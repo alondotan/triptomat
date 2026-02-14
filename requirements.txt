@@ -1,0 +1,7 @@
+yt-dlp
+google-genai
+python-slugify
+requests
+beautifulsoup4
+python-dotenv
+pytest
