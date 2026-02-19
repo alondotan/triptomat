@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Triptomat — Add Link</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 2rem;
+      width: 100%;
+      max-width: 540px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      color: #111;
+    }
+
+    p.subtitle {
+      font-size: 0.875rem;
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 0.4rem;
+    }
+
+    input[type="url"] {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input[type="url"]:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
+    }
+
+    .options {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .options input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: #4f46e5;
+      cursor: pointer;
+    }
+
+    .options label {
+      margin-bottom: 0;
+      font-weight: 400;
+      color: #555;
+      cursor: pointer;
+    }
+
+    button {
+      margin-top: 1.25rem;
+      width: 100%;
+      padding: 0.75rem;
+      background: #4f46e5;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+    }
+
+    button:hover:not(:disabled) { background: #4338ca; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    #result {
+      margin-top: 1.25rem;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      display: none;
+    }
+
+    #result.success {
+      background: #ecfdf5;
+      border: 1px solid #6ee7b7;
+      color: #065f46;
+    }
+
+    #result.cached {
+      background: #eff6ff;
+      border: 1px solid #93c5fd;
+      color: #1e40af;
+    }
+
+    #result.error {
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      color: #991b1b;
+    }
+
+    pre {
+      margin-top: 0.5rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      font-size: 0.78rem;
+      opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Triptomat</h1>
+    <p class="subtitle">Add a URL to extract travel recommendations</p>
+
+    <label for="url-input">URL</label>
+    <input
+      type="url"
+      id="url-input"
+      placeholder="https://www.youtube.com/watch?v=..."
+      autocomplete="off"
+    />
+
+    <div class="options">
+      <input type="checkbox" id="overwrite" />
+      <label for="overwrite">Force re-process (ignore cache)</label>
+    </div>
+
+    <button id="submit-btn" onclick="submitUrl()">Submit</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const API_URL = "https://9hhwxodv7a.execute-api.eu-central-1.amazonaws.com/process";
+
+    async function submitUrl() {
+      const urlInput = document.getElementById("url-input");
+      const overwrite = document.getElementById("overwrite").checked;
+      const btn = document.getElementById("submit-btn");
+      const result = document.getElementById("result");
+
+      const url = urlInput.value.trim();
+      if (!url) {
+        showResult("error", "Please enter a URL.");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Submitting…";
+      result.style.display = "none";
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url, overwrite }),
+        });
+
+        const data = await response.json();
+
+        if (response.status === 202) {
+          showResult("success", `Job submitted (ID: ${data.job_id})`, data);
+        } else if (response.status === 200) {
+          showResult("cached", "Returned from cache", data);
+        } else {
+          showResult("error", data.error || "Unexpected error", data);
+        }
+      } catch (err) {
+        showResult("error", `Network error: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Submit";
+      }
+    }
+
+    function showResult(type, message, data) {
+      const result = document.getElementById("result");
+      result.className = type;
+      result.style.display = "block";
+      result.innerHTML = `<strong>${message}</strong>`;
+      if (data) {
+        result.innerHTML += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+      }
+    }
+
+    // Allow pressing Enter to submit
+    document.getElementById("url-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") submitUrl();
+    });
+  </script>
+</body>
+</html>
