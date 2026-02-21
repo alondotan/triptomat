@@ -1,4 +1,4 @@
-from core.prompt import build_main_prompt
+from core.prompts import build_main_prompt
 
 
 class TestBuildMainPrompt:

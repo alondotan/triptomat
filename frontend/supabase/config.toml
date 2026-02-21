@@ -1,0 +1,10 @@
+project_id = "aqpzhflzsqkjceeeufyf"
+
+[functions.travel-webhook]
+verify_jwt = false
+
+[functions.recommendation-webhook]
+verify_jwt = false
+
+[functions.sync-maps-list]
+verify_jwt = false

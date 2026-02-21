@@ -1,3 +1,4 @@
+# Python / backend
 .env
 __pycache__/
 *.pyc
@@ -8,3 +9,9 @@ build/
 .venv/
 venv/
 .pytest_cache/
+
+# Frontend (React/Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local

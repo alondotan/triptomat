@@ -4,4 +4,4 @@ python-slugify
 requests
 beautifulsoup4
 python-dotenv
-pytest
+

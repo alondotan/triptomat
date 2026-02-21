@@ -1,75 +1,102 @@
 # Triptomat
 
-Extracts travel recommendations from URLs (videos, articles, Google Maps links) using Google Gemini AI, enriches them with geocoding data, and sends them to a webhook.
+A travel intelligence platform that processes content from URLs and emails using AI, and surfaces it in a full trip management UI.
 
-## Supported Sources
-
-- **YouTube / TikTok / Instagram** - Video analysis via Gemini
-- **Google Maps links** - Place identification and enrichment
-- **Web articles** - Text extraction and analysis
-
-## Project Structure
+## Architecture
 
 ```
-core/           # Pure logic - no external API calls
-  config.py     # Config loading from config.json
-  prompt.py     # Gemini prompt builder
-  geocoding.py  # Site hierarchy, coordinate extraction, enrichment
-  url_helpers.py# URL classification, safe filenames
-
-services/       # External API wrappers
-  gemini.py     # GeminiService (video & text analysis)
-  google_maps.py# MapsService (geocoding, reverse geocoding, place photos)
-  scraper.py    # Web scraping, metadata extraction, video download
-  webhook.py    # Webhook delivery
-
-main.py         # Orchestrator and entry point
-config.json     # Type definitions and categories
+┌─────────────────────────────────────────────┐
+│              Backend (AWS Lambda)            │
+│                                             │
+│  Gateway → Downloader → Worker              │
+│  (API GW)  (yt-dlp/S3)  (Gemini/geocoding)  │
+│                                             │
+│  Mail Handler (email → AI analysis)         │
+└──────────────────┬──────────────────────────┘
+                   │ webhook (HTTP POST)
+┌──────────────────▼──────────────────────────┐
+│           Frontend (Supabase + React)        │
+│                                             │
+│  Edge Functions (travel-webhook /           │
+│                  recommendation-webhook)    │
+│  PostgreSQL (trips, POIs, itinerary, ...)   │
+│  React SPA (Itinerary, Map, Budget, ...)    │
+└─────────────────────────────────────────────┘
 ```
 
-## Setup
+## Repo Structure
 
-1. Create a `.env` file:
 ```
-GOOGLE_API_KEY=your-gemini-api-key
-MAP_GOOGLE_API_KEY=your-google-maps-api-key
-WEBHOOK_URL=your-webhook-url
-WEBHOOK_TOKEN=your-webhook-token
+backend (root)
+  core/                  # Shared Python logic (prompts, geocoding, scrapers)
+  lambda_gateway/        # API entry point, DynamoDB cache, SQS dispatch
+  lambda_downloader/     # Downloads video via yt-dlp, uploads to S3
+  lambda_worker/         # Gemini analysis, geocoding, webhook delivery
+  lambda_mail_handler/   # Parses raw emails, OpenAI analysis, webhook
+  requirements.txt
+  config.json            # Type definitions and categories
+  local_dev.py           # Local development runner
+  route_map.html         # Standalone route-planning tool
+
+frontend/
+  src/                   # React/TypeScript source
+  supabase/              # Edge Functions + DB migrations
+  public/
+  package.json
 ```
 
-2. Install dependencies:
-```
+## Backend Setup
+
+```bash
 pip install -r requirements.txt
 ```
 
-3. Run:
+`.env`:
 ```
-python main.py
+GOOGLE_API_KEY=
+MAP_GOOGLE_API_KEY=
+WEBHOOK_URL=https://<project>.supabase.co/functions/v1/travel-webhook
+WEBHOOK_TOKEN=
+OPENAI_API_KEY=
 ```
 
-## Testing
+### Build & Deploy a Lambda
 
+```bash
+# From repo root:
+docker build --provenance=false -t triptomat-<name> -f lambda_<name>/Dockerfile .
+docker tag triptomat-<name>:latest 664923616128.dkr.ecr.eu-central-1.amazonaws.com/triptomat-<name>:latest
+docker push 664923616128.dkr.ecr.eu-central-1.amazonaws.com/triptomat-<name>:latest
+aws lambda update-function-code --function-name triptomat-<name> \
+  --image-uri 664923616128.dkr.ecr.eu-central-1.amazonaws.com/triptomat-<name>:latest \
+  --profile triptomat --region eu-central-1
 ```
+
+### Tests
+
+```bash
 pytest tests/
 ```
 
-All core module tests run without API keys or network access.
-
-## Docker
+## Frontend Setup
 
 ```bash
-docker build -t triptomat .
-docker-compose run app pytest   # Run tests in container
-docker-compose up               # Run the app
+cd frontend
+npm install
+npm run dev
 ```
 
-## Deploy to AWS ECR
+`frontend/.env`:
+```
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+VITE_SUPABASE_PROJECT_ID=
+```
+
+### Deploy Supabase Edge Functions
 
 ```bash
-aws ecr get-login-password --region eu-central-1 --profile triptomat | \
-  docker login --username AWS --password-stdin 664923616128.dkr.ecr.eu-central-1.amazonaws.com
-
-docker build -t triptomat .
-docker tag triptomat:latest 664923616128.dkr.ecr.eu-central-1.amazonaws.com/triptomat:latest
-docker push 664923616128.dkr.ecr.eu-central-1.amazonaws.com/triptomat:latest
+cd frontend
+supabase functions deploy travel-webhook
+supabase functions deploy recommendation-webhook
 ```

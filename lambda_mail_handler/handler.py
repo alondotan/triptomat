@@ -9,6 +9,7 @@ import uuid
 import datetime
 from email import message_from_string
 from email.policy import default
+from email.utils import parseaddr
 
 from core.config import load_config
 
@@ -16,7 +17,8 @@ s3_client = boto3.client('s3')
 
 ALLOWED_TYPES, GEO_ONLY_TYPES = load_config()
 WEBHOOK_URL = os.environ.get('MAIL_WEBHOOK_URL', '')
-WEBHOOK_TOKEN = os.environ.get('MAIL_WEBHOOK_KEY', '')
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
+SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
 
@@ -40,7 +42,12 @@ def lambda_handler(event, context):
 
         plain_text = _get_plain_text(msg)
         fwd_headers = _extract_forwarded_headers(plain_text)
-        user_email = msg['from']
+        _, user_email = parseaddr(msg['from'])
+
+        token = get_webhook_token_for_email(user_email)
+        if not token:
+            print(f"No webhook token found for {user_email} — skipping")
+            return {'statusCode': 200, 'body': json.dumps('No user found, skipped')}
 
         clean_html = clean_html_for_ai(html_content)
         travel_data = call_openai(clean_html, ALLOWED_TYPES, GEO_ONLY_TYPES)
@@ -62,7 +69,7 @@ def lambda_handler(event, context):
 
             print(json.dumps(payload, indent=2, ensure_ascii=False))
             if WEBHOOK_URL:
-                send_to_webhook(payload, WEBHOOK_URL, WEBHOOK_TOKEN)
+                send_to_webhook(payload, WEBHOOK_URL, token)
 
         return {'statusCode': 200, 'body': json.dumps('Processed and Sent')}
 
@@ -226,6 +233,33 @@ def call_openai(html_text, allowed_types, geo_types):
     with urllib.request.urlopen(req) as res:
         res_payload = json.loads(res.read().decode("utf-8"))
         return json.loads(res_payload['choices'][0]['message']['content'])
+
+
+def get_webhook_token_for_email(email):
+    """Look up a user's webhook token from Supabase by their email address."""
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        print("SUPABASE_URL or SUPABASE_SERVICE_KEY not set")
+        return None
+    rpc_url = f"{SUPABASE_URL}/rest/v1/rpc/get_webhook_token_by_email"
+    req = urllib.request.Request(
+        rpc_url,
+        data=json.dumps({"p_email": email}).encode("utf-8"),
+        headers={
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_SERVICE_KEY,
+            "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req) as res:
+            result = json.loads(res.read().decode("utf-8"))
+            return result if isinstance(result, str) else None
+    except urllib.error.HTTPError as e:
+        print(f"Supabase token lookup failed {e.code}: {e.read().decode()}")
+        return None
+    except Exception as e:
+        print(f"Supabase token lookup error: {e}")
+        return None
 
 
 def send_to_webhook(payload, url, token):

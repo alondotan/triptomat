@@ -1,0 +1,336 @@
+import { useState, useEffect } from 'react';
+import { useTrip } from '@/context/TripContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { ExternalLink, Quote, Save } from 'lucide-react';
+import { SubCategorySelector } from '@/components/SubCategorySelector';
+import type { PointOfInterest, POICategory, POIStatus } from '@/types/trip';
+import type { SourceRecommendation } from '@/types/webhook';
+import { supabase } from '@/integrations/supabase/client';
+
+interface POIDetailDialogProps {
+  poi: PointOfInterest;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+interface RecommendationQuote {
+  paragraph: string;
+  sourceUrl?: string;
+  recommendationId: string;
+}
+
+export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProps) {
+  const { updatePOI, state } = useTrip();
+
+  // Editable fields
+  const [name, setName] = useState(poi.name);
+  const [category, setCategory] = useState<POICategory>(poi.category);
+  const [subCategory, setSubCategory] = useState(poi.subCategory || '');
+  const [status, setStatus] = useState<POIStatus>(poi.status);
+  const [city, setCity] = useState(poi.location.city || '');
+  const [country, setCountry] = useState(poi.location.country || '');
+  const [address, setAddress] = useState(poi.location.address || '');
+  const [costAmount, setCostAmount] = useState(poi.details.cost?.amount?.toString() || '');
+  const [notes, setNotes] = useState(poi.details.notes?.user_summary || '');
+
+  // Accommodation fields
+  const [checkinDate, setCheckinDate] = useState(poi.details.accommodation_details?.checkin?.date || '');
+  const [checkinHour, setCheckinHour] = useState(poi.details.accommodation_details?.checkin?.hour || '');
+  const [checkoutDate, setCheckoutDate] = useState(poi.details.accommodation_details?.checkout?.date || '');
+  const [checkoutHour, setCheckoutHour] = useState(poi.details.accommodation_details?.checkout?.hour || '');
+  const [roomType, setRoomType] = useState(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
+  const [occupancy, setOccupancy] = useState(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
+
+  // Booking fields
+  const [reservationDate, setReservationDate] = useState(poi.details.booking?.reservation_date || '');
+  const [reservationHour, setReservationHour] = useState(poi.details.booking?.reservation_hour || '');
+  const [orderNumber, setOrderNumber] = useState(poi.details.order_number || '');
+
+  // Recommendation quotes
+  const [quotes, setQuotes] = useState<RecommendationQuote[]>([]);
+
+  // Reset fields when poi changes
+  useEffect(() => {
+    setName(poi.name);
+    setCategory(poi.category);
+    setSubCategory(poi.subCategory || '');
+    setStatus(poi.status);
+    setCity(poi.location.city || '');
+    setCountry(poi.location.country || '');
+    setAddress(poi.location.address || '');
+    setCostAmount(poi.details.cost?.amount?.toString() || '');
+    setNotes(poi.details.notes?.user_summary || '');
+    setCheckinDate(poi.details.accommodation_details?.checkin?.date || '');
+    setCheckinHour(poi.details.accommodation_details?.checkin?.hour || '');
+    setCheckoutDate(poi.details.accommodation_details?.checkout?.date || '');
+    setCheckoutHour(poi.details.accommodation_details?.checkout?.hour || '');
+    setRoomType(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
+    setOccupancy(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
+    setReservationDate(poi.details.booking?.reservation_date || '');
+    setReservationHour(poi.details.booking?.reservation_hour || '');
+    setOrderNumber(poi.details.order_number || '');
+  }, [poi]);
+
+  // Fetch recommendation quotes
+  useEffect(() => {
+    if (!open) return;
+    const recIds = poi.sourceRefs.recommendation_ids || [];
+    const detailQuotes: RecommendationQuote[] = [];
+
+    // Check inline details first (from webhook)
+    const details = poi.details as Record<string, unknown>;
+    if (details.paragraph) {
+      detailQuotes.push({
+        paragraph: details.paragraph as string,
+        sourceUrl: details.source_url as string | undefined,
+        recommendationId: 'inline',
+      });
+    }
+
+    if (recIds.length > 0) {
+      supabase
+        .from('source_recommendations')
+        .select('id, source_url, analysis')
+        .in('id', recIds)
+        .then(({ data }) => {
+          const fetchedQuotes: RecommendationQuote[] = [];
+          data?.forEach(rec => {
+            const analysis = rec.analysis as Record<string, unknown> | null;
+            const items = (analysis?.extracted_items || analysis?.recommendations || []) as Array<{ name: string; paragraph: string }>;
+            const matchingItem = items.find(item =>
+              item.name.toLowerCase().includes(poi.name.toLowerCase()) ||
+              poi.name.toLowerCase().includes(item.name.toLowerCase())
+            );
+            if (matchingItem) {
+              fetchedQuotes.push({
+                paragraph: matchingItem.paragraph,
+                sourceUrl: rec.source_url || undefined,
+                recommendationId: rec.id,
+              });
+            }
+          });
+          // Merge, avoid duplicates
+          const allQuotes = [...detailQuotes];
+          for (const fq of fetchedQuotes) {
+            if (!allQuotes.some(q => q.paragraph === fq.paragraph)) {
+              allQuotes.push(fq);
+            }
+          }
+          setQuotes(allQuotes);
+        });
+    } else {
+      setQuotes(detailQuotes);
+    }
+  }, [open, poi]);
+
+  const handleSave = async () => {
+    const updatedPOI: PointOfInterest = {
+      ...poi,
+      name,
+      category,
+      subCategory: subCategory || undefined,
+      status,
+      location: {
+        ...poi.location,
+        city: city || undefined,
+        country: country || undefined,
+        address: address || undefined,
+      },
+      details: {
+        ...poi.details,
+        cost: costAmount ? { amount: parseFloat(costAmount), currency: state.activeTrip?.currency || 'USD' } : poi.details.cost,
+        notes: notes ? { ...poi.details.notes, user_summary: notes } : poi.details.notes,
+        order_number: orderNumber || poi.details.order_number,
+        booking: (reservationDate || reservationHour) ? {
+          ...poi.details.booking,
+          reservation_date: reservationDate || undefined,
+          reservation_hour: reservationHour || undefined,
+        } : poi.details.booking,
+        accommodation_details: category === 'accommodation' ? {
+          ...poi.details.accommodation_details,
+          checkin: (checkinDate || checkinHour) ? { date: checkinDate || undefined, hour: checkinHour || undefined } : poi.details.accommodation_details?.checkin,
+          checkout: (checkoutDate || checkoutHour) ? { date: checkoutDate || undefined, hour: checkoutHour || undefined } : poi.details.accommodation_details?.checkout,
+          rooms: roomType ? [{ room_type: roomType, occupancy: occupancy || undefined }] : poi.details.accommodation_details?.rooms,
+        } : poi.details.accommodation_details,
+      },
+    };
+
+    await updatePOI(updatedPOI);
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-lg">{poi.name}</DialogTitle>
+        </DialogHeader>
+
+        {/* Recommendation Quotes */}
+        {quotes.length > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-sm font-semibold flex items-center gap-1.5">
+              <Quote size={14} /> המלצות
+            </h4>
+            {quotes.map((q, i) => (
+              <div key={i} className="bg-muted/50 rounded-lg p-3 text-sm space-y-1.5 border border-border/50">
+                <p className="text-muted-foreground italic leading-relaxed" dir="auto">{q.paragraph}</p>
+                {q.sourceUrl && (
+                  <a
+                    href={q.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    <ExternalLink size={12} /> מקור
+                  </a>
+                )}
+              </div>
+            ))}
+            <Separator />
+          </div>
+        )}
+
+        {/* Edit Form */}
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>שם</Label>
+            <Input value={name} onChange={e => setName(e.target.value)} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>קטגוריה</Label>
+              <Select value={category} onValueChange={v => setCategory(v as POICategory)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="accommodation">לינה</SelectItem>
+                  <SelectItem value="eatery">אוכל</SelectItem>
+                  <SelectItem value="attraction">אטרקציה</SelectItem>
+                  <SelectItem value="service">שירות</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>סטטוס</Label>
+              <Select value={status} onValueChange={v => setStatus(v as POIStatus)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="candidate">מועמד</SelectItem>
+                  <SelectItem value="in_plan">בתוכנית</SelectItem>
+                  <SelectItem value="booked">הוזמן</SelectItem>
+                  <SelectItem value="visited">בוקר</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>תת-קטגוריה</Label>
+            <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} placeholder="בחר תת-קטגוריה..." />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>עיר</Label>
+              <Input value={city} onChange={e => setCity(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>מדינה</Label>
+              <Input value={country} onChange={e => setCountry(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>כתובת</Label>
+            <Input value={address} onChange={e => setAddress(e.target.value)} />
+          </div>
+
+          <div className="space-y-2">
+            <Label>עלות ({state.activeTrip?.currency || 'USD'})</Label>
+            <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} />
+          </div>
+
+          {/* Accommodation-specific fields */}
+          {category === 'accommodation' && (
+            <>
+              <Separator />
+              <h4 className="text-sm font-semibold">פרטי לינה</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>תאריך צ׳ק-אין</Label>
+                  <Input type="date" value={checkinDate} onChange={e => setCheckinDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>שעת צ׳ק-אין</Label>
+                  <Input type="time" value={checkinHour} onChange={e => setCheckinHour(e.target.value)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>תאריך צ׳ק-אאוט</Label>
+                  <Input type="date" value={checkoutDate} onChange={e => setCheckoutDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>שעת צ׳ק-אאוט</Label>
+                  <Input type="time" value={checkoutHour} onChange={e => setCheckoutHour(e.target.value)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>סוג חדר</Label>
+                  <Input value={roomType} onChange={e => setRoomType(e.target.value)} placeholder="Double, Suite..." />
+                </div>
+                <div className="space-y-2">
+                  <Label>תפוסה</Label>
+                  <Input value={occupancy} onChange={e => setOccupancy(e.target.value)} placeholder="2 adults" />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Booking fields for eatery */}
+          {(category === 'eatery' || category === 'attraction') && (
+            <>
+              <Separator />
+              <h4 className="text-sm font-semibold">פרטי הזמנה</h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>תאריך הזמנה</Label>
+                  <Input type="date" value={reservationDate} onChange={e => setReservationDate(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>שעת הזמנה</Label>
+                  <Input type="time" value={reservationHour} onChange={e => setReservationHour(e.target.value)} />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Order number */}
+          <div className="space-y-2">
+            <Label>מספר הזמנה</Label>
+            <Input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="Booking ref..." />
+          </div>
+
+          {/* Notes */}
+          <div className="space-y-2">
+            <Label>הערות</Label>
+            <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="הוסף הערה..." rows={3} />
+          </div>
+
+          <Button onClick={handleSave} className="w-full gap-1.5">
+            <Save size={16} /> שמור שינויים
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
