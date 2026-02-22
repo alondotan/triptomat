@@ -1,18 +1,85 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTrip } from '@/context/TripContext';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppLayout } from '@/components/AppLayout';
 import { CreateTripForm } from '@/components/forms/CreateTripForm';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Plane, Building2, MapPin, CalendarDays, Pencil } from 'lucide-react';
+import { CalendarDays, Pencil } from 'lucide-react';
 import { format, eachDayOfInterval, parseISO } from 'date-fns';
 import * as tripService from '@/services/tripService';
-import { DaySection, type LocationSuggestion } from '@/components/DaySection';
+import { type LocationSuggestion } from '@/components/DaySection';
 import { LocationContextPicker } from '@/components/LocationContextPicker';
+import { ItineraryDayContent, DragPreview } from '@/components/ItineraryDayContent';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+  closestCenter,
+} from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
+
+// ─── Smart label for untimed activity groups ──────────────────────────────────
+
+function getSmartLabel(prevTime?: string, nextTime?: string): string {
+  if (!prevTime && !nextTime) return 'זמן גמיש';
+  if (!prevTime) {
+    const h = parseInt(nextTime!.split(':')[0]);
+    return h <= 11 ? 'בוקר' : 'שעות היום';
+  }
+  if (!nextTime) {
+    const h = parseInt(prevTime.split(':')[0]);
+    return h >= 19 ? 'לילה' : 'ערב';
+  }
+  const h1 = parseInt(prevTime.split(':')[0]);
+  const h2 = parseInt(nextTime.split(':')[0]);
+  if (h1 < 12 && h2 >= 13) return 'צהריים';
+  if (h1 >= 13 && h1 < 17) return 'אחה"צ';
+  return 'הבא בתור';
+}
+
+// ─── Droppable day pill ───────────────────────────────────────────────────────
+
+function DroppableDayPill({
+  dayNum, day, isSelected, hasContent, onClick,
+}: {
+  dayNum: number;
+  day: Date;
+  isSelected: boolean;
+  hasContent: boolean;
+  onClick: () => void;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `day-drop-${dayNum}` });
+  return (
+    <button
+      ref={setNodeRef}
+      onClick={onClick}
+      className={`flex flex-col items-center min-w-[56px] sm:min-w-[72px] px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border-2 transition-all text-xs sm:text-sm ${
+        isSelected
+          ? 'border-primary bg-primary text-primary-foreground font-semibold'
+          : isOver
+            ? 'border-primary/80 bg-primary/15 scale-105 shadow-md'
+            : hasContent
+              ? 'border-primary/30 bg-muted/50 hover:bg-muted'
+              : 'border-transparent bg-muted/30 hover:bg-muted text-muted-foreground'
+      }`}
+    >
+      <span className="text-[10px] sm:text-xs">{format(day, 'EEE')}</span>
+      <span className="text-base sm:text-lg font-bold">{format(day, 'd')}</span>
+      <span className="text-[9px] sm:text-[10px]">{format(day, 'MMM')}</span>
+      {hasContent && !isSelected && <div className="w-1.5 h-1.5 rounded-full bg-current mt-1 opacity-60" />}
+    </button>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 const Index = () => {
   const { state, loadTripData, addPOI, addTransportation, addMission, updatePOI } = useTrip();
@@ -21,12 +88,27 @@ const Index = () => {
   const [editingLocation, setEditingLocation] = useState(false);
   const [locationDaysForward, setLocationDaysForward] = useState(0);
 
+  // ── Drag state ───────────────────────────────────────────────────────────────
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [isOverSchedule, setIsOverSchedule] = useState(false);
+  const [isOverPotential, setIsOverPotential] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+  );
+
+  const isScheduledBeingDragged = activeId?.startsWith('sched-') ?? false;
+  const isDragging = activeId !== null;
+
   // Reset editing state when switching trips
   useEffect(() => {
     setEditingLocation(false);
     setSelectedDayNum(1);
     setLocationDaysForward(0);
   }, [state.activeTrip?.id]);
+
+  // ── Trip data ────────────────────────────────────────────────────────────────
 
   const tripDays = useMemo(() => {
     if (!state.activeTrip) return [];
@@ -45,7 +127,7 @@ const Index = () => {
     if (!currentItDay) return [];
     return currentItDay.accommodationOptions
       .map(opt => ({ ...opt, poi: state.pois.find(p => p.id === opt.poi_id) }))
-      .filter(opt => opt.poi);
+      .filter((opt): opt is typeof opt & { poi: NonNullable<typeof opt.poi> } => !!opt.poi);
   }, [currentItDay, state.pois]);
 
   const dayActivities = useMemo(() => {
@@ -53,9 +135,28 @@ const Index = () => {
     return currentItDay.activities
       .filter(a => a.type === 'poi')
       .map(a => ({ ...a, poi: state.pois.find(p => p.id === a.id) }))
-      .filter(a => a.poi)
+      .filter((a): a is typeof a & { poi: NonNullable<typeof a.poi> } => !!a.poi)
       .sort((a, b) => a.order - b.order);
   }, [currentItDay, state.pois]);
+
+  const dayPotentialActivities = useMemo(() =>
+    dayActivities.filter(a => !a.schedule_state || a.schedule_state === 'potential'),
+    [dayActivities]
+  );
+
+  const dayScheduledActivities = useMemo(() =>
+    dayActivities.filter(a => a.schedule_state === 'scheduled'),
+    [dayActivities]
+  );
+
+  const prevDayAccommodations = useMemo(() => {
+    if (selectedDayNum <= 1) return [];
+    const prevItDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum - 1);
+    if (!prevItDay) return [];
+    return prevItDay.accommodationOptions
+      .map(opt => ({ ...opt, poi: state.pois.find(p => p.id === opt.poi_id) }))
+      .filter((opt): opt is typeof opt & { poi: NonNullable<typeof opt.poi> } => !!opt.poi);
+  }, [state.itineraryDays, state.pois, selectedDayNum]);
 
   const dayTransport = useMemo(() => {
     if (!currentItDay) return [];
@@ -64,24 +165,144 @@ const Index = () => {
       .filter(seg => seg.transport);
   }, [currentItDay, state.transportation]);
 
-  // Location suggestions for transport quick-create form
+  const scheduleCells = useMemo(() => {
+    type RawCell = {
+      id: string;
+      type: 'activity' | 'transport';
+      time?: string;
+      endTime?: string;
+      label: string;
+      sublabel?: string;
+      category?: string;
+      activityId?: string;
+      transportId?: string;
+    };
+    type ResultCell = RawCell | {
+      id: string;
+      type: 'group';
+      label: string;
+      groupItems: { activityId: string; label: string; sublabel?: string; category?: string }[];
+    };
+
+    const fmtTime = (iso: string) => {
+      try { return format(parseISO(iso), 'HH:mm'); } catch { return undefined; }
+    };
+
+    const rawCells: RawCell[] = [];
+
+    dayTransport.forEach(dt => {
+      if (!dt.transport) return;
+      // Only show the specific segment(s) that belong to this day.
+      // dt.segment_id is set by linkTransportSegmentsToDays; if absent (legacy
+      // entries added manually without a segment_id) fall back to all segments.
+      const segsToShow = dt.segment_id
+        ? dt.transport.segments.filter(s => s.segment_id === dt.segment_id)
+        : dt.transport.segments;
+      segsToShow.forEach((seg, segIdx) => {
+        rawCells.push({
+          id: `transport-${dt.transportation_id}-${seg.segment_id || segIdx}`,
+          type: 'transport',
+          time: seg.departure_time ? fmtTime(seg.departure_time) : undefined,
+          endTime: seg.arrival_time ? fmtTime(seg.arrival_time) : undefined,
+          label: `${seg.from.name} → ${seg.to.name}`,
+          sublabel: [dt.transport!.category, seg.flight_or_vessel_number].filter(Boolean).join(' '),
+          category: dt.transport!.category,
+          transportId: dt.transportation_id,
+        });
+      });
+    });
+
+    dayScheduledActivities.forEach(a => {
+      rawCells.push({
+        id: `activity-${a.id}`,
+        type: 'activity',
+        time: a.time_window?.start,
+        endTime: a.time_window?.end,
+        label: a.poi.name,
+        sublabel: [a.poi.subCategory, a.poi.location?.city].filter(Boolean).join(' · '),
+        category: a.poi.subCategory || a.poi.category,
+        activityId: a.id,
+      });
+    });
+
+    rawCells.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+
+    // Group consecutive untimed activity cells
+    const result: ResultCell[] = [];
+    let groupBuffer: RawCell[] = [];
+    let lastTimedCellTime: string | undefined;
+
+    const flushGroup = (nextTime?: string) => {
+      if (groupBuffer.length === 0) return;
+      result.push({
+        id: `group-${groupBuffer.map(b => b.activityId).join('-')}`,
+        type: 'group',
+        label: getSmartLabel(lastTimedCellTime, nextTime),
+        groupItems: groupBuffer.map(b => ({
+          activityId: b.activityId!,
+          label: b.label,
+          sublabel: b.sublabel,
+          category: b.category,
+        })),
+      });
+      groupBuffer = [];
+    };
+
+    for (const cell of rawCells) {
+      if (cell.time) {
+        flushGroup(cell.time);
+        result.push(cell);
+        lastTimedCellTime = cell.time;
+      } else if (cell.type === 'activity') {
+        groupBuffer.push(cell);
+      } else {
+        // Untimed transport — flush any buffer then push as-is
+        flushGroup(undefined);
+        result.push(cell);
+      }
+    }
+    flushGroup(undefined);
+
+    return result;
+  }, [dayTransport, dayScheduledActivities]);
+
+  // ── Drag preview data ────────────────────────────────────────────────────────
+
+  const dragPreviewData = useMemo(() => {
+    if (!activeId) return null;
+    if (isScheduledBeingDragged) {
+      const actId = activeId.replace('sched-', '');
+      for (const cell of scheduleCells) {
+        if (cell.type === 'activity' && cell.activityId === actId) {
+          return { label: cell.label, category: cell.category };
+        }
+        if (cell.type === 'group' && cell.groupItems) {
+          const item = cell.groupItems.find(gi => gi.activityId === actId);
+          if (item) return { label: item.label, category: item.category };
+        }
+      }
+      return null;
+    }
+    const activity = dayPotentialActivities.find(a => a.id === activeId);
+    return activity ? { label: activity.poi.name, category: activity.poi.subCategory } : null;
+  }, [activeId, isScheduledBeingDragged, dayPotentialActivities, scheduleCells]);
+
+  // ── Location suggestions ─────────────────────────────────────────────────────
+
   const transportLocationSuggestions = useMemo<LocationSuggestion[]>(() => {
     const suggestions: LocationSuggestion[] = [];
-    // Activities assigned to this day
     dayActivities.forEach(a => {
       if (a.poi?.name) {
         const label = a.poi.location?.city ? `${a.poi.name} (${a.poi.location.city})` : a.poi.name;
         suggestions.push({ label, type: 'activity' });
       }
     });
-    // Accommodation of this day
     dayAccommodations.forEach(a => {
       if (a.poi?.name) {
         const label = a.poi.location?.city ? `${a.poi.name} (${a.poi.location.city})` : a.poi.name;
         suggestions.push({ label, type: 'accommodation' });
       }
     });
-    // Accommodation of previous day
     const prevItDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum - 1);
     if (prevItDay) {
       prevItDay.accommodationOptions.forEach(opt => {
@@ -92,18 +313,13 @@ const Index = () => {
         }
       });
     }
-    // Airports from flights assigned to this day
     dayTransport.forEach(dt => {
       if (dt.transport?.category === 'flight' && dt.transport.segments) {
         dt.transport.segments.forEach(seg => {
           const depLabel = seg.from.code ? `${seg.from.name} (${seg.from.code})` : seg.from.name;
           const arrLabel = seg.to.code ? `${seg.to.name} (${seg.to.code})` : seg.to.name;
-          if (!suggestions.some(s => s.label === depLabel)) {
-            suggestions.push({ label: depLabel, type: 'airport' });
-          }
-          if (!suggestions.some(s => s.label === arrLabel)) {
-            suggestions.push({ label: arrLabel, type: 'airport' });
-          }
+          if (!suggestions.some(s => s.label === depLabel)) suggestions.push({ label: depLabel, type: 'airport' });
+          if (!suggestions.some(s => s.label === arrLabel)) suggestions.push({ label: arrLabel, type: 'airport' });
         });
       }
     });
@@ -125,6 +341,8 @@ const Index = () => {
     return spans;
   }, [tripDays, state.itineraryDays]);
 
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+
   const refreshDays = useCallback(async () => {
     if (state.activeTrip) await loadTripData(state.activeTrip.id);
   }, [state.activeTrip, loadTripData]);
@@ -144,6 +362,8 @@ const Index = () => {
     });
   }, [currentItDay, state.activeTrip, selectedDayNum, tripDays]);
 
+  // ── Entity CRUD ──────────────────────────────────────────────────────────────
+
   const addEntityToDay = useCallback(async (
     entityType: 'accommodation' | 'activity' | 'transport',
     entityId: string,
@@ -153,14 +373,12 @@ const Index = () => {
     if (!itDay) return;
 
     if (entityType === 'accommodation') {
-      // For multi-night: assign to consecutive days starting from selected
       const nightCount = nights || 1;
       const dayNumbers: number[] = [];
       for (let i = 0; i < nightCount; i++) {
         const dayNum = selectedDayNum + i;
         if (dayNum <= tripDays.length) dayNumbers.push(dayNum);
       }
-
       for (const dayNum of dayNumbers) {
         let targetDay = state.itineraryDays.find(d => d.dayNumber === dayNum);
         if (!targetDay && state.activeTrip) {
@@ -184,7 +402,6 @@ const Index = () => {
           }
         }
       }
-      // Update POI status to 'matched' if it's candidate or in_plan
       const poi = state.pois.find(p => p.id === entityId);
       if (poi && (poi.status === 'candidate' || poi.status === 'in_plan')) {
         await updatePOI({ ...poi, status: 'matched' });
@@ -195,7 +412,6 @@ const Index = () => {
       await tripService.updateItineraryDay(itDay.id, {
         activities: [...existing, { order: existing.length + 1, type: 'poi', id: entityId }],
       });
-      // Update POI status to 'matched' if it's candidate or in_plan
       const poi = state.pois.find(p => p.id === entityId);
       if (poi && (poi.status === 'candidate' || poi.status === 'in_plan')) {
         await updatePOI({ ...poi, status: 'matched' });
@@ -209,14 +425,13 @@ const Index = () => {
     }
 
     await refreshDays();
-  }, [ensureItDay, refreshDays, selectedDayNum, tripDays, state.itineraryDays, state.activeTrip]);
+  }, [ensureItDay, refreshDays, selectedDayNum, tripDays, state.itineraryDays, state.activeTrip, state.pois, updatePOI]);
 
   const removeEntityFromDay = useCallback(async (
     entityType: 'accommodation' | 'activity' | 'transport',
     entityId: string,
   ) => {
     if (!currentItDay) return;
-
     if (entityType === 'accommodation') {
       await tripService.updateItineraryDay(currentItDay.id, {
         accommodationOptions: currentItDay.accommodationOptions.filter(o => o.poi_id !== entityId),
@@ -230,15 +445,66 @@ const Index = () => {
         transportationSegments: currentItDay.transportationSegments.filter(s => s.transportation_id !== entityId),
       });
     }
-
     await refreshDays();
   }, [currentItDay, refreshDays]);
+
+  const toggleActivityScheduleState = useCallback(async (
+    activityId: string,
+    scheduleState: 'potential' | 'scheduled',
+  ) => {
+    if (!currentItDay) return;
+    const updated = currentItDay.activities.map(a =>
+      a.id === activityId ? { ...a, schedule_state: scheduleState } : a
+    );
+    await tripService.updateItineraryDay(currentItDay.id, { activities: updated });
+    await refreshDays();
+  }, [currentItDay, refreshDays]);
+
+  const reorderDayActivities = useCallback(async (orderedIds: string[]) => {
+    if (!currentItDay) return;
+    const reordered = orderedIds.map((id, idx) => {
+      const existing = currentItDay.activities.find(a => a.id === id);
+      return existing ? { ...existing, order: idx + 1 } : null;
+    }).filter((a): a is NonNullable<typeof a> => a !== null);
+    const others = currentItDay.activities.filter(a => !orderedIds.includes(a.id));
+    await tripService.updateItineraryDay(currentItDay.id, { activities: [...reordered, ...others] });
+    await refreshDays();
+  }, [currentItDay, refreshDays]);
+
+  const moveActivityToDay = useCallback(async (
+    activityId: string,
+    targetDayNum: number,
+  ) => {
+    if (!currentItDay || !state.activeTrip) return;
+    const updatedActivities = currentItDay.activities.filter(a => a.id !== activityId);
+    await tripService.updateItineraryDay(currentItDay.id, { activities: updatedActivities });
+    let targetDay = state.itineraryDays.find(d => d.dayNumber === targetDayNum);
+    if (!targetDay) {
+      const day = tripDays[targetDayNum - 1];
+      targetDay = await tripService.createItineraryDay({
+        tripId: state.activeTrip.id,
+        dayNumber: targetDayNum,
+        date: day ? format(day, 'yyyy-MM-dd') : undefined,
+        locationContext: '',
+        accommodationOptions: [],
+        activities: [],
+        transportationSegments: [],
+      });
+    }
+    if (targetDay) {
+      const existing = targetDay.activities || [];
+      await tripService.updateItineraryDay(targetDay.id, {
+        activities: [...existing, { order: existing.length + 1, type: 'poi' as const, id: activityId }],
+      });
+    }
+    await refreshDays();
+  }, [currentItDay, state.activeTrip, state.itineraryDays, tripDays, refreshDays]);
 
   const toggleAccommodationSelected = useCallback(async (poiId: string, selected: boolean) => {
     if (!currentItDay) return;
     const updated = currentItDay.accommodationOptions.map(o => ({
       ...o,
-      is_selected: o.poi_id === poiId ? selected : false, // only one selected at a time
+      is_selected: o.poi_id === poiId ? selected : false,
     }));
     await tripService.updateItineraryDay(currentItDay.id, { accommodationOptions: updated });
     await refreshDays();
@@ -278,7 +544,7 @@ const Index = () => {
     }
   }, [state.activeTrip, addPOI, addEntityToDay, addMission]);
 
-  const handleCreateNewTransport = useCallback(async (data: Record<string, string>, createBookingMission?: boolean) => {
+  const handleCreateNewTransport = useCallback(async (data: Record<string, string>) => {
     if (!state.activeTrip) return;
     const newT = await addTransportation({
       tripId: state.activeTrip.id,
@@ -298,7 +564,6 @@ const Index = () => {
     });
     if (newT) {
       await addEntityToDay('transport', newT.id);
-      // Auto-create booking mission for transport
       const label = `${data.fromName} → ${data.toName}`;
       await addMission({
         tripId: state.activeTrip.id,
@@ -317,7 +582,6 @@ const Index = () => {
     for (let i = 0; i < totalDays; i++) {
       const dayNum = selectedDayNum + i;
       if (dayNum > tripDays.length) break;
-
       let targetDay = state.itineraryDays.find(d => d.dayNumber === dayNum);
       if (!targetDay && state.activeTrip) {
         const day = tripDays[dayNum - 1];
@@ -339,6 +603,69 @@ const Index = () => {
     setLocationDaysForward(0);
     await refreshDays();
   }, [ensureItDay, currentItDay, locationContext, locationDaysForward, selectedDayNum, tripDays, state.itineraryDays, state.activeTrip, refreshDays]);
+
+  // ── Drag handlers ────────────────────────────────────────────────────────────
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+    setIsOverSchedule(false);
+    setIsOverPotential(false);
+  }, []);
+
+  const handleDragOver = useCallback((event: DragOverEvent) => {
+    const overId = event.over?.id?.toString() ?? '';
+    const activeIsScheduled = event.active.id.toString().startsWith('sched-');
+    setIsOverSchedule(
+      overId === 'schedule-drop-zone' ||
+      overId.startsWith('gap-') ||
+      (!activeIsScheduled && overId.startsWith('sched-'))
+    );
+    setIsOverPotential(overId === 'potential-drop-zone');
+  }, []);
+
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    setIsOverSchedule(false);
+    setIsOverPotential(false);
+    if (!over) return;
+
+    const isScheduled = active.id.toString().startsWith('sched-');
+    const activityId = isScheduled
+      ? active.id.toString().replace('sched-', '')
+      : active.id.toString();
+    const overId = over.id.toString();
+
+    if (overId.startsWith('day-drop-')) {
+      // Move to another day (works for both potential and scheduled)
+      const targetDay = parseInt(overId.replace('day-drop-', ''));
+      if (!isNaN(targetDay)) await moveActivityToDay(activityId, targetDay);
+    } else if (overId === 'potential-drop-zone' && isScheduled) {
+      // Schedule → Potential
+      await toggleActivityScheduleState(activityId, 'potential');
+    } else if (isScheduled && overId.startsWith('sched-')) {
+      // Reorder within schedule
+      const schedIds = dayScheduledActivities.map(a => a.id);
+      const oldIdx = schedIds.indexOf(activityId);
+      const newIdx = schedIds.indexOf(overId.replace('sched-', ''));
+      if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
+        await reorderDayActivities(arrayMove(schedIds, oldIdx, newIdx));
+      }
+    } else if (!isScheduled && (overId === 'schedule-drop-zone' || overId.startsWith('gap-') || overId.startsWith('sched-'))) {
+      // Potential → Schedule (via zone, end-gap, or dropping directly on a scheduled item)
+      await toggleActivityScheduleState(activityId, 'scheduled');
+    } else if (!isScheduled && overId !== active.id.toString()) {
+      // Reorder within potential list
+      const oldIdx = dayPotentialActivities.findIndex(a => a.id === activityId);
+      const newIdx = dayPotentialActivities.findIndex(a => a.id === overId);
+      if (oldIdx !== -1 && newIdx !== -1) {
+        const newOrder = arrayMove(dayPotentialActivities.map(a => a.id), oldIdx, newIdx);
+        await reorderDayActivities(newOrder);
+      }
+    }
+  }, [moveActivityToDay, toggleActivityScheduleState, reorderDayActivities, dayPotentialActivities, dayScheduledActivities]);
+
+  // ── Loading / no-trip states ─────────────────────────────────────────────────
 
   if (state.isLoading) {
     return (
@@ -372,176 +699,145 @@ const Index = () => {
   const availableActivities = state.pois.filter(p => p.category !== 'accommodation' && !p.isCancelled && !dayActivities.some(d => d.id === p.id));
   const availableTransport = state.transportation.filter(t => !t.isCancelled && !dayTransport.some(d => d.transportation_id === t.id));
 
+  const locationDayWidth = typeof window !== 'undefined' ? (window.innerWidth < 640 ? 64 : 80) : 72;
+  const selectedIdx = selectedDayNum - 1;
+  const selectedSpan = locationSpans.find(s => s.startIdx <= selectedIdx && s.endIdx >= selectedIdx);
+
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {/* Trip info */}
-        <div>
-          {trip.description && <p className="text-muted-foreground text-sm">{trip.description}</p>}
-          <div className="flex gap-2 mt-1 flex-wrap">
-            <Badge variant="outline">{trip.status}</Badge>
-            <Badge variant="secondary">
-              {format(parseISO(trip.startDate), 'MMM d')} – {format(parseISO(trip.endDate), 'MMM d, yyyy')}
-            </Badge>
-            {trip.countries.map(c => <Badge key={c} variant="secondary">{c}</Badge>)}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="space-y-6">
+          {/* Trip info */}
+          <div>
+            {trip.description && <p className="text-muted-foreground text-sm">{trip.description}</p>}
+            <div className="flex gap-2 mt-1 flex-wrap">
+              <Badge variant="outline">{trip.status}</Badge>
+              <Badge variant="secondary">
+                {format(parseISO(trip.startDate), 'MMM d')} – {format(parseISO(trip.endDate), 'MMM d, yyyy')}
+              </Badge>
+              {trip.countries.map(c => <Badge key={c} variant="secondary">{c}</Badge>)}
+            </div>
           </div>
-        </div>
 
-        {/* Horizontal Day Selector */}
-        <ScrollArea className="w-full">
-          <div className="flex gap-2 pb-1" id="day-selector-row">
-            {tripDays.map((day, idx) => {
-              const dayNum = idx + 1;
-              const isSelected = dayNum === selectedDayNum;
-              const itDay = state.itineraryDays.find(d => d.dayNumber === dayNum);
-              const hasContent = !!itDay && (
-                (itDay.accommodationOptions?.length || 0) > 0 ||
-                (itDay.activities?.length || 0) > 0 ||
-                (itDay.transportationSegments?.length || 0) > 0
-              );
-
-              return (
-                <button
-                  key={dayNum}
-                  onClick={() => {
-                    setSelectedDayNum(dayNum);
-                    const it = state.itineraryDays.find(d => d.dayNumber === dayNum);
-                    setLocationContext(it?.locationContext || '');
-                    setEditingLocation(false);
-                  }}
-                  className={`flex flex-col items-center min-w-[56px] sm:min-w-[72px] px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border-2 transition-all text-xs sm:text-sm ${
-                    isSelected
-                      ? 'border-primary bg-primary/10 text-primary font-semibold'
-                      : hasContent
-                        ? 'border-primary/30 bg-muted/50 hover:bg-muted'
-                        : 'border-transparent bg-muted/30 hover:bg-muted text-muted-foreground'
-                  }`}
-                >
-                  <span className="text-[10px] sm:text-xs">{format(day, 'EEE')}</span>
-                  <span className="text-base sm:text-lg font-bold">{format(day, 'd')}</span>
-                  <span className="text-[9px] sm:text-[10px]">{format(day, 'MMM')}</span>
-                  {hasContent && <div className="w-1.5 h-1.5 rounded-full bg-primary mt-1" />}
-                </button>
-              );
-            })}
-          </div>
-          {/* Gantt-like location bar */}
-          {locationSpans.length > 0 && (
-            <div className="relative h-6 mt-1 mb-1">
-              {locationSpans.map((span, i) => {
-                const dayWidth = window.innerWidth < 640 ? 64 : 80; // match min-w
-                const left = span.startIdx * dayWidth;
-                const width = (span.endIdx - span.startIdx + 1) * dayWidth - 8;
+          {/* Horizontal Day Selector — pills double as DnD drop targets */}
+          <ScrollArea className="w-full">
+            <div className="flex gap-2 pb-1" id="day-selector-row">
+              {tripDays.map((day, idx) => {
+                const dayNum = idx + 1;
+                const isSelected = dayNum === selectedDayNum;
+                const itDay = state.itineraryDays.find(d => d.dayNumber === dayNum);
+                const hasContent = !!itDay && (
+                  (itDay.accommodationOptions?.length || 0) > 0 ||
+                  (itDay.activities?.length || 0) > 0 ||
+                  (itDay.transportationSegments?.length || 0) > 0
+                );
                 return (
-                  <div
-                    key={i}
-                    className="absolute top-0 h-full bg-primary/15 border border-primary/30 rounded-md flex items-center justify-center px-2 overflow-hidden"
-                    style={{ left: `${left}px`, width: `${width}px` }}
-                  >
-                    <span className="text-[11px] font-medium text-primary truncate">📍 {span.location}</span>
-                  </div>
+                  <DroppableDayPill
+                    key={dayNum}
+                    dayNum={dayNum}
+                    day={day}
+                    isSelected={isSelected}
+                    hasContent={hasContent}
+                    onClick={() => {
+                      setSelectedDayNum(dayNum);
+                      const it = state.itineraryDays.find(d => d.dayNumber === dayNum);
+                      setLocationContext(it?.locationContext || '');
+                      setEditingLocation(false);
+                    }}
+                  />
                 );
               })}
             </div>
-          )}
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
-
-        {/* Selected Day Editor */}
-        {selectedDate && (
-          <div className="space-y-5">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary text-primary-foreground font-bold text-sm sm:text-base">
-                {selectedDayNum}
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="text-base sm:text-lg font-semibold">{format(selectedDate, 'EEEE, MMM d')}</h3>
-              {editingLocation ? (
-                  <div className="mt-1 w-full sm:w-80">
-                    <LocationContextPicker
-                      countries={trip.countries}
-                      value={locationContext}
-                      onChange={setLocationContext}
-                      daysForward={locationDaysForward}
-                      onDaysForwardChange={setLocationDaysForward}
-                      maxDaysForward={tripDays.length - selectedDayNum}
-                      onSave={updateLocationContext}
-                      onCancel={() => { setEditingLocation(false); setLocationDaysForward(0); }}
-                      extraHierarchy={state.tripSitesHierarchy}
-                    />
-                  </div>
-                ) : (
+            {/* Gantt-like location bar */}
+            <div className="relative h-6 mt-1 mb-1">
+              {locationSpans.map((span, i) => {
+                const left = span.startIdx * locationDayWidth;
+                const width = (span.endIdx - span.startIdx + 1) * locationDayWidth - 8;
+                const isSelected = selectedSpan === span;
+                return (
                   <button
-                    onClick={() => { setLocationContext(currentItDay?.locationContext || ''); setEditingLocation(true); }}
-                    className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+                    key={i}
+                    type="button"
+                    onClick={() => { setLocationContext(span.location); setEditingLocation(true); }}
+                    disabled={!isSelected}
+                    className={`absolute top-0 h-full rounded-md flex items-center px-2 overflow-hidden gap-1 transition-colors ${
+                      isSelected
+                        ? 'bg-secondary border border-primary/40 cursor-pointer hover:border-primary'
+                        : 'bg-secondary border border-border cursor-default'
+                    }`}
+                    style={{ left: `${left}px`, width: `${width}px` }}
                   >
-                    📍 {currentItDay?.locationContext || 'הוסף מיקום'}
-                    <Pencil size={12} />
+                    <span className="text-[11px] font-medium text-primary truncate">{span.location}</span>
+                    {isSelected && <Pencil size={9} className="shrink-0 text-primary opacity-70" />}
                   </button>
-                )}
-              </div>
+                );
+              })}
+              {!selectedSpan && (
+                <button
+                  type="button"
+                  onClick={() => { setLocationContext(''); setEditingLocation(true); }}
+                  className="absolute top-0 h-full border border-dashed border-primary/40 rounded-md flex items-center justify-center px-2 text-[11px] text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+                  style={{ left: `${selectedIdx * locationDayWidth}px`, width: `${locationDayWidth - 8}px` }}
+                >
+                  + מיקום
+                </button>
+              )}
             </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
 
-            {/* Accommodation Section */}
-            <DaySection
-              title="לינה"
-              icon={<Building2 size={16} />}
-              entityType="accommodation"
-              items={dayAccommodations.map(d => ({
-                id: d.poi_id,
-                label: d.poi?.name || 'Unknown',
-                sublabel: d.poi?.location.city || '',
-                status: d.poi?.status || 'candidate',
-                isSelected: d.is_selected,
-                subCategory: d.poi?.subCategory || '',
+          {/* Location picker */}
+          {editingLocation && selectedDate && (
+            <div className="w-full sm:w-80">
+              <LocationContextPicker
+                countries={trip.countries}
+                value={locationContext}
+                onChange={setLocationContext}
+                daysForward={locationDaysForward}
+                onDaysForwardChange={setLocationDaysForward}
+                maxDaysForward={tripDays.length - selectedDayNum}
+                onSave={updateLocationContext}
+                onCancel={() => { setEditingLocation(false); setLocationDaysForward(0); }}
+                extraHierarchy={state.tripSitesHierarchy}
+              />
+            </div>
+          )}
+
+          {/* 4-Section Day Content */}
+          {selectedDate && (
+            <ItineraryDayContent
+              selectedDayNum={selectedDayNum}
+              tripDays={tripDays}
+              // Drag state from this DndContext
+              isDragging={isDragging}
+              isOverSchedule={isOverSchedule}
+              isOverPotential={isOverPotential}
+              isScheduledBeingDragged={isScheduledBeingDragged}
+              // Section 1
+              prevDayAccommodations={prevDayAccommodations}
+              // Section 2
+              potentialActivities={dayPotentialActivities}
+              availableActivities={availableActivities.map(p => ({
+                id: p.id,
+                label: p.name,
+                sublabel: `${p.category} • ${p.location.city || ''}`,
+                city: p.location.city || '',
+                status: p.status,
               }))}
-              onRemove={(id) => removeEntityFromDay('accommodation', id)}
-              availableItems={availableAccom.map(p => ({ id: p.id, label: p.name, sublabel: p.location.city || '', city: p.location.city || '', status: p.status }))}
               locationContext={currentItDay?.locationContext || ''}
-              onAdd={async (id, nights, createBookingMission) => {
-                await addEntityToDay('accommodation', id, nights);
-                if (createBookingMission && state.activeTrip) {
-                  const poi = state.pois.find(p => p.id === id);
-                  await addMission({
-                    tripId: state.activeTrip.id,
-                    title: `להזמין: ${poi?.name || 'לינה'}`,
-                    description: 'accommodation',
-                    status: 'pending',
-                    contextLinks: [],
-                    reminders: [],
-                    objectLink: id,
-                  });
-                }
-              }}
-              onCreateNew={(data, bookingMission) => handleCreateNewPOI('accommodation', { ...data, category: 'accommodation' }, bookingMission)}
-              onToggleSelected={toggleAccommodationSelected}
-              addLabel="הוסף לינה"
-              maxNights={tripDays.length - selectedDayNum + 1}
-              showBookingMissionOption
               countries={trip.countries}
-              extraHierarchy={state.tripSitesHierarchy}
-            />
-
-            <Separator />
-
-            {/* Activities Section */}
-            <DaySection
-              title="פעילויות ואטרקציות"
-              icon={<MapPin size={16} />}
-              entityType="activity"
-              items={dayActivities.map(d => ({
-                id: d.id,
-                label: d.poi?.name || 'Unknown',
-                sublabel: d.poi?.subCategory || d.poi?.category || '',
-                status: d.poi?.status || 'candidate',
-                subCategory: d.poi?.subCategory || d.poi?.category || '',
-              }))}
-              onRemove={(id) => removeEntityFromDay('activity', id)}
-              availableItems={availableActivities.map(p => ({ id: p.id, label: p.name, sublabel: `${p.category} • ${p.location.city || ''}`, city: p.location.city || '', status: p.status }))}
-              locationContext={currentItDay?.locationContext || ''}
-              onAdd={async (id, _nights, createBookingMission) => {
+              tripSitesHierarchy={state.tripSitesHierarchy}
+              onMoveActivityToDay={moveActivityToDay}
+              onRemoveActivity={(id) => removeEntityFromDay('activity', id)}
+              onAddActivity={async (id, _nights, createBooking) => {
                 await addEntityToDay('activity', id);
-                if (createBookingMission && state.activeTrip) {
+                if (createBooking && state.activeTrip) {
                   const poi = state.pois.find(p => p.id === id);
                   await addMission({
                     tripId: state.activeTrip.id,
@@ -554,60 +850,20 @@ const Index = () => {
                   });
                 }
               }}
-              onCreateNew={(data, bookingMission) => handleCreateNewPOI('activity', data, bookingMission)}
-              addLabel="הוסף פעילות"
-              showBookingMissionOption
-              countries={trip.countries}
-              extraHierarchy={state.tripSitesHierarchy}
-            />
-
-            <Separator />
-
-            {/* Transport Section */}
-            <DaySection
-              title="תחבורה"
-              icon={<Plane size={16} />}
-              entityType="transport"
-              items={dayTransport.map(d => {
-                const seg = d.segment_id && d.transport
-                  ? d.transport.segments.find(s => s.segment_id === d.segment_id)
-                  : null;
-                const label = seg
-                  ? `${seg.from.name} → ${seg.to.name}`
-                  : d.transport
-                    ? d.transport.segments.length > 0
-                      ? `${d.transport.segments[0].from.name} → ${d.transport.segments[d.transport.segments.length - 1].to.name}`
-                      : d.transport.category
-                    : 'Unknown';
-                const formatTime = (iso: string) => {
-                  try { return format(parseISO(iso), 'HH:mm'); } catch { return ''; }
-                };
-                let sublabel = d.transport?.category || '';
-                if (seg?.departure_time || seg?.arrival_time) {
-                  const dep = seg.departure_time ? formatTime(seg.departure_time) : '';
-                  const arr = seg.arrival_time ? formatTime(seg.arrival_time) : '';
-                  sublabel = dep && arr ? `${dep} – ${arr}` : dep || arr;
-                  if (d.transport?.category) sublabel = `${d.transport.category} • ${sublabel}`;
-                }
-                return {
-                  id: d.transportation_id,
-                  label,
-                  sublabel,
-                  status: d.transport?.status || 'candidate',
-                  subCategory: d.transport?.category || '',
-                };
-              })}
-              onRemove={(id) => removeEntityFromDay('transport', id)}
-              availableItems={availableTransport.map(t => ({
+              onCreateNewActivity={(data, bookingMission) => handleCreateNewPOI('activity', data, bookingMission)}
+              // Section 3
+              scheduleCells={scheduleCells}
+              availableTransport={availableTransport.map(t => ({
                 id: t.id,
                 label: t.segments.length > 0
                   ? `${t.segments[0].from.name} → ${t.segments[t.segments.length - 1].to.name}`
                   : t.category,
                 sublabel: t.category,
               }))}
-              onAdd={async (id) => {
+              locationSuggestions={transportLocationSuggestions}
+              onRemoveTransport={(id) => removeEntityFromDay('transport', id)}
+              onAddTransport={async (id) => {
                 await addEntityToDay('transport', id);
-                // Auto-create booking mission for transport
                 if (state.activeTrip) {
                   const t = state.transportation.find(tr => tr.id === id);
                   const label = t && t.segments.length > 0
@@ -624,13 +880,46 @@ const Index = () => {
                   });
                 }
               }}
-              onCreateNew={handleCreateNewTransport}
-              addLabel="הוסף תחבורה"
-              locationSuggestions={transportLocationSuggestions}
+              onCreateNewTransport={handleCreateNewTransport}
+              // Section 4
+              dayAccommodations={dayAccommodations}
+              availableAccom={availableAccom.map(p => ({
+                id: p.id,
+                label: p.name,
+                sublabel: p.location.city || '',
+                city: p.location.city || '',
+                status: p.status,
+              }))}
+              onToggleAccommodationSelected={toggleAccommodationSelected}
+              onRemoveAccommodation={(id) => removeEntityFromDay('accommodation', id)}
+              onAddAccommodation={async (id, nights, createBooking) => {
+                await addEntityToDay('accommodation', id, nights);
+                if (createBooking && state.activeTrip) {
+                  const poi = state.pois.find(p => p.id === id);
+                  await addMission({
+                    tripId: state.activeTrip.id,
+                    title: `להזמין: ${poi?.name || 'לינה'}`,
+                    description: 'accommodation',
+                    status: 'pending',
+                    contextLinks: [],
+                    reminders: [],
+                    objectLink: id,
+                  });
+                }
+              }}
+              onCreateNewAccommodation={(data, bookingMission) => handleCreateNewPOI('accommodation', { ...data, category: 'accommodation' }, bookingMission)}
+              maxNights={tripDays.length - selectedDayNum + 1}
             />
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+
+        {/* Drag overlay — follows cursor/finger */}
+        <DragOverlay dropAnimation={null}>
+          {dragPreviewData && (
+            <DragPreview label={dragPreviewData.label} category={dragPreviewData.category} />
+          )}
+        </DragOverlay>
+      </DndContext>
     </AppLayout>
   );
 };

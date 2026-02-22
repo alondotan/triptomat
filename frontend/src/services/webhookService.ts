@@ -114,6 +114,8 @@ async function linkTransportSegmentsToDays(
       if (!segs.some((s: any) => s.transportation_id === transportId && s.segment_id === seg.segment_id)) {
         segs.push({ is_selected: true, transportation_id: transportId, segment_id: seg.segment_id });
         await supabase.from('itinerary_days').update({ transportation_segments: segs }).eq('id', matchingDay.id);
+        // Keep in-memory object current so same-day segments don't overwrite each other
+        (matchingDay as any).transportation_segments = segs;
       }
     }
   }
