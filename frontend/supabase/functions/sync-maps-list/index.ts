@@ -186,6 +186,9 @@ serve(async (req) => {
     // ── Step 1: fetch raw places from Google Maps entitylist API ──
     const { places: rawPlaces, listName } = await fetchRawPlacesFromGoogleMaps(list.url);
     if (rawPlaces.length === 0) {
+      if (listName) {
+        await supabase.from("map_lists").update({ name: listName }).eq("id", list_id);
+      }
       return json({ success: true, new_places: 0, total_places: 0, message: "No places found" });
     }
 
@@ -199,6 +202,10 @@ serve(async (req) => {
     const newRaw = rawPlaces.filter((p) => !existingKeys.has(toKey(p.name)));
 
     if (newRaw.length === 0) {
+      // Still update list name if we got it
+      if (listName) {
+        await supabase.from("map_lists").update({ name: listName, last_synced_at: new Date().toISOString() }).eq("id", list_id);
+      }
       return json({ success: true, new_places: 0, total_places: rawPlaces.length, message: "All up to date" });
     }
 
@@ -369,13 +376,38 @@ async function fetchRawPlacesFromGoogleMaps(url: string): Promise<FetchResult> {
     return { places: [], listName: null };
   }
 
-  // Extract list name — try common positions in the Google Maps entitylist response
-  let listName: string | null = null;
-  if (typeof data?.[0]?.[1] === "string" && data[0][1].length > 0) {
-    listName = data[0][1];
-  } else if (Array.isArray(data?.[0]?.[0]) && typeof data[0][0][1] === "string" && data[0][0][1].length > 0) {
-    listName = data[0][0][1];
+  // Log structure of data[0] (up to index 7, before the places array at [8]) for debugging
+  if (Array.isArray(data?.[0])) {
+    for (let i = 0; i < Math.min(9, data[0].length); i++) {
+      const v = data[0][i];
+      console.log(`[sync] data[0][${i}] = ${JSON.stringify(v)?.substring(0, 200)}`);
+    }
   }
+
+  // Extract list name from Google Maps entitylist response.
+  // Structure: data[0][1] is typically the list title string.
+  // Fallback: scan data[0][0..6] for short human-readable strings (not opaque IDs).
+  let listName: string | null = null;
+
+  const idPattern = /^[A-Za-z0-9_-]{20,}$/; // long opaque IDs with no spaces/punctuation
+
+  const isGoodTitle = (v: unknown): v is string =>
+    typeof v === "string" && v.length >= 2 && v.length <= 150 && !idPattern.test(v);
+
+  // Priority 1: data[0][1] — the canonical list title slot
+  if (isGoodTitle(data?.[0]?.[1])) {
+    listName = data[0][1];
+  }
+
+  // Priority 2: scan other slots (skip [8] which is the places array)
+  if (!listName && Array.isArray(data?.[0])) {
+    for (let i = 0; i < Math.min(7, data[0].length); i++) {
+      if (i === 1) continue; // already checked
+      const v = data[0][i];
+      if (isGoodTitle(v)) { listName = v; break; }
+    }
+  }
+
   console.log(`[sync] Extracted list name: ${listName}`);
 
   // Parse places from data[0][8]

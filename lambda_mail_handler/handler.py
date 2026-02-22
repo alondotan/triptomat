@@ -53,11 +53,10 @@ def lambda_handler(event, context):
         travel_data = call_openai(clean_html, ALLOWED_TYPES, GEO_ONLY_TYPES)
 
         if travel_data:
-            travel_data["source_info"] = {
+            travel_data["source_email_info"] = {
                 "subject": fwd_headers.get("subject", msg['subject']),
                 "sender": fwd_headers.get("from", msg['from']),
-                "received_at": fwd_headers.get("date", msg['date']),
-                "recipient": fwd_headers.get("to", msg['to']),
+                "date_sent": fwd_headers.get("date", msg['date']),
             }
             travel_data["user_email"] = user_email
 

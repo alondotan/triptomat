@@ -1,14 +1,45 @@
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ExternalLink, Mail, Plane, Hotel, MapPin, Trash2, ChevronDown, ChevronRight, Calendar, DollarSign, MapPinned, User } from 'lucide-react';
+import { ExternalLink, Mail, Plane, Hotel, MapPin, Trash2, ChevronDown, ChevronRight, Calendar, DollarSign, MapPinned, User, Hash } from 'lucide-react';
 import { SourceEmail } from '@/types/webhook';
 import { fetchSourceEmails, deleteSourceEmail } from '@/services/webhookService';
 import { useToast } from '@/hooks/use-toast';
 import { useTrip } from '@/context/TripContext';
 import { format } from 'date-fns';
+
+// ── Unread tracking ───────────────────────────────────────────────────────────
+
+const READ_IDS_KEY = 'inbox_read_ids';
+
+function getStoredReadIds(): Set<string> {
+  try {
+    return new Set<string>(JSON.parse(localStorage.getItem(READ_IDS_KEY) || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+
+export function broadcastInboxUnread(count: number) {
+  localStorage.setItem('inbox_unread_count', String(count));
+  window.dispatchEvent(new CustomEvent('inboxUnreadChanged', { detail: { count } }));
+}
+
+// ── Subject helper ────────────────────────────────────────────────────────────
+
+function cleanSubject(subject: string): string {
+  let s = subject.trim();
+  let prev: string;
+  do {
+    prev = s;
+    s = s.replace(/^(fw|fwd|re)\s*:\s*/i, '').trim();
+  } while (s !== prev);
+  return s || subject;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export function SourceEmailsDashboard() {
   const { state } = useTrip();
@@ -16,6 +47,7 @@ export function SourceEmailsDashboard() {
   const [items, setItems] = useState<SourceEmail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [readIds, setReadIds] = useState<Set<string>>(getStoredReadIds);
 
   useEffect(() => {
     const loadItems = async () => {
@@ -31,11 +63,42 @@ export function SourceEmailsDashboard() {
     loadItems();
   }, []);
 
+  // On first use: mark all existing emails as already-read so they don't all show as new
+  useEffect(() => {
+    if (isLoading || items.length === 0) return;
+    if (localStorage.getItem(READ_IDS_KEY) === null) {
+      const allIds = items.map(i => i.id);
+      localStorage.setItem(READ_IDS_KEY, JSON.stringify(allIds));
+      setReadIds(new Set(allIds));
+    }
+  }, [items, isLoading]);
+
+  // Broadcast unread count whenever readIds or items change
+  useEffect(() => {
+    if (isLoading) return;
+    const count = items.filter(i => !readIds.has(i.id)).length;
+    broadcastInboxUnread(count);
+  }, [readIds, items, isLoading]);
+
+  const markAsRead = useCallback((id: string) => {
+    setReadIds(prev => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      localStorage.setItem(READ_IDS_KEY, JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
+
   const toggleExpanded = (id: string) => {
     setExpandedIds(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+        markAsRead(id);
+      }
       return next;
     });
   };
@@ -54,6 +117,8 @@ export function SourceEmailsDashboard() {
     return trip?.name;
   };
 
+  const unreadCount = items.filter(i => !readIds.has(i.id)).length;
+
   if (isLoading) return <Card><CardContent className="p-6 text-center">Loading...</CardContent></Card>;
 
   if (items.length === 0) {
@@ -61,7 +126,6 @@ export function SourceEmailsDashboard() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2"><Mail className="h-5 w-5" /> Source Emails</CardTitle>
-          <CardDescription>All linked emails across trips</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center py-8 text-muted-foreground">
@@ -77,30 +141,55 @@ export function SourceEmailsDashboard() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Mail className="h-5 w-5" /> Source Emails <Badge variant="secondary">{items.length}</Badge>
+          <Mail className="h-5 w-5" /> Source Emails
+          <Badge variant="secondary">{items.length}</Badge>
+          {unreadCount > 0 && (
+            <Badge className="bg-blue-500 text-white hover:bg-blue-500">{unreadCount} new</Badge>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {items.map(item => {
           const tripName = getTripName(item.tripId);
           const isExpanded = expandedIds.has(item.id);
+          const isUnread = !readIds.has(item.id);
+
+          const rawSubject = item.sourceEmailInfo.subject;
+          const title = rawSubject ? cleanSubject(rawSubject) : 'Email';
+          const orderNumber = item.parsedData?.metadata?.order_number;
+
           return (
             <Collapsible key={item.id} open={isExpanded} onOpenChange={() => toggleExpanded(item.id)}>
-              <div className="rounded-lg border bg-card">
+              <div className={`rounded-lg border bg-card transition-colors ${isUnread ? 'border-blue-500/40 bg-blue-500/5' : ''}`}>
                 <div className="flex items-center justify-between p-3 hover:bg-accent/50 transition-colors">
                   <CollapsibleTrigger className="flex items-center gap-3 flex-1 text-left cursor-pointer">
                     {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
-                    <div className="p-2 rounded-full bg-muted">{getCategoryIcon(item.parsedData?.metadata?.category)}</div>
-                    <div>
-                      <span className="font-medium">{item.sourceEmailInfo.subject || item.parsedData?.metadata?.order_number || 'Email'}</span>
+                    <div className="relative shrink-0">
+                      <div className="p-2 rounded-full bg-muted">{getCategoryIcon(item.parsedData?.metadata?.category)}</div>
+                      {isUnread && (
+                        <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-blue-500 border-2 border-background" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium truncate">{title}</span>
+                        {isUnread && (
+                          <span className="shrink-0 inline-flex items-center rounded-full bg-blue-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">NEW</span>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">
                         {tripName && <Badge variant="outline" className="text-xs mr-2">{tripName}</Badge>}
-                        {item.parsedData?.metadata?.order_number && `Order: ${item.parsedData.metadata.order_number}`}
-                        {' • '}{format(new Date(item.createdAt), 'MMM d, yyyy')}
+                        {orderNumber && (
+                          <span className="inline-flex items-center gap-0.5 mr-1">
+                            <Hash className="h-3 w-3" />{orderNumber}
+                          </span>
+                        )}
+                        {orderNumber && ' • '}
+                        {format(new Date(item.createdAt), 'MMM d, yyyy')}
                       </p>
                     </div>
                   </CollapsibleTrigger>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Badge className={item.status === 'linked' ? 'bg-primary text-primary-foreground' : ''}>
                       {item.status}
                     </Badge>
@@ -123,7 +212,7 @@ export function SourceEmailsDashboard() {
                   </div>
                 </div>
                 <CollapsibleContent>
-                  <EmailDetails parsedData={item.parsedData} />
+                  <EmailDetails parsedData={item.parsedData} orderNumber={orderNumber} sender={item.sourceEmailInfo.sender} dateSent={item.sourceEmailInfo.date_sent} />
                 </CollapsibleContent>
               </div>
             </Collapsible>
@@ -134,7 +223,14 @@ export function SourceEmailsDashboard() {
   );
 }
 
-function EmailDetails({ parsedData }: { parsedData: SourceEmail['parsedData'] }) {
+interface EmailDetailsProps {
+  parsedData: SourceEmail['parsedData'];
+  orderNumber?: string;
+  sender?: string;
+  dateSent?: string;
+}
+
+function EmailDetails({ parsedData, orderNumber, sender, dateSent }: EmailDetailsProps) {
   if (!parsedData) return null;
   const { metadata, sites_hierarchy, accommodation_details, transportation_details, attraction_details, eatery_details, additional_info } = parsedData;
   const accom = accommodation_details as Record<string, any> | undefined;
@@ -144,16 +240,28 @@ function EmailDetails({ parsedData }: { parsedData: SourceEmail['parsedData'] })
 
   return (
     <div className="px-4 pb-4 pt-1 space-y-3 border-t">
-      {/* Metadata */}
-      {metadata && (
-        <div className="flex flex-wrap gap-2 text-xs">
-          {metadata.category && <Badge variant="outline">{metadata.category}</Badge>}
-          {metadata.sub_category && <Badge variant="outline">{metadata.sub_category}</Badge>}
-          {metadata.date && <Badge variant="outline">{metadata.date}</Badge>}
-          {metadata.action && <Badge variant="outline">{metadata.action}</Badge>}
-          {sites_hierarchy?.map((node, i) => (
-            <Badge key={i} variant="outline">🌍 {node.site}</Badge>
-          ))}
+      {/* Key metadata row */}
+      <div className="flex flex-wrap gap-2 text-xs pt-1">
+        {metadata?.category && <Badge variant="outline">{metadata.category}</Badge>}
+        {metadata?.sub_category && <Badge variant="outline">{metadata.sub_category}</Badge>}
+        {metadata?.date && <Badge variant="outline">{metadata.date}</Badge>}
+        {metadata?.action && <Badge variant="outline">{metadata.action}</Badge>}
+        {sites_hierarchy?.map((node, i) => (
+          <Badge key={i} variant="outline">🌍 {node.site}</Badge>
+        ))}
+      </div>
+
+      {/* Order number + sender row */}
+      {(orderNumber || sender || dateSent) && (
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+          {orderNumber && (
+            <div className="flex items-center gap-1">
+              <Hash className="h-3.5 w-3.5" />
+              <span className="font-medium text-foreground">{orderNumber}</span>
+            </div>
+          )}
+          {sender && <div className="truncate max-w-[220px]">{sender}</div>}
+          {dateSent && <div>{dateSent}</div>}
         </div>
       )}
 

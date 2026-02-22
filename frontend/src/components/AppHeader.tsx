@@ -1,16 +1,15 @@
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { 
-  CalendarDays, 
-  Map, 
+import {
+  CalendarDays,
+  Map,
   MapPin,
   Plane,
   Star,
-  Table2, 
-  DollarSign, 
+  Table2,
+  DollarSign,
   CheckSquare,
   Compass,
-  Menu,
   Inbox,
   ChevronDown,
   Plus,
@@ -21,8 +20,8 @@ import {
   Pencil,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MobileBottomNav } from './MobileBottomNav';
 import { useState, useEffect } from 'react';
 import { useTrip } from '@/context/TripContext';
 import { CreateTripForm } from './forms/CreateTripForm';
@@ -60,7 +59,6 @@ const navItems = [
 
 export function AppHeader() {
   const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [webhookDialogOpen, setWebhookDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -69,6 +67,9 @@ export function AppHeader() {
   const [editStartDate, setEditStartDate] = useState('');
   const [editEndDate, setEditEndDate] = useState('');
   const [webhookToken, setWebhookToken] = useState<string | null>(null);
+  const [inboxUnread, setInboxUnread] = useState<number>(() => {
+    try { return parseInt(localStorage.getItem('inbox_unread_count') || '0', 10); } catch { return 0; }
+  });
   const { state, dispatch, deleteCurrentTrip, updateCurrentTrip } = useTrip();
   const { toast } = useToast();
 
@@ -76,6 +77,12 @@ export function AppHeader() {
     supabase.from('webhook_tokens').select('token').maybeSingle().then(({ data }) => {
       if (data) setWebhookToken(data.token);
     });
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: Event) => setInboxUnread((e as CustomEvent).detail.count);
+    window.addEventListener('inboxUnreadChanged', handler);
+    return () => window.removeEventListener('inboxUnreadChanged', handler);
   }, []);
 
   const handleSignOut = async () => {
@@ -103,6 +110,7 @@ export function AppHeader() {
   };
 
   return (
+    <>
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container px-3 sm:px-6 flex h-14 sm:h-16 items-center justify-between">
         {/* Logo + Trip Selector */}
@@ -159,19 +167,27 @@ export function AppHeader() {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
-            
+            const showUnread = item.path === '/inbox' && inboxUnread > 0;
+
             return (
               <RouterNavLink
                 key={item.path}
                 to={item.path}
                 className={cn(
                   'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
-                  isActive 
-                    ? 'bg-primary text-primary-foreground' 
+                  isActive
+                    ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                 )}
               >
-                <Icon size={18} />
+                <div className="relative">
+                  <Icon size={18} />
+                  {showUnread && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[9px] font-bold text-white">
+                      {inboxUnread > 9 ? '9+' : inboxUnread}
+                    </span>
+                  )}
+                </div>
                 {item.label}
               </RouterNavLink>
             );
@@ -188,51 +204,6 @@ export function AppHeader() {
           </Button>
         </div>
 
-        {/* Mobile Navigation */}
-        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon">
-              <Menu size={24} />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-72">
-            <nav className="flex flex-col gap-2 mt-8">
-              {navItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path;
-                
-                return (
-                  <RouterNavLink
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      'flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors',
-                      isActive 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                    )}
-                  >
-                    <Icon size={20} />
-                    {item.label}
-                  </RouterNavLink>
-                );
-              })}
-              <button
-                onClick={() => { setWebhookDialogOpen(true); setMobileMenuOpen(false); }}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted"
-              >
-                <Key size={20} /> Webhook URLs
-              </button>
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted"
-              >
-                <LogOut size={20} /> Sign Out
-              </button>
-            </nav>
-          </SheetContent>
-        </Sheet>
       </div>
 
       {/* New Trip Form (rendered outside DropdownMenu to prevent focus conflicts) */}
@@ -345,5 +316,7 @@ export function AppHeader() {
         </DialogContent>
       </Dialog>
     </header>
+    <MobileBottomNav onWebhookOpen={() => setWebhookDialogOpen(true)} />
+    </>
   );
 }
