@@ -36,7 +36,6 @@ export function MapListManager() {
 
   const [showAdd, setShowAdd] = useState(false);
   const [newUrl, setNewUrl] = useState('');
-  const [newName, setNewName] = useState('');
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
@@ -72,23 +71,29 @@ export function MapListManager() {
   };
 
   const handleAdd = async () => {
-    if (!tripId || !newUrl.trim() || !newName.trim()) return;
+    if (!tripId || !newUrl.trim()) return;
     setAdding(true);
     const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from('map_lists').insert({
-      trip_id: tripId,
-      user_id: user!.id,
-      url: newUrl.trim(),
-      name: newName.trim(),
-    });
+    const { data: newList, error } = await supabase
+      .from('map_lists')
+      .insert({
+        trip_id: tripId,
+        user_id: user!.id,
+        url: newUrl.trim(),
+        name: 'Google Maps List',
+      })
+      .select()
+      .single();
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
-      setNewUrl(''); setNewName(''); setShowAdd(false);
-      await fetchLists();
-      toast({ title: 'List added', description: 'Click Sync to import places.' });
+      setAdding(false);
+      return;
     }
+    setNewUrl(''); setShowAdd(false);
+    await fetchLists();
     setAdding(false);
+    // Auto-sync immediately to fetch places and resolve the list name
+    await handleSync(newList as MapList);
   };
 
   const handleSync = async (list: MapList) => {
@@ -141,11 +146,10 @@ export function MapListManager() {
 
       {showAdd && (
         <div className="space-y-2 border rounded-md p-3 bg-muted/30">
-          <Input placeholder="List name (e.g. Tokyo Restaurants)" value={newName} onChange={e => setNewName(e.target.value)} className="text-sm h-8" />
           <Input placeholder="Google Maps list URL" value={newUrl} onChange={e => setNewUrl(e.target.value)} className="text-sm h-8" />
           <div className="flex gap-2 justify-end">
             <Button variant="outline" size="sm" onClick={() => setShowAdd(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleAdd} disabled={adding || !newUrl.trim() || !newName.trim()}>
+            <Button size="sm" onClick={handleAdd} disabled={adding || !newUrl.trim()}>
               {adding ? 'Adding…' : 'Add'}
             </Button>
           </div>
@@ -172,9 +176,9 @@ export function MapListManager() {
                 className="h-6 w-6 shrink-0"
                 onClick={() => handleSync(list)}
                 disabled={syncing[list.id] || !webhookToken}
-                title="Sync list"
+                title={list.last_synced_at ? 'Sync again' : 'Syncing...'}
               >
-                <RefreshCw size={13} className={syncing[list.id] ? 'animate-spin' : ''} />
+                <RefreshCw size={13} className={syncing[list.id] || !list.last_synced_at ? 'animate-spin' : ''} />
               </Button>
               <Button
                 variant="ghost" size="icon"

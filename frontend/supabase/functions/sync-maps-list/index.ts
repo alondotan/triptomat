@@ -111,6 +111,11 @@ interface RawPlace {
   lng?: number;
 }
 
+interface FetchResult {
+  places: RawPlace[];
+  listName: string | null;
+}
+
 interface EnrichedPlace {
   name: string;
   address: string;
@@ -179,7 +184,7 @@ serve(async (req) => {
     if (!list) return json({ error: "List not found" }, 404);
 
     // ── Step 1: fetch raw places from Google Maps entitylist API ──
-    const rawPlaces = await fetchRawPlacesFromGoogleMaps(list.url);
+    const { places: rawPlaces, listName } = await fetchRawPlacesFromGoogleMaps(list.url);
     if (rawPlaces.length === 0) {
       return json({ success: true, new_places: 0, total_places: 0, message: "No places found" });
     }
@@ -216,9 +221,9 @@ serve(async (req) => {
         newRaw.map((p) => ({ list_id, place_key: toKey(p.name), place_name: p.name }))
       );
       const totalCount = existingKeys.size + newRaw.length;
-      await supabase.from("map_lists")
-        .update({ last_synced_at: new Date().toISOString(), item_count: totalCount })
-        .eq("id", list_id);
+      const metaUpdate: Record<string, unknown> = { last_synced_at: new Date().toISOString(), item_count: totalCount };
+      if (listName) metaUpdate.name = listName;
+      await supabase.from("map_lists").update(metaUpdate).eq("id", list_id);
       return json({ success: true, new_places: 0, total_places: totalCount, message: "All POIs already exist" });
     }
 
@@ -268,9 +273,9 @@ serve(async (req) => {
     );
 
     const totalCount = existingKeys.size + newRaw.length;
-    await supabase.from("map_lists")
-      .update({ last_synced_at: new Date().toISOString(), item_count: totalCount })
-      .eq("id", list_id);
+    const metaUpdate: Record<string, unknown> = { last_synced_at: new Date().toISOString(), item_count: totalCount };
+    if (listName) metaUpdate.name = listName;
+    await supabase.from("map_lists").update(metaUpdate).eq("id", list_id);
 
     // ── Step 8: update trip hierarchy + countries (same as recommendation-webhook) ──
     // Insert a source_recommendations record so TripContext picks up the sites_hierarchy
@@ -310,7 +315,7 @@ serve(async (req) => {
 
 // ─── Step 1: Google Maps entitylist API ──────────────────────────────────────
 
-async function fetchRawPlacesFromGoogleMaps(url: string): Promise<RawPlace[]> {
+async function fetchRawPlacesFromGoogleMaps(url: string): Promise<FetchResult> {
   // Follow redirect (maps.app.goo.gl → google.com/maps/...)
   const res = await fetch(url, { headers: BROWSER_HEADERS, redirect: "follow" });
   const finalUrl = res.url;
@@ -329,7 +334,7 @@ async function fetchRawPlacesFromGoogleMaps(url: string): Promise<RawPlace[]> {
 
   if (!googleListId) {
     console.error("[sync] Could not extract list ID from:", finalUrl);
-    return [];
+    return { places: [], listName: null };
   }
   console.log(`[sync] Google list ID: ${googleListId}`);
 
@@ -353,7 +358,7 @@ async function fetchRawPlacesFromGoogleMaps(url: string): Promise<RawPlace[]> {
   const jsonStr = rawBody.replace(/^\s*\)\]\}'\s*/, "").trim();
   if (!jsonStr.startsWith("[")) {
     console.error("[sync] Unexpected entitylist response:", rawBody.substring(0, 300));
-    return [];
+    return { places: [], listName: null };
   }
 
   let data: any;
@@ -361,15 +366,24 @@ async function fetchRawPlacesFromGoogleMaps(url: string): Promise<RawPlace[]> {
     data = JSON.parse(jsonStr);
   } catch (e) {
     console.error("[sync] JSON parse failed:", e);
-    return [];
+    return { places: [], listName: null };
   }
+
+  // Extract list name — try common positions in the Google Maps entitylist response
+  let listName: string | null = null;
+  if (typeof data?.[0]?.[1] === "string" && data[0][1].length > 0) {
+    listName = data[0][1];
+  } else if (Array.isArray(data?.[0]?.[0]) && typeof data[0][0][1] === "string" && data[0][0][1].length > 0) {
+    listName = data[0][0][1];
+  }
+  console.log(`[sync] Extracted list name: ${listName}`);
 
   // Parse places from data[0][8]
   // Each entry: [null, [null, null, subtitle, null, address, [null,null,lat,lng], ...], "Place Name", ...]
   const placesArray = data?.[0]?.[8];
   if (!Array.isArray(placesArray)) {
     console.warn("[sync] No places array at data[0][8]");
-    return [];
+    return { places: [], listName };
   }
 
   const result: RawPlace[] = [];
@@ -389,7 +403,7 @@ async function fetchRawPlacesFromGoogleMaps(url: string): Promise<RawPlace[]> {
   }
 
   console.log(`[sync] Raw places: ${result.length}`);
-  return result;
+  return { places: result, listName };
 }
 
 // ─── Step 2: Google Places API enrichment ────────────────────────────────────
