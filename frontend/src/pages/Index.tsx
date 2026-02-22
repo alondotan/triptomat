@@ -188,18 +188,15 @@ const Index = () => {
       try { return format(parseISO(iso), 'HH:mm'); } catch { return undefined; }
     };
 
-    const rawCells: RawCell[] = [];
-
+    // Transport cells — sorted by departure time
+    const transportCells: RawCell[] = [];
     dayTransport.forEach(dt => {
       if (!dt.transport) return;
-      // Only show the specific segment(s) that belong to this day.
-      // dt.segment_id is set by linkTransportSegmentsToDays; if absent (legacy
-      // entries added manually without a segment_id) fall back to all segments.
       const segsToShow = dt.segment_id
         ? dt.transport.segments.filter(s => s.segment_id === dt.segment_id)
         : dt.transport.segments;
       segsToShow.forEach((seg, segIdx) => {
-        rawCells.push({
+        transportCells.push({
           id: `transport-${dt.transportation_id}-${seg.segment_id || segIdx}`,
           type: 'transport',
           time: seg.departure_time ? fmtTime(seg.departure_time) : undefined,
@@ -211,21 +208,36 @@ const Index = () => {
         });
       });
     });
+    transportCells.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
 
-    dayScheduledActivities.forEach(a => {
-      rawCells.push({
-        id: `activity-${a.id}`,
-        type: 'activity',
-        time: a.time_window?.start,
-        endTime: a.time_window?.end,
-        label: a.poi.name,
-        sublabel: [a.poi.subCategory, a.poi.location?.city].filter(Boolean).join(' · '),
-        category: a.poi.subCategory || a.poi.category,
-        activityId: a.id,
-      });
-    });
+    // Activity cells — kept in dayScheduledActivities ORDER (order field, not time)
+    // This lets users control position freely; time is shown but doesn't dictate ordering.
+    const activityCells: RawCell[] = dayScheduledActivities.map(a => ({
+      id: `activity-${a.id}`,
+      type: 'activity',
+      time: a.time_window?.start,
+      endTime: a.time_window?.end,
+      label: a.poi.name,
+      sublabel: [a.poi.subCategory, a.poi.location?.city].filter(Boolean).join(' · '),
+      category: a.poi.subCategory || a.poi.category,
+      activityId: a.id,
+    }));
 
-    rawCells.sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+    // Merge: insert each transport cell before the first timed activity whose time
+    // is >= the transport's departure time. Untimed activities stay in order position.
+    const merged: RawCell[] = [];
+    let tIdx = 0;
+    for (const act of activityCells) {
+      if (act.time) {
+        // Flush any transport that departs before this activity's start time
+        while (tIdx < transportCells.length && transportCells[tIdx].time && transportCells[tIdx].time! <= act.time!) {
+          merged.push(transportCells[tIdx++]);
+        }
+      }
+      merged.push(act);
+    }
+    // Remaining transport at the end
+    while (tIdx < transportCells.length) merged.push(transportCells[tIdx++]);
 
     // Group consecutive untimed activity cells
     const result: ResultCell[] = [];
@@ -248,7 +260,7 @@ const Index = () => {
       groupBuffer = [];
     };
 
-    for (const cell of rawCells) {
+    for (const cell of merged) {
       if (cell.time) {
         flushGroup(cell.time);
         result.push(cell);
@@ -256,7 +268,7 @@ const Index = () => {
       } else if (cell.type === 'activity') {
         groupBuffer.push(cell);
       } else {
-        // Untimed transport — flush any buffer then push as-is
+        // Untimed transport — flush buffer then push
         flushGroup(undefined);
         result.push(cell);
       }
@@ -471,6 +483,44 @@ const Index = () => {
     await refreshDays();
   }, [currentItDay, refreshDays]);
 
+  // Move a potential activity into the schedule at a specific visual gap position.
+  // gapIndex corresponds to gap-N droppable IDs rendered between scheduleCells.
+  const moveToScheduleAtPosition = useCallback(async (
+    activityId: string,
+    gapIndex: number,
+  ) => {
+    if (!currentItDay) return;
+
+    // Collect scheduled activity IDs before and after the gap in current visual order
+    const activitiesBefore: string[] = [];
+    const activitiesAfter: string[] = [];
+    scheduleCells.forEach((cell, cellIdx) => {
+      const isBefore = cellIdx < gapIndex;
+      if (cell.type === 'activity' && cell.activityId) {
+        (isBefore ? activitiesBefore : activitiesAfter).push(cell.activityId);
+      } else if (cell.type === 'group' && cell.groupItems) {
+        cell.groupItems.forEach(gi => {
+          (isBefore ? activitiesBefore : activitiesAfter).push(gi.activityId);
+        });
+      }
+    });
+
+    const orderedIds = [...activitiesBefore, activityId, ...activitiesAfter];
+
+    // Toggle schedule_state and assign contiguous order values
+    const withToggled = currentItDay.activities.map(a =>
+      a.id === activityId ? { ...a, schedule_state: 'scheduled' as const } : a
+    );
+    const reordered = orderedIds.map((id, idx) => {
+      const existing = withToggled.find(a => a.id === id);
+      return existing ? { ...existing, order: idx + 1 } : null;
+    }).filter((a): a is NonNullable<typeof a> => a !== null);
+    const others = withToggled.filter(a => !orderedIds.includes(a.id));
+
+    await tripService.updateItineraryDay(currentItDay.id, { activities: [...reordered, ...others] });
+    await refreshDays();
+  }, [currentItDay, scheduleCells, refreshDays]);
+
   const moveActivityToDay = useCallback(async (
     activityId: string,
     targetDayNum: number,
@@ -651,8 +701,12 @@ const Index = () => {
       if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
         await reorderDayActivities(arrayMove(schedIds, oldIdx, newIdx));
       }
-    } else if (!isScheduled && (overId === 'schedule-drop-zone' || overId.startsWith('gap-') || overId.startsWith('sched-'))) {
-      // Potential → Schedule (via zone, end-gap, or dropping directly on a scheduled item)
+    } else if (!isScheduled && overId.startsWith('gap-')) {
+      // Potential → Schedule at a specific visual position (gap between cells)
+      const gapIndex = parseInt(overId.replace('gap-', ''));
+      if (!isNaN(gapIndex)) await moveToScheduleAtPosition(activityId, gapIndex);
+    } else if (!isScheduled && (overId === 'schedule-drop-zone' || overId.startsWith('sched-'))) {
+      // Potential → Schedule (fallback: drop on zone or directly on a scheduled item)
       await toggleActivityScheduleState(activityId, 'scheduled');
     } else if (!isScheduled && overId !== active.id.toString()) {
       // Reorder within potential list
@@ -663,7 +717,7 @@ const Index = () => {
         await reorderDayActivities(newOrder);
       }
     }
-  }, [moveActivityToDay, toggleActivityScheduleState, reorderDayActivities, dayPotentialActivities, dayScheduledActivities]);
+  }, [moveActivityToDay, toggleActivityScheduleState, reorderDayActivities, moveToScheduleAtPosition, dayPotentialActivities, dayScheduledActivities]);
 
   // ── Loading / no-trip states ─────────────────────────────────────────────────
 
