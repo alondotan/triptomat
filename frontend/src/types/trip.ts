@@ -81,6 +81,7 @@ export interface PointOfInterest {
   sourceRefs: SourceRefs;
   details: POIDetails;
   isCancelled: boolean;
+  isPaid: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -131,6 +132,7 @@ export interface Transportation {
   segments: TransportSegment[];
   additionalInfo: { notes?: string; layover_details?: string };
   isCancelled: boolean;
+  isPaid: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -189,6 +191,7 @@ export interface ItineraryActivity {
   order: number;
   type: 'poi' | 'collection';
   id: string;
+  schedule_state?: 'potential' | 'scheduled';
   time_window?: { start?: string; end?: string };
 }
 
@@ -224,6 +227,7 @@ export interface Expense {
   currency: string;
   date?: string;
   notes?: string;
+  isPaid: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -14,6 +14,7 @@ interface WebhookPayload {
     sub_category?: string;
     action: 'create' | 'update' | 'cancel';
     order_number: string;
+    is_paid?: boolean;
   };
   sites_hierarchy?: SiteNode[];
   accommodation_details?: {
@@ -222,6 +223,25 @@ function addEmailToSourceRefs(existingRefs: any, emailId: string): any {
   return { ...refs, email_ids: emailIds };
 }
 
+/** Returns the actual event date (not the processing date) from the payload. */
+function extractEventDate(payload: WebhookPayload): string | null {
+  const { metadata } = payload;
+  if (metadata.category === 'transportation' && payload.transportation_details?.segments?.length) {
+    const dep = payload.transportation_details.segments[0].departure_time;
+    if (dep) return dep.split('T')[0];
+  }
+  if (metadata.category === 'accommodation' && payload.accommodation_details?.checkin_date) {
+    return payload.accommodation_details.checkin_date;
+  }
+  if (metadata.category === 'attraction' && payload.attraction_details?.reservation_date) {
+    return payload.attraction_details.reservation_date;
+  }
+  if (metadata.category === 'eatery' && payload.eatery_details?.reservation_date) {
+    return payload.eatery_details.reservation_date;
+  }
+  return metadata.date || null;
+}
+
 // ── Main handler ─────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -274,10 +294,11 @@ Deno.serve(async (req) => {
     const hierarchyCities = extractCities(sites_hierarchy);
     let matchedTripId: string | null = null;
 
-    if (metadata.date && eventCountries.length > 0) {
+    const eventDate = extractEventDate(payload);
+    if (eventDate && eventCountries.length > 0) {
       let query = supabase
         .from('trips').select('id, countries, start_date, end_date')
-        .lte('start_date', metadata.date).gte('end_date', metadata.date);
+        .lte('start_date', eventDate).gte('end_date', eventDate);
       if (userId) query = query.eq('user_id', userId);
       const { data: trips } = await query;
       for (const trip of (trips || [])) {
@@ -285,6 +306,7 @@ Deno.serve(async (req) => {
         if (eventCountries.some(ec => tc.includes(ec.toLowerCase()))) { matchedTripId = trip.id; break; }
       }
     }
+    console.log(`Event date used for matching: ${eventDate}, metadata.date was: ${metadata.date}`);
 
     console.log(`Trip: ${matchedTripId || 'none'}, Action: ${action}`);
 
@@ -400,6 +422,7 @@ Deno.serve(async (req) => {
               .insert([{
                 trip_id: matchedTripId,
                 ...newData,
+                is_paid: payload.metadata.is_paid ?? false,
                 source_refs: { email_ids: [sourceEmailId], recommendation_ids: [] },
               }])
               .select('id').single();
@@ -461,6 +484,7 @@ Deno.serve(async (req) => {
               .insert([{
                 trip_id: matchedTripId,
                 ...newData,
+                is_paid: payload.metadata.is_paid ?? true,
                 source_refs: { email_ids: [sourceEmailId], recommendation_ids: [] },
               }])
               .select('id').single();
@@ -519,6 +543,7 @@ Deno.serve(async (req) => {
                 .insert([{
                   trip_id: matchedTripId,
                   ...newData,
+                  is_paid: payload.metadata.is_paid ?? false,
                   source_refs: { email_ids: [sourceEmailId], recommendation_ids: [] },
                 }])
                 .select('id').single();

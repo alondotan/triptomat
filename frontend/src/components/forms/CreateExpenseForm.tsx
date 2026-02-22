@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Plus } from 'lucide-react';
 
 const EXPENSE_CATEGORIES = [
@@ -29,6 +30,7 @@ export function CreateExpenseForm() {
   const [currency, setCurrency] = useState(state.activeTrip?.currency || 'ILS');
   const [date, setDate] = useState('');
   const [notes, setNotes] = useState('');
+  const [isPaid, setIsPaid] = useState(false);
 
   const resetForm = () => {
     setDescription('');
@@ -37,6 +39,7 @@ export function CreateExpenseForm() {
     setCurrency(state.activeTrip?.currency || 'ILS');
     setDate('');
     setNotes('');
+    setIsPaid(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,6 +54,7 @@ export function CreateExpenseForm() {
       currency,
       date: date || undefined,
       notes: notes || undefined,
+      isPaid,
     });
 
     resetForm();
@@ -101,6 +105,11 @@ export function CreateExpenseForm() {
           <div className="space-y-2">
             <Label>הערות</Label>
             <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="פרטים נוספים..." />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label htmlFor="is-paid-switch">שולם?</Label>
+            <Switch id="is-paid-switch" checked={isPaid} onCheckedChange={setIsPaid} />
           </div>
 
           <Button type="submit" className="w-full">הוסף הוצאה</Button>

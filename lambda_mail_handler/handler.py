@@ -155,7 +155,11 @@ def call_openai(html_text, allowed_types, geo_types):
             9. Timing & Years: If a date in the email (e.g., "19 Mar") lacks a year, use the current year ({today.year}) if the date is in the future, or the next year if the date has already passed this year.
 
             10. The date in the metadata refer to the main date that relevant to the mail (e.g., checking date,departure date,reservation date).
-            11. The sites_hierarchy (Nested Structure):
+            11. Payment Status (`is_paid` in metadata):
+            - Set `true` if the email confirms payment was already made (e.g., flight bookings, ticket purchases, "payment confirmed", "thank you for your payment", "amount charged").
+            - Set `false` if payment is deferred (e.g., hotel with "pay at hotel", "pay on arrival", "free cancellation", "payment due at check-in", Booking.com-style reservations without prepayment).
+            - Default: `true` for transportation (flights/trains/ferries usually require upfront payment), `false` for accommodation and eateries.
+            12. The sites_hierarchy (Nested Structure):
             - Construct a nested geographical tree under the key "sites_hierarchy".
             - The first level must be the country or countries that in the mail.
             - Each node must be an object: {{"site": "Name", "site_type": "Type", "sub_sites": []}}.
@@ -167,7 +171,7 @@ def call_openai(html_text, allowed_types, geo_types):
 
             ### JSON Schema Structure:
             {{
-            "metadata": {{"date":"", "category": "", "sub_category": "", "action": "create|update|cancel", "order_number": ""}},
+            "metadata": {{"date":"", "category": "", "sub_category": "", "action": "create|update|cancel", "order_number": "", "is_paid": true}},
             "sites_hierarchy": [
                             {{
                                 "site": "Country Name",

@@ -122,6 +122,7 @@ export async function updatePOI(poiId: string, updates: Partial<PointOfInterest>
   if (updates.sourceRefs !== undefined) updateData.source_refs = updates.sourceRefs;
   if (updates.details !== undefined) updateData.details = updates.details;
   if (updates.isCancelled !== undefined) updateData.is_cancelled = updates.isCancelled;
+  if (updates.isPaid !== undefined) updateData.is_paid = updates.isPaid;
 
   const { error } = await supabase.from('points_of_interest').update(updateData).eq('id', poiId);
   if (error) throw error;
@@ -144,6 +145,7 @@ function mapPOI(row: Record<string, unknown>): PointOfInterest {
     sourceRefs: (row.source_refs as SourceRefs) || { email_ids: [], recommendation_ids: [] },
     details: (row.details as POIDetails) || {},
     isCancelled: (row.is_cancelled as boolean) || false,
+    isPaid: (row.is_paid as boolean) || false,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -195,6 +197,7 @@ export async function updateTransportation(id: string, updates: Partial<Transpor
   if (updates.segments !== undefined) updateData.segments = updates.segments;
   if (updates.additionalInfo !== undefined) updateData.additional_info = updates.additionalInfo;
   if (updates.isCancelled !== undefined) updateData.is_cancelled = updates.isCancelled;
+  if (updates.isPaid !== undefined) updateData.is_paid = updates.isPaid;
 
   const { error } = await supabase.from('transportation').update(updateData).eq('id', id);
   if (error) throw error;
@@ -217,6 +220,7 @@ function mapTransportation(row: Record<string, unknown>): Transportation {
     segments: (row.segments as TransportSegment[]) || [],
     additionalInfo: (row.additional_info as Transportation['additionalInfo']) || {},
     isCancelled: (row.is_cancelled as boolean) || false,
+    isPaid: (row.is_paid as boolean) || false,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -385,6 +389,7 @@ export async function createExpense(e: Omit<Expense, 'id' | 'createdAt' | 'updat
       currency: e.currency,
       date: e.date || null,
       notes: e.notes || null,
+      is_paid: e.isPaid ?? false,
     }])
     .select()
     .single();
@@ -400,6 +405,7 @@ export async function updateExpense(id: string, updates: Partial<Expense>): Prom
   if (updates.currency !== undefined) updateData.currency = updates.currency;
   if (updates.date !== undefined) updateData.date = updates.date;
   if (updates.notes !== undefined) updateData.notes = updates.notes;
+  if (updates.isPaid !== undefined) updateData.is_paid = updates.isPaid;
   const { error } = await supabase.from('expenses').update(updateData).eq('id', id);
   if (error) throw error;
 }
@@ -419,6 +425,7 @@ function mapExpense(row: Record<string, unknown>): Expense {
     currency: row.currency as string,
     date: (row.date as string) || undefined,
     notes: (row.notes as string) || undefined,
+    isPaid: (row.is_paid as boolean) || false,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };

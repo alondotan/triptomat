@@ -152,6 +152,7 @@ interface TripContextType {
   addExpense: (e: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateExpense: (id: string, updates: Partial<Expense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+  togglePaidStatus: (entityType: 'poi' | 'transport' | 'expense', id: string, isPaid: boolean) => Promise<void>;
   getCostBreakdown: () => CostBreakdown;
   formatCurrency: (amount: number, currency?: string) => string;
   formatDualCurrency: (amount: number, originalCurrency: string) => string;
@@ -414,6 +415,27 @@ export function TripProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const togglePaidStatus = async (entityType: 'poi' | 'transport' | 'expense', id: string, isPaid: boolean) => {
+    try {
+      if (entityType === 'poi') {
+        await tripService.updatePOI(id, { isPaid });
+        const existing = state.pois.find(p => p.id === id);
+        if (existing) dispatch({ type: 'UPDATE_POI', payload: { ...existing, isPaid } });
+      } else if (entityType === 'transport') {
+        await tripService.updateTransportation(id, { isPaid });
+        const existing = state.transportation.find(t => t.id === id);
+        if (existing) dispatch({ type: 'UPDATE_TRANSPORTATION', payload: { ...existing, isPaid } });
+      } else {
+        await tripService.updateExpense(id, { isPaid });
+        const existing = state.expenses.find(e => e.id === id);
+        if (existing) dispatch({ type: 'UPDATE_EXPENSE', payload: { ...existing, isPaid } });
+      }
+    } catch (error) {
+      console.error('Failed to toggle paid status:', error);
+      toast({ title: 'Error', description: 'Failed to update paid status.', variant: 'destructive' });
+    }
+  };
+
   const getCostBreakdown = (): CostBreakdown => {
     const preferred = state.activeTrip?.currency || 'USD';
     let transport = 0, lodging = 0, activities = 0, services = 0;
@@ -478,6 +500,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       addTransportation: addTransportationAction, updateTransportation: updateTransportationAction, deleteTransportation: deleteTransportationAction,
       addMission: addMissionAction, updateMission: updateMissionAction, deleteMission: deleteMissionAction,
       addExpense: addExpenseAction, updateExpense: updateExpenseAction, deleteExpense: deleteExpenseAction,
+      togglePaidStatus,
       getCostBreakdown, formatCurrency, formatDualCurrency, convertToPreferredCurrency,
     }}>
       {children}
