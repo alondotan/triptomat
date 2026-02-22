@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Save } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import type { Transportation, TransportStatus } from '@/types/trip';
 
 const TRANSPORT_CATEGORIES = [
@@ -32,6 +33,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
   const [status, setStatus] = useState<TransportStatus>(transport.status);
   const [costAmount, setCostAmount] = useState(transport.cost.total_amount?.toString() || '');
   const [costCurrency, setCostCurrency] = useState(transport.cost.currency || state.activeTrip?.currency || 'ILS');
+  const [isPaid, setIsPaid] = useState(transport.isPaid);
   const [orderNumber, setOrderNumber] = useState(transport.booking.order_number || '');
   const [carrierName, setCarrierName] = useState(transport.booking.carrier_name || '');
   const [notes, setNotes] = useState(transport.additionalInfo.notes || '');
@@ -51,6 +53,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
     setStatus(transport.status);
     setCostAmount(transport.cost.total_amount?.toString() || '');
     setCostCurrency(transport.cost.currency || state.activeTrip?.currency || 'ILS');
+    setIsPaid(transport.isPaid);
     setOrderNumber(transport.booking.order_number || '');
     setCarrierName(transport.booking.carrier_name || '');
     setNotes(transport.additionalInfo.notes || '');
@@ -79,6 +82,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
 
     const updated: Transportation = {
       ...transport,
+      isPaid,
       category,
       status,
       cost: { total_amount: costAmount ? parseFloat(costAmount) : 0, currency: costCurrency },
@@ -166,15 +170,24 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>עלות</Label>
-              <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} />
+          <div className="space-y-2">
+            <Label>עלות</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" />
+              <Select value={costCurrency} onValueChange={setCostCurrency}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'].map(c => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
-              <Label>מטבע</Label>
-              <Input value={costCurrency} onChange={e => setCostCurrency(e.target.value)} placeholder="ILS" />
-            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label htmlFor="transport-detail-is-paid">שולם?</Label>
+            <Switch id="transport-detail-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
           </div>
 
           <div className="space-y-2">

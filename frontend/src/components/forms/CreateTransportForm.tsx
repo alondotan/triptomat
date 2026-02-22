@@ -7,7 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import type { TransportStatus } from '@/types/trip';
+
+const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
 
 const TRANSPORT_CATEGORIES = [
   { value: 'flight', label: 'Flight' },
@@ -34,6 +37,8 @@ export function CreateTransportForm() {
   const [orderNumber, setOrderNumber] = useState('');
   const [carrierName, setCarrierName] = useState('');
   const [costAmount, setCostAmount] = useState('');
+  const [costCurrency, setCostCurrency] = useState(state.activeTrip?.currency || 'ILS');
+  const [isPaid, setIsPaid] = useState(true);
   const [notes, setNotes] = useState('');
 
   const resetForm = () => {
@@ -43,7 +48,7 @@ export function CreateTransportForm() {
     setToName(''); setToCode('');
     setDepartureTime(''); setArrivalTime('');
     setFlightNumber(''); setOrderNumber(''); setCarrierName('');
-    setCostAmount(''); setNotes('');
+    setCostAmount(''); setCostCurrency(state.activeTrip?.currency || 'ILS'); setIsPaid(true); setNotes('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +62,7 @@ export function CreateTransportForm() {
       sourceRefs: { email_ids: [], recommendation_ids: [] },
       cost: {
         total_amount: costAmount ? parseFloat(costAmount) : 0,
-        currency: state.activeTrip.currency,
+        currency: costCurrency,
       },
       booking: {
         order_number: orderNumber || undefined,
@@ -74,6 +79,7 @@ export function CreateTransportForm() {
       ],
       additionalInfo: { notes: notes || undefined },
       isCancelled: false,
+      isPaid,
     });
 
     resetForm();
@@ -164,15 +170,27 @@ export function CreateTransportForm() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Order #</Label>
-              <Input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="ABC123" />
+          <div className="space-y-2">
+            <Label>Order #</Label>
+            <Input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="ABC123" />
+          </div>
+
+          <div className="space-y-2">
+            <Label>עלות</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" />
+              <Select value={costCurrency} onValueChange={setCostCurrency}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
-              <Label>Cost ({state.activeTrip?.currency || 'USD'})</Label>
-              <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" />
-            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label htmlFor="transport-is-paid">שולם?</Label>
+            <Switch id="transport-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
           </div>
 
           <div className="space-y-2">

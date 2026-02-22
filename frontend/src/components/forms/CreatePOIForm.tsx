@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Pencil } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { CitySelector } from '@/components/CitySelector';
 import { SubCategorySelector } from '@/components/SubCategorySelector';
 import type { POICategory, POIStatus } from '@/types/trip';
@@ -24,6 +25,7 @@ export function CreatePOIForm() {
   const [address, setAddress] = useState('');
   const [costAmount, setCostAmount] = useState('');
   const [costCurrency, setCostCurrency] = useState(state.activeTrip?.currency || 'ILS');
+  const [isPaid, setIsPaid] = useState(false);
   const [notes, setNotes] = useState('');
 
   const tripCountries = state.activeTrip?.countries || [];
@@ -39,6 +41,7 @@ export function CreatePOIForm() {
     setAddress('');
     setCostAmount('');
     setCostCurrency(state.activeTrip?.currency || 'ILS');
+    setIsPaid(false);
     setNotes('');
   };
 
@@ -63,6 +66,7 @@ export function CreatePOIForm() {
         notes: notes ? { user_summary: notes } : undefined,
       },
       isCancelled: false,
+      isPaid,
     });
 
     resetForm();
@@ -176,6 +180,11 @@ export function CreatePOIForm() {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label htmlFor="poi-is-paid">שולם?</Label>
+            <Switch id="poi-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
           </div>
 
           <div className="space-y-2">

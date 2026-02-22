@@ -9,8 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ExternalLink, Quote, Save } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { SubCategorySelector } from '@/components/SubCategorySelector';
 import type { PointOfInterest, POICategory, POIStatus } from '@/types/trip';
+
+const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
 import type { SourceRecommendation } from '@/types/webhook';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -38,6 +41,8 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const [country, setCountry] = useState(poi.location.country || '');
   const [address, setAddress] = useState(poi.location.address || '');
   const [costAmount, setCostAmount] = useState(poi.details.cost?.amount?.toString() || '');
+  const [costCurrency, setCostCurrency] = useState(poi.details.cost?.currency || state.activeTrip?.currency || 'ILS');
+  const [isPaid, setIsPaid] = useState(poi.isPaid);
   const [notes, setNotes] = useState(poi.details.notes?.user_summary || '');
 
   // Accommodation fields
@@ -66,6 +71,8 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     setCountry(poi.location.country || '');
     setAddress(poi.location.address || '');
     setCostAmount(poi.details.cost?.amount?.toString() || '');
+    setCostCurrency(poi.details.cost?.currency || state.activeTrip?.currency || 'ILS');
+    setIsPaid(poi.isPaid);
     setNotes(poi.details.notes?.user_summary || '');
     setCheckinDate(poi.details.accommodation_details?.checkin?.date || '');
     setCheckinHour(poi.details.accommodation_details?.checkin?.hour || '');
@@ -133,6 +140,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const handleSave = async () => {
     const updatedPOI: PointOfInterest = {
       ...poi,
+      isPaid,
       name,
       category,
       subCategory: subCategory || undefined,
@@ -145,7 +153,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
       },
       details: {
         ...poi.details,
-        cost: costAmount ? { amount: parseFloat(costAmount), currency: state.activeTrip?.currency || 'USD' } : poi.details.cost,
+        cost: costAmount ? { amount: parseFloat(costAmount), currency: costCurrency } : poi.details.cost,
         notes: notes ? { ...poi.details.notes, user_summary: notes } : poi.details.notes,
         order_number: orderNumber || poi.details.order_number,
         booking: (reservationDate || reservationHour) ? {
@@ -254,8 +262,21 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           </div>
 
           <div className="space-y-2">
-            <Label>עלות ({state.activeTrip?.currency || 'USD'})</Label>
-            <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} />
+            <Label>עלות</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" />
+              <Select value={costCurrency} onValueChange={setCostCurrency}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label htmlFor="poi-detail-is-paid">שולם?</Label>
+            <Switch id="poi-detail-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
           </div>
 
           {/* Accommodation-specific fields */}

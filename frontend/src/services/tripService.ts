@@ -101,6 +101,7 @@ export async function createPOI(poi: Omit<PointOfInterest, 'id' | 'createdAt' | 
     source_refs: poi.sourceRefs as unknown as Json,
     details: poi.details as unknown as Json,
     is_cancelled: poi.isCancelled || false,
+    is_paid: poi.isPaid ?? false,
   };
   const { data, error } = await supabase
     .from('points_of_interest')
@@ -176,6 +177,7 @@ export async function createTransportation(t: Omit<Transportation, 'id' | 'creat
     segments: t.segments as unknown as Json,
     additional_info: t.additionalInfo as unknown as Json,
     is_cancelled: t.isCancelled || false,
+    is_paid: t.isPaid ?? false,
   };
   const { data, error } = await supabase
     .from('transportation')
