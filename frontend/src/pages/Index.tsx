@@ -23,6 +23,8 @@ import {
   useSensors,
   useDroppable,
   closestCenter,
+  pointerWithin,
+  type CollisionDetection,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
@@ -100,6 +102,14 @@ const Index = () => {
 
   const isScheduledBeingDragged = activeId?.startsWith('sched-') ?? false;
   const isDragging = activeId !== null;
+
+  // When dragging a potential item: use pointer position so small gaps are easy to hit.
+  // When dragging a scheduled item: use closestCenter for smooth sortable reorder.
+  const collisionDetection: CollisionDetection = useCallback((args) => {
+    if (isScheduledBeingDragged) return closestCenter(args);
+    const hits = pointerWithin(args);
+    return hits.length > 0 ? hits : closestCenter(args);
+  }, [isScheduledBeingDragged]);
 
   // Reset editing state when switching trips
   useEffect(() => {
@@ -705,8 +715,20 @@ const Index = () => {
       // Potential → Schedule at a specific visual position (gap between cells)
       const gapIndex = parseInt(overId.replace('gap-', ''));
       if (!isNaN(gapIndex)) await moveToScheduleAtPosition(activityId, gapIndex);
-    } else if (!isScheduled && (overId === 'schedule-drop-zone' || overId.startsWith('sched-'))) {
-      // Potential → Schedule (fallback: drop on zone or directly on a scheduled item)
+    } else if (!isScheduled && overId.startsWith('sched-')) {
+      // Potential → dropped directly ON a scheduled cell → insert before that cell
+      const targetActId = overId.replace('sched-', '');
+      const cellIdx = scheduleCells.findIndex(c =>
+        (c.type === 'activity' && c.activityId === targetActId) ||
+        (c.type === 'group' && c.groupItems?.some(gi => gi.activityId === targetActId))
+      );
+      if (cellIdx !== -1) {
+        await moveToScheduleAtPosition(activityId, cellIdx);
+      } else {
+        await toggleActivityScheduleState(activityId, 'scheduled');
+      }
+    } else if (!isScheduled && overId === 'schedule-drop-zone') {
+      // Potential → Schedule (fallback: whole-zone drop)
       await toggleActivityScheduleState(activityId, 'scheduled');
     } else if (!isScheduled && overId !== active.id.toString()) {
       // Reorder within potential list
@@ -717,7 +739,7 @@ const Index = () => {
         await reorderDayActivities(newOrder);
       }
     }
-  }, [moveActivityToDay, toggleActivityScheduleState, reorderDayActivities, moveToScheduleAtPosition, dayPotentialActivities, dayScheduledActivities]);
+  }, [moveActivityToDay, toggleActivityScheduleState, reorderDayActivities, moveToScheduleAtPosition, dayPotentialActivities, dayScheduledActivities, scheduleCells]);
 
   // ── Loading / no-trip states ─────────────────────────────────────────────────
 
@@ -761,7 +783,7 @@ const Index = () => {
     <AppLayout>
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={collisionDetection}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
