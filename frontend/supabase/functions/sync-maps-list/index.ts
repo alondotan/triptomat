@@ -300,17 +300,8 @@ serve(async (req) => {
         linked_entities: [],
       }]);
 
-      // Also add new countries to trips.countries
-      const { data: tripRow } = await supabase
-        .from("trips").select("countries").eq("id", list.trip_id).single();
-      const existing = ((tripRow?.countries as string[]) || []).map((c: string) => c.toLowerCase());
-      const incoming = extractCountriesFromHierarchy(aiOutput.sites_hierarchy as SiteNode[]);
-      const toAdd = incoming.filter((c) => !existing.some((e: string) => e.toLowerCase() === c.toLowerCase()));
-      if (toAdd.length > 0) {
-        const merged = [...(tripRow?.countries || []), ...toAdd];
-        await supabase.from("trips").update({ countries: merged }).eq("id", list.trip_id);
-        console.log(`[sync] Added countries to trip: ${toAdd.join(", ")}`);
-      }
+      // Note: we intentionally do NOT auto-update trips.countries here.
+      // Countries on a trip are managed explicitly by the user.
     }
 
     return json({ success: true, new_places: recs.length, total_places: totalCount });
