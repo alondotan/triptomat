@@ -11,13 +11,9 @@ import {
   Table2,
   DollarSign,
   CheckSquare,
-  Inbox,
-  Key,
-  LogOut,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { supabase } from '@/integrations/supabase/client';
 
 const primaryItems = [
   { path: '/', label: 'Timeline', icon: CalendarDays },
@@ -32,31 +28,13 @@ const moreItems = [
   { path: '/itinerary', label: 'Itinerary', icon: Table2 },
   { path: '/budget', label: 'Budget', icon: DollarSign },
   { path: '/tasks', label: 'Tasks', icon: CheckSquare },
-  { path: '/inbox', label: 'Inbox', icon: Inbox },
 ];
 
-interface MobileBottomNavProps {
-  onWebhookOpen: () => void;
-}
-
-export function MobileBottomNav({ onWebhookOpen }: MobileBottomNavProps) {
+export function MobileBottomNav() {
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
-  const [inboxUnread, setInboxUnread] = useState<number>(() => {
-    try { return parseInt(localStorage.getItem('inbox_unread_count') || '0', 10); } catch { return 0; }
-  });
-
-  useEffect(() => {
-    const handler = (e: Event) => setInboxUnread((e as CustomEvent).detail.count);
-    window.addEventListener('inboxUnreadChanged', handler);
-    return () => window.removeEventListener('inboxUnreadChanged', handler);
-  }, []);
 
   const isMoreActive = moreItems.some(item => location.pathname === item.path);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
 
   return (
     <>
@@ -89,12 +67,7 @@ export function MobileBottomNav({ onWebhookOpen }: MobileBottomNavProps) {
               isMoreActive ? 'text-primary' : 'text-muted-foreground'
             )}
           >
-            <div className="relative">
-              <MoreHorizontal size={22} strokeWidth={1.8} />
-              {inboxUnread > 0 && (
-                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-blue-500 border-2 border-background" />
-              )}
-            </div>
+            <MoreHorizontal size={22} strokeWidth={1.8} />
             <span>More</span>
           </button>
         </div>
@@ -106,7 +79,6 @@ export function MobileBottomNav({ onWebhookOpen }: MobileBottomNavProps) {
             {moreItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
-              const showBadge = item.path === '/inbox' && inboxUnread > 0;
               return (
                 <RouterNavLink
                   key={item.path}
@@ -119,38 +91,11 @@ export function MobileBottomNav({ onWebhookOpen }: MobileBottomNavProps) {
                       : 'text-foreground hover:bg-muted'
                   )}
                 >
-                  <div className="relative">
-                    <Icon size={20} />
-                    {showBadge && (
-                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-[9px] font-bold text-white">
-                        {inboxUnread > 9 ? '9+' : inboxUnread}
-                      </span>
-                    )}
-                  </div>
+                  <Icon size={20} />
                   {item.label}
-                  {showBadge && (
-                    <span className="ml-auto inline-flex items-center rounded-full bg-blue-500 px-2 py-0.5 text-xs font-semibold text-white">
-                      {inboxUnread}
-                    </span>
-                  )}
                 </RouterNavLink>
               );
             })}
-            <div className="mx-6 my-1 border-t border-border" />
-            <button
-              onClick={() => { onWebhookOpen(); setMoreOpen(false); }}
-              className="flex items-center gap-4 px-6 py-3 text-base font-medium text-foreground hover:bg-muted"
-            >
-              <Key size={20} />
-              Webhook URLs
-            </button>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-4 px-6 py-3 text-base font-medium text-destructive hover:bg-muted"
-            >
-              <LogOut size={20} />
-              Sign Out
-            </button>
           </div>
         </SheetContent>
       </Sheet>
