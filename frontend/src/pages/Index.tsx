@@ -110,12 +110,17 @@ const Index = () => {
   const collisionDetection: CollisionDetection = useCallback((args) => {
     if (isScheduledBeingDragged) return closestCenter(args);
     const hits = pointerWithin(args);
-    // Prefer specific droppables (gaps, sched items, day pills) over catch-all zones
+    // Priority 1: gaps (they overlap adjacent cards via negative margin — always prefer them)
+    const gaps = hits.filter(c => c.id.toString().startsWith('gap-'));
+    if (gaps.length > 0) return gaps;
+    // Priority 2: specific droppables (sched items, day pills) over catch-all zones
     const CATCH_ALL = new Set(['schedule-drop-zone', 'potential-drop-zone']);
     const specific = hits.filter(c => !CATCH_ALL.has(c.id.toString()));
     if (specific.length > 0) return specific;
-    if (hits.length > 0) return hits;        // fallback to catch-all zone
-    return closestCenter(args);              // nothing under pointer — use center
+    // Priority 3: catch-all zones (empty schedule area, potential zone)
+    if (hits.length > 0) return hits;
+    // Fallback: nothing under pointer, use closest by center distance
+    return closestCenter(args);
   }, [isScheduledBeingDragged]);
 
   // Reset editing state when switching trips

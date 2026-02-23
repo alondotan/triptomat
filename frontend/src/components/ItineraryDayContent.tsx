@@ -209,17 +209,21 @@ function ScheduleDropZone({ isActive, isOver, disabled, children }: {
 function ScheduleDropGap({ index }: { index: number }) {
   const { setNodeRef, isOver } = useDroppable({ id: `gap-${index}` });
   return (
+    // Negative margin creates a 10px overlap into the adjacent cards on both sides —
+    // same trick as the HTML prototype. This makes the gap easy to hit without
+    // precise aiming: hovering near the card edge lands inside the gap's hit rect.
     <div
       ref={setNodeRef}
+      style={{ marginTop: '-10px', marginBottom: '-10px' }}
       className={`relative z-20 transition-all duration-150 ${
         isOver
-          ? 'h-12 rounded-xl border-2 border-dashed border-primary/50 bg-primary/10 flex items-center justify-center'
-          : 'h-7'
+          ? 'h-14 rounded-xl border-2 border-dashed border-primary/50 bg-primary/10 flex items-center justify-center'
+          : 'h-5'
       }`}
     >
       {isOver && <p className="text-[10px] text-primary/70 font-medium">שחרר כאן</p>}
       {!isOver && (
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center gap-2 px-2 opacity-30">
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center gap-2 px-2 pointer-events-none opacity-25">
           <div className="flex-1 h-px border-t border-dashed border-primary/40" />
           <span className="text-[9px] text-primary/60 shrink-0">+</span>
           <div className="flex-1 h-px border-t border-dashed border-primary/40" />
