@@ -728,14 +728,16 @@ const Index = () => {
       const gapIndex = parseInt(overId.replace('gap-', ''));
       if (!isNaN(gapIndex)) await moveToScheduleAtPosition(activityId, gapIndex);
     } else if (!isScheduled && overId.startsWith('sched-')) {
-      // Potential → dropped directly ON a scheduled cell → insert before that cell
+      // Potential → dropped on a scheduled cell body (not a gap edge).
+      // Insert AFTER that cell (cellIdx + 1): top-edge drops are caught by the gap above,
+      // so landing on the card body means "put it after this card."
       const targetActId = overId.replace('sched-', '');
       const cellIdx = scheduleCells.findIndex(c =>
         (c.type === 'activity' && c.activityId === targetActId) ||
         (c.type === 'group' && c.groupItems?.some(gi => gi.activityId === targetActId))
       );
       if (cellIdx !== -1) {
-        await moveToScheduleAtPosition(activityId, cellIdx);
+        await moveToScheduleAtPosition(activityId, cellIdx + 1);
       } else {
         await toggleActivityScheduleState(activityId, 'scheduled');
       }
