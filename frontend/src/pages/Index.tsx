@@ -103,12 +103,19 @@ const Index = () => {
   const isScheduledBeingDragged = activeId?.startsWith('sched-') ?? false;
   const isDragging = activeId !== null;
 
-  // When dragging a potential item: use pointer position so small gaps are easy to hit.
-  // When dragging a scheduled item: use closestCenter for smooth sortable reorder.
+  // When dragging a potential item: use pointer position so gaps are easy to hit.
+  // pointerWithin returns droppables in registration order (parent before children),
+  // so 'schedule-drop-zone' (parent) would always win over gaps (children) unless
+  // we filter it out and prefer specific targets first.
   const collisionDetection: CollisionDetection = useCallback((args) => {
     if (isScheduledBeingDragged) return closestCenter(args);
     const hits = pointerWithin(args);
-    return hits.length > 0 ? hits : closestCenter(args);
+    // Prefer specific droppables (gaps, sched items, day pills) over catch-all zones
+    const CATCH_ALL = new Set(['schedule-drop-zone', 'potential-drop-zone']);
+    const specific = hits.filter(c => !CATCH_ALL.has(c.id.toString()));
+    if (specific.length > 0) return specific;
+    if (hits.length > 0) return hits;        // fallback to catch-all zone
+    return closestCenter(args);              // nothing under pointer — use center
   }, [isScheduledBeingDragged]);
 
   // Reset editing state when switching trips
