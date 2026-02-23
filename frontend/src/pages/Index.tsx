@@ -103,25 +103,30 @@ const Index = () => {
   const isScheduledBeingDragged = activeId?.startsWith('sched-') ?? false;
   const isDragging = activeId !== null;
 
-  // When dragging a potential item: use pointer position so gaps are easy to hit.
-  // pointerWithin returns droppables in registration order (parent before children),
-  // so 'schedule-drop-zone' (parent) would always win over gaps (children) unless
-  // we filter it out and prefer specific targets first.
+  // Collision detection reads drag type from args.active.id (not from React state),
+  // avoiding any re-render race condition with isScheduledBeingDragged.
+  // Always uses pointer position (pointerWithin) so the user points at the exact target.
   const collisionDetection: CollisionDetection = useCallback((args) => {
-    if (isScheduledBeingDragged) return closestCenter(args);
+    const isSchedDrag = args.active.id.toString().startsWith('sched-');
     const hits = pointerWithin(args);
-    // Priority 1: gaps (they overlap adjacent cards via negative margin — always prefer them)
-    const gaps = hits.filter(c => c.id.toString().startsWith('gap-'));
-    if (gaps.length > 0) return gaps;
-    // Priority 2: specific droppables (sched items, day pills) over catch-all zones
-    const CATCH_ALL = new Set(['schedule-drop-zone', 'potential-drop-zone']);
-    const specific = hits.filter(c => !CATCH_ALL.has(c.id.toString()));
-    if (specific.length > 0) return specific;
-    // Priority 3: catch-all zones (empty schedule area, potential zone)
+
+    if (!isSchedDrag) {
+      // Potential-item drags: gaps win over everything (negative-margin overlap trick)
+      const gaps = hits.filter(c => c.id.toString().startsWith('gap-'));
+      if (gaps.length > 0) return gaps;
+      // Specific droppables (sched-* cards, day pills) beat catch-all zones
+      const CATCH_ALL = new Set(['schedule-drop-zone', 'potential-drop-zone']);
+      const specific = hits.filter(c => !CATCH_ALL.has(c.id.toString()));
+      if (specific.length > 0) return specific;
+      if (hits.length > 0) return hits;
+      return closestCenter(args);
+    }
+
+    // Scheduled-item drags: whatever is directly under the pointer wins.
+    // (potential-drop-zone, sched-* cards for reorder, day-drop-* pills)
     if (hits.length > 0) return hits;
-    // Fallback: nothing under pointer, use closest by center distance
     return closestCenter(args);
-  }, [isScheduledBeingDragged]);
+  }, []); // no deps — drag type comes from args.active.id, not state
 
   // Reset editing state when switching trips
   useEffect(() => {
@@ -166,10 +171,17 @@ const Index = () => {
     [dayActivities]
   );
 
-  const dayScheduledActivities = useMemo(() =>
-    dayActivities.filter(a => a.schedule_state === 'scheduled'),
-    [dayActivities]
-  );
+  // Scheduled activities: use raw DB array order, NOT the order field.
+  // moveToScheduleAtPosition saves [...scheduledInOrder, ...potentials], so
+  // the array position is the source of truth for display order — same as the HTML prototype.
+  const dayScheduledActivities = useMemo(() => {
+    if (!currentItDay) return [];
+    return currentItDay.activities
+      .filter(a => a.type === 'poi' && a.schedule_state === 'scheduled')
+      .map(a => ({ ...a, poi: state.pois.find(p => p.id === a.id) }))
+      .filter((a): a is typeof a & { poi: NonNullable<typeof a.poi> } => !!a.poi);
+    // NO sort — display order = position in the DB activities array
+  }, [currentItDay, state.pois]);
 
   const prevDayAccommodations = useMemo(() => {
     if (selectedDayNum <= 1) return [];
