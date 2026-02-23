@@ -564,7 +564,7 @@ export function ItineraryDayContent({
   scheduleCells.forEach((cell, cellIdx) => {
     if (cell.type === 'activity' && cell.activityId) {
       scheduleContent.push(
-        <div key={cell.id} className="relative flex items-start gap-3">
+        <div key={cell.id} data-sched-cell={cellIdx} className="relative flex items-start gap-3">
           <div className="shrink-0 mt-2.5 w-3.5 h-3.5 rounded-full border-2 border-background z-10 bg-muted-foreground/70" />
           <div className="flex-1">
             <SortableScheduledItem
@@ -581,17 +581,18 @@ export function ItineraryDayContent({
       );
     } else if (cell.type === 'group' && cell.groupItems) {
       scheduleContent.push(
-        <GroupCell
-          key={cell.id}
-          label={cell.label}
-          items={cell.groupItems}
-          onRemove={onRemoveActivity}
-        />
+        <div key={cell.id} data-sched-cell={cellIdx}>
+          <GroupCell
+            label={cell.label}
+            items={cell.groupItems}
+            onRemove={onRemoveActivity}
+          />
+        </div>
       );
     } else {
       // Transport cell (static)
       scheduleContent.push(
-        <div key={cell.id} className="relative flex items-start gap-3">
+        <div key={cell.id} data-sched-cell={cellIdx} className="relative flex items-start gap-3">
           <div className="shrink-0 mt-2.5 w-3.5 h-3.5 rounded-full border-2 border-background z-10 bg-primary" />
           <div className="flex-1 flex items-start gap-2 bg-muted/30 rounded-xl px-2.5 py-2 border border-border/20">
             <div className="shrink-0 w-10 text-right pt-0.5">

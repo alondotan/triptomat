@@ -103,18 +103,50 @@ const Index = () => {
   const isScheduledBeingDragged = activeId?.startsWith('sched-') ?? false;
   const isDragging = activeId !== null;
 
-  // Collision detection reads drag type from args.active.id (not from React state),
-  // avoiding any re-render race condition with isScheduledBeingDragged.
-  // Always uses pointer position (pointerWithin) so the user points at the exact target.
+  // Collision detection:
+  // • potential-item drags: day pills via pointer; if over schedule, compute gap index
+  //   from actual pointer Y vs [data-sched-cell] element midpoints (avoids all rect-overlap
+  //   issues with negative-margin gaps); otherwise let potential list sort normally.
+  // • scheduled-item drags: pointer for potential-drop-zone & day pills; closestCenter
+  //   for schedule reorder (sortable CSS transforms shift rects, closestCenter handles that).
   const collisionDetection: CollisionDetection = useCallback((args) => {
     const isSchedDrag = args.active.id.toString().startsWith('sched-');
     const hits = pointerWithin(args);
 
     if (!isSchedDrag) {
-      // Potential-item drags: gaps win over everything (negative-margin overlap trick)
-      const gaps = hits.filter(c => c.id.toString().startsWith('gap-'));
-      if (gaps.length > 0) return gaps;
-      // Specific droppables (sched-* cards, day pills) beat catch-all zones
+      // 1. Day pills always win when pointer is physically over them
+      const dayPillHit = hits.filter(c => c.id.toString().startsWith('day-drop-'));
+      if (dayPillHit.length > 0) return dayPillHit;
+
+      // 2. If pointer is over the schedule area, compute exact gap from cell midpoints
+      const overSchedule = hits.some(c => {
+        const id = c.id.toString();
+        return id === 'schedule-drop-zone' || id.startsWith('gap-') || id.startsWith('sched-');
+      });
+
+      if (overSchedule && args.pointerCoordinates) {
+        const py = args.pointerCoordinates.y;
+        // Count how many schedule cells have their midpoint ABOVE the pointer
+        const cellEls = Array.from(document.querySelectorAll('[data-sched-cell]'));
+        const gapIndex = cellEls.filter(el => {
+          const r = el.getBoundingClientRect();
+          return py > r.top + r.height / 2;
+        }).length;
+
+        // Return the registered gap droppable for this index
+        const gapId = `gap-${gapIndex}`;
+        const gapContainer = args.droppableContainers.find(c => c.id === gapId);
+        if (gapContainer) {
+          return [{ id: gapContainer.id, data: { droppableContainer: gapContainer, value: 0 } }];
+        }
+        // Fallback: schedule-drop-zone (e.g. schedule is empty, no gaps registered yet)
+        const schedContainer = args.droppableContainers.find(c => c.id === 'schedule-drop-zone');
+        if (schedContainer) {
+          return [{ id: schedContainer.id, data: { droppableContainer: schedContainer, value: 0 } }];
+        }
+      }
+
+      // 3. Not over schedule: potential list reorder or other droppables
       const CATCH_ALL = new Set(['schedule-drop-zone', 'potential-drop-zone']);
       const specific = hits.filter(c => !CATCH_ALL.has(c.id.toString()));
       if (specific.length > 0) return specific;
@@ -122,21 +154,16 @@ const Index = () => {
       return closestCenter(args);
     }
 
-    // Scheduled-item drags: use pointer for precise special zones,
-    // but closestCenter (not pointer) for schedule reorder —
-    // because useSortable applies CSS transforms that shift card visual positions,
-    // making getBoundingClientRect() reflect the shifted rect, so closestCenter
-    // correctly finds the nearest card even as they animate.
+    // Scheduled-item drags: pointer for special zones, closestCenter for schedule reorder
     const potentialHit = hits.filter(c => c.id.toString() === 'potential-drop-zone');
     if (potentialHit.length > 0) return potentialHit;
     const dayPillHit = hits.filter(c => c.id.toString().startsWith('day-drop-'));
     if (dayPillHit.length > 0) return dayPillHit;
-    // Schedule reorder: find closest sched-* droppable by center distance
     const cc = closestCenter(args);
     const schedResults = cc.filter(c => c.id.toString().startsWith('sched-'));
     if (schedResults.length > 0) return schedResults;
     return cc;
-  }, []); // no deps — drag type comes from args.active.id, not state
+  }, []); // no deps — reads from DOM and args directly
 
   // Reset editing state when switching trips
   useEffect(() => {
