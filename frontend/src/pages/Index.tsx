@@ -122,10 +122,20 @@ const Index = () => {
       return closestCenter(args);
     }
 
-    // Scheduled-item drags: whatever is directly under the pointer wins.
-    // (potential-drop-zone, sched-* cards for reorder, day-drop-* pills)
-    if (hits.length > 0) return hits;
-    return closestCenter(args);
+    // Scheduled-item drags: use pointer for precise special zones,
+    // but closestCenter (not pointer) for schedule reorder —
+    // because useSortable applies CSS transforms that shift card visual positions,
+    // making getBoundingClientRect() reflect the shifted rect, so closestCenter
+    // correctly finds the nearest card even as they animate.
+    const potentialHit = hits.filter(c => c.id.toString() === 'potential-drop-zone');
+    if (potentialHit.length > 0) return potentialHit;
+    const dayPillHit = hits.filter(c => c.id.toString().startsWith('day-drop-'));
+    if (dayPillHit.length > 0) return dayPillHit;
+    // Schedule reorder: find closest sched-* droppable by center distance
+    const cc = closestCenter(args);
+    const schedResults = cc.filter(c => c.id.toString().startsWith('sched-'));
+    if (schedResults.length > 0) return schedResults;
+    return cc;
   }, []); // no deps — drag type comes from args.active.id, not state
 
   // Reset editing state when switching trips
@@ -540,6 +550,7 @@ const Index = () => {
     });
 
     const orderedIds = [...activitiesBefore, activityId, ...activitiesAfter];
+    console.log('[DnD] moveToPos:', { activityId, gapIndex, cells: scheduleCells.length, activitiesBefore, activitiesAfter, orderedIds });
 
     // Toggle schedule_state and assign contiguous order values
     const withToggled = currentItDay.activities.map(a =>
@@ -719,6 +730,7 @@ const Index = () => {
       ? active.id.toString().replace('sched-', '')
       : active.id.toString();
     const overId = over.id.toString();
+    console.log('[DnD] dragEnd:', { activeId: active.id.toString(), overId, isScheduled, activityId });
 
     if (overId.startsWith('day-drop-')) {
       // Move to another day (works for both potential and scheduled)
