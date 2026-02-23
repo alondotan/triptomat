@@ -710,6 +710,7 @@ const Index = () => {
   const handleDragOver = useCallback((event: DragOverEvent) => {
     const overId = event.over?.id?.toString() ?? '';
     const activeIsScheduled = event.active.id.toString().startsWith('sched-');
+    console.log('[DnD] over:', overId);
     setIsOverSchedule(
       overId === 'schedule-drop-zone' ||
       overId.startsWith('gap-') ||
