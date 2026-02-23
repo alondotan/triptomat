@@ -15,6 +15,7 @@ import MapPage from "./pages/Map";
 import BudgetPage from "./pages/Budget";
 import TasksPage from "./pages/Tasks";
 import InboxPage from "./pages/Inbox";
+import AccommodationPage from "./pages/Accommodation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
                   <Route path="/budget" element={<BudgetPage />} />
                   <Route path="/tasks" element={<TasksPage />} />
                   <Route path="/inbox" element={<InboxPage />} />
+                  <Route path="/accommodation" element={<AccommodationPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </TripProvider>

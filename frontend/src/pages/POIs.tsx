@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTrip } from '@/context/TripContext';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,19 +7,17 @@ import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { POIDetailDialog } from '@/components/POIDetailDialog';
 import { SubCategoryIcon } from '@/components/SubCategoryIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, MapPin, UtensilsCrossed, Wrench, Trash2, Filter, LayoutGrid, CalendarDays, Heart } from 'lucide-react';
+import { MapPin, UtensilsCrossed, Wrench, Trash2, Filter, LayoutGrid, CalendarDays, Heart, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { PointOfInterest, POIStatus } from '@/types/trip';
 
 const categoryIcons: Record<string, React.ReactNode> = {
-  accommodation: <Building2 size={16} />,
   attraction: <MapPin size={16} />,
   eatery: <UtensilsCrossed size={16} />,
   service: <Wrench size={16} />,
 };
 
 const categoryLabels: Record<string, string> = {
-  accommodation: 'לינה',
   eatery: 'אוכל',
   attraction: 'אטרקציות',
   service: 'שירותים',
@@ -36,10 +34,11 @@ const statusLabels: Record<string, string> = {
 type GroupBy = 'category' | 'location' | 'status';
 
 const POIsPage = () => {
-  const { state, formatCurrency, formatDualCurrency, deletePOI, updatePOI } = useTrip();
+  const { state, formatDualCurrency, deletePOI, updatePOI } = useTrip();
   const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [groupBy, setGroupBy] = useState<GroupBy>('category');
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Build a map: poiId -> list of day numbers it's assigned to
   const poiDaysMap = useMemo(() => {
@@ -76,11 +75,24 @@ const POIsPage = () => {
     await updatePOI({ ...poi, status: newStatus });
   };
 
+  // Reset expanded state when groupBy changes (group keys change)
+  useEffect(() => { setExpandedGroups(new Set()); }, [groupBy]);
+
+  const toggleGroup = (key: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+
+  const nonAccommodationPois = useMemo(() => state.pois.filter(p => p.category !== 'accommodation'), [state.pois]);
+
   const filteredPois = useMemo(() => {
     if (!state.activeTrip) return [];
-    if (statusFilters.has('all')) return state.pois;
-    return state.pois.filter(p => statusFilters.has(p.status));
-  }, [state.pois, statusFilters, state.activeTrip]);
+    if (statusFilters.has('all')) return nonAccommodationPois;
+    return nonAccommodationPois.filter(p => statusFilters.has(p.status));
+  }, [nonAccommodationPois, statusFilters, state.activeTrip]);
 
   const grouped = useMemo(() => {
     const groups: Record<string, PointOfInterest[]> = {};
@@ -115,14 +127,14 @@ const POIsPage = () => {
     return null;
   };
 
-  // Status counts for filter badges
+  // Status counts for filter badges (excluding accommodation)
   const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: state.pois.length };
-    for (const p of state.pois) {
+    const counts: Record<string, number> = { all: nonAccommodationPois.length };
+    for (const p of nonAccommodationPois) {
       counts[p.status] = (counts[p.status] || 0) + 1;
     }
     return counts;
-  }, [state.pois]);
+  }, [nonAccommodationPois]);
 
   if (!state.activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
@@ -134,7 +146,7 @@ const POIsPage = () => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold">Points of Interest</h2>
-            <p className="text-muted-foreground">{filteredPois.length} / {state.pois.length} items</p>
+            <p className="text-muted-foreground">{filteredPois.length} / {nonAccommodationPois.length} items</p>
           </div>
           <CreatePOIForm />
         </div>
@@ -181,12 +193,24 @@ const POIsPage = () => {
           </div>
         </div>
 
-        {grouped.map(([key, pois]) => (
+        {grouped.map(([key, pois]) => {
+          const isExpanded = expandedGroups.has(key);
+          return (
           <div key={key}>
-            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              {getGroupIcon(key)} {getGroupLabel(key)} ({pois.length})
-            </h3>
-            <div className="grid gap-3 md:grid-cols-2">
+            <button
+              onClick={() => toggleGroup(key)}
+              className="w-full text-left mb-3 flex items-center gap-2 hover:text-primary transition-colors group"
+            >
+              {isExpanded
+                ? <ChevronDown size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                : <ChevronRight size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
+              }
+              {getGroupIcon(key)}
+              <span className="text-lg font-semibold">{getGroupLabel(key)}</span>
+              <Badge variant="secondary" className="text-xs ml-1">{pois.length}</Badge>
+            </button>
+            {isExpanded && (
+            <div className="grid gap-3 md:grid-cols-2 mb-2">
               {pois.map(poi => (
                 <Card key={poi.id} className={`cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${poi.isCancelled ? 'opacity-50' : ''}`} onClick={() => setSelectedPOI(poi)}>
                   <CardHeader className="pb-2">
@@ -264,12 +288,14 @@ const POIsPage = () => {
                 </Card>
               ))}
             </div>
+            )}
           </div>
-        ))}
+          );
+        })}
 
         {filteredPois.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            {state.pois.length === 0 ? 'אין נקודות עניין עדיין. הוסף אחת כדי להתחיל!' : 'אין תוצאות לפילטר הנוכחי.'}
+            {nonAccommodationPois.length === 0 ? 'אין נקודות עניין עדיין. הוסף אחת כדי להתחיל!' : 'אין תוצאות לפילטר הנוכחי.'}
           </div>
         )}
 

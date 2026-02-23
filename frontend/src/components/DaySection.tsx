@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { format } from 'date-fns';
 import { useTrip } from '@/context/TripContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, X, Star, Moon, Heart } from 'lucide-react';
+import { Plus, X, Star, Moon, Heart, ArrowRight, CalendarDays } from 'lucide-react';
 import { CitySelector } from '@/components/CitySelector';
 import { SubCategorySelector } from '@/components/SubCategorySelector';
 import { SubCategoryIcon } from '@/components/SubCategoryIcon';
@@ -45,6 +46,13 @@ export interface DaySectionProps {
   showBookingMissionOption?: boolean;
   countries?: string[];
   extraHierarchy?: SiteNode[];
+  // New optional props
+  hideHeader?: boolean;
+  hideEmptyState?: boolean;
+  onMoveToSchedule?: (id: string) => void;
+  onMoveToDay?: (id: string, dayNum: number) => void;
+  tripDays?: Date[];
+  selectedDayNum?: number;
 }
 
 
@@ -68,6 +76,7 @@ export function DaySection({
   title, icon, items, onRemove, availableItems, onAdd,
   onCreateNew, onToggleSelected, addLabel, entityType, maxNights, locationSuggestions,
   showBookingMissionOption, locationContext, countries, extraHierarchy,
+  hideHeader, hideEmptyState, onMoveToSchedule, onMoveToDay, tripDays, selectedDayNum,
 }: DaySectionProps) {
   const [showPicker, setShowPicker] = useState(false);
   const [nights, setNights] = useState(1);
@@ -111,9 +120,9 @@ export function DaySection({
 
   return (
     <div className="space-y-2">
-      <h4 className="text-sm font-semibold flex items-center gap-2">{icon} {title}</h4>
+      {!hideHeader && <h4 className="text-sm font-semibold flex items-center gap-2">{icon} {title}</h4>}
 
-      {items.length === 0 && (
+      {!hideEmptyState && items.length === 0 && (
         <p className="text-xs text-muted-foreground mr-0 sm:mr-6">אין פריטים</p>
       )}
 
@@ -137,6 +146,39 @@ export function DaySection({
           </div>
           {item.status && (
             <Badge variant={item.status === 'booked' ? 'default' : 'secondary'} className="text-xs shrink-0">{item.status}</Badge>
+          )}
+          {/* Move to schedule button */}
+          {onMoveToSchedule && (
+            <button
+              onClick={() => onMoveToSchedule(item.id)}
+              title="העבר ללו״ז"
+              className="shrink-0 p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
+            >
+              <ArrowRight size={13} />
+            </button>
+          )}
+          {/* Move to another day */}
+          {onMoveToDay && tripDays && (
+            <select
+              className="shrink-0 appearance-none bg-transparent text-muted-foreground hover:text-primary cursor-pointer p-1 text-[10px] rounded hover:bg-primary/10 transition-colors"
+              value=""
+              title="העבר ליום אחר"
+              onChange={e => {
+                const targetDay = parseInt(e.target.value);
+                if (targetDay) onMoveToDay(item.id, targetDay);
+              }}
+            >
+              <option value="">📅</option>
+              {tripDays.map((day, idx) => {
+                const dayNum = idx + 1;
+                if (dayNum === selectedDayNum) return null;
+                return (
+                  <option key={dayNum} value={dayNum}>
+                    יום {dayNum} — {format(day, 'MMM d')}
+                  </option>
+                );
+              })}
+            </select>
           )}
           <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" onClick={() => onRemove(item.id)}>
             <X size={14} />

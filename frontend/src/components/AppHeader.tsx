@@ -11,6 +11,7 @@ import {
   CheckSquare,
   Compass,
   Inbox,
+  Hotel,
   ChevronDown,
   Plus,
   Trash2,
@@ -48,6 +49,7 @@ import {
 const navItems = [
   { path: '/', label: 'Timeline', icon: CalendarDays },
   { path: '/pois', label: 'POIs', icon: MapPin },
+  { path: '/accommodation', label: 'Stay', icon: Hotel },
   { path: '/transport', label: 'Transport', icon: Plane },
   { path: '/recommendations', label: 'Recs', icon: Star },
   { path: '/itinerary', label: 'Itinerary', icon: Table2 },
