@@ -24,6 +24,10 @@ maps = MapsService(MAP_GOOGLE_API_KEY) if MAP_GOOGLE_API_KEY else None
 
 def lambda_handler(event, context):
     """API Gateway entry point. Checks cache, classifies URL, dispatches to queues."""
+    # Handle CORS preflight
+    if event.get("httpMethod") == "OPTIONS":
+        return _response(200, {})
+
     try:
         body = json.loads(event.get("body", "{}"))
         url = body.get("url")
@@ -128,6 +132,11 @@ class _DecimalEncoder(json.JSONEncoder):
 def _response(status_code, body):
     return {
         "statusCode": status_code,
-        "headers": {"Content-Type": "application/json"},
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type,Authorization",
+            "Access-Control-Allow-Methods": "POST,OPTIONS",
+        },
         "body": json.dumps(body, cls=_DecimalEncoder)
     }
