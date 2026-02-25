@@ -253,6 +253,35 @@ export function TripProvider({ children }: { children: ReactNode }) {
     }
   }, [state.activeTrip?.id, loadTripData]);
 
+  // Real-time subscriptions — keep pois / transportation / itinerary_days in sync
+  useEffect(() => {
+    const tripId = state.activeTrip?.id;
+    if (!tripId) return;
+
+    let channel: ReturnType<typeof import('@/integrations/supabase/client')['supabase']['channel']> | null = null;
+
+    import('@/integrations/supabase/client').then(({ supabase }) => {
+      channel = supabase
+        .channel(`trip-realtime-${tripId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'points_of_interest', filter: `trip_id=eq.${tripId}` }, () => {
+          tripService.fetchPOIs(tripId).then(pois => dispatch({ type: 'SET_POIS', payload: pois }));
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'transportation', filter: `trip_id=eq.${tripId}` }, () => {
+          tripService.fetchTransportation(tripId).then(t => dispatch({ type: 'SET_TRANSPORTATION', payload: t }));
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'itinerary_days', filter: `trip_id=eq.${tripId}` }, () => {
+          tripService.fetchItineraryDays(tripId).then(days => dispatch({ type: 'SET_ITINERARY_DAYS', payload: days }));
+        })
+        .subscribe();
+    });
+
+    return () => {
+      import('@/integrations/supabase/client').then(({ supabase }) => {
+        if (channel) supabase.removeChannel(channel);
+      });
+    };
+  }, [state.activeTrip?.id]);
+
   const createNewTrip = async (name: string, description: string, startDate: string, endDate: string, countries: string[] = []) => {
     try {
       const newTrip = await tripService.createTrip({

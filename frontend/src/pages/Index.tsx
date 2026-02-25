@@ -92,77 +92,64 @@ const Index = () => {
 
   // ── Drag state ───────────────────────────────────────────────────────────────
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [isOverSchedule, setIsOverSchedule] = useState(false);
   const [isOverPotential, setIsOverPotential] = useState(false);
-
+  const [isOverNewSchedule, setIsOverNewSchedule] = useState(false);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
   );
 
-  const isScheduledBeingDragged = activeId?.startsWith('sched-') ?? false;
+  const isScheduledBeingDragged = !!activeId?.startsWith('newsched-');
   const isDragging = activeId !== null;
 
   // Collision detection:
-  // • potential-item drags: day pills via pointer; if over schedule, compute gap index
-  //   from actual pointer Y vs [data-sched-cell] element midpoints (avoids all rect-overlap
-  //   issues with negative-margin gaps); otherwise let potential list sort normally.
-  // • scheduled-item drags: pointer for potential-drop-zone & day pills; closestCenter
-  //   for schedule reorder (sortable CSS transforms shift rects, closestCenter handles that).
+  // • Both drag types: day pills first, then potential-zone (for scheduled), then schedule gaps.
+  // • Gap index computed from pointer Y vs [data-newsched-cell] midpoints (stable — no transforms).
   const collisionDetection: CollisionDetection = useCallback((args) => {
-    const isSchedDrag = args.active.id.toString().startsWith('sched-');
+    const isSchedDrag = args.active.id.toString().startsWith('newsched-');
     const hits = pointerWithin(args);
 
-    if (!isSchedDrag) {
-      // 1. Day pills always win when pointer is physically over them
-      const dayPillHit = hits.filter(c => c.id.toString().startsWith('day-drop-'));
-      if (dayPillHit.length > 0) return dayPillHit;
-
-      // 2. If pointer is over the schedule area, compute exact gap from cell midpoints
-      const overSchedule = hits.some(c => {
-        const id = c.id.toString();
-        return id === 'schedule-drop-zone' || id.startsWith('gap-') || id.startsWith('sched-');
-      });
-
-      if (overSchedule && args.pointerCoordinates) {
-        const py = args.pointerCoordinates.y;
-        // Count how many schedule cells have their midpoint ABOVE the pointer
-        const cellEls = Array.from(document.querySelectorAll('[data-sched-cell]'));
-        const gapIndex = cellEls.filter(el => {
-          const r = el.getBoundingClientRect();
-          return py > r.top + r.height / 2;
-        }).length;
-
-        // Return the registered gap droppable for this index
-        const gapId = `gap-${gapIndex}`;
-        const gapContainer = args.droppableContainers.find(c => c.id === gapId);
-        if (gapContainer) {
-          return [{ id: gapContainer.id, data: { droppableContainer: gapContainer, value: 0 } }];
-        }
-        // Fallback: schedule-drop-zone (e.g. schedule is empty, no gaps registered yet)
-        const schedContainer = args.droppableContainers.find(c => c.id === 'schedule-drop-zone');
-        if (schedContainer) {
-          return [{ id: schedContainer.id, data: { droppableContainer: schedContainer, value: 0 } }];
-        }
-      }
-
-      // 3. Not over schedule: potential list reorder or other droppables
-      const CATCH_ALL = new Set(['schedule-drop-zone', 'potential-drop-zone']);
-      const specific = hits.filter(c => !CATCH_ALL.has(c.id.toString()));
-      if (specific.length > 0) return specific;
-      if (hits.length > 0) return hits;
-      return closestCenter(args);
-    }
-
-    // Scheduled-item drags: pointer for special zones, closestCenter for schedule reorder
-    const potentialHit = hits.filter(c => c.id.toString() === 'potential-drop-zone');
-    if (potentialHit.length > 0) return potentialHit;
+    // 1. Day pills always win
     const dayPillHit = hits.filter(c => c.id.toString().startsWith('day-drop-'));
     if (dayPillHit.length > 0) return dayPillHit;
-    const cc = closestCenter(args);
-    const schedResults = cc.filter(c => c.id.toString().startsWith('sched-'));
-    if (schedResults.length > 0) return schedResults;
-    return cc;
+
+    // 2. Potential-zone wins for scheduled drags (return item to potential)
+    if (isSchedDrag) {
+      const potentialHit = hits.filter(c => c.id.toString() === 'potential-drop-zone');
+      if (potentialHit.length > 0) return potentialHit;
+    }
+
+    // 3. Schedule zone: compute gap from cell midpoints (wrappers don't transform — stable)
+    const overNewZone = hits.some(c => {
+      const id = c.id.toString();
+      return id === 'new-schedule-zone' || id.startsWith('newsched-gap-');
+    });
+    if (overNewZone && args.pointerCoordinates) {
+      const py = args.pointerCoordinates.y;
+      const cellEls = Array.from(document.querySelectorAll('[data-newsched-cell]'));
+      const gapIndex = cellEls.filter(el => {
+        const r = el.getBoundingClientRect();
+        return py > r.top + r.height / 2;
+      }).length;
+      const gapContainer = args.droppableContainers.find(c => c.id === `newsched-gap-${gapIndex}`);
+      if (gapContainer) {
+        return [{ id: gapContainer.id, data: { droppableContainer: gapContainer, value: 0 } }];
+      }
+      // Fallback: zone itself (empty schedule / no gaps rendered)
+      const zoneContainer = args.droppableContainers.find(c => c.id === 'new-schedule-zone');
+      if (zoneContainer) {
+        return [{ id: zoneContainer.id, data: { droppableContainer: zoneContainer, value: 0 } }];
+      }
+    }
+
+    // 4. Potential drag not over schedule: allow reorder within potential list
+    if (!isSchedDrag) {
+      const specific = hits.filter(c => c.id.toString() !== 'potential-drop-zone');
+      if (specific.length > 0) return specific;
+      if (hits.length > 0) return hits;
+    }
+
+    return closestCenter(args);
   }, []); // no deps — reads from DOM and args directly
 
   // Reset editing state when switching trips
@@ -354,7 +341,7 @@ const Index = () => {
   const dragPreviewData = useMemo(() => {
     if (!activeId) return null;
     if (isScheduledBeingDragged) {
-      const actId = activeId.replace('sched-', '');
+      const actId = activeId.replace('newsched-', '');
       for (const cell of scheduleCells) {
         if (cell.type === 'activity' && cell.activityId === actId) {
           return { label: cell.label, category: cell.category };
@@ -556,30 +543,46 @@ const Index = () => {
 
   // Move a potential activity into the schedule at a specific visual gap position.
   // gapIndex corresponds to gap-N droppable IDs rendered between scheduleCells.
+  // Helper: count how many activities are in scheduleCells[0..gapIndex-1].
+  // Transport cells contribute 0, activity cells contribute 1, groups contribute N.
+  // This maps a visual gap index (in scheduleCells space) to an insertion point
+  // in the flat activity-ID array — exactly like the HTML prototype's targetIdx.
+  const activityInsertPoint = useCallback((gapIndex: number): number => {
+    let count = 0;
+    for (let i = 0; i < gapIndex && i < scheduleCells.length; i++) {
+      const cell = scheduleCells[i];
+      if (cell.type === 'activity' && cell.activityId) count++;
+      else if (cell.type === 'group' && cell.groupItems) count += cell.groupItems.length;
+    }
+    return count;
+  }, [scheduleCells]);
+
+  // Current flat ordered list of scheduled activity IDs from scheduleCells.
+  const scheduledActivityOrder = useMemo((): string[] => {
+    const ids: string[] = [];
+    scheduleCells.forEach(cell => {
+      if (cell.type === 'activity' && cell.activityId) ids.push(cell.activityId);
+      else if (cell.type === 'group' && cell.groupItems) cell.groupItems.forEach(gi => ids.push(gi.activityId));
+    });
+    return ids;
+  }, [scheduleCells]);
+
   const moveToScheduleAtPosition = useCallback(async (
     activityId: string,
     gapIndex: number,
   ) => {
     if (!currentItDay) return;
 
-    // Collect scheduled activity IDs before and after the gap in current visual order
-    const activitiesBefore: string[] = [];
-    const activitiesAfter: string[] = [];
-    scheduleCells.forEach((cell, cellIdx) => {
-      const isBefore = cellIdx < gapIndex;
-      if (cell.type === 'activity' && cell.activityId) {
-        (isBefore ? activitiesBefore : activitiesAfter).push(cell.activityId);
-      } else if (cell.type === 'group' && cell.groupItems) {
-        cell.groupItems.forEach(gi => {
-          (isBefore ? activitiesBefore : activitiesAfter).push(gi.activityId);
-        });
-      }
-    });
+    // Insertion point in the flat scheduled-activity array (transport excluded)
+    const insertPoint = activityInsertPoint(gapIndex);
+    const orderedIds = [
+      ...scheduledActivityOrder.slice(0, insertPoint),
+      activityId,
+      ...scheduledActivityOrder.slice(insertPoint),
+    ];
+    console.log('[DnD] moveToPos:', { activityId, gapIndex, insertPoint, orderedIds });
 
-    const orderedIds = [...activitiesBefore, activityId, ...activitiesAfter];
-    console.log('[DnD] moveToPos:', { activityId, gapIndex, cells: scheduleCells.length, activitiesBefore, activitiesAfter, orderedIds });
-
-    // Toggle schedule_state and assign contiguous order values
+    // Toggle schedule_state and assign order values
     const withToggled = currentItDay.activities.map(a =>
       a.id === activityId ? { ...a, schedule_state: 'scheduled' as const } : a
     );
@@ -591,7 +594,28 @@ const Index = () => {
 
     await tripService.updateItineraryDay(currentItDay.id, { activities: [...reordered, ...others] });
     await refreshDays();
-  }, [currentItDay, scheduleCells, refreshDays]);
+  }, [currentItDay, scheduledActivityOrder, activityInsertPoint, refreshDays]);
+
+  // Reposition an already-scheduled activity — prototype's splice approach:
+  // splice out at dragIdx, splice in at adjusted insertPoint (subtract 1 if moving forward).
+  const moveScheduledToPosition = useCallback(async (
+    activityId: string,
+    gapIndex: number,
+  ) => {
+    if (!currentItDay) return;
+
+    const insertPoint = activityInsertPoint(gapIndex);
+    const dragIdx = scheduledActivityOrder.indexOf(activityId);
+    if (dragIdx === -1) return;
+
+    const newOrder = [...scheduledActivityOrder];
+    newOrder.splice(dragIdx, 1);
+    const adjustedInsert = dragIdx < insertPoint ? insertPoint - 1 : insertPoint;
+    newOrder.splice(adjustedInsert, 0, activityId);
+    console.log('[DnD] moveScheduledToPos:', { activityId, gapIndex, insertPoint, dragIdx, adjustedInsert, newOrder });
+
+    await reorderDayActivities(newOrder);
+  }, [currentItDay, scheduledActivityOrder, activityInsertPoint, reorderDayActivities]);
 
   const moveActivityToDay = useCallback(async (
     activityId: string,
@@ -649,6 +673,7 @@ const Index = () => {
       sourceRefs: { email_ids: [], recommendation_ids: [] },
       details: {},
       isCancelled: false,
+      isPaid: false,
     });
     if (newPOI) {
       await addEntityToDay(entityType, newPOI.id, entityType === 'accommodation' ? nights : undefined);
@@ -683,6 +708,7 @@ const Index = () => {
       }],
       additionalInfo: {},
       isCancelled: false,
+      isPaid: false,
     });
     if (newT) {
       await addEntityToDay('transport', newT.id);
@@ -730,73 +756,48 @@ const Index = () => {
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(event.active.id as string);
-    setIsOverSchedule(false);
     setIsOverPotential(false);
+    setIsOverNewSchedule(false);
   }, []);
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
     const overId = event.over?.id?.toString() ?? '';
-    const activeIsScheduled = event.active.id.toString().startsWith('sched-');
     console.log('[DnD] over:', overId);
-    setIsOverSchedule(
-      overId === 'schedule-drop-zone' ||
-      overId.startsWith('gap-') ||
-      (!activeIsScheduled && overId.startsWith('sched-'))
-    );
     setIsOverPotential(overId === 'potential-drop-zone');
+    setIsOverNewSchedule(overId === 'new-schedule-zone' || overId.startsWith('newsched-gap-'));
   }, []);
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
-    setIsOverSchedule(false);
     setIsOverPotential(false);
+    setIsOverNewSchedule(false);
     if (!over) return;
 
-    const isScheduled = active.id.toString().startsWith('sched-');
-    const activityId = isScheduled
-      ? active.id.toString().replace('sched-', '')
-      : active.id.toString();
+    const activeIdStr = active.id.toString();
+    const isScheduled = activeIdStr.startsWith('newsched-');
+    const activityId = isScheduled ? activeIdStr.replace('newsched-', '') : activeIdStr;
     const overId = over.id.toString();
-    console.log('[DnD] dragEnd:', { activeId: active.id.toString(), overId, isScheduled, activityId });
+    console.log('[DnD] dragEnd:', { activeId: activeIdStr, overId, isScheduled, activityId });
 
     if (overId.startsWith('day-drop-')) {
-      // Move to another day (works for both potential and scheduled)
+      // Move to another day
       const targetDay = parseInt(overId.replace('day-drop-', ''));
       if (!isNaN(targetDay)) await moveActivityToDay(activityId, targetDay);
     } else if (overId === 'potential-drop-zone' && isScheduled) {
       // Schedule → Potential
       await toggleActivityScheduleState(activityId, 'potential');
-    } else if (isScheduled && overId.startsWith('sched-')) {
-      // Reorder within schedule
-      const schedIds = dayScheduledActivities.map(a => a.id);
-      const oldIdx = schedIds.indexOf(activityId);
-      const newIdx = schedIds.indexOf(overId.replace('sched-', ''));
-      if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
-        await reorderDayActivities(arrayMove(schedIds, oldIdx, newIdx));
-      }
-    } else if (!isScheduled && overId.startsWith('gap-')) {
-      // Potential → Schedule at a specific visual position (gap between cells)
-      const gapIndex = parseInt(overId.replace('gap-', ''));
-      if (!isNaN(gapIndex)) await moveToScheduleAtPosition(activityId, gapIndex);
-    } else if (!isScheduled && overId.startsWith('sched-')) {
-      // Potential → dropped on a scheduled cell body (not a gap edge).
-      // Insert AFTER that cell (cellIdx + 1): top-edge drops are caught by the gap above,
-      // so landing on the card body means "put it after this card."
-      const targetActId = overId.replace('sched-', '');
-      const cellIdx = scheduleCells.findIndex(c =>
-        (c.type === 'activity' && c.activityId === targetActId) ||
-        (c.type === 'group' && c.groupItems?.some(gi => gi.activityId === targetActId))
-      );
-      if (cellIdx !== -1) {
-        await moveToScheduleAtPosition(activityId, cellIdx + 1);
-      } else {
-        await toggleActivityScheduleState(activityId, 'scheduled');
-      }
-    } else if (!isScheduled && overId === 'schedule-drop-zone') {
-      // Potential → Schedule (fallback: whole-zone drop)
-      await toggleActivityScheduleState(activityId, 'scheduled');
-    } else if (!isScheduled && overId !== active.id.toString()) {
+    } else if (!isScheduled && (overId === 'new-schedule-zone' || overId.startsWith('newsched-gap-'))) {
+      // Potential → Schedule zone
+      const gapIndex = overId.startsWith('newsched-gap-')
+        ? parseInt(overId.replace('newsched-gap-', ''), 10)
+        : scheduleCells.length;
+      await moveToScheduleAtPosition(activityId, gapIndex);
+    } else if (isScheduled && overId.startsWith('newsched-gap-')) {
+      // Scheduled item reposition
+      const gapIndex = parseInt(overId.replace('newsched-gap-', ''), 10);
+      await moveScheduledToPosition(activityId, gapIndex);
+    } else if (!isScheduled && overId !== activeIdStr) {
       // Reorder within potential list
       const oldIdx = dayPotentialActivities.findIndex(a => a.id === activityId);
       const newIdx = dayPotentialActivities.findIndex(a => a.id === overId);
@@ -805,7 +806,7 @@ const Index = () => {
         await reorderDayActivities(newOrder);
       }
     }
-  }, [moveActivityToDay, toggleActivityScheduleState, reorderDayActivities, moveToScheduleAtPosition, dayPotentialActivities, dayScheduledActivities, scheduleCells]);
+  }, [moveActivityToDay, toggleActivityScheduleState, reorderDayActivities, moveToScheduleAtPosition, moveScheduledToPosition, dayPotentialActivities, dayScheduledActivities, scheduleCells]);
 
   // ── Loading / no-trip states ─────────────────────────────────────────────────
 
@@ -958,8 +959,8 @@ const Index = () => {
               tripDays={tripDays}
               // Drag state from this DndContext
               isDragging={isDragging}
-              isOverSchedule={isOverSchedule}
               isOverPotential={isOverPotential}
+              isOverNewSchedule={isOverNewSchedule}
               isScheduledBeingDragged={isScheduledBeingDragged}
               // Section 1
               prevDayAccommodations={prevDayAccommodations}

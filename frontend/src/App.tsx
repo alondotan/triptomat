@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { TripProvider } from "./context/TripContext";
 import { AuthGuard } from "./components/AuthGuard";
 import AuthPage from "./pages/Auth";
-import Index from "./pages/Index";
 import ItineraryPage from "./pages/Itinerary";
 import POIsPage from "./pages/POIs";
 import TransportPage from "./pages/Transport";
@@ -16,6 +15,7 @@ import BudgetPage from "./pages/Budget";
 import TasksPage from "./pages/Tasks";
 import InboxPage from "./pages/Inbox";
 import AccommodationPage from "./pages/Accommodation";
+import DndTestPage from "./pages/DndTest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,7 +32,7 @@ const App = () => (
             <AuthGuard>
               <TripProvider>
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<DndTestPage />} />
                   <Route path="/itinerary" element={<ItineraryPage />} />
                   <Route path="/pois" element={<POIsPage />} />
                   <Route path="/transport" element={<TransportPage />} />

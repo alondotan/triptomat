@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import {
   useDroppable,
+  useDraggable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -10,7 +11,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  Building2, Sun, Moon, Clock, Lightbulb,
+  Building2, Sun, Moon, Clock, Lightbulb, CalendarDays,
   Plane, Train, Ship, Car, Bus, X, Plus, Navigation, GripVertical,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -70,8 +71,8 @@ export interface ItineraryDayContentProps {
 
   // Drag state (from parent DndContext in Index.tsx)
   isDragging: boolean;
-  isOverSchedule: boolean;
   isOverPotential: boolean;
+  isOverNewSchedule: boolean;
   isScheduledBeingDragged: boolean;
 
   // Section 1
@@ -174,65 +175,6 @@ function PotentialDropZone({ isOver }: { isOver: boolean }) {
   );
 }
 
-// ─── Schedule drop zone ───────────────────────────────────────────────────────
-
-function ScheduleDropZone({ isActive, isOver, disabled, children }: {
-  isActive: boolean;
-  isOver: boolean;
-  disabled?: boolean;
-  children: React.ReactNode;
-}) {
-  const { setNodeRef } = useDroppable({ id: 'schedule-drop-zone', disabled });
-  return (
-    <div
-      ref={setNodeRef}
-      className={`rounded-xl transition-all duration-200 ${
-        isOver
-          ? 'ring-2 ring-primary/60 ring-dashed bg-primary/8 p-2'
-          : isActive
-            ? 'ring-1 ring-primary/20 ring-dashed p-1'
-            : ''
-      }`}
-    >
-      {isOver && (
-        <p className="text-xs text-primary/80 text-center py-2 font-medium">
-          שחרר כאן להוספה ללו"ז
-        </p>
-      )}
-      {children}
-    </div>
-  );
-}
-
-// ─── Schedule drop gap ────────────────────────────────────────────────────────
-
-function ScheduleDropGap({ index }: { index: number }) {
-  const { setNodeRef, isOver } = useDroppable({ id: `gap-${index}` });
-  return (
-    // Negative margin creates a 10px overlap into the adjacent cards on both sides —
-    // same trick as the HTML prototype. This makes the gap easy to hit without
-    // precise aiming: hovering near the card edge lands inside the gap's hit rect.
-    <div
-      ref={setNodeRef}
-      style={{ marginTop: '-10px', marginBottom: '-10px' }}
-      className={`relative z-20 transition-all duration-150 ${
-        isOver
-          ? 'h-14 rounded-xl border-2 border-dashed border-primary/50 bg-primary/10 flex items-center justify-center'
-          : 'h-5'
-      }`}
-    >
-      {isOver && <p className="text-[10px] text-primary/70 font-medium">שחרר כאן</p>}
-      {!isOver && (
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center gap-2 px-2 pointer-events-none opacity-25">
-          <div className="flex-1 h-px border-t border-dashed border-primary/40" />
-          <span className="text-[9px] text-primary/60 shrink-0">+</span>
-          <div className="flex-1 h-px border-t border-dashed border-primary/40" />
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Sortable potential activity ──────────────────────────────────────────────
 
 function SortableActivityItem({
@@ -283,105 +225,6 @@ function SortableActivityItem({
       >
         <X size={12} />
       </button>
-    </div>
-  );
-}
-
-// ─── Sortable scheduled activity card (no dot — dot added by parent) ──────────
-
-function SortableScheduledItem({
-  activityId, label, sublabel, category, time, endTime, onRemove,
-}: {
-  activityId: string;
-  label: string;
-  sublabel?: string;
-  category?: string;
-  time?: string;
-  endTime?: string;
-  onRemove: (id: string) => Promise<void>;
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: `sched-${activityId}`,
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined, transition }}
-      className={`flex items-start gap-2 bg-muted/30 rounded-xl px-2.5 py-2 border border-border/20 transition-opacity ${
-        isDragging ? 'opacity-40' : ''
-      }`}
-    >
-      <button
-        {...attributes}
-        {...listeners}
-        className="shrink-0 cursor-grab active:cursor-grabbing p-0.5 text-muted-foreground/30 hover:text-muted-foreground/60 touch-none select-none mt-0.5"
-        aria-label="גרור"
-      >
-        <GripVertical size={13} />
-      </button>
-
-      <div className="shrink-0 w-10 text-right pt-0.5">
-        {time
-          ? <span className="text-[10px] font-mono text-primary">{time}</span>
-          : <span className="text-[10px] text-muted-foreground/40">—</span>
-        }
-      </div>
-
-      <div className="flex-1 min-w-0 flex items-start gap-1.5">
-        {category && (
-          <span className="shrink-0 mt-0.5 text-muted-foreground">
-            <SubCategoryIcon type={category} size={13} className="text-muted-foreground" />
-          </span>
-        )}
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold truncate">{label}</p>
-          {sublabel && <p className="text-[10px] text-muted-foreground truncate">{sublabel}</p>}
-          {endTime && <p className="text-[10px] text-muted-foreground">עד {endTime}</p>}
-        </div>
-      </div>
-
-      <button
-        onClick={() => onRemove(activityId)}
-        title="הסר"
-        className="shrink-0 mt-0.5 p-1 rounded text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors"
-      >
-        <X size={11} />
-      </button>
-    </div>
-  );
-}
-
-// ─── Group cell (multiple untimed activities with a smart label) ──────────────
-
-function GroupCell({
-  label, items, onRemove,
-}: {
-  label: string;
-  items: ScheduleCellItem[];
-  onRemove: (id: string) => Promise<void>;
-}) {
-  return (
-    <div className="relative flex items-start gap-3">
-      <div className="shrink-0 mt-3 w-3.5 h-3.5 rounded-full border-2 border-background z-10 bg-muted-foreground/40" />
-      <div className="flex-1 bg-muted/20 rounded-xl border border-border/20 overflow-hidden">
-        <div className="flex items-center gap-2 px-2.5 py-1.5 bg-muted/30 border-b border-border/20">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">{label}</span>
-          <span className="text-[10px] text-muted-foreground/40">· זמן חופשי</span>
-        </div>
-        <div className="space-y-1 p-1.5">
-          {items.map(item => (
-            <SortableScheduledItem
-              key={item.activityId}
-              activityId={item.activityId}
-              label={item.label}
-              sublabel={item.sublabel}
-              category={item.category}
-              onRemove={onRemove}
-            />
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
@@ -530,11 +373,252 @@ function AddTransportDialog({
   );
 }
 
+// ─── Locked (timed) new-schedule item ────────────────────────────────────────
+
+function LockedNewSchedItem({
+  activityId, label, sublabel, category, time, endTime, onRemove,
+}: {
+  activityId: string;
+  label: string;
+  sublabel?: string;
+  category?: string;
+  time: string;
+  endTime?: string;
+  onRemove: (id: string) => Promise<void>;
+}) {
+  return (
+    <div className="rounded-xl border-2 overflow-hidden border-amber-400/60 bg-amber-50/5">
+      <div className="px-2.5 py-0.5 border-b border-amber-400/30 flex items-center gap-1.5">
+        <Clock size={9} className="text-amber-500/70" />
+        <span className="text-[10px] text-amber-500/70 font-mono">{time}</span>
+        {endTime && <span className="text-[10px] text-amber-500/40">– {endTime}</span>}
+      </div>
+      <div className="flex items-center gap-2 px-2.5 py-2">
+        <div className="shrink-0 w-[18px]" />
+        {category && <SubCategoryIcon type={category} size={13} className="text-muted-foreground shrink-0" />}
+        <p className="flex-1 text-xs font-semibold truncate">{label}</p>
+        {sublabel && <p className="text-[10px] text-muted-foreground truncate max-w-[80px]">{sublabel}</p>}
+        <button
+          onClick={() => onRemove(activityId)}
+          className="shrink-0 p-0.5 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
+        >
+          <X size={11} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Sortable new-schedule item ───────────────────────────────────────────────
+
+function SortableNewSchedItem({
+  activityId, label, sublabel, category, time, endTime, onRemove,
+}: {
+  activityId: string;
+  label: string;
+  sublabel?: string;
+  category?: string;
+  time?: string;
+  endTime?: string;
+  onRemove: (id: string) => Promise<void>;
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `newsched-${activityId}`,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`rounded-xl border-2 overflow-hidden transition-opacity ${
+        isDragging ? 'opacity-40' : ''
+      } ${time ? 'border-amber-400/60 bg-amber-50/5' : 'border-border/30 bg-background/50'}`}
+    >
+      {time && (
+        <div className="px-2.5 py-0.5 border-b border-amber-400/30 flex items-center gap-1.5">
+          <Clock size={9} className="text-amber-500/70" />
+          <span className="text-[10px] text-amber-500/70 font-mono">{time}</span>
+          {endTime && <span className="text-[10px] text-amber-500/40">– {endTime}</span>}
+        </div>
+      )}
+      <div className="flex items-center gap-2 px-2.5 py-2">
+        <button
+          {...attributes}
+          {...listeners}
+          className="shrink-0 cursor-grab active:cursor-grabbing p-0.5 text-muted-foreground/30 hover:text-muted-foreground/60 touch-none select-none"
+          aria-label="גרור"
+        >
+          <GripVertical size={13} />
+        </button>
+        {category && <SubCategoryIcon type={category} size={13} className="text-muted-foreground shrink-0" />}
+        <p className="flex-1 text-xs font-semibold truncate">{label}</p>
+        {sublabel && <p className="text-[10px] text-muted-foreground truncate max-w-[80px]">{sublabel}</p>}
+        <button
+          onClick={() => onRemove(activityId)}
+          className="shrink-0 p-0.5 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
+        >
+          <X size={11} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── New-schedule drop gap ────────────────────────────────────────────────────
+
+function NewSchedDropGap({ index }: { index: number }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `newsched-gap-${index}` });
+  return (
+    <div
+      ref={setNodeRef}
+      data-newsched-gap-index={index}
+      style={{ marginTop: '-8px', marginBottom: '-8px' }}
+      className={`relative z-20 transition-all duration-150 ${
+        isOver
+          ? 'h-12 rounded-xl border-2 border-dashed border-primary/50 bg-primary/10 flex items-center justify-center'
+          : 'h-4'
+      }`}
+    >
+      {isOver && <p className="text-[10px] text-primary/70 font-medium">שחרר כאן</p>}
+      {!isOver && (
+        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center gap-2 px-2 pointer-events-none opacity-20">
+          <div className="flex-1 h-px border-t border-dashed border-primary/40" />
+          <span className="text-[9px] text-primary/60 shrink-0">+</span>
+          <div className="flex-1 h-px border-t border-dashed border-primary/40" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── New-style schedule zone ───────────────────────────────────────────────────
+
+function NewScheduleDropZone({
+  scheduleCells, onRemoveActivity, onRemoveTransport, isActive, isOver, showGaps,
+}: {
+  scheduleCells: ScheduleCellData[];
+  onRemoveActivity: (id: string) => Promise<void>;
+  onRemoveTransport: (id: string) => Promise<void>;
+  isActive: boolean;
+  isOver: boolean;
+  showGaps: boolean;
+}) {
+  const { setNodeRef } = useDroppable({ id: 'new-schedule-zone', disabled: !isActive });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`min-h-[80px] rounded-xl border-2 p-2 transition-all ${
+        isOver
+          ? 'border-primary/60 border-dashed bg-primary/5'
+          : isActive
+            ? 'border-primary/20 border-dashed'
+            : 'border-border/30 bg-muted/10'
+      }`}
+    >
+      {scheduleCells.length === 0 ? (
+        <p className={`text-xs px-1 py-2 text-center ${isOver ? 'text-primary/80 font-medium' : 'text-muted-foreground'}`}>
+          {isOver ? 'שחרר כאן' : 'גרור פעילויות פוטנציאליות לכאן'}
+        </p>
+      ) : (
+        <div className="space-y-1.5">
+          {showGaps && <NewSchedDropGap index={0} />}
+          {scheduleCells.map((cell, cellIdx) => {
+              let cellNode: React.ReactNode = null;
+
+              if (cell.type === 'transport') {
+                cellNode = (
+                  <div className="rounded-xl border-2 overflow-hidden border-border/40 bg-background/50">
+                    {cell.time && (
+                      <div className="px-2.5 py-0.5 border-b border-border/20 flex items-center gap-1.5">
+                        <Clock size={9} className="text-muted-foreground/60" />
+                        <span className="text-[10px] font-mono text-muted-foreground/80">{cell.time}</span>
+                        {cell.endTime && <span className="text-[10px] text-muted-foreground/40">– {cell.endTime}</span>}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 px-2.5 py-2">
+                      <div className="shrink-0 w-[18px]" />
+                      <span className="shrink-0 text-muted-foreground">
+                        <TransportIcon category={cell.category} />
+                      </span>
+                      <p className="flex-1 text-xs font-semibold truncate">{cell.label}</p>
+                      {cell.sublabel && <p className="text-[10px] text-muted-foreground truncate max-w-[80px]">{cell.sublabel}</p>}
+                      {cell.transportId && (
+                        <button
+                          onClick={() => onRemoveTransport(cell.transportId!)}
+                          className="shrink-0 p-0.5 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
+                        >
+                          <X size={11} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              } else if (cell.type === 'activity' && cell.activityId) {
+                if (cell.time) {
+                  cellNode = (
+                    <LockedNewSchedItem
+                      activityId={cell.activityId}
+                      label={cell.label}
+                      sublabel={cell.sublabel}
+                      category={cell.category}
+                      time={cell.time}
+                      endTime={cell.endTime}
+                      onRemove={onRemoveActivity}
+                    />
+                  );
+                } else {
+                  cellNode = (
+                    <SortableNewSchedItem
+                      activityId={cell.activityId}
+                      label={cell.label}
+                      sublabel={cell.sublabel}
+                      category={cell.category}
+                      onRemove={onRemoveActivity}
+                    />
+                  );
+                }
+              } else if (cell.type === 'group' && cell.groupItems) {
+                cellNode = (
+                  <div className="rounded-xl border-2 border-primary/40 bg-primary/5 overflow-hidden">
+                    <div className="px-2.5 py-1 border-b border-primary/20 flex items-center gap-1.5">
+                      <span className="text-[10px] text-primary/70 font-semibold">{cell.label}</span>
+                      <span className="text-[10px] text-primary/40">· {cell.groupItems.length} פעילויות</span>
+                    </div>
+                    <div className="p-1 space-y-0.5">
+                      {cell.groupItems.map(gi => (
+                        <SortableNewSchedItem
+                          key={gi.activityId}
+                          activityId={gi.activityId}
+                          label={gi.label}
+                          sublabel={gi.sublabel}
+                          category={gi.category}
+                          onRemove={onRemoveActivity}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              }
+
+              if (!cellNode) return null;
+              return (
+                <div key={cell.id}>
+                  <div data-newsched-cell={cellIdx}>{cellNode}</div>
+                  {showGaps && <NewSchedDropGap index={cellIdx + 1} />}
+                </div>
+              );
+            })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main component ────────────────────────────────────────────────────────────
 
 export function ItineraryDayContent({
   selectedDayNum, tripDays,
-  isDragging, isOverSchedule, isOverPotential, isScheduledBeingDragged,
+  isDragging, isOverPotential, isOverNewSchedule, isScheduledBeingDragged,
   prevDayAccommodations,
   potentialActivities, availableActivities, locationContext, countries, tripSitesHierarchy,
   onMoveActivityToDay, onRemoveActivity, onAddActivity, onCreateNewActivity,
@@ -545,91 +629,6 @@ export function ItineraryDayContent({
 }: ItineraryDayContentProps) {
 
   const morningAccom = prevDayAccommodations.find(a => a.is_selected) ?? prevDayAccommodations[0];
-
-  // Flat list of sched-{id} for SortableContext
-  const scheduledItemIds = scheduleCells.flatMap(cell => {
-    if (cell.type === 'activity' && cell.activityId) return [`sched-${cell.activityId}`];
-    if (cell.type === 'group' && cell.groupItems) return cell.groupItems.map(gi => `sched-${gi.activityId}`);
-    return [];
-  });
-
-  // Build schedule cells with drop gaps between every cell when dragging from potential
-  const showGaps = isDragging && !isScheduledBeingDragged;
-  const scheduleContent: React.ReactNode[] = [];
-
-  if (showGaps) {
-    scheduleContent.push(<ScheduleDropGap key="gap-0" index={0} />);
-  }
-
-  scheduleCells.forEach((cell, cellIdx) => {
-    if (cell.type === 'activity' && cell.activityId) {
-      scheduleContent.push(
-        <div key={cell.id} data-sched-cell={cellIdx} className="relative flex items-start gap-3">
-          <div className="shrink-0 mt-2.5 w-3.5 h-3.5 rounded-full border-2 border-background z-10 bg-muted-foreground/70" />
-          <div className="flex-1">
-            <SortableScheduledItem
-              activityId={cell.activityId}
-              label={cell.label}
-              sublabel={cell.sublabel}
-              category={cell.category}
-              time={cell.time}
-              endTime={cell.endTime}
-              onRemove={onRemoveActivity}
-            />
-          </div>
-        </div>
-      );
-    } else if (cell.type === 'group' && cell.groupItems) {
-      scheduleContent.push(
-        <div key={cell.id} data-sched-cell={cellIdx}>
-          <GroupCell
-            label={cell.label}
-            items={cell.groupItems}
-            onRemove={onRemoveActivity}
-          />
-        </div>
-      );
-    } else {
-      // Transport cell (static)
-      scheduleContent.push(
-        <div key={cell.id} data-sched-cell={cellIdx} className="relative flex items-start gap-3">
-          <div className="shrink-0 mt-2.5 w-3.5 h-3.5 rounded-full border-2 border-background z-10 bg-primary" />
-          <div className="flex-1 flex items-start gap-2 bg-muted/30 rounded-xl px-2.5 py-2 border border-border/20">
-            <div className="shrink-0 w-10 text-right pt-0.5">
-              {cell.time
-                ? <span className="text-[10px] font-mono text-primary">{cell.time}</span>
-                : <span className="text-[10px] text-muted-foreground/40">—</span>
-              }
-            </div>
-            <div className="flex-1 min-w-0 flex items-start gap-1.5">
-              <span className="shrink-0 mt-0.5 text-muted-foreground">
-                <TransportIcon category={cell.category} />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold truncate">{cell.label}</p>
-                {cell.sublabel && <p className="text-[10px] text-muted-foreground truncate">{cell.sublabel}</p>}
-                {cell.endTime && <p className="text-[10px] text-muted-foreground">עד {cell.endTime}</p>}
-              </div>
-            </div>
-            {cell.transportId && (
-              <button
-                onClick={() => onRemoveTransport(cell.transportId!)}
-                title="הסר"
-                className="shrink-0 mt-0.5 p-1 rounded text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors"
-              >
-                <X size={11} />
-              </button>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    // Drop gap after each cell (index = cellIdx + 1 means "before cell at cellIdx+1")
-    if (showGaps) {
-      scheduleContent.push(<ScheduleDropGap key={`gap-${cellIdx + 1}`} index={cellIdx + 1} />);
-    }
-  });
 
   return (
     <div className="space-y-6">
@@ -699,10 +698,10 @@ export function ItineraryDayContent({
         </div>
       </SectionBlock>
 
-      {/* ── Section 3: Detailed Schedule ────────────────────────────── */}
+      {/* ── Section 2.5: Schedule ─────────────────────────────────────── */}
       <SectionBlock
-        icon={<Clock size={12} />}
-        title='לו"ז מפורט'
+        icon={<CalendarDays size={12} />}
+        title='לו"ז'
         colorClass="text-primary"
         action={
           <AddTransportDialog
@@ -713,23 +712,14 @@ export function ItineraryDayContent({
           />
         }
       >
-        <ScheduleDropZone isActive={isDragging && !isScheduledBeingDragged} isOver={isOverSchedule && scheduleContent.length === 0} disabled={isScheduledBeingDragged}>
-          {scheduleCells.length === 0 ? (
-            <p className="text-xs text-muted-foreground px-1">
-              {isDragging && !isScheduledBeingDragged ? '' : 'גרור פעילות ללו״ז או הוסף תחבורה'}
-            </p>
-          ) : (
-            <div className="relative">
-              {/* Vertical timeline line */}
-              <div className="absolute left-[7px] top-3 bottom-3 w-px bg-border/50" />
-              <SortableContext items={scheduledItemIds} strategy={verticalListSortingStrategy}>
-                <div className="space-y-2">
-                  {scheduleContent}
-                </div>
-              </SortableContext>
-            </div>
-          )}
-        </ScheduleDropZone>
+        <NewScheduleDropZone
+          scheduleCells={scheduleCells}
+          onRemoveActivity={onRemoveActivity}
+          onRemoveTransport={onRemoveTransport}
+          isActive={isDragging && !isScheduledBeingDragged}
+          isOver={isOverNewSchedule}
+          showGaps={isDragging}
+        />
       </SectionBlock>
 
       {/* ── Section 4: Evening Accommodation ────────────────────────── */}

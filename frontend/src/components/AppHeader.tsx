@@ -2,6 +2,7 @@ import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   CalendarDays,
+  Compass,
   Map,
   MapPin,
   Plane,
@@ -9,7 +10,6 @@ import {
   Table2,
   DollarSign,
   CheckSquare,
-  Compass,
   Inbox,
   Hotel,
   Menu,
