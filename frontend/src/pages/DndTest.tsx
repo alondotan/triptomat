@@ -147,6 +147,7 @@ function DraggableItem({ item, isBeingDragged }: { item: Item; isBeingDragged: b
   return (
     <div
       ref={setNodeRef}
+      style={{ touchAction: 'none' }}
       className={`flex items-center gap-2.5 bg-card border rounded-xl px-3 py-2.5 select-none transition-opacity ${
         isBeingDragged ? 'opacity-30' : 'cursor-grab hover:border-primary/40'
       }`}
@@ -179,6 +180,7 @@ function SortableScheduledItem({
       style={{
         transform: transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
         transition,
+        touchAction: 'none',
       }}
       className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-opacity ${
         isLocked ? 'bg-background/50' : 'bg-background/70'
@@ -303,11 +305,11 @@ function PotentialZone({ children, isScheduledDragging }: {
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[280px] border-2 rounded-xl p-3 transition-all space-y-1.5 ${
+      className={`border-2 rounded-xl p-3 transition-all space-y-1.5 ${
         isOver
-          ? 'border-amber-400/80 border-dashed bg-amber-50/10'
+          ? 'border-amber-400/80 border-dashed bg-amber-50/10 min-h-[80px]'
           : isScheduledDragging
-            ? 'border-amber-400/40 border-dashed'
+            ? 'border-amber-400/40 border-dashed min-h-[80px]'
             : 'border-border/30'
       } bg-muted/10`}
     >
@@ -332,11 +334,11 @@ function ScheduleZone({ children, activePotentialDrag, isEmpty }: {
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[280px] border-2 rounded-xl p-3 transition-all ${
+      className={`border-2 rounded-xl p-3 transition-all ${
         isOver && isEmpty
-          ? 'border-primary/60 border-dashed bg-primary/5'
+          ? 'border-primary/60 border-dashed bg-primary/5 min-h-[80px]'
           : activePotentialDrag && isEmpty
-            ? 'border-primary/20 border-dashed'
+            ? 'border-primary/20 border-dashed min-h-[80px]'
             : 'border-border/30'
       } bg-muted/10`}
     >
@@ -722,7 +724,7 @@ export default function DndTestPage() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
   );
 
   // Persist scheduled/potential arrays back to itineraryDay.activities + context
