@@ -232,7 +232,7 @@ Deno.serve(async (req) => {
     if (matchedTripId) {
       // Pre-fetch existing entities for this trip
       const [{ data: existingPois }, { data: existingTransport }] = await Promise.all([
-        supabase.from('points_of_interest').select('id, name, category, source_refs').eq('trip_id', matchedTripId),
+        supabase.from('points_of_interest').select('id, name, category, location, source_refs').eq('trip_id', matchedTripId),
         supabase.from('transportation').select('id, category, additional_info, source_refs').eq('trip_id', matchedTripId),
       ]);
 
@@ -295,18 +295,30 @@ Deno.serve(async (req) => {
           // POI: accommodation, eatery, attraction, service
           const poiCategory = dbCategory === 'service' ? 'attraction' : dbCategory;
 
-          // Fuzzy match: check if POI with similar name + same category exists
-          const matchedPoi = existingPois?.find(p =>
-            p.category === poiCategory && fuzzyMatch(p.name, item.name)
-          );
+          // Fuzzy match: name + category, with optional city check when both have it
+          const matchedPoi = existingPois?.find(p => {
+            if (p.category !== poiCategory) return false;
+            if (!fuzzyMatch(p.name, item.name)) return false;
+            const existingCity = (p.location as any)?.city;
+            const newCity = item.site || (item.location as any)?.city;
+            if (existingCity && newCity && !fuzzyMatch(existingCity, newCity)) return false;
+            return true;
+          });
 
           if (matchedPoi) {
-            // Link to existing - add recommendation ref
+            // Link to existing - add recommendation ref and merge location data
             const refs = (matchedPoi.source_refs as Record<string, unknown>) || {};
             const recIds = (refs.recommendation_ids as string[]) || [];
             if (!recIds.includes(sourceRecId)) {
+              const incomingLocation = {
+                city: item.site || undefined,
+                address: item.location?.address || undefined,
+                coordinates: item.location?.coordinates || undefined,
+              };
+              const mergedLocation = mergeWithNewWins(matchedPoi.location, incomingLocation);
               await supabase.from('points_of_interest').update({
                 source_refs: { ...refs, recommendation_ids: [...recIds, sourceRecId] },
+                location: mergedLocation,
               }).eq('id', matchedPoi.id);
             }
             linkedEntities.push({
@@ -366,9 +378,31 @@ Deno.serve(async (req) => {
 
 // Fuzzy match: case-insensitive, checks if one name contains the other
 function fuzzyMatch(existingName: string, newName: string): boolean {
+  if (!existingName || !newName) return false;
   const a = existingName.toLowerCase().trim();
   const b = newName.toLowerCase().trim();
+  if (!a || !b) return false;
   if (a === b) return true;
   if (a.includes(b) || b.includes(a)) return true;
   return false;
+}
+
+function hasValue(v: unknown): boolean {
+  return v !== null && v !== undefined && v !== '';
+}
+
+/**
+ * Merge two objects: new wins when both have a value.
+ * If incoming field is null/undefined/empty-string, the old value is preserved.
+ * Arrays are replaced entirely by the new value.
+ */
+function mergeWithNewWins(old: any, incoming: any): any {
+  if (!hasValue(incoming)) return old;
+  if (typeof incoming !== 'object' || Array.isArray(incoming)) return incoming;
+  if (typeof old !== 'object' || old === null || Array.isArray(old)) return incoming;
+  const result = { ...old };
+  for (const key of Object.keys(incoming)) {
+    result[key] = mergeWithNewWins(old[key], incoming[key]);
+  }
+  return result;
 }

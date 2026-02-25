@@ -92,18 +92,33 @@ function extractCities(h?: SiteNode[]): string[] {
   return out;
 }
 
-/** Deep merge: newer non-null/non-undefined values win. Arrays replaced entirely. */
-function deepMerge(old: any, incoming: any): any {
-  if (incoming === null || incoming === undefined) return old;
+/** Returns true if a value is considered "present" (not null, undefined, or empty string). */
+function hasValue(v: unknown): boolean {
+  return v !== null && v !== undefined && v !== '';
+}
+
+/**
+ * Merge two objects: new wins when both have a value.
+ * If incoming field is null/undefined/empty-string, the old value is preserved.
+ * Arrays are replaced entirely by the new value.
+ */
+function mergeWithNewWins(old: any, incoming: any): any {
+  if (!hasValue(incoming)) return old;
   if (typeof incoming !== 'object' || Array.isArray(incoming)) return incoming;
   if (typeof old !== 'object' || old === null || Array.isArray(old)) return incoming;
   const result = { ...old };
   for (const key of Object.keys(incoming)) {
-    if (incoming[key] !== undefined) {
-      result[key] = deepMerge(old[key], incoming[key]);
-    }
+    result[key] = mergeWithNewWins(old[key], incoming[key]);
   }
   return result;
+}
+
+function fuzzyMatch(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  const x = a.toLowerCase().trim();
+  const y = b.toLowerCase().trim();
+  if (!x || !y) return false;
+  return x === y || x.includes(y) || y.includes(x);
 }
 
 const toUtcMs = (d: string) => new Date(`${d}T00:00:00Z`).getTime();
@@ -216,6 +231,26 @@ async function findExistingTransport(supabase: any, tripId: string, orderNumber:
     .eq('trip_id', tripId)
     .contains('booking', { order_number: orderNumber });
   return data?.[0] || null;
+}
+
+/** Fuzzy-match by name + category (+ city when both have it). Used as fallback when no order_number match. */
+async function findExistingPoiByNameAndLocation(
+  supabase: any, tripId: string, name: string, category: string, city?: string
+) {
+  const { data } = await supabase
+    .from('points_of_interest')
+    .select('*')
+    .eq('trip_id', tripId)
+    .eq('category', category);
+  if (!data?.length) return null;
+  for (const poi of data) {
+    if (!fuzzyMatch(poi.name, name)) continue;
+    const poiCity = poi.location?.city;
+    // If both have a city value, they must match
+    if (city && poiCity && !fuzzyMatch(poiCity, city)) continue;
+    return poi;
+  }
+  return null;
 }
 
 function addEmailToSourceRefs(existingRefs: any, emailId: string): any {
@@ -393,14 +428,17 @@ Deno.serve(async (req) => {
             },
           };
 
-          const existing = await findExistingPoi(supabase, matchedTripId, orderNumber, 'accommodation');
+          let existing = await findExistingPoi(supabase, matchedTripId, orderNumber, 'accommodation');
+          if (!existing) {
+            existing = await findExistingPoiByNameAndLocation(supabase, matchedTripId, accom.establishment_name, 'accommodation', city);
+          }
 
           if (existing) {
             // UPDATE existing entity
             const merged = {
               ...newData,
-              location: deepMerge(existing.location, newData.location),
-              details: deepMerge(existing.details, newData.details),
+              location: mergeWithNewWins(existing.location, newData.location),
+              details: mergeWithNewWins(existing.details, newData.details),
               source_refs: addEmailToSourceRefs(existing.source_refs, sourceEmailId),
             };
             // Use new name only if provided
@@ -466,8 +504,8 @@ Deno.serve(async (req) => {
           if (existing) {
             const merged = {
               ...newData,
-              cost: deepMerge(existing.cost, newData.cost),
-              booking: deepMerge(existing.booking, newData.booking),
+              cost: mergeWithNewWins(existing.cost, newData.cost),
+              booking: mergeWithNewWins(existing.booking, newData.booking),
               segments: builtSegments.length > 0 ? builtSegments : existing.segments,
               source_refs: addEmailToSourceRefs(existing.source_refs, sourceEmailId),
             };
@@ -527,13 +565,16 @@ Deno.serve(async (req) => {
               },
             };
 
-            const existing = await findExistingPoi(supabase, matchedTripId, orderNumber, metadata.category);
+            let existing = await findExistingPoi(supabase, matchedTripId, orderNumber, metadata.category);
+            if (!existing) {
+              existing = await findExistingPoiByNameAndLocation(supabase, matchedTripId, name, metadata.category, city);
+            }
 
             if (existing) {
               const merged = {
                 ...newData,
-                location: deepMerge(existing.location, newData.location),
-                details: deepMerge(existing.details, newData.details),
+                location: mergeWithNewWins(existing.location, newData.location),
+                details: mergeWithNewWins(existing.details, newData.details),
                 source_refs: addEmailToSourceRefs(existing.source_refs, sourceEmailId),
               };
               if (!name) merged.name = existing.name;

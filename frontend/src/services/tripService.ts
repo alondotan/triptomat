@@ -90,6 +90,90 @@ export async function fetchPOIs(tripId: string): Promise<PointOfInterest[]> {
   return (data || []).map(mapPOI);
 }
 
+// ── Merge utilities ─────────────────────────────────────────────
+
+function hasValue(v: unknown): boolean {
+  return v !== null && v !== undefined && v !== '';
+}
+
+function mergeWithNewWins(old: unknown, incoming: unknown): unknown {
+  if (!hasValue(incoming)) return old;
+  if (typeof incoming !== 'object' || Array.isArray(incoming)) return incoming;
+  if (typeof old !== 'object' || old === null || Array.isArray(old)) return incoming;
+  const result: Record<string, unknown> = { ...(old as Record<string, unknown>) };
+  for (const key of Object.keys(incoming as Record<string, unknown>)) {
+    result[key] = mergeWithNewWins(
+      (old as Record<string, unknown>)[key],
+      (incoming as Record<string, unknown>)[key],
+    );
+  }
+  return result;
+}
+
+function fuzzyMatch(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  const x = a.toLowerCase().trim();
+  const y = b.toLowerCase().trim();
+  return x === y || x.includes(y) || y.includes(x);
+}
+
+const STATUS_PRIORITY: Record<string, number> = {
+  booked: 4, visited: 3, in_plan: 2, matched: 1, candidate: 0,
+};
+
+/**
+ * Creates a new POI, or merges with an existing one if a POI with the same
+ * name + category (+ matching city when both have it) already exists for the trip.
+ * Merge rule: new value wins when both have a value; empty/null/undefined preserves the old.
+ * Returns the resulting POI and whether a merge occurred.
+ */
+export async function createOrMergePOI(
+  poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>,
+): Promise<{ poi: PointOfInterest; merged: boolean }> {
+  const { data: candidates } = await supabase
+    .from('points_of_interest')
+    .select('*')
+    .eq('trip_id', poi.tripId)
+    .eq('category', poi.category);
+
+  const newCity = poi.location?.city;
+  const existingRow = (candidates || []).find((p: Record<string, unknown>) => {
+    if (!fuzzyMatch(p.name as string, poi.name)) return false;
+    const existingCity = (p.location as Record<string, unknown>)?.city as string | undefined;
+    if (newCity && existingCity && !fuzzyMatch(existingCity, newCity)) return false;
+    return true;
+  });
+
+  if (existingRow) {
+    const existingPoi = mapPOI(existingRow);
+    const mergedLocation = mergeWithNewWins(existingPoi.location, poi.location) as POILocation;
+    const mergedDetails = mergeWithNewWins(existingPoi.details, poi.details) as POIDetails;
+
+    const updates: Partial<PointOfInterest> = {
+      location: mergedLocation,
+      details: mergedDetails,
+    };
+
+    // Keep sub_category if new one is provided
+    if (hasValue(poi.subCategory)) updates.subCategory = poi.subCategory;
+
+    // Upgrade status only; never downgrade (e.g. don't overwrite 'booked' with 'candidate')
+    const newPriority = STATUS_PRIORITY[poi.status] ?? 0;
+    const existingPriority = STATUS_PRIORITY[existingPoi.status] ?? 0;
+    if (newPriority > existingPriority) updates.status = poi.status;
+
+    // isPaid is additive: once paid, stays paid
+    if (poi.isPaid) updates.isPaid = true;
+
+    await updatePOI(existingPoi.id, updates);
+    const merged: PointOfInterest = { ...existingPoi, ...updates };
+    return { poi: merged, merged: true };
+  }
+
+  const newPoi = await createPOI(poi);
+  return { poi: newPoi, merged: false };
+}
+
 export async function createPOI(poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>): Promise<PointOfInterest> {
   const insertData = {
     trip_id: poi.tripId,

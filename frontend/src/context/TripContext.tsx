@@ -321,9 +321,14 @@ export function TripProvider({ children }: { children: ReactNode }) {
 
   const addPOI = async (poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>): Promise<PointOfInterest | undefined> => {
     try {
-      const newPOI = await tripService.createPOI(poi);
-      dispatch({ type: 'ADD_POI', payload: newPOI });
-      return newPOI;
+      const { poi: result, merged } = await tripService.createOrMergePOI(poi);
+      if (merged) {
+        dispatch({ type: 'UPDATE_POI', payload: result });
+        toast({ title: 'מוזג עם מקום קיים', description: `"${result.name}" כבר קיים — המידע שהוספת שולב עמו.` });
+      } else {
+        dispatch({ type: 'ADD_POI', payload: result });
+      }
+      return result;
     } catch (error) {
       console.error('Failed to add POI:', error);
       toast({ title: 'Error', description: 'Failed to add item.', variant: 'destructive' });
