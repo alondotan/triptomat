@@ -41,6 +41,8 @@ export interface ScheduleCellItem {
   label: string;
   sublabel?: string;
   category?: string;
+  duration?: string;
+  notes?: string;
 }
 
 export interface ScheduleCellData {
@@ -54,6 +56,8 @@ export interface ScheduleCellData {
   activityId?: string;
   transportId?: string;
   groupItems?: ScheduleCellItem[];
+  duration?: string;
+  notes?: string;
 }
 
 export interface AccommodationOption {
@@ -216,6 +220,17 @@ function SortableActivityItem({
             {[activity.poi.subCategory, activity.poi.location?.city].filter(Boolean).join(' · ')}
           </p>
         )}
+        {activity.poi.details?.activity_details?.duration && (
+          <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+            <Clock size={9} className="shrink-0" />
+            {activity.poi.details.activity_details.duration}
+          </p>
+        )}
+        {activity.poi.details?.notes?.user_summary && (
+          <p className="text-[10px] text-muted-foreground/70 truncate italic">
+            {activity.poi.details.notes.user_summary}
+          </p>
+        )}
       </div>
 
       {/* Remove */}
@@ -376,7 +391,7 @@ function AddTransportDialog({
 // ─── Locked (timed) new-schedule item ────────────────────────────────────────
 
 function LockedNewSchedItem({
-  activityId, label, sublabel, category, time, endTime, onRemove,
+  activityId, label, sublabel, category, time, endTime, duration, notes, onRemove,
 }: {
   activityId: string;
   label: string;
@@ -384,6 +399,8 @@ function LockedNewSchedItem({
   category?: string;
   time: string;
   endTime?: string;
+  duration?: string;
+  notes?: string;
   onRemove: (id: string) => Promise<void>;
 }) {
   return (
@@ -396,8 +413,19 @@ function LockedNewSchedItem({
       <div className="flex items-center gap-2 px-2.5 py-2">
         <div className="shrink-0 w-[18px]" />
         {category && <SubCategoryIcon type={category} size={13} className="text-muted-foreground shrink-0" />}
-        <p className="flex-1 text-xs font-semibold truncate">{label}</p>
-        {sublabel && <p className="text-[10px] text-muted-foreground truncate max-w-[80px]">{sublabel}</p>}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold truncate">{label}</p>
+          {sublabel && <p className="text-[10px] text-muted-foreground truncate">{sublabel}</p>}
+          {duration && (
+            <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+              <Clock size={9} className="shrink-0" />
+              {duration}
+            </p>
+          )}
+          {notes && (
+            <p className="text-[10px] text-muted-foreground/70 truncate italic">{notes}</p>
+          )}
+        </div>
         <button
           onClick={() => onRemove(activityId)}
           className="shrink-0 p-0.5 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
@@ -412,7 +440,7 @@ function LockedNewSchedItem({
 // ─── Sortable new-schedule item ───────────────────────────────────────────────
 
 function SortableNewSchedItem({
-  activityId, label, sublabel, category, time, endTime, onRemove,
+  activityId, label, sublabel, category, time, endTime, duration, notes, onRemove,
 }: {
   activityId: string;
   label: string;
@@ -420,6 +448,8 @@ function SortableNewSchedItem({
   category?: string;
   time?: string;
   endTime?: string;
+  duration?: string;
+  notes?: string;
   onRemove: (id: string) => Promise<void>;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -450,8 +480,19 @@ function SortableNewSchedItem({
           <GripVertical size={13} />
         </button>
         {category && <SubCategoryIcon type={category} size={13} className="text-muted-foreground shrink-0" />}
-        <p className="flex-1 text-xs font-semibold truncate">{label}</p>
-        {sublabel && <p className="text-[10px] text-muted-foreground truncate max-w-[80px]">{sublabel}</p>}
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold truncate">{label}</p>
+          {sublabel && <p className="text-[10px] text-muted-foreground truncate">{sublabel}</p>}
+          {duration && (
+            <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+              <Clock size={9} className="shrink-0" />
+              {duration}
+            </p>
+          )}
+          {notes && (
+            <p className="text-[10px] text-muted-foreground/70 truncate italic">{notes}</p>
+          )}
+        </div>
         <button
           onClick={() => onRemove(activityId)}
           className="shrink-0 p-0.5 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
@@ -563,6 +604,8 @@ function NewScheduleDropZone({
                       category={cell.category}
                       time={cell.time}
                       endTime={cell.endTime}
+                      duration={cell.duration}
+                      notes={cell.notes}
                       onRemove={onRemoveActivity}
                     />
                   );
@@ -573,6 +616,8 @@ function NewScheduleDropZone({
                       label={cell.label}
                       sublabel={cell.sublabel}
                       category={cell.category}
+                      duration={cell.duration}
+                      notes={cell.notes}
                       onRemove={onRemoveActivity}
                     />
                   );
@@ -592,6 +637,8 @@ function NewScheduleDropZone({
                           label={gi.label}
                           sublabel={gi.sublabel}
                           category={gi.category}
+                          duration={gi.duration}
+                          notes={gi.notes}
                           onRemove={onRemoveActivity}
                         />
                       ))}

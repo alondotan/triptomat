@@ -234,12 +234,14 @@ const Index = () => {
       category?: string;
       activityId?: string;
       transportId?: string;
+      duration?: string;
+      notes?: string;
     };
     type ResultCell = RawCell | {
       id: string;
       type: 'group';
       label: string;
-      groupItems: { activityId: string; label: string; sublabel?: string; category?: string }[];
+      groupItems: { activityId: string; label: string; sublabel?: string; category?: string; duration?: string; notes?: string }[];
     };
 
     const fmtTime = (iso: string) => {
@@ -279,6 +281,8 @@ const Index = () => {
       sublabel: [a.poi.subCategory, a.poi.location?.city].filter(Boolean).join(' · '),
       category: a.poi.subCategory || a.poi.category,
       activityId: a.id,
+      duration: a.poi.details?.activity_details?.duration,
+      notes: a.poi.details?.notes?.user_summary,
     }));
 
     // Merge: insert each transport cell before the first timed activity whose time
@@ -313,6 +317,8 @@ const Index = () => {
           label: b.label,
           sublabel: b.sublabel,
           category: b.category,
+          duration: b.duration,
+          notes: b.notes,
         })),
       });
       groupBuffer = [];

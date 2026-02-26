@@ -8,6 +8,7 @@ import { POIDetailDialog } from '@/components/POIDetailDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Building2, CalendarDays, BedDouble, Trash2, ArrowRight, Search } from 'lucide-react';
+import { BookingActions } from '@/components/BookingActions';
 import type { PointOfInterest } from '@/types/trip';
 
 const statusLabels: Record<string, string> = {
@@ -172,7 +173,11 @@ const AccommodationPage = () => {
                       <p className="text-xs text-muted-foreground italic">{poi.details.notes.user_summary}</p>
                     )}
 
-                    <div className="pt-1 flex justify-end">
+                    <div className="pt-1 flex justify-between items-center">
+                      <BookingActions
+                        orderNumber={poi.details.order_number}
+                        emailLinks={poi.sourceRefs.email_ids.map(id => ({ id, ...state.sourceEmailMap[id] }))}
+                      />
                       <Button
                         variant="ghost"
                         size="sm"

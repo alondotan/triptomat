@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CreateTransportForm } from '@/components/forms/CreateTransportForm';
 import { TransportDetailDialog } from '@/components/TransportDetailDialog';
 import { Plane, Train, Ship, Bus, Car, Trash2, Filter, Search } from 'lucide-react';
+import { BookingActions } from '@/components/BookingActions';
 import { SubCategoryIcon } from '@/components/SubCategoryIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -186,9 +187,6 @@ const TransportPage = () => {
                   {t.cost.total_amount > 0 && (
                     <p className="font-semibold text-primary">{formatDualCurrency(t.cost.total_amount, t.cost.currency || state.activeTrip?.currency || 'USD')}</p>
                   )}
-                  {t.booking.order_number && (
-                    <p className="text-xs text-muted-foreground">Order: {t.booking.order_number}</p>
-                  )}
                   {t.booking.carrier_name && (
                     <p className="text-xs text-muted-foreground">Carrier: {t.booking.carrier_name}</p>
                   )}
@@ -205,7 +203,11 @@ const TransportPage = () => {
                   <p className="text-xs text-muted-foreground italic">{t.additionalInfo.notes}</p>
                 )}
 
-                <div className="pt-1 flex justify-end">
+                <div className="pt-1 flex justify-between items-center">
+                  <BookingActions
+                    orderNumber={t.booking.order_number}
+                    emailLinks={t.sourceRefs.email_ids.map(id => ({ id, ...state.sourceEmailMap[id] }))}
+                  />
                   <Button variant="ghost" size="sm" className="text-destructive h-7" onClick={(e) => { e.stopPropagation(); deleteTransportation(t.id); }}>
                     <Trash2 size={14} className="mr-1" /> Delete
                   </Button>

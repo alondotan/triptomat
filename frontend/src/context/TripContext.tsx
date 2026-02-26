@@ -15,6 +15,7 @@ interface TripState {
   itineraryDays: ItineraryDay[];
   expenses: Expense[];
   tripSitesHierarchy: SiteHierarchyNode[];
+  sourceEmailMap: Record<string, { permalink?: string; subject?: string }>;
   exchangeRates: ExchangeRates | null;
   isLoading: boolean;
   error: string | null;
@@ -47,7 +48,8 @@ type TripAction =
   | { type: 'SET_EXPENSES'; payload: Expense[] }
   | { type: 'ADD_EXPENSE'; payload: Expense }
   | { type: 'UPDATE_EXPENSE'; payload: Expense }
-  | { type: 'DELETE_EXPENSE'; payload: string };
+  | { type: 'DELETE_EXPENSE'; payload: string }
+  | { type: 'SET_SOURCE_EMAIL_MAP'; payload: Record<string, { permalink?: string; subject?: string }> };
 
 function tripReducer(state: TripState, action: TripAction): TripState {
   switch (action.type) {
@@ -64,14 +66,14 @@ function tripReducer(state: TripState, action: TripAction): TripState {
       };
     case 'SET_ACTIVE_TRIP': {
       const trip = state.trips.find(t => t.id === action.payload);
-      return { ...state, activeTrip: trip || null, pois: [], transportation: [], missions: [], itineraryDays: [], expenses: [], tripSitesHierarchy: [] };
+      return { ...state, activeTrip: trip || null, pois: [], transportation: [], missions: [], itineraryDays: [], expenses: [], tripSitesHierarchy: [], sourceEmailMap: {} };
     }
     case 'CREATE_TRIP':
       return {
         ...state,
         trips: [action.payload, ...state.trips],
         activeTrip: action.payload,
-        pois: [], transportation: [], missions: [], itineraryDays: [], expenses: [], tripSitesHierarchy: [],
+        pois: [], transportation: [], missions: [], itineraryDays: [], expenses: [], tripSitesHierarchy: [], sourceEmailMap: {},
       };
     case 'DELETE_TRIP': {
       const filtered = state.trips.filter(t => t.id !== action.payload);
@@ -79,7 +81,7 @@ function tripReducer(state: TripState, action: TripAction): TripState {
         ...state,
         trips: filtered,
         activeTrip: filtered.length > 0 ? filtered[0] : null,
-        pois: [], transportation: [], missions: [], itineraryDays: [], expenses: [], tripSitesHierarchy: [],
+        pois: [], transportation: [], missions: [], itineraryDays: [], expenses: [], tripSitesHierarchy: [], sourceEmailMap: {},
       };
     }
     case 'UPDATE_TRIP': {
@@ -116,6 +118,8 @@ function tripReducer(state: TripState, action: TripAction): TripState {
       return { ...state, itineraryDays: action.payload };
     case 'SET_TRIP_SITES_HIERARCHY':
       return { ...state, tripSitesHierarchy: action.payload };
+    case 'SET_SOURCE_EMAIL_MAP':
+      return { ...state, sourceEmailMap: action.payload };
     case 'SET_EXCHANGE_RATES':
       return { ...state, exchangeRates: action.payload };
     case 'SET_EXPENSES':
@@ -172,6 +176,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
     itineraryDays: [],
     expenses: [],
     tripSitesHierarchy: [],
+    sourceEmailMap: {},
     exchangeRates: null,
     isLoading: true,
     error: null,
@@ -210,7 +215,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         const [{ data: emails }, { data: recommendations }] = await Promise.all([
           supabase
             .from('source_emails')
-            .select('parsed_data')
+            .select('email_id, source_email_info, parsed_data')
             .eq('trip_id', tripId)
             .eq('status', 'linked'),
           supabase
@@ -233,6 +238,17 @@ export function TripProvider({ children }: { children: ReactNode }) {
           }
         }
         dispatch({ type: 'SET_TRIP_SITES_HIERARCHY', payload: allHierarchy });
+
+        // Build email map: emailId (Gmail message ID) -> { permalink, subject }
+        const emailMap: Record<string, { permalink?: string; subject?: string }> = {};
+        for (const email of (emails || [])) {
+          const emailId = email.email_id as string | undefined;
+          if (emailId) {
+            const info = email.source_email_info as { email_permalink?: string; subject?: string } | undefined;
+            emailMap[emailId] = { permalink: info?.email_permalink, subject: info?.subject };
+          }
+        }
+        dispatch({ type: 'SET_SOURCE_EMAIL_MAP', payload: emailMap });
       } catch (e) {
         console.error('Failed to load trip sites hierarchy:', e);
       }
