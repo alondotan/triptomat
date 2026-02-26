@@ -11,6 +11,7 @@ import { MapPin, UtensilsCrossed, Wrench, Trash2, Filter, LayoutGrid, CalendarDa
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { PointOfInterest, POIStatus } from '@/types/trip';
+import { BookingActions } from '@/components/BookingActions';
 
 const categoryIcons: Record<string, React.ReactNode> = {
   attraction: <MapPin size={16} />,
@@ -77,11 +78,21 @@ const POIsPage = () => {
     await updatePOI({ ...poi, status: newStatus });
   };
 
+  const [expandedSubGroups, setExpandedSubGroups] = useState<Set<string>>(new Set());
+
   // Reset expanded state when groupBy changes (group keys change)
-  useEffect(() => { setExpandedGroups(new Set()); }, [groupBy]);
+  useEffect(() => { setExpandedGroups(new Set()); setExpandedSubGroups(new Set()); }, [groupBy]);
 
   const toggleGroup = (key: string) => {
     setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+
+  const toggleSubGroup = (key: string) => {
+    setExpandedSubGroups(prev => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key); else next.add(key);
       return next;
@@ -219,6 +230,101 @@ const POIsPage = () => {
 
         {grouped.map(([key, pois]) => {
           const isExpanded = expandedGroups.has(key);
+
+          // Build sub-groups by subCategory when grouping by category
+          const subGroups: [string, PointOfInterest[]][] = groupBy === 'category'
+            ? (() => {
+                const map: Record<string, PointOfInterest[]> = {};
+                for (const poi of pois) {
+                  const sub = poi.subCategory || '—';
+                  if (!map[sub]) map[sub] = [];
+                  map[sub].push(poi);
+                }
+                return Object.entries(map).sort(([a], [b]) => a.localeCompare(b));
+              })()
+            : [];
+
+          const renderCard = (poi: PointOfInterest) => (
+            <Card key={poi.id} className={`cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${poi.isCancelled ? 'opacity-50' : ''}`} onClick={() => setSelectedPOI(poi)}>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => toggleLike(poi, e)}
+                      className={`shrink-0 transition-colors ${
+                        poi.status === 'in_plan' || poi.status === 'matched' ? 'text-red-500' :
+                        poi.status === 'booked' || poi.status === 'visited' ? 'text-muted-foreground/30 cursor-default' :
+                        'text-muted-foreground/40 hover:text-red-400'
+                      }`}
+                      title={poi.status === 'matched' ? 'משודך ליום' : poi.status === 'in_plan' ? 'הסר מהתוכנית' : 'הוסף לתוכנית'}
+                    >
+                      <Heart size={16} fill={poi.status === 'in_plan' || poi.status === 'matched' ? 'currentColor' : 'none'} />
+                    </button>
+                    <CardTitle className="text-base">{poi.name}</CardTitle>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Badge variant={poi.status === 'booked' ? 'default' : 'secondary'} className="text-xs">{statusLabels[poi.status] || poi.status}</Badge>
+                    {poi.isCancelled && <Badge variant="destructive">בוטל</Badge>}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {poi.subCategory && groupBy !== 'category' && (
+                  <Badge variant="outline" className="text-xs flex items-center gap-1">
+                    <SubCategoryIcon type={poi.subCategory} size={12} />
+                    {poi.subCategory}
+                  </Badge>
+                )}
+
+                {(poi.location.city || poi.location.country || poi.location.address) && (
+                  <p className="text-muted-foreground">
+                    📍 {[poi.location.address, poi.location.city, poi.location.country].filter(Boolean).join(', ')}
+                  </p>
+                )}
+
+                {poi.details.cost && poi.details.cost.amount > 0 && (
+                  <p className="font-semibold text-primary">
+                    {formatDualCurrency(poi.details.cost.amount, poi.details.cost.currency || state.activeTrip?.currency || 'USD')}
+                  </p>
+                )}
+
+                {poi.details.accommodation_details && (
+                  <div className="text-xs text-muted-foreground space-y-0.5">
+                    {poi.details.accommodation_details.checkin?.date && (
+                      <p>Check-in: {poi.details.accommodation_details.checkin.date} {poi.details.accommodation_details.checkin.hour || ''}</p>
+                    )}
+                    {poi.details.accommodation_details.checkout?.date && (
+                      <p>Check-out: {poi.details.accommodation_details.checkout.date} {poi.details.accommodation_details.checkout.hour || ''}</p>
+                    )}
+                  </div>
+                )}
+
+                {poi.details.notes?.user_summary && (
+                  <p className="text-xs text-muted-foreground italic">{poi.details.notes.user_summary}</p>
+                )}
+
+                {poiDaysMap[poi.id] && poiDaysMap[poi.id].length > 0 && (
+                  <div className="flex items-center gap-1 flex-wrap">
+                    <CalendarDays size={12} className="text-muted-foreground" />
+                    {poiDaysMap[poi.id].map(d => (
+                      <Badge key={d} variant="outline" className="text-[10px] px-1.5 py-0">יום {d}</Badge>
+                    ))}
+                  </div>
+                )}
+
+                <div className="pt-2 flex justify-between items-center">
+                  <BookingActions
+                    orderNumber={poi.details.order_number}
+                    emailLinks={poi.sourceRefs.email_ids.map(id => ({ id, ...state.sourceEmailMap[id] }))}
+                  />
+                  <Button variant="ghost" size="sm" className="text-destructive h-7" onClick={(e) => { e.stopPropagation(); deletePOI(poi.id); }}>
+                    <Trash2 size={14} className="mr-1" /> מחק
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+
           return (
           <div key={key}>
             <button
@@ -234,84 +340,39 @@ const POIsPage = () => {
               <Badge variant="secondary" className="text-xs ml-1">{pois.length}</Badge>
             </button>
             {isExpanded && (
-            <div className="grid gap-3 md:grid-cols-2 mb-2">
-              {pois.map(poi => (
-                <Card key={poi.id} className={`cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${poi.isCancelled ? 'opacity-50' : ''}`} onClick={() => setSelectedPOI(poi)}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+              groupBy === 'category' ? (
+                <div className="space-y-1 mb-4 ml-5">
+                  {subGroups.map(([subKey, subPois]) => {
+                    const subGroupKey = `${key}::${subKey}`;
+                    const isSubExpanded = expandedSubGroups.has(subGroupKey);
+                    return (
+                      <div key={subKey}>
                         <button
-                          onClick={(e) => toggleLike(poi, e)}
-                          className={`shrink-0 transition-colors ${
-                            poi.status === 'in_plan' || poi.status === 'matched' ? 'text-red-500' : 
-                            poi.status === 'booked' || poi.status === 'visited' ? 'text-muted-foreground/30 cursor-default' :
-                            'text-muted-foreground/40 hover:text-red-400'
-                          }`}
-                          title={poi.status === 'matched' ? 'משודך ליום' : poi.status === 'in_plan' ? 'הסר מהתוכנית' : 'הוסף לתוכנית'}
+                          onClick={() => toggleSubGroup(subGroupKey)}
+                          className="w-full text-left mb-2 flex items-center gap-2 hover:text-primary transition-colors group"
                         >
-                          <Heart size={16} fill={poi.status === 'in_plan' || poi.status === 'matched' ? 'currentColor' : 'none'} />
+                          {isSubExpanded
+                            ? <ChevronDown size={13} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                            : <ChevronRight size={13} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                          }
+                          <SubCategoryIcon type={subKey} size={13} />
+                          <span className="text-sm font-medium">{subKey}</span>
+                          <Badge variant="outline" className="text-[10px] ml-1">{subPois.length}</Badge>
                         </button>
-                        <CardTitle className="text-base">{poi.name}</CardTitle>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Badge variant={poi.status === 'booked' ? 'default' : 'secondary'} className="text-xs">{statusLabels[poi.status] || poi.status}</Badge>
-                        {poi.isCancelled && <Badge variant="destructive">בוטל</Badge>}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    {poi.subCategory && (
-                      <Badge variant="outline" className="text-xs flex items-center gap-1">
-                        <SubCategoryIcon type={poi.subCategory} size={12} />
-                        {poi.subCategory}
-                      </Badge>
-                    )}
-
-                    {(poi.location.city || poi.location.country || poi.location.address) && (
-                      <p className="text-muted-foreground">
-                        📍 {[poi.location.address, poi.location.city, poi.location.country].filter(Boolean).join(', ')}
-                      </p>
-                    )}
-
-                    {poi.details.cost && poi.details.cost.amount > 0 && (
-                      <p className="font-semibold text-primary">
-                        {formatDualCurrency(poi.details.cost.amount, poi.details.cost.currency || state.activeTrip?.currency || 'USD')}
-                      </p>
-                    )}
-
-                    {poi.details.accommodation_details && (
-                      <div className="text-xs text-muted-foreground space-y-0.5">
-                        {poi.details.accommodation_details.checkin?.date && (
-                          <p>Check-in: {poi.details.accommodation_details.checkin.date} {poi.details.accommodation_details.checkin.hour || ''}</p>
-                        )}
-                        {poi.details.accommodation_details.checkout?.date && (
-                          <p>Check-out: {poi.details.accommodation_details.checkout.date} {poi.details.accommodation_details.checkout.hour || ''}</p>
+                        {isSubExpanded && (
+                          <div className="grid gap-3 md:grid-cols-2 mb-3 ml-4">
+                            {subPois.map(renderCard)}
+                          </div>
                         )}
                       </div>
-                    )}
-
-                    {poi.details.notes?.user_summary && (
-                      <p className="text-xs text-muted-foreground italic">{poi.details.notes.user_summary}</p>
-                    )}
-
-                    {poiDaysMap[poi.id] && poiDaysMap[poi.id].length > 0 && (
-                      <div className="flex items-center gap-1 flex-wrap">
-                        <CalendarDays size={12} className="text-muted-foreground" />
-                        {poiDaysMap[poi.id].map(d => (
-                          <Badge key={d} variant="outline" className="text-[10px] px-1.5 py-0">יום {d}</Badge>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="pt-2 flex justify-end">
-                      <Button variant="ghost" size="sm" className="text-destructive h-7" onClick={(e) => { e.stopPropagation(); deletePOI(poi.id); }}>
-                        <Trash2 size={14} className="mr-1" /> מחק
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="grid gap-3 md:grid-cols-2 mb-2">
+                  {pois.map(renderCard)}
+                </div>
+              )
             )}
           </div>
           );
