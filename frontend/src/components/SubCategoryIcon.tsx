@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import { MapPin } from 'lucide-react';
-import { getSubCategoryIcon, loadSubCategoryConfig, type SubCategoryEntry } from '@/lib/subCategoryConfig';
+import { useState, useEffect } from 'react';
+import { getSubCategoryIcon, loadSubCategoryConfig } from '@/lib/subCategoryConfig';
 import type { LucideIcon } from 'lucide-react';
 
 interface SubCategoryIconProps {
@@ -10,7 +9,8 @@ interface SubCategoryIconProps {
 }
 
 export function SubCategoryIcon({ type, size = 14, className = '' }: SubCategoryIconProps) {
-  const [Icon, setIcon] = useState<LucideIcon>(MapPin);
+  // Initialize synchronously from cache if already loaded; otherwise MapPin
+  const [Icon, setIcon] = useState<LucideIcon>(() => getSubCategoryIcon(type));
 
   useEffect(() => {
     loadSubCategoryConfig().then(() => {
