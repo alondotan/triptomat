@@ -279,10 +279,10 @@ const Index = () => {
       endTime: a.time_window?.end,
       label: a.poi.name,
       sublabel: [a.poi.subCategory, a.poi.location?.city].filter(Boolean).join(' · '),
-      category: a.poi.subCategory || a.poi.category,
+      category: a.poi.subCategory,
       activityId: a.id,
       duration: a.poi.details?.activity_details?.duration,
-      notes: a.poi.details?.notes?.user_summary || a.poi.details?.notes?.raw_notes,
+      notes: a.poi.details?.notes?.user_summary,
     }));
 
     // Merge: insert each transport cell before the first timed activity whose time

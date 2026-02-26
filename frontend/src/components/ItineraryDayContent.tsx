@@ -226,9 +226,9 @@ function SortableActivityItem({
             {activity.poi.details.activity_details.duration}
           </p>
         )}
-        {(activity.poi.details?.notes?.user_summary || activity.poi.details?.notes?.raw_notes) && (
+        {activity.poi.details?.notes?.user_summary && (
           <p className="text-[10px] text-muted-foreground/70 truncate italic">
-            {activity.poi.details.notes!.user_summary || activity.poi.details.notes!.raw_notes}
+            {activity.poi.details.notes.user_summary}
           </p>
         )}
       </div>
