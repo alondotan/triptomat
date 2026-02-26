@@ -179,7 +179,7 @@ export function SourceEmailsDashboard() {
             <Collapsible key={item.id} open={isExpanded} onOpenChange={() => toggleExpanded(item.id)}>
               <div className={`rounded-lg border bg-card transition-colors ${isUnread ? 'border-blue-500/40 bg-blue-500/5' : ''}`}>
                 <div className="flex items-center justify-between p-3 hover:bg-accent/50 transition-colors">
-                  <CollapsibleTrigger className="flex items-center gap-3 flex-1 text-left cursor-pointer">
+                  <CollapsibleTrigger className="flex items-center gap-3 flex-1 min-w-0 text-left cursor-pointer">
                     {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
                     <div className="relative shrink-0">
                       <div className="p-2 rounded-full bg-muted">{getCategoryIcon(item.parsedData?.metadata?.category)}</div>
@@ -188,7 +188,7 @@ export function SourceEmailsDashboard() {
                       )}
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 overflow-hidden">
                         <span className="font-medium truncate">{title}</span>
                         {isUnread && (
                           <span className="shrink-0 inline-flex items-center rounded-full bg-blue-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">NEW</span>

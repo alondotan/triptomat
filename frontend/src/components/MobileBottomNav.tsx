@@ -55,7 +55,7 @@ export function MobileBottomNav() {
                 )}
               >
                 <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />
-                <span>{item.label}</span>
+                <span className="whitespace-nowrap">{item.label}</span>
               </RouterNavLink>
             );
           })}
@@ -68,7 +68,7 @@ export function MobileBottomNav() {
             )}
           >
             <MoreHorizontal size={22} strokeWidth={1.8} />
-            <span>More</span>
+            <span className="whitespace-nowrap">More</span>
           </button>
         </div>
       </nav>
