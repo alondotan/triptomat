@@ -282,7 +282,7 @@ const Index = () => {
       category: a.poi.subCategory || a.poi.category,
       activityId: a.id,
       duration: a.poi.details?.activity_details?.duration,
-      notes: a.poi.details?.notes?.user_summary,
+      notes: a.poi.details?.notes?.user_summary || a.poi.details?.notes?.raw_notes,
     }));
 
     // Merge: insert each transport cell before the first timed activity whose time

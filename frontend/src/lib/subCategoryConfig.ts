@@ -164,7 +164,12 @@ const materialToLucide: Record<string, LucideIcon> = {
   gavel: Landmark,
   celebration: Tent,
   sports_soccer: Zap,
+  sports_basketball: Zap,
   directions_run: Footprints,
+  museum: Landmark,
+  panorama: Eye,
+  shopping_basket: ShoppingBag,
+  business_center: Briefcase,
 };
 
 export interface SubCategoryEntry {
