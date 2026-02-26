@@ -215,7 +215,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
         const [{ data: emails }, { data: recommendations }] = await Promise.all([
           supabase
             .from('source_emails')
-            .select('email_id, source_email_info, parsed_data')
+            .select('id, source_email_info, parsed_data')
             .eq('trip_id', tripId)
             .eq('status', 'linked'),
           supabase
@@ -239,14 +239,11 @@ export function TripProvider({ children }: { children: ReactNode }) {
         }
         dispatch({ type: 'SET_TRIP_SITES_HIERARCHY', payload: allHierarchy });
 
-        // Build email map: emailId (Gmail message ID) -> { permalink, subject }
+        // Build email map: source_emails UUID -> { permalink, subject }
         const emailMap: Record<string, { permalink?: string; subject?: string }> = {};
         for (const email of (emails || [])) {
-          const emailId = email.email_id as string | undefined;
-          if (emailId) {
-            const info = email.source_email_info as { email_permalink?: string; subject?: string } | undefined;
-            emailMap[emailId] = { permalink: info?.email_permalink, subject: info?.subject };
-          }
+          const info = email.source_email_info as { email_permalink?: string; subject?: string } | undefined;
+          emailMap[email.id] = { permalink: info?.email_permalink, subject: info?.subject };
         }
         dispatch({ type: 'SET_SOURCE_EMAIL_MAP', payload: emailMap });
       } catch (e) {
