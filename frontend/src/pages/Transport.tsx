@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CreateTransportForm } from '@/components/forms/CreateTransportForm';
 import { TransportDetailDialog } from '@/components/TransportDetailDialog';
-import { Plane, Train, Ship, Bus, Car, Trash2, Filter } from 'lucide-react';
+import { Plane, Train, Ship, Bus, Car, Trash2, Filter, Search } from 'lucide-react';
 import { SubCategoryIcon } from '@/components/SubCategoryIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { format, parseISO } from 'date-fns';
 import type { Transportation } from '@/types/trip';
 
@@ -42,6 +43,7 @@ const TransportPage = () => {
   const { state, formatCurrency, formatDualCurrency, deleteTransportation } = useTrip();
   const [selectedTransport, setSelectedTransport] = useState<Transportation | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   // Build a map: transportId_segmentId -> dayNumber/date
   const segmentDayMap = useMemo(() => {
     const map: Record<string, { dayNumber: number; date?: string }> = {};
@@ -57,13 +59,28 @@ const TransportPage = () => {
   // Filter and sort
   const filteredTransport = useMemo(() => {
     let items = categoryFilter === 'all' ? state.transportation : state.transportation.filter(t => t.category === categoryFilter);
-    // Sort by earliest departure date
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      items = items.filter(t =>
+        t.segments.some(s =>
+          s.from.name.toLowerCase().includes(q) ||
+          s.to.name.toLowerCase().includes(q) ||
+          (s.from.code || '').toLowerCase().includes(q) ||
+          (s.to.code || '').toLowerCase().includes(q) ||
+          (s.flight_or_vessel_number || '').toLowerCase().includes(q) ||
+          (s.carrier_code || '').toLowerCase().includes(q)
+        ) ||
+        (t.booking.carrier_name || '').toLowerCase().includes(q) ||
+        (t.booking.order_number || '').toLowerCase().includes(q) ||
+        (t.additionalInfo.notes || '').toLowerCase().includes(q)
+      );
+    }
     return [...items].sort((a, b) => {
       const aDate = a.segments[0]?.departure_time || '';
       const bDate = b.segments[0]?.departure_time || '';
       return aDate.localeCompare(bDate);
     });
-  }, [state.transportation, categoryFilter]);
+  }, [state.transportation, categoryFilter, searchQuery]);
 
   const categoryOptions = useMemo(() => {
     const cats = new Set(state.transportation.map(t => t.category));
@@ -83,6 +100,16 @@ const TransportPage = () => {
             <p className="text-muted-foreground">{filteredTransport.length} / {state.transportation.length} items</p>
           </div>
           <CreateTransportForm />
+        </div>
+
+        <div className="relative">
+          <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="חפש לפי יעד, טיסה, חברה..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pr-8 h-9 text-sm"
+          />
         </div>
 
         {categoryOptions.length > 1 && (

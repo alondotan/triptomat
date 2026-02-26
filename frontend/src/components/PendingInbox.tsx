@@ -41,6 +41,27 @@ export function PendingInbox() {
 
   useEffect(() => { loadItems(); }, []);
 
+  // Real-time: re-fetch when pending emails or recommendations change
+  useEffect(() => {
+    let channel: ReturnType<typeof import('@/integrations/supabase/client')['supabase']['channel']> | null = null;
+    import('@/integrations/supabase/client').then(({ supabase }) => {
+      channel = supabase
+        .channel('pending-inbox-rt')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'source_emails' }, () => {
+          loadItems();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'source_recommendations' }, () => {
+          loadItems();
+        })
+        .subscribe();
+    });
+    return () => {
+      import('@/integrations/supabase/client').then(({ supabase }) => {
+        if (channel) supabase.removeChannel(channel);
+      });
+    };
+  }, []);
+
   const handleLink = async () => {
     if (!selectedItemId || !selectedTripId) return;
     try {

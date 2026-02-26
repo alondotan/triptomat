@@ -7,8 +7,9 @@ import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { POIDetailDialog } from '@/components/POIDetailDialog';
 import { SubCategoryIcon } from '@/components/SubCategoryIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, UtensilsCrossed, Wrench, Trash2, Filter, LayoutGrid, CalendarDays, Heart, ChevronDown, ChevronRight } from 'lucide-react';
+import { MapPin, UtensilsCrossed, Wrench, Trash2, Filter, LayoutGrid, CalendarDays, Heart, ChevronDown, ChevronRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import type { PointOfInterest, POIStatus } from '@/types/trip';
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -38,6 +39,7 @@ const POIsPage = () => {
   const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [groupBy, setGroupBy] = useState<GroupBy>('category');
+  const [searchQuery, setSearchQuery] = useState('');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Build a map: poiId -> list of day numbers it's assigned to
@@ -90,9 +92,20 @@ const POIsPage = () => {
 
   const filteredPois = useMemo(() => {
     if (!state.activeTrip) return [];
-    if (statusFilters.has('all')) return nonAccommodationPois;
-    return nonAccommodationPois.filter(p => statusFilters.has(p.status));
-  }, [nonAccommodationPois, statusFilters, state.activeTrip]);
+    let pois = statusFilters.has('all') ? nonAccommodationPois : nonAccommodationPois.filter(p => statusFilters.has(p.status));
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      pois = pois.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.location.city || '').toLowerCase().includes(q) ||
+        (p.location.country || '').toLowerCase().includes(q) ||
+        (p.location.address || '').toLowerCase().includes(q) ||
+        (p.subCategory || '').toLowerCase().includes(q) ||
+        (p.details.notes?.user_summary || '').toLowerCase().includes(q)
+      );
+    }
+    return pois;
+  }, [nonAccommodationPois, statusFilters, searchQuery, state.activeTrip]);
 
   const grouped = useMemo(() => {
     const groups: Record<string, PointOfInterest[]> = {};
@@ -149,6 +162,17 @@ const POIsPage = () => {
             <p className="text-muted-foreground">{filteredPois.length} / {nonAccommodationPois.length} items</p>
           </div>
           <CreatePOIForm />
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="חפש לפי שם, מיקום, קטגוריה..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pr-8 h-9 text-sm"
+          />
         </div>
 
         {/* Filter & Group Controls */}

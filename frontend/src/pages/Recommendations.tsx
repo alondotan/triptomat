@@ -37,6 +37,29 @@ const Recommendations = () => {
       .finally(() => setLoading(false));
   }, [state.activeTrip?.id]);
 
+  // Real-time: re-fetch when a new recommendation arrives for this trip
+  useEffect(() => {
+    const tripId = state.activeTrip?.id;
+    if (!tripId) return;
+    let channel: ReturnType<typeof import('@/integrations/supabase/client')['supabase']['channel']> | null = null;
+    import('@/integrations/supabase/client').then(({ supabase }) => {
+      channel = supabase
+        .channel(`source-recs-rt-${tripId}`)
+        .on('postgres_changes', {
+          event: '*', schema: 'public', table: 'source_recommendations',
+          filter: `trip_id=eq.${tripId}`,
+        }, () => {
+          fetchTripRecommendations(tripId).then(setRecommendations).catch(console.error);
+        })
+        .subscribe();
+    });
+    return () => {
+      import('@/integrations/supabase/client').then(({ supabase }) => {
+        if (channel) supabase.removeChannel(channel);
+      });
+    };
+  }, [state.activeTrip?.id]);
+
   if (!state.activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
   }

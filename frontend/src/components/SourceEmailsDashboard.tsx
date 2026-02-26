@@ -49,19 +49,36 @@ export function SourceEmailsDashboard() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [readIds, setReadIds] = useState<Set<string>>(getStoredReadIds);
 
-  useEffect(() => {
-    const loadItems = async () => {
-      try {
-        const allItems = await fetchSourceEmails('linked');
-        setItems(allItems);
-      } catch (error) {
-        console.error('Failed to load source emails:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadItems();
+  const loadItems = useCallback(async () => {
+    try {
+      const allItems = await fetchSourceEmails('linked');
+      setItems(allItems);
+    } catch (error) {
+      console.error('Failed to load source emails:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => { loadItems(); }, [loadItems]);
+
+  // Real-time: re-fetch when source_emails changes (new email arrives or gets linked)
+  useEffect(() => {
+    let channel: ReturnType<typeof import('@/integrations/supabase/client')['supabase']['channel']> | null = null;
+    import('@/integrations/supabase/client').then(({ supabase }) => {
+      channel = supabase
+        .channel('source-emails-linked-rt')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'source_emails' }, () => {
+          loadItems();
+        })
+        .subscribe();
+    });
+    return () => {
+      import('@/integrations/supabase/client').then(({ supabase }) => {
+        if (channel) supabase.removeChannel(channel);
+      });
+    };
+  }, [loadItems]);
 
   // On first use: mark all existing emails as already-read so they don't all show as new
   useEffect(() => {

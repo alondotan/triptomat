@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { POIDetailDialog } from '@/components/POIDetailDialog';
 import { Button } from '@/components/ui/button';
-import { Building2, CalendarDays, BedDouble, Trash2, ArrowRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Building2, CalendarDays, BedDouble, Trash2, ArrowRight, Search } from 'lucide-react';
 import type { PointOfInterest } from '@/types/trip';
 
 const statusLabels: Record<string, string> = {
@@ -20,10 +21,11 @@ const statusLabels: Record<string, string> = {
 const AccommodationPage = () => {
   const { state, formatDualCurrency, deletePOI } = useTrip();
   const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const accommodations = useMemo(() => {
     if (!state.activeTrip) return [];
-    return state.pois
+    let list = state.pois
       .filter(p => p.category === 'accommodation')
       .sort((a, b) => {
         const dateA = a.details.accommodation_details?.checkin?.date || '';
@@ -33,7 +35,17 @@ const AccommodationPage = () => {
         if (!dateB) return -1;
         return dateA.localeCompare(dateB);
       });
-  }, [state.pois, state.activeTrip]);
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.location.city || '').toLowerCase().includes(q) ||
+        (p.location.country || '').toLowerCase().includes(q) ||
+        (p.details.notes?.user_summary || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [state.pois, state.activeTrip, searchQuery]);
 
   if (!state.activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
@@ -50,9 +62,21 @@ const AccommodationPage = () => {
           <CreatePOIForm />
         </div>
 
+        <div className="relative">
+          <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="חפש לפי שם, עיר, מדינה..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pr-8 h-9 text-sm"
+          />
+        </div>
+
         {accommodations.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            No accommodation added yet. Forward a booking confirmation email or add one manually.
+            {state.pois.filter(p => p.category === 'accommodation').length === 0
+              ? 'No accommodation added yet. Forward a booking confirmation email or add one manually.'
+              : 'אין תוצאות לחיפוש הנוכחי.'}
           </div>
         ) : (
           <div className="space-y-4">
