@@ -342,8 +342,8 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
               <h4 className="text-sm font-semibold">זמנים</h4>
               {bookings.map((slot, i) => (
                 <div key={i} className="space-y-1 border rounded-md p-2">
-                  <div className="flex gap-2 items-center">
-                    <Input type="date" value={slot.date} className="flex-1 min-w-0" onChange={e => {
+                  <div className="flex gap-2 items-center overflow-hidden">
+                    <Input type="date" value={slot.date} className="flex-1 min-w-0 w-0" onChange={e => {
                       const next = [...bookings];
                       next[i] = { ...slot, date: e.target.value };
                       setBookings(next);
