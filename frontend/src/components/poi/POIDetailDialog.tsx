@@ -353,34 +353,30 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
               <Separator />
               <h4 className="text-sm font-semibold">זמנים</h4>
               {bookings.map((slot, i) => (
-                <div key={i} className="space-y-1 border rounded-md p-2">
-                  <div className="flex gap-2 items-center overflow-hidden">
-                    <Input type="date" value={slot.date} className="flex-1 min-w-0 w-0" onChange={e => {
-                      const next = [...bookings];
-                      next[i] = { ...slot, date: e.target.value };
-                      setBookings(next);
-                    }} />
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => {
-                      setBookings(bookings.filter((_, j) => j !== i));
-                    }}>
-                      <X size={14} />
-                    </Button>
-                  </div>
-                  <div className="flex gap-2 items-center">
-                    <Input type="time" value={slot.hour} className="w-[100px]" disabled={!slot.date} onChange={e => {
-                      const next = [...bookings];
-                      next[i] = { ...slot, hour: e.target.value, schedule_state: e.target.value ? 'scheduled' : 'potential' };
-                      setBookings(next);
-                    }} />
-                    {slot.date && (
-                      <Badge
-                        variant={slot.hour ? 'default' : 'outline'}
-                        className="select-none text-xs whitespace-nowrap"
-                      >
-                        {slot.hour ? 'בלו״ז' : 'פוטנציאלי'}
-                      </Badge>
-                    )}
-                  </div>
+                <div key={i} className="flex gap-1.5 items-center overflow-hidden">
+                  <Input type="date" value={slot.date} className="flex-1 min-w-0 w-0" onChange={e => {
+                    const next = [...bookings];
+                    next[i] = { ...slot, date: e.target.value };
+                    setBookings(next);
+                  }} />
+                  <Input type="time" value={slot.hour} className="w-[90px] shrink-0" disabled={!slot.date} onChange={e => {
+                    const next = [...bookings];
+                    next[i] = { ...slot, hour: e.target.value, schedule_state: e.target.value ? 'scheduled' : 'potential' };
+                    setBookings(next);
+                  }} />
+                  {slot.date && (
+                    <Badge
+                      variant={slot.hour ? 'default' : 'outline'}
+                      className="select-none text-xs whitespace-nowrap shrink-0"
+                    >
+                      {slot.hour ? 'בלו״ז' : 'פוטנציאלי'}
+                    </Badge>
+                  )}
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => {
+                    setBookings(bookings.filter((_, j) => j !== i));
+                  }}>
+                    <X size={14} />
+                  </Button>
                 </div>
               ))}
               <Button variant="outline" size="sm" className="gap-1" onClick={() => setBookings([...bookings, { date: '', hour: '', schedule_state: 'potential' }])}>
