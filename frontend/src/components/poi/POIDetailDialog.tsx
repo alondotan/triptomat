@@ -13,6 +13,7 @@ import { ExternalLink, Plus, Quote, Save, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { SubCategorySelector } from '@/components/shared/SubCategorySelector';
 import type { PointOfInterest, POICategory, POIStatus, POIBooking } from '@/types/trip';
+import { getPOICategories, getCategoryLabel } from '@/lib/subCategoryConfig';
 import { syncActivityBookingsToDays } from '@/services/itineraryService';
 
 const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
@@ -249,10 +250,9 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
               <Select value={category} onValueChange={v => setCategory(v as POICategory)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="accommodation">לינה</SelectItem>
-                  <SelectItem value="eatery">אוכל</SelectItem>
-                  <SelectItem value="attraction">אטרקציה</SelectItem>
-                  <SelectItem value="service">שירות</SelectItem>
+                  {getPOICategories().map(c => (
+                    <SelectItem key={c} value={c}>{getCategoryLabel(c)}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -354,12 +354,12 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
               <h4 className="text-sm font-semibold">זמנים</h4>
               {bookings.map((slot, i) => (
                 <div key={i} className="flex gap-1.5 items-center overflow-hidden">
-                  <Input type="date" value={slot.date} className="flex-1 min-w-0 w-0" onChange={e => {
+                  <Input type="date" value={slot.date} className="flex-1 min-w-0 w-0 px-1.5" onChange={e => {
                     const next = [...bookings];
                     next[i] = { ...slot, date: e.target.value };
                     setBookings(next);
                   }} />
-                  <Input type="time" value={slot.hour} className="w-[90px] shrink-0" disabled={!slot.date} onChange={e => {
+                  <Input type="time" value={slot.hour} className="w-[80px] shrink-0 px-1.5" disabled={!slot.date} onChange={e => {
                     const next = [...bookings];
                     next[i] = { ...slot, hour: e.target.value, schedule_state: e.target.value ? 'scheduled' : 'potential' };
                     setBookings(next);
