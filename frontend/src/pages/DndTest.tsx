@@ -1585,7 +1585,7 @@ export default function DndTestPage() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col gap-3 w-full px-4 h-[calc(100dvh-9.5rem)] sm:h-[calc(100dvh-10.5rem)] md:h-[calc(100dvh-7rem)] overflow-y-auto md:overflow-hidden" dir="rtl">
+      <div className="flex flex-col gap-3 w-full px-4 md:h-[calc(100dvh-7rem)] md:overflow-hidden" dir="rtl">
 
         <DndContext
           sensors={sensors}
@@ -1595,7 +1595,7 @@ export default function DndTestPage() {
         >
           {/* ── Day pills + Location strip (sticky, never scrolls) ── */}
           {tripDays.length > 0 ? (
-            <ScrollArea className="w-full shrink-0 sticky top-0 z-10 bg-background pb-1">
+            <ScrollArea className="w-full shrink-0 sticky top-14 sm:top-16 md:static z-10 bg-background pb-1">
               <div className="flex gap-2 pb-1">
                 {tripDays.map((day, idx) => {
                   const dayNum = idx + 1;
