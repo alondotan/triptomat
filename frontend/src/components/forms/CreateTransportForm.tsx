@@ -59,7 +59,7 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
   const { toast } = useToast();
   const [openInternal, setOpenInternal] = useState(false);
   const open = isControlled ? openProp! : openInternal;
-  const setOpen = (v: boolean) => { isControlled ? onOpenChange?.(v) : setOpenInternal(v); };
+  const setOpen = (v: boolean) => { if (isControlled) { onOpenChange?.(v); } else { setOpenInternal(v); } };
   const [category, setCategory] = useState('flight');
   const [status, setStatus] = useState<TransportStatus>('candidate');
   const [segments, setSegments] = useState<SegmentFormData[]>([emptySegment()]);
