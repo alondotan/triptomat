@@ -1,3 +1,12 @@
+"""triptomat-mail-handler Lambda handler.
+
+Required env vars:
+  MAIL_WEBHOOK_URL    — Supabase travel-webhook Edge Function URL
+  SUPABASE_URL        — Supabase project URL (for user lookup)
+  SUPABASE_SERVICE_KEY — Supabase service-role key
+  OPENAI_API_KEY      — OpenAI API key for email analysis
+"""
+
 import json
 import boto3
 import os

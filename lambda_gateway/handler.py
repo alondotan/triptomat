@@ -1,3 +1,12 @@
+"""triptomat-gateway Lambda handler.
+
+Required env vars:
+  DOWNLOAD_QUEUE_URL  — SQS queue URL for video downloads
+  ANALYSIS_QUEUE_URL  — SQS queue URL for AI analysis
+  DYNAMODB_TABLE      — DynamoDB cache table name (default: triptomat-cache)
+  MAP_GOOGLE_API_KEY  — Google Maps API key for geocoding
+"""
+
 import json
 import os
 import traceback

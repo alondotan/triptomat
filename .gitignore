@@ -1,5 +1,7 @@
 # Python / backend
 .env
+.env.local
+.env.*.local
 __pycache__/
 *.pyc
 *.mp4

@@ -1,3 +1,14 @@
+"""triptomat-worker Lambda handler.
+
+Required env vars:
+  S3_BUCKET           — S3 bucket for media files (default: triptomat-media)
+  DYNAMODB_TABLE      — DynamoDB cache table name (default: triptomat-cache)
+  GOOGLE_API_KEY      — Google Gemini API key for AI analysis
+  MAP_GOOGLE_API_KEY  — Google Maps API key for geocoding
+  WEBHOOK_URL         — Supabase recommendation webhook URL
+  WEBHOOK_TOKEN       — Default webhook auth token (overridden per-request)
+"""
+
 import json
 import os
 from datetime import datetime, timezone

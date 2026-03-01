@@ -1,3 +1,10 @@
+"""triptomat-downloader Lambda handler.
+
+Required env vars:
+  S3_BUCKET           — S3 bucket for media files (default: triptomat-media)
+  ANALYSIS_QUEUE_URL  — SQS queue URL for AI analysis
+"""
+
 import json
 import os
 
