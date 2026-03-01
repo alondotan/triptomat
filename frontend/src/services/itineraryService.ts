@@ -1,5 +1,5 @@
 import type { Json } from '@/integrations/supabase/types';
-import { ItineraryDay } from '@/types/trip';
+import { ItineraryDay, POIBooking } from '@/types/trip';
 import { supabase } from './helpers';
 
 export async function fetchItineraryDays(tripId: string): Promise<ItineraryDay[]> {
@@ -142,4 +142,92 @@ export async function ensureItineraryDayForDate(tripId: string, date: string): P
 
   if (createError) throw createError;
   return created as unknown as ItineraryDayLite;
+}
+
+/**
+ * Syncs a POI's bookings to itinerary days:
+ * - For each booking with a reservation_date, ensures the POI is on the matching day
+ * - Sets time_window.start from the booking's reservation_hour
+ * - Removes the POI from days whose dates no longer match any booking
+ */
+export async function syncActivityBookingsToDays(
+  tripId: string,
+  poiId: string,
+  bookings: POIBooking[],
+): Promise<void> {
+  const bookingDates = new Set(
+    bookings.map(b => b.reservation_date).filter((d): d is string => !!d),
+  );
+  if (bookingDates.size === 0) return;
+
+  // Build a map: bookingDate → reservation_hour
+  const dateToHour = new Map<string, string | undefined>();
+  for (const b of bookings) {
+    if (b.reservation_date) dateToHour.set(b.reservation_date, b.reservation_hour);
+  }
+
+  // Fetch all existing itinerary days for this trip
+  const { data: allDays } = await supabase
+    .from('itinerary_days')
+    .select('*')
+    .eq('trip_id', tripId);
+  const days = allDays || [];
+
+  // 1) Remove POI from days whose date no longer matches any booking
+  for (const day of days) {
+    const activities = (day.activities || []) as Array<{ id: string; type: string; order: number; schedule_state?: string; time_window?: { start?: string; end?: string } }>;
+    const idx = activities.findIndex(a => a.type === 'poi' && a.id === poiId);
+    if (idx === -1) continue;
+
+    const dayDate = day.date as string | null;
+    if (dayDate && !bookingDates.has(dayDate)) {
+      // Day has this POI but no matching booking → remove
+      activities.splice(idx, 1);
+      await supabase.from('itinerary_days').update({ activities }).eq('id', day.id);
+    } else if (dayDate && bookingDates.has(dayDate)) {
+      // Day matches a booking → update time_window
+      const hour = dateToHour.get(dayDate);
+      if (hour) {
+        activities[idx] = {
+          ...activities[idx],
+          time_window: { start: hour, end: activities[idx].time_window?.end },
+          schedule_state: 'scheduled',
+        };
+        await supabase.from('itinerary_days').update({ activities }).eq('id', day.id);
+      }
+    }
+  }
+
+  // 2) Add POI to days where it's missing
+  for (const date of bookingDates) {
+    const existingDay = days.find(d => d.date === date);
+    const hour = dateToHour.get(date);
+
+    if (existingDay) {
+      const activities = (existingDay.activities || []) as Array<{ id: string; type: string; order: number; time_window?: { start?: string; end?: string }; schedule_state?: string }>;
+      if (!activities.some(a => a.type === 'poi' && a.id === poiId)) {
+        activities.push({
+          order: activities.length + 1,
+          type: 'poi',
+          id: poiId,
+          schedule_state: hour ? 'scheduled' : undefined,
+          time_window: hour ? { start: hour } : undefined,
+        });
+        await supabase.from('itinerary_days').update({ activities }).eq('id', existingDay.id);
+      }
+    } else {
+      // Create the day and add the POI
+      const created = await ensureItineraryDayForDate(tripId, date);
+      if (created) {
+        const activities = [{
+          order: 1,
+          type: 'poi',
+          id: poiId,
+          schedule_state: hour ? 'scheduled' : undefined,
+          time_window: hour ? { start: hour } : undefined,
+        }];
+        await supabase.from('itinerary_days').update({ activities }).eq('id', created.id);
+      }
+    }
+  }
 }

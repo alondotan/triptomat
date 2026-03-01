@@ -12,7 +12,8 @@ import { Separator } from '@/components/ui/separator';
 import { ExternalLink, Plus, Quote, Save, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { SubCategorySelector } from '@/components/shared/SubCategorySelector';
-import type { PointOfInterest, POICategory, POIStatus } from '@/types/trip';
+import type { PointOfInterest, POICategory, POIStatus, POIBooking } from '@/types/trip';
+import { syncActivityBookingsToDays } from '@/services/itineraryService';
 
 const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
 import type { SourceRecommendation } from '@/types/webhook';
@@ -172,6 +173,13 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     };
 
     await updatePOI(updatedPOI);
+
+    // Sync bookings to itinerary days (add/move/remove from days by date)
+    const savedBookings: POIBooking[] = updatedPOI.details.bookings || [];
+    if ((category === 'eatery' || category === 'attraction') && savedBookings.length > 0) {
+      await syncActivityBookingsToDays(poi.tripId, poi.id, savedBookings);
+    }
+
     onOpenChange(false);
   };
 
