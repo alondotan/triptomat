@@ -169,10 +169,10 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
         cost: costAmount ? { amount: parseFloat(costAmount), currency: costCurrency } : poi.details.cost,
         notes: notes ? { ...poi.details.notes, user_summary: notes } : poi.details.notes,
         order_number: orderNumber || poi.details.order_number,
-        bookings: bookings.filter(b => b.date || b.hour).map(b => ({
-          reservation_date: b.date || undefined,
-          reservation_hour: b.schedule_state === 'scheduled' && b.hour ? b.hour : undefined,
-          schedule_state: b.schedule_state,
+        bookings: bookings.filter(b => b.date).map(b => ({
+          reservation_date: b.date,
+          reservation_hour: b.hour || undefined,
+          schedule_state: b.hour ? 'scheduled' : 'potential',
         })),
         activity_details: (category === 'eatery' || category === 'attraction') ? {
           ...poi.details.activity_details,
@@ -204,6 +204,12 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
         <DialogHeader>
           <DialogTitle className="text-lg">{poi.name}</DialogTitle>
         </DialogHeader>
+
+        {poi.imageUrl && (
+          <div className="w-full h-48 overflow-hidden rounded-lg -mt-2">
+            <img src={poi.imageUrl} alt={poi.name} className="w-full h-full object-cover" />
+          </div>
+        )}
 
         {/* Recommendation Quotes */}
         {quotes.length > 0 && (
@@ -361,23 +367,19 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                     </Button>
                   </div>
                   <div className="flex gap-2 items-center">
-                    <Badge
-                      variant={slot.schedule_state === 'scheduled' ? 'default' : 'outline'}
-                      className="cursor-pointer select-none text-xs whitespace-nowrap"
-                      onClick={() => {
-                        const next = [...bookings];
-                        const newState = slot.schedule_state === 'scheduled' ? 'potential' : 'scheduled';
-                        next[i] = { ...slot, schedule_state: newState, hour: newState === 'potential' ? '' : slot.hour };
-                        setBookings(next);
-                      }}
-                    >
-                      {slot.schedule_state === 'scheduled' ? 'בלו״ז' : 'פוטנציאלי'}
-                    </Badge>
-                    <Input type="time" value={slot.hour} className="w-[100px]" onChange={e => {
+                    <Input type="time" value={slot.hour} className="w-[100px]" disabled={!slot.date} onChange={e => {
                       const next = [...bookings];
-                      next[i] = { ...slot, hour: e.target.value };
+                      next[i] = { ...slot, hour: e.target.value, schedule_state: e.target.value ? 'scheduled' : 'potential' };
                       setBookings(next);
                     }} />
+                    {slot.date && (
+                      <Badge
+                        variant={slot.hour ? 'default' : 'outline'}
+                        className="select-none text-xs whitespace-nowrap"
+                      >
+                        {slot.hour ? 'בלו״ז' : 'פוטנציאלי'}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               ))}
