@@ -182,6 +182,7 @@ export interface SubCategoryEntry {
 export interface SubCategoryConfig {
   master_list: SubCategoryEntry[];
   cat_styles: Record<string, { icon: string; color: string }>;
+  category_to_db?: Record<string, string>;
 }
 
 let cachedConfig: SubCategoryConfig | null = null;
@@ -211,18 +212,14 @@ export function getSubCategoryEntry(type: string): SubCategoryEntry | undefined 
   return cachedConfig.master_list.find(e => e.type.toLowerCase() === type.toLowerCase());
 }
 
-// Map POI category to config categories
-const poiCategoryToConfigCategory: Record<string, string[]> = {
-  accommodation: ['Accommodations'],
-  eatery: ['Eateries'],
-  attraction: ['Activities', 'Events'],
-  service: ['Services'],
-};
-
 export function getSubCategoriesForPOICategory(poiCategory: string): SubCategoryEntry[] {
   if (!cachedConfig) return [];
-  const configCats = poiCategoryToConfigCategory[poiCategory];
-  if (!configCats) return [];
+  // Reverse-map: DB category → config categories
+  const catToDb = cachedConfig.category_to_db || {};
+  const configCats = Object.entries(catToDb)
+    .filter(([, db]) => db === poiCategory)
+    .map(([cfg]) => cfg);
+  if (!configCats.length) return [];
   return cachedConfig.master_list.filter(e => configCats.includes(e.category) && !e.is_geo_location);
 }
 
@@ -233,6 +230,36 @@ export function getTransportSubCategories(): SubCategoryEntry[] {
 
 export function getLucideIcon(materialIcon: string): LucideIcon {
   return materialToLucide[materialIcon] || MapPin;
+}
+
+// ── Derived category helpers (used by recommendationService etc.) ────────────
+
+/** Returns type → DB category mapping, derived from the loaded config. */
+export function getTypeToCategoryMap(): Record<string, string> {
+  if (!cachedConfig) return {};
+  const catToDb = cachedConfig.category_to_db || {};
+  const map: Record<string, string> = {};
+  for (const entry of cachedConfig.master_list) {
+    const db = catToDb[entry.category];
+    if (db) map[entry.type] = db;
+  }
+  return map;
+}
+
+/** Returns the set of geographic location types. */
+export function getGeoTypes(): Set<string> {
+  if (!cachedConfig) return new Set();
+  return new Set(
+    cachedConfig.master_list.filter(e => e.is_geo_location).map(e => e.type)
+  );
+}
+
+/** Returns the set of tip types. */
+export function getTipTypes(): Set<string> {
+  if (!cachedConfig) return new Set();
+  return new Set(
+    cachedConfig.master_list.filter(e => e.category === 'Tips').map(e => e.type)
+  );
 }
 
 // Preload on module import

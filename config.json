@@ -360,5 +360,15 @@
     "Geography": { "icon": "map", "color": "text-emerald-500" },
      "Events": { "icon": "calendar", "color": "text-purple-500" },
     "Contacts": { "icon": "users", "color": "text-teal-500" }
+  },
+
+  "category_to_db": {
+    "Accommodations": "accommodation",
+    "Eateries": "eatery",
+    "Activities": "attraction",
+    "Events": "attraction",
+    "Transportation": "transportation",
+    "Services": "service",
+    "Contacts": "contact"
   }
 }
