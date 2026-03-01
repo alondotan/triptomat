@@ -193,24 +193,27 @@ function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeing
       className={`flex items-center gap-2.5 bg-card border rounded-xl px-3 py-2.5 select-none transition-opacity ${
         isBeingDragged ? 'opacity-30' : 'cursor-grab hover:border-primary/40'
       }`}
+      {...attributes}
+      {...listeners}
     >
-      <div className="flex items-center gap-2.5 flex-1 min-w-0" {...attributes} {...listeners}>
-        <GripVertical size={14} className="text-muted-foreground/50 shrink-0" />
+      <GripVertical size={14} className="text-muted-foreground/50 shrink-0" />
+      <div className="flex-1 min-w-0">
         {item.poi ? (
           <POICard poi={item.poi} level={2} editable />
         ) : (
-          <>
+          <div className="flex items-center gap-2">
             <span className="material-symbols-outlined">{item.emoji}</span>
             <span className="text-sm font-medium">{item.label}</span>
             {item.remark && <span className="text-xs text-muted-foreground ml-1">{item.remark}</span>}
-          </>
+          </div>
         )}
       </div>
       {onRemove && (
         <button
           onPointerDown={e => e.stopPropagation()}
+          onTouchStart={e => e.stopPropagation()}
           onClick={e => { e.stopPropagation(); onRemove(); }}
-          className="shrink-0 p-1 rounded-md text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
+          className="shrink-0 p-1.5 rounded-md text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
           title="הסר מהלו״ז"
         >
           <X size={14} />
