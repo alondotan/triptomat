@@ -48,6 +48,19 @@ jobs:
           GOOGLE_API_KEY: dummy
           MAP_GOOGLE_API_KEY: dummy
 
+  edge-functions:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/supabase/functions/_shared
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno test
+        name: Test
+
   docker:
     runs-on: ubuntu-latest
     strategy:
