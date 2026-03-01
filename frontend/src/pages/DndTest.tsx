@@ -523,7 +523,7 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
       {timeBlockItem ? (
         <TimeBlockSectionHeader
           item={timeBlockItem}
-          canDelete={canDelete}
+          canDelete
           onUpdate={(lbl, t) => onUpdateTimeBlock?.(timeBlockItem.id, lbl, t)}
           onDelete={() => onDeleteTimeBlock?.(timeBlockItem.id)}
         />
