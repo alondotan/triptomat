@@ -188,9 +188,14 @@ let cachedConfig: SubCategoryConfig | null = null;
 
 export async function loadSubCategoryConfig(): Promise<SubCategoryConfig> {
   if (cachedConfig) return cachedConfig;
-  const res = await fetch('/data/sub-categories.json');
-  cachedConfig = await res.json();
-  return cachedConfig!;
+  try {
+    const res = await fetch('/data/sub-categories.json');
+    if (!res.ok) return { master_list: [] } as SubCategoryConfig;
+    cachedConfig = await res.json();
+    return cachedConfig!;
+  } catch {
+    return { master_list: [] } as SubCategoryConfig;
+  }
 }
 
 // Synchronous lookup (after load)

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useRef, ReactNode, useCallback } from 'react';
 import { Trip, PointOfInterest, Transportation, Mission, ItineraryDay, CostBreakdown, Expense, Contact } from '@/types/trip';
 import { SiteHierarchyNode } from '@/types/webhook';
 import * as tripService from '@/services/tripService';
@@ -200,6 +200,9 @@ export function TripProvider({ children }: { children: ReactNode }) {
     isLoading: true,
     error: null,
   });
+
+  // Track pending exchange-rate fetches to avoid repeated calls during render
+  const pendingRateFetches = useRef<Set<string>>(new Set());
 
   const loadTrips = useCallback(async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
@@ -618,12 +621,20 @@ export function TripProvider({ children }: { children: ReactNode }) {
     if (!state.exchangeRates) return original;
     const converted = convertToPreferred(amount, originalCurrency, state.exchangeRates);
     if (converted === null) {
-      fetchSingleRate(originalCurrency, preferred).then(rate => {
-        if (rate && state.exchangeRates) {
-          const updatedRates = { ...state.exchangeRates, rates: { ...state.exchangeRates.rates, [originalCurrency]: rate } };
-          dispatch({ type: 'SET_EXCHANGE_RATES', payload: updatedRates });
-        }
-      });
+      // Schedule fetch outside render cycle, deduplicate by currency key
+      const key = `${originalCurrency}_${preferred}`;
+      if (!pendingRateFetches.current.has(key)) {
+        pendingRateFetches.current.add(key);
+        setTimeout(() => {
+          fetchSingleRate(originalCurrency, preferred).then(rate => {
+            pendingRateFetches.current.delete(key);
+            if (rate && state.exchangeRates) {
+              const updatedRates = { ...state.exchangeRates, rates: { ...state.exchangeRates.rates, [originalCurrency]: rate } };
+              dispatch({ type: 'SET_EXCHANGE_RATES', payload: updatedRates });
+            }
+          });
+        }, 0);
+      }
       return original;
     }
     return `${original} (${formatCurrency(Math.round(converted), preferred)})`;

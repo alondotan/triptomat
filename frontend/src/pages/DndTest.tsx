@@ -1127,9 +1127,7 @@ export default function DndTestPage() {
   // lockedIds  = scheduled activities that have a time_window.start (timed anchor)
   useEffect(() => {
     const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
-    console.log('[DndTest] selectedDayNum=', selectedDayNum, 'itDay=', itDay, 'allDays=', state.itineraryDays.map(d => d.dayNumber), 'pois#=', state.pois.length);
     if (!itDay) { setPotential([]); setScheduled([]); setLockedIds(new Set()); return; }
-    console.log('[DndTest] activities=', itDay.activities);
 
     const newPotential: Item[] = [];
     const newScheduled: Item[] = [];
@@ -1140,13 +1138,10 @@ export default function DndTestPage() {
       .filter(a => a.type === 'poi')
       .forEach(a => {
         const poi = state.pois.find(p => p.id === a.id);
-        console.log('[DndTest] activity', a.id, 'schedule_state=', a.schedule_state, 'time_window=', a.time_window, '=> poi=', poi?.name ?? 'NOT FOUND');
         if (!poi) return;
         // time: prefer itinerary time_window, fallback to POI booking hour
         const bookingHour = poi.details?.booking?.reservation_hour;
         const time = a.time_window?.start ?? bookingHour ?? undefined;
-        console.log(getSubCategoryEntry(poi.subCategory)?.icon);
-        console.log(poi);
         const item: Item = {
           id: a.id,
           label: poi.name,
