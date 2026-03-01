@@ -47,6 +47,7 @@ export interface POIBooking {
   reservation_date?: string;
   reservation_hour?: string;
   number_of_people?: number;
+  schedule_state?: 'potential' | 'scheduled';
 }
 
 export interface AccommodationDetails {

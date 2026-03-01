@@ -57,8 +57,12 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const [occupancy, setOccupancy] = useState(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
 
   // Booking fields (multiple time slots)
-  const [bookings, setBookings] = useState<Array<{ date: string; hour: string }>>(
-    (poi.details.bookings || []).map(b => ({ date: b.reservation_date || '', hour: b.reservation_hour || '' }))
+  const [bookings, setBookings] = useState<Array<{ date: string; hour: string; schedule_state: 'potential' | 'scheduled' }>>(
+    (poi.details.bookings || []).map(b => ({
+      date: b.reservation_date || '',
+      hour: b.reservation_hour || '',
+      schedule_state: b.schedule_state || (b.reservation_hour ? 'scheduled' : 'potential'),
+    }))
   );
   const [orderNumber, setOrderNumber] = useState(poi.details.order_number || '');
 
@@ -84,7 +88,11 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     setCheckoutHour(poi.details.accommodation_details?.checkout?.hour || '');
     setRoomType(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
     setOccupancy(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
-    setBookings((poi.details.bookings || []).map(b => ({ date: b.reservation_date || '', hour: b.reservation_hour || '' })));
+    setBookings((poi.details.bookings || []).map(b => ({
+      date: b.reservation_date || '',
+      hour: b.reservation_hour || '',
+      schedule_state: b.schedule_state || (b.reservation_hour ? 'scheduled' : 'potential'),
+    })));
     setOrderNumber(poi.details.order_number || '');
   }, [poi]);
 
@@ -161,7 +169,8 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
         order_number: orderNumber || poi.details.order_number,
         bookings: bookings.filter(b => b.date || b.hour).map(b => ({
           reservation_date: b.date || undefined,
-          reservation_hour: b.hour || undefined,
+          reservation_hour: b.schedule_state === 'scheduled' && b.hour ? b.hour : undefined,
+          schedule_state: b.schedule_state,
         })),
         accommodation_details: category === 'accommodation' ? {
           ...poi.details.accommodation_details,
@@ -175,8 +184,8 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     await updatePOI(updatedPOI);
 
     // Sync bookings to itinerary days (add/move/remove from days by date)
-    const savedBookings: POIBooking[] = updatedPOI.details.bookings || [];
-    if ((category === 'eatery' || category === 'attraction') && savedBookings.length > 0) {
+    if (category === 'eatery' || category === 'attraction') {
+      const savedBookings: POIBooking[] = updatedPOI.details.bookings || [];
       await syncActivityBookingsToDays(poi.tripId, poi.id, savedBookings);
     }
 
@@ -332,31 +341,51 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
               <Separator />
               <h4 className="text-sm font-semibold">זמנים</h4>
               {bookings.map((slot, i) => (
-                <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
-                  <div className="space-y-1">
-                    {i === 0 && <Label className="text-xs">תאריך</Label>}
+                <div key={i} className="space-y-1">
+                  {i === 0 && (
+                    <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
+                      <Label className="text-xs">תאריך</Label>
+                      <Label className="text-xs text-center w-[70px]">מצב</Label>
+                      <Label className="text-xs">שעה</Label>
+                      <div className="w-9" />
+                    </div>
+                  )}
+                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
                     <Input type="date" value={slot.date} onChange={e => {
                       const next = [...bookings];
                       next[i] = { ...slot, date: e.target.value };
                       setBookings(next);
                     }} />
+                    <Badge
+                      variant={slot.schedule_state === 'scheduled' ? 'default' : 'outline'}
+                      className="cursor-pointer select-none text-xs whitespace-nowrap w-[70px] justify-center"
+                      onClick={() => {
+                        const next = [...bookings];
+                        const newState = slot.schedule_state === 'scheduled' ? 'potential' : 'scheduled';
+                        next[i] = { ...slot, schedule_state: newState, hour: newState === 'potential' ? '' : slot.hour };
+                        setBookings(next);
+                      }}
+                    >
+                      {slot.schedule_state === 'scheduled' ? 'בלו״ז' : 'פוטנציאלי'}
+                    </Badge>
+                    {slot.schedule_state === 'scheduled' ? (
+                      <Input type="time" value={slot.hour} className="w-[100px]" onChange={e => {
+                        const next = [...bookings];
+                        next[i] = { ...slot, hour: e.target.value };
+                        setBookings(next);
+                      }} />
+                    ) : (
+                      <div className="w-[100px]" />
+                    )}
+                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => {
+                      setBookings(bookings.filter((_, j) => j !== i));
+                    }}>
+                      <X size={14} />
+                    </Button>
                   </div>
-                  <div className="space-y-1">
-                    {i === 0 && <Label className="text-xs">שעה</Label>}
-                    <Input type="time" value={slot.hour} onChange={e => {
-                      const next = [...bookings];
-                      next[i] = { ...slot, hour: e.target.value };
-                      setBookings(next);
-                    }} />
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => {
-                    setBookings(bookings.filter((_, j) => j !== i));
-                  }}>
-                    <X size={14} />
-                  </Button>
                 </div>
               ))}
-              <Button variant="outline" size="sm" className="gap-1" onClick={() => setBookings([...bookings, { date: '', hour: '' }])}>
+              <Button variant="outline" size="sm" className="gap-1" onClick={() => setBookings([...bookings, { date: '', hour: '', schedule_state: 'potential' }])}>
                 <Plus size={14} /> הוסף זמן
               </Button>
             </>

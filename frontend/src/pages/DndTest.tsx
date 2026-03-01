@@ -5,6 +5,7 @@ import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
 import { useItinerary } from '@/context/ItineraryContext';
 import { updateItineraryDay, createItineraryDay } from '@/services/itineraryService';
+import { rebuildPOIBookingsFromDays } from '@/services/poiService';
 import { LocationContextPicker } from '@/components/shared/LocationContextPicker';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { eachDayOfInterval, parseISO, format } from 'date-fns';
@@ -1338,7 +1339,22 @@ export default function DndTestPage() {
 
     // Persist to DB
     await updateItineraryDay(itDay.id, { activities: updatedActivities });
-  }, [selectedDayNum, itineraryDays, setItineraryDays]);
+
+    // Sync bookings for any POIs whose presence or state changed on this day
+    if (activeTrip) {
+      const oldPOIs = new Map(itDay.activities.filter(a => a.type === 'poi').map(a => [a.id, a]));
+      const newPOIs = new Map(updatedActivities.filter(a => a.type === 'poi').map(a => [a.id, a]));
+      const changedIds = new Set<string>();
+      for (const [id, a] of newPOIs) {
+        const old = oldPOIs.get(id);
+        if (!old || old.schedule_state !== a.schedule_state || old.time_window?.start !== a.time_window?.start) changedIds.add(id);
+      }
+      for (const id of oldPOIs.keys()) {
+        if (!newPOIs.has(id)) changedIds.add(id);
+      }
+      await Promise.all([...changedIds].map(id => rebuildPOIBookingsFromDays(activeTrip.id, id)));
+    }
+  }, [selectedDayNum, itineraryDays, setItineraryDays, activeTrip]);
 
   // Delete an auto-generated group → merge its items into the adjacent unlocked group
   const handleDeleteAutoGroup = useCallback(async (contentItemIds: string[]) => {

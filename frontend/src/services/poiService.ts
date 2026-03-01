@@ -181,6 +181,65 @@ function normalizeDetails(raw: Record<string, unknown>): POIDetails {
   return details;
 }
 
+/**
+ * Rebuilds a POI's bookings array from itinerary day activities (days → bookings sync).
+ * Reads fresh data from the DB, compares, and updates if changed.
+ */
+export async function rebuildPOIBookingsFromDays(tripId: string, poiId: string): Promise<void> {
+  // 1. Fetch all itinerary days for the trip
+  const { data: days, error: daysError } = await supabase
+    .from('itinerary_days')
+    .select('date, activities')
+    .eq('trip_id', tripId);
+  if (daysError) throw daysError;
+
+  // 2. Scan activities in each day for this POI
+  type Activity = { id: string; type: string; schedule_state?: string; time_window?: { start?: string; end?: string } };
+  const newBookings: POIBooking[] = [];
+  for (const day of days || []) {
+    const dayDate = day.date as string | null;
+    if (!dayDate) continue;
+    const activities = (day.activities || []) as Activity[];
+    const match = activities.find(a => a.type === 'poi' && a.id === poiId);
+    if (match) {
+      newBookings.push({
+        reservation_date: dayDate,
+        reservation_hour: match.time_window?.start || undefined,
+        schedule_state: match.schedule_state === 'scheduled' ? 'scheduled' : 'potential',
+      });
+    }
+  }
+
+  // 3. Fetch current POI to preserve number_of_people
+  const { data: poiRow, error: poiError } = await supabase
+    .from('points_of_interest')
+    .select('details')
+    .eq('id', poiId)
+    .single();
+  if (poiError) throw poiError;
+
+  const details = normalizeDetails((poiRow.details as Record<string, unknown>) || {});
+  const existingBookings = details.bookings || [];
+
+  // Preserve number_of_people from existing bookings
+  for (const nb of newBookings) {
+    const existing = existingBookings.find(e => e.reservation_date === nb.reservation_date);
+    if (existing?.number_of_people) nb.number_of_people = existing.number_of_people;
+  }
+
+  // 4. Compare and update if changed
+  const oldKey = JSON.stringify(existingBookings.map(b => `${b.reservation_date}|${b.reservation_hour || ''}|${b.schedule_state || ''}`).sort());
+  const newKey = JSON.stringify(newBookings.map(b => `${b.reservation_date}|${b.reservation_hour || ''}|${b.schedule_state || ''}`).sort());
+  if (oldKey === newKey) return;
+
+  details.bookings = newBookings.length > 0 ? newBookings : undefined;
+  const { error: updateError } = await supabase
+    .from('points_of_interest')
+    .update({ details: details as unknown as Json })
+    .eq('id', poiId);
+  if (updateError) throw updateError;
+}
+
 export function mapPOI(row: Record<string, unknown>): PointOfInterest {
   return {
     id: row.id as string,

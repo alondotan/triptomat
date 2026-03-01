@@ -11,6 +11,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { CalendarDays, Pencil } from 'lucide-react';
 import { format, eachDayOfInterval, parseISO } from 'date-fns';
 import { createItineraryDay, updateItineraryDay } from '@/services/itineraryService';
+import { rebuildPOIBookingsFromDays } from '@/services/poiService';
 import { type LocationSuggestion } from '@/components/DaySection';
 import { LocationContextPicker } from '@/components/shared/LocationContextPicker';
 import { ItineraryDayContent, DragPreview } from '@/components/ItineraryDayContent';
@@ -494,6 +495,7 @@ const Index = () => {
       await updateItineraryDay(itDay.id, {
         activities: [...existing, { order: existing.length + 1, type: 'poi', id: entityId }],
       });
+      if (activeTrip) await rebuildPOIBookingsFromDays(activeTrip.id, entityId);
       const poi = pois.find(p => p.id === entityId);
       if (poi && (poi.status === 'candidate' || poi.status === 'in_plan')) {
         await updatePOI({ ...poi, status: 'matched' });
@@ -522,13 +524,14 @@ const Index = () => {
       await updateItineraryDay(currentItDay.id, {
         activities: currentItDay.activities.filter(a => a.id !== entityId),
       });
+      if (activeTrip) await rebuildPOIBookingsFromDays(activeTrip.id, entityId);
     } else if (entityType === 'transport') {
       await updateItineraryDay(currentItDay.id, {
         transportationSegments: currentItDay.transportationSegments.filter(s => s.transportation_id !== entityId),
       });
     }
     await refreshDays();
-  }, [currentItDay, refreshDays]);
+  }, [currentItDay, activeTrip, refreshDays]);
 
   const toggleActivityScheduleState = useCallback(async (
     activityId: string,
@@ -539,8 +542,9 @@ const Index = () => {
       a.id === activityId ? { ...a, schedule_state: scheduleState } : a
     );
     await updateItineraryDay(currentItDay.id, { activities: updated });
+    if (activeTrip) await rebuildPOIBookingsFromDays(activeTrip.id, activityId);
     await refreshDays();
-  }, [currentItDay, refreshDays]);
+  }, [currentItDay, activeTrip, refreshDays]);
 
   const reorderDayActivities = useCallback(async (orderedIds: string[]) => {
     if (!currentItDay) return;
@@ -605,8 +609,9 @@ const Index = () => {
     const others = withToggled.filter(a => !orderedIds.includes(a.id));
 
     await updateItineraryDay(currentItDay.id, { activities: [...reordered, ...others] });
+    if (activeTrip) await rebuildPOIBookingsFromDays(activeTrip.id, activityId);
     await refreshDays();
-  }, [currentItDay, scheduledActivityOrder, activityInsertPoint, refreshDays]);
+  }, [currentItDay, activeTrip, scheduledActivityOrder, activityInsertPoint, refreshDays]);
 
   // Reposition an already-scheduled activity — prototype's splice approach:
   // splice out at dragIdx, splice in at adjusted insertPoint (subtract 1 if moving forward).
@@ -655,6 +660,7 @@ const Index = () => {
         activities: [...existing, { order: existing.length + 1, type: 'poi' as const, id: activityId }],
       });
     }
+    await rebuildPOIBookingsFromDays(activeTrip.id, activityId);
     await refreshDays();
   }, [currentItDay, activeTrip, itineraryDays, tripDays, refreshDays]);
 
