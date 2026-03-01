@@ -1601,7 +1601,7 @@ export default function DndTestPage() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col gap-3 w-full px-4 h-[calc(100dvh-9.5rem)] sm:h-[calc(100dvh-10.5rem)] md:h-[calc(100dvh-7rem)]" dir="rtl">
+      <div className="flex flex-col gap-3 w-full px-4 h-full" dir="rtl">
 
         <DndContext
           sensors={sensors}

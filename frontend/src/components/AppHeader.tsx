@@ -25,7 +25,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { MobileBottomNav } from './MobileBottomNav';
 import { useState, useEffect } from 'react';
 import { useTripList } from '@/context/TripListContext';
 import { useActiveTrip } from '@/context/ActiveTripContext';
@@ -451,7 +450,6 @@ export function AppHeader() {
       </Dialog>
 
     </header>
-    <MobileBottomNav />
     </>
   );
 }
