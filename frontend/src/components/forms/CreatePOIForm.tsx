@@ -11,11 +11,14 @@ import { Plus, Pencil } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { CitySelector } from '@/components/CitySelector';
 import { SubCategorySelector } from '@/components/SubCategorySelector';
+import { useToast } from '@/hooks/use-toast';
+import { createPOISchema } from '@/schemas/poi.schema';
 import type { POICategory, POIStatus } from '@/types/trip';
 
 export function CreatePOIForm() {
   const { activeTrip, tripSitesHierarchy } = useActiveTrip();
   const { addPOI } = usePOI();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [category, setCategory] = useState<POICategory>('attraction');
@@ -49,7 +52,24 @@ export function CreatePOIForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeTrip || !name.trim()) return;
+    if (!activeTrip) return;
+
+    const result = createPOISchema.safeParse({
+      name: name.trim(),
+      category,
+      status,
+      subCategory: subCategory || undefined,
+      country: country || undefined,
+      city: city || undefined,
+      address: address || undefined,
+      costAmount: costAmount ? parseFloat(costAmount) : undefined,
+      costCurrency: costCurrency || undefined,
+      notes: notes || undefined,
+    });
+    if (!result.success) {
+      toast({ title: "Validation error", description: result.error.issues[0].message, variant: "destructive" });
+      return;
+    }
 
     await addPOI({
       tripId: activeTrip.id,

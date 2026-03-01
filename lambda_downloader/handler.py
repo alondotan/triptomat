@@ -10,6 +10,9 @@ import os
 
 import boto3
 import yt_dlp
+from pydantic import ValidationError
+
+from core.schemas import DownloadMessage
 
 s3 = boto3.client("s3")
 sqs = boto3.client("sqs")
@@ -21,10 +24,17 @@ ANALYSIS_QUEUE_URL = os.environ.get("ANALYSIS_QUEUE_URL", "")
 def lambda_handler(event, context):
     """SQS-triggered handler. Downloads video, uploads to S3, sends to analysis queue."""
     for record in event["Records"]:
-        msg = json.loads(record["body"])
-        job_id = msg["job_id"]
-        url = msg["url"]
-        webhook_token = msg.get("webhook_token", "")
+        raw = json.loads(record["body"])
+
+        try:
+            msg = DownloadMessage.model_validate(raw)
+        except ValidationError as e:
+            print(f"Invalid SQS message: {e}")
+            raise
+
+        job_id = msg.job_id
+        url = msg.url
+        webhook_token = msg.webhook_token or ""
 
         print(f"Downloading video for job {job_id}: {url}")
 

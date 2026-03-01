@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, ArrowDown } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { useToast } from '@/hooks/use-toast';
+import { createTransportSchema } from '@/schemas/transport.schema';
 import type { TransportStatus } from '@/types/trip';
 
 const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
@@ -54,6 +56,7 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
   const isControlled = openProp !== undefined;
   const { activeTrip } = useActiveTrip();
   const { addTransportation } = useTransport();
+  const { toast } = useToast();
   const [openInternal, setOpenInternal] = useState(false);
   const open = isControlled ? openProp! : openInternal;
   const setOpen = (v: boolean) => { isControlled ? onOpenChange?.(v) : setOpenInternal(v); };
@@ -99,7 +102,30 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeTrip || !segments[0].fromName.trim() || !segments[0].toName.trim()) return;
+    if (!activeTrip) return;
+
+    const validation = createTransportSchema.safeParse({
+      category,
+      status,
+      segments: segments.map(s => ({
+        fromName: s.fromName.trim(),
+        fromCode: s.fromCode || undefined,
+        toName: s.toName.trim(),
+        toCode: s.toCode || undefined,
+        departureTime: s.departureTime || undefined,
+        arrivalTime: s.arrivalTime || undefined,
+        flightNumber: s.flightNumber || undefined,
+      })),
+      carrierName: carrierName || undefined,
+      orderNumber: orderNumber || undefined,
+      costAmount: costAmount ? parseFloat(costAmount) : undefined,
+      costCurrency: costCurrency || undefined,
+      notes: notes || undefined,
+    });
+    if (!validation.success) {
+      toast({ title: "Validation error", description: validation.error.issues[0].message, variant: "destructive" });
+      return;
+    }
 
     const result = await addTransportation({
       tripId: activeTrip.id,

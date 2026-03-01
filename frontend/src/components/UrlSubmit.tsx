@@ -4,6 +4,7 @@ import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { urlSchema } from '@/schemas/url.schema';
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -35,6 +36,13 @@ export function UrlSubmit() {
     e.preventDefault();
     const trimmed = url.trim();
     if (!trimmed || !webhookToken) return;
+
+    const validation = urlSchema.safeParse(trimmed);
+    if (!validation.success) {
+      setStatus('error');
+      setMessage(validation.error.issues[0].message);
+      return;
+    }
 
     setStatus('loading');
     setMessage('');

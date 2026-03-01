@@ -7,6 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useTripList } from '@/context/TripListContext';
 import { CountrySelector } from '@/components/CountrySelector';
 import { Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { createTripSchema } from '@/schemas/trip.schema';
 
 interface CreateTripFormProps {
   trigger?: React.ReactNode;
@@ -16,6 +18,7 @@ interface CreateTripFormProps {
 
 export function CreateTripForm({ trigger, open: openProp, onOpenChange }: CreateTripFormProps) {
   const { createNewTrip } = useTripList();
+  const { toast } = useToast();
   const [openInternal, setOpenInternal] = useState(false);
   const open = openProp !== undefined ? openProp : openInternal;
   const setOpen = (v: boolean) => { setOpenInternal(v); onOpenChange?.(v); };
@@ -28,8 +31,15 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !startDate || !endDate) return;
-    
+
+    const result = createTripSchema.safeParse({
+      name, description: description || undefined, countries, startDate, endDate,
+    });
+    if (!result.success) {
+      toast({ title: "Validation error", description: result.error.issues[0].message, variant: "destructive" });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await createNewTrip(name, description, startDate, endDate, countries);

@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Plus } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { createExpenseSchema } from '@/schemas/expense.schema';
 
 const EXPENSE_CATEGORIES = [
   { value: 'food', label: 'אוכל' },
@@ -25,6 +27,7 @@ const EXPENSE_CATEGORIES = [
 export function CreateExpenseForm() {
   const { activeTrip } = useActiveTrip();
   const { addExpense } = useFinance();
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('other');
@@ -46,7 +49,20 @@ export function CreateExpenseForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeTrip || !description.trim() || !amount) return;
+    if (!activeTrip) return;
+
+    const validation = createExpenseSchema.safeParse({
+      description: description.trim(),
+      category,
+      amount: amount ? parseFloat(amount) : undefined,
+      currency,
+      date: date || undefined,
+      notes: notes || undefined,
+    });
+    if (!validation.success) {
+      toast({ title: "Validation error", description: validation.error.issues[0].message, variant: "destructive" });
+      return;
+    }
 
     await addExpense({
       tripId: activeTrip.id,

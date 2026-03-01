@@ -15,12 +15,14 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 import boto3
+from pydantic import ValidationError
 
 from core.analyzer import GeminiService
 from core.config import load_config
 from core.geocoding import enrich_analysis_data, extract_coords_from_url
 from core.prompts import build_main_prompt
 from core.scrapers import MapsService
+from core.schemas import AnalysisMessage
 from core.webhook import send_to_webhook
 
 s3 = boto3.client("s3")
@@ -53,12 +55,19 @@ def _to_decimal(obj):
 def lambda_handler(event, context):
     """SQS-triggered handler. Runs AI analysis, geocoding, webhook, and caches result."""
     for record in event["Records"]:
-        msg = json.loads(record["body"])
-        job_id = msg["job_id"]
-        url = msg["url"]
-        source_type = msg["source_type"]
-        source_metadata = msg.get("source_metadata", {"title": "", "image": ""})
-        webhook_token = msg.get("webhook_token", "")
+        raw = json.loads(record["body"])
+
+        try:
+            msg = AnalysisMessage.model_validate(raw)
+        except ValidationError as e:
+            print(f"Invalid SQS message: {e}")
+            raise
+
+        job_id = msg.job_id
+        url = msg.url
+        source_type = msg.source_type
+        source_metadata = msg.source_metadata
+        webhook_token = msg.webhook_token or ""
 
         print(f"Analyzing job {job_id} ({source_type}): {url}")
 
@@ -67,7 +76,7 @@ def lambda_handler(event, context):
             manual_lat, manual_lng = None, None
 
             if source_type == "video":
-                s3_key = msg["s3_key"]
+                s3_key = msg.s3_key
                 video_path = f"/tmp/{job_id}.mp4"
                 s3.download_file(S3_BUCKET, s3_key, video_path)
 
@@ -76,9 +85,9 @@ def lambda_handler(event, context):
                 os.remove(video_path)
 
             elif source_type == "maps":
-                final_url = msg.get("final_url", url)
-                manual_lat = msg.get("manual_lat")
-                manual_lng = msg.get("manual_lng")
+                final_url = msg.final_url or url
+                manual_lat = msg.manual_lat
+                manual_lng = msg.manual_lng
 
                 if manual_lat and manual_lng:
                     actual_address = maps.get_address_from_coords(manual_lat, manual_lng)
@@ -96,7 +105,7 @@ def lambda_handler(event, context):
                         source_metadata["image"] = maps.get_google_maps_image(manual_lat, manual_lng, place_name)
 
             elif source_type == "web":
-                text = msg.get("text", "")
+                text = msg.text or ""
                 if text:
                     prompt = f"Analyze this text and extract locations:\n{text}\n\n{main_prompt}"
                     response_text = gemini.analyze_text(prompt)
