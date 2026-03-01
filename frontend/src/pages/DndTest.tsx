@@ -189,14 +189,17 @@ function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeing
   return (
     <div
       ref={setNodeRef}
-      style={{ touchAction: 'manipulation' }}
       className={`flex items-center gap-2.5 bg-card border rounded-xl px-3 py-2.5 select-none transition-opacity ${
-        isBeingDragged ? 'opacity-30' : 'cursor-grab hover:border-primary/40'
+        isBeingDragged ? 'opacity-30' : 'hover:border-primary/40'
       }`}
-      {...attributes}
-      {...listeners}
     >
-      <GripVertical size={14} className="text-muted-foreground/50 shrink-0" />
+      <button
+        {...attributes}
+        {...listeners}
+        className="shrink-0 p-0.5 touch-none select-none cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground"
+      >
+        <GripVertical size={14} />
+      </button>
       <div className="flex-1 min-w-0">
         {item.poi ? (
           <POICard poi={item.poi} level={2} editable />
@@ -210,9 +213,7 @@ function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeing
       </div>
       {onRemove && (
         <button
-          onPointerDown={e => e.stopPropagation()}
-          onTouchStart={e => e.stopPropagation()}
-          onClick={e => { e.stopPropagation(); onRemove(); }}
+          onClick={onRemove}
           className="shrink-0 p-1.5 rounded-md text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
           title="הסר מהלו״ז"
         >
@@ -267,7 +268,6 @@ function SortableScheduledItem({
         style={{
           transform: transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
           transition,
-          touchAction: 'manipulation',
         }}
         className={`flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1.5 transition-opacity ${isDragging ? 'opacity-40' : ''}`}
       >
@@ -336,7 +336,6 @@ function SortableScheduledItem({
       style={{
         transform: transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
         transition,
-        touchAction: 'manipulation',
       }}
       className={`flex items-center gap-2.5 bg-card border rounded-lg px-3 py-2.5 transition-opacity ${
         isLocked ? 'opacity-70' : ''
@@ -1694,7 +1693,7 @@ export default function DndTestPage() {
           )}
 
           {/* ── Scrollable content area ─────────────────────── */}
-          <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden" style={{ overscrollBehavior: 'contain' }}>
           <div className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-4 md:h-full md:[grid-template-rows:minmax(0,1fr)]">
 
             {/* ── Right column: Potential + Add activity ─────── */}
