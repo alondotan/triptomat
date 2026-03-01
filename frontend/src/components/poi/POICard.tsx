@@ -170,6 +170,9 @@ export function POICard({
                   <button type="button" className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded" onClick={handleSaveDuration}>
                     שמור
                   </button>
+                  <button type="button" className="text-xs px-2 py-0.5 border border-border rounded hover:bg-muted" onClick={() => setEditingDuration(false)}>
+                    ביטול
+                  </button>
                 </div>
               </div>
             ) : (
