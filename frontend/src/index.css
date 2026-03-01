@@ -102,6 +102,7 @@
     font-size: 0.8rem;
     font-weight: 400;
     font-feature-settings: "rlig" 1, "calt" 1;
+    overscroll-behavior: none;
   }
 
   h1, h2 {

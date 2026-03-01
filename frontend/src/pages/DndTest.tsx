@@ -1693,7 +1693,7 @@ export default function DndTestPage() {
           )}
 
           {/* ── Scrollable content area ─────────────────────── */}
-          <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden" style={{ overscrollBehavior: 'contain' }}>
+          <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-4 md:h-full md:[grid-template-rows:minmax(0,1fr)]">
 
             {/* ── Right column: Potential + Add activity ─────── */}
