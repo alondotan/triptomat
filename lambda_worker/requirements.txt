@@ -1,4 +1,4 @@
-google-genai
-requests
-boto3
-pydantic
+google-genai==1.65.0
+requests==2.32.5
+boto3==1.42.59
+pydantic==2.12.5

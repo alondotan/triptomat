@@ -1,7 +1,7 @@
-yt-dlp
-google-genai
-python-slugify
-requests
-beautifulsoup4
-python-dotenv
+yt-dlp==2026.2.21
+google-genai==1.65.0
+python-slugify==8.0.4
+requests==2.32.5
+beautifulsoup4==4.14.3
+python-dotenv==1.2.1
 
