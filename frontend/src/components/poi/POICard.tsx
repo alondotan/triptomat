@@ -249,6 +249,11 @@ export function POICard({
         className={`cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${poi.isCancelled ? 'opacity-50' : ''} ${className}`}
         onClick={() => setDialogOpen(true)}
       >
+        {poi.imageUrl && (
+          <div className="w-full h-32 overflow-hidden rounded-t-lg">
+            <img src={poi.imageUrl} alt={poi.name} className="w-full h-full object-cover" />
+          </div>
+        )}
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

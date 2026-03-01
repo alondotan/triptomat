@@ -97,7 +97,7 @@ export async function linkRecommendationToTrip(
         if (newT) linkedEntities.push({ entity_type: 'transportation', entity_id: newT.id, description: item.name, matched_existing: false });
       }
     } else {
-      const poiCategory = dbCategory === 'service' ? 'attraction' : dbCategory;
+      const poiCategory = dbCategory;
       const matchedPoi = existingPois?.find(p => p.category === poiCategory && fuzzyMatch(p.name, item.name));
 
       if (matchedPoi) {

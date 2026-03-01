@@ -1,7 +1,7 @@
 import {
   Globe, Flag, Droplets, Waves, Mountain, Sun, Snowflake, Compass, Anchor,
-  Landmark, Church, Map, Building2, Users, Tent, TreePine, Home, Hotel,
-  MapPin, Navigation, Layers, Flame, BarChart3, Trees, Palmtree,
+  Landmark, Church, Building2, Users, Tent, TreePine, Home, Hotel,
+  MapPin, Navigation, Layers, Flame, BarChart3, Trees, Palmtree, Map as MapIcon,
   ShoppingBag, Palette, Smile, Bike, Star, Eye, Footprints, Camera,
   Ship, Music, Brush, Moon, Sparkles, Gamepad2, Theater,
   Wine, Beer, Film, Fish, Bird, Rocket, Bath, Car, Bus, Train, TrainFront,
@@ -28,7 +28,7 @@ const materialToLucide: Record<string, LucideIcon> = {
   anchor: Anchor,
   account_balance: Landmark,
   church: Church,
-  map: Map,
+  map: MapIcon,
   domain: Building2,
   location_city: Building2,
   groups: Users,
@@ -179,23 +179,60 @@ export interface SubCategoryEntry {
   is_geo_location: boolean;
 }
 
-export interface SubCategoryConfig {
-  master_list: SubCategoryEntry[];
-  cat_styles: Record<string, { icon: string; color: string }>;
-  category_to_db?: Record<string, string>;
+export interface CategoryMeta {
+  db_name: string | null;
+  icon: string;
+  color: string;
+  label_he: string;
 }
 
+export interface SubCategoryConfig {
+  master_list: SubCategoryEntry[];
+  categories: Record<string, CategoryMeta>;
+}
+
+// Lucide icon name → component (for category-level icons)
+const lucideByName: Record<string, LucideIcon> = {
+  zap: Zap, bed: Bed, utensils: Utensils, wrench: Wrench,
+  plane: Plane, users: Users, calendar: Calendar, lightbulb: Lightbulb, map: MapIcon,
+};
+
 let cachedConfig: SubCategoryConfig | null = null;
+
+// Cached reverse lookup: db_name → CategoryMeta (built on load)
+let dbCategoryMap: Record<string, CategoryMeta> = {};
+
+function buildDbCategoryMap(categories: Record<string, CategoryMeta>): Record<string, CategoryMeta> {
+  const result: Record<string, CategoryMeta> = {};
+  for (const meta of Object.values(categories)) {
+    if (meta.db_name && !result[meta.db_name]) {
+      result[meta.db_name] = meta;
+    }
+  }
+  return result;
+}
+
+function getCategoryToDbMap(): Record<string, string> {
+  if (!cachedConfig?.categories) return {};
+  const map: Record<string, string> = {};
+  for (const [configCat, meta] of Object.entries(cachedConfig.categories)) {
+    if (meta.db_name) map[configCat] = meta.db_name;
+  }
+  return map;
+}
 
 export async function loadSubCategoryConfig(): Promise<SubCategoryConfig> {
   if (cachedConfig) return cachedConfig;
   try {
     const res = await fetch('/data/sub-categories.json');
-    if (!res.ok) return { master_list: [] } as SubCategoryConfig;
+    if (!res.ok) return { master_list: [], categories: {} } as SubCategoryConfig;
     cachedConfig = await res.json();
+    if (cachedConfig?.categories) {
+      dbCategoryMap = buildDbCategoryMap(cachedConfig.categories);
+    }
     return cachedConfig!;
   } catch {
-    return { master_list: [] } as SubCategoryConfig;
+    return { master_list: [], categories: {} } as SubCategoryConfig;
   }
 }
 
@@ -214,8 +251,7 @@ export function getSubCategoryEntry(type: string): SubCategoryEntry | undefined 
 
 export function getSubCategoriesForPOICategory(poiCategory: string): SubCategoryEntry[] {
   if (!cachedConfig) return [];
-  // Reverse-map: DB category → config categories
-  const catToDb = cachedConfig.category_to_db || {};
+  const catToDb = getCategoryToDbMap();
   const configCats = Object.entries(catToDb)
     .filter(([, db]) => db === poiCategory)
     .map(([cfg]) => cfg);
@@ -237,7 +273,7 @@ export function getLucideIcon(materialIcon: string): LucideIcon {
 /** Returns type → DB category mapping, derived from the loaded config. */
 export function getTypeToCategoryMap(): Record<string, string> {
   if (!cachedConfig) return {};
-  const catToDb = cachedConfig.category_to_db || {};
+  const catToDb = getCategoryToDbMap();
   const map: Record<string, string> = {};
   for (const entry of cachedConfig.master_list) {
     const db = catToDb[entry.category];
@@ -260,6 +296,41 @@ export function getTipTypes(): Set<string> {
   return new Set(
     cachedConfig.master_list.filter(e => e.category === 'Tips').map(e => e.type)
   );
+}
+
+// ── Category-level helpers (by DB category name) ─────────────────────────────
+
+/** Get the Lucide icon component for a DB category (e.g., 'attraction' → Zap). */
+export function getCategoryIcon(dbCategory: string): LucideIcon {
+  const meta = dbCategoryMap[dbCategory];
+  if (!meta) return MapPin;
+  return lucideByName[meta.icon] || MapPin;
+}
+
+/** Get Hebrew label for a DB category (e.g., 'eatery' → 'אוכל'). */
+export function getCategoryLabel(dbCategory: string): string {
+  const meta = dbCategoryMap[dbCategory];
+  return meta?.label_he || dbCategory;
+}
+
+/** Get Tailwind color class for a DB category. */
+export function getCategoryColor(dbCategory: string): string {
+  const meta = dbCategoryMap[dbCategory];
+  return meta?.color || 'text-gray-500';
+}
+
+/** Get all DB categories that create POIs (deduplicated). */
+export function getPOICategories(): string[] {
+  if (!cachedConfig?.categories) return [];
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const meta of Object.values(cachedConfig.categories)) {
+    if (meta.db_name && meta.db_name !== 'transportation' && meta.db_name !== 'contact' && !seen.has(meta.db_name)) {
+      seen.add(meta.db_name);
+      result.push(meta.db_name);
+    }
+  }
+  return result;
 }
 
 // Preload on module import

@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Inbox, Link2, ExternalLink, Plane, Hotel, MapPin, Trash2, UtensilsCrossed, Star } from 'lucide-react';
+import { Inbox, Link2, ExternalLink, Trash2, Star } from 'lucide-react';
+import { getCategoryIcon } from '@/lib/subCategoryConfig';
 import { SourceEmail, SourceRecommendation } from '@/types/webhook';
 import { fetchSourceEmails, linkSourceEmailToTrip, deleteSourceEmail } from '@/services/webhookService';
 import { fetchPendingRecommendations, linkRecommendationToTrip, deleteRecommendation } from '@/services/recommendationService';
@@ -111,14 +112,9 @@ export function PendingInbox() {
     setLinkDialogOpen(true);
   };
 
-  const getCategoryIcon = (category?: string) => {
-    switch (category) {
-      case 'transportation': return <Plane className="h-4 w-4" />;
-      case 'accommodation': return <Hotel className="h-4 w-4" />;
-      case 'attraction': return <MapPin className="h-4 w-4" />;
-      case 'eatery': return <UtensilsCrossed className="h-4 w-4" />;
-      default: return <MapPin className="h-4 w-4" />;
-    }
+  const renderCategoryIcon = (category?: string) => {
+    const Icon = getCategoryIcon(category || '');
+    return <Icon className="h-4 w-4" />;
   };
 
   const getEmailTitle = (item: SourceEmail) => {
@@ -186,7 +182,7 @@ export function PendingInbox() {
                 emails.map(item => (
                   <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-muted">{getCategoryIcon(item.parsedData?.metadata?.category)}</div>
+                      <div className="p-2 rounded-full bg-muted">{renderCategoryIcon(item.parsedData?.metadata?.category)}</div>
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{getEmailTitle(item)}</span>

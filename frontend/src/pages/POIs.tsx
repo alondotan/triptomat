@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, UtensilsCrossed, Wrench, Filter, LayoutGrid, ChevronDown, ChevronRight, Search, Merge } from 'lucide-react';
+import { MapPin, Filter, LayoutGrid, ChevronDown, ChevronRight, Search, Merge } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,18 +15,7 @@ import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
 import type { PointOfInterest, POIStatus, POICategory } from '@/types/trip';
 import { useCountrySites, type SiteNode } from '@/hooks/useCountrySites';
 import { POICard } from '@/components/poi/POICard';
-
-const categoryIcons: Record<string, React.ReactNode> = {
-  attraction: <MapPin size={16} />,
-  eatery: <UtensilsCrossed size={16} />,
-  service: <Wrench size={16} />,
-};
-
-const categoryLabels: Record<string, string> = {
-  eatery: 'אוכל',
-  attraction: 'אטרקציות',
-  service: 'שירותים',
-};
+import { getCategoryIcon, getCategoryLabel, getPOICategories } from '@/lib/subCategoryConfig';
 
 const statusLabels: Record<string, string> = {
   candidate: 'מועמד',
@@ -192,13 +181,13 @@ const POIsPage = () => {
   }, [filteredPois, groupBy, cityRegionMap]);
 
   const getGroupLabel = (key: string): string => {
-    if (groupBy === 'category') return categoryLabels[key] || key;
+    if (groupBy === 'category') return getCategoryLabel(key);
     if (groupBy === 'status') return statusLabels[key] || key;
     return key; // location - already readable
   };
 
   const getGroupIcon = (key: string): React.ReactNode => {
-    if (groupBy === 'category') return categoryIcons[key] || <MapPin size={16} />;
+    if (groupBy === 'category') { const Icon = getCategoryIcon(key); return <Icon size={16} />; }
     if (groupBy === 'location') return <MapPin size={16} />;
     return null;
   };
@@ -294,19 +283,20 @@ const POIsPage = () => {
               >
                 הכל
               </Badge>
-              {(['attraction', 'eatery', 'service'] as POICategory[]).map(c => (
-                categoryCounts[c] ? (
+              {getPOICategories().filter(c => c !== 'accommodation').map(c => {
+                const Icon = getCategoryIcon(c);
+                return categoryCounts[c] ? (
                   <Badge
                     key={c}
-                    variant={categoryFilters.has(c) ? 'default' : 'outline'}
+                    variant={categoryFilters.has(c as POICategory) ? 'default' : 'outline'}
                     className="cursor-pointer text-xs gap-1"
-                    onClick={() => toggleCategoryFilter(c)}
+                    onClick={() => toggleCategoryFilter(c as POICategory)}
                   >
-                    {categoryIcons[c]}
-                    {categoryLabels[c]} ({categoryCounts[c]})
+                    <Icon size={16} />
+                    {getCategoryLabel(c)} ({categoryCounts[c]})
                   </Badge>
-                ) : null
-              ))}
+                ) : null;
+              })}
             </div>
           </div>
 
@@ -382,7 +372,7 @@ const POIsPage = () => {
                           <Badge variant="outline" className="text-[10px] ml-1">{subPois.length}</Badge>
                         </button>
                         {isSubExpanded && (
-                          <div className="grid gap-3 md:grid-cols-2 mb-3 ml-4">
+                          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 mb-3 ml-4">
                             {subPois.map(p => (
                               <div key={p.id} className="relative">
                                 {mergeMode && (
@@ -405,7 +395,7 @@ const POIsPage = () => {
                   })}
                 </div>
               ) : (
-                <div className="grid gap-3 md:grid-cols-2 mb-2">
+                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 mb-2">
                   {pois.map(p => (
                     <div key={p.id} className="relative">
                       {mergeMode && (

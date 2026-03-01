@@ -115,6 +115,18 @@ def lambda_handler(event, context):
                 enriched_data = enrich_analysis_data(
                     response_json, maps.get_location_details, manual_lat, manual_lng
                 )
+
+                # If no source image yet, try to get one from the first recommendation's coordinates
+                if not source_metadata.get("image"):
+                    recs = enriched_data.get("recommendations", [])
+                    if recs:
+                        first = recs[0]
+                        coords = first.get("location", {}).get("coordinates", {})
+                        lat, lng = coords.get("lat"), coords.get("lng")
+                        name = first.get("name", "")
+                        if lat and lng and name:
+                            source_metadata["image"] = maps.get_google_maps_image(lat, lng, name)
+
                 send_to_webhook(enriched_data, url, source_metadata, webhook_token=webhook_token or None)
 
                 # Cache result in DynamoDB

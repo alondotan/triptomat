@@ -83,6 +83,7 @@ export interface PointOfInterest {
   details: POIDetails;
   isCancelled: boolean;
   isPaid: boolean;
+  imageUrl?: string;
   createdAt: string;
   updatedAt: string;
 }

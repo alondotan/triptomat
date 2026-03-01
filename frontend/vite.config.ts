@@ -47,7 +47,13 @@ function syncConfig(): Plugin {
 
 function generateCategories(configPath: string, outPath: string) {
   const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-  const { master_list, category_to_db } = config;
+  const { master_list, categories } = config;
+
+  // Derive category_to_db from unified categories object
+  const category_to_db: Record<string, string> = {};
+  for (const [configCat, meta] of Object.entries(categories) as [string, { db_name: string | null }][]) {
+    if (meta.db_name) category_to_db[configCat] = meta.db_name;
+  }
 
   const typeToCat: Record<string, string> = {};
   for (const entry of master_list) {

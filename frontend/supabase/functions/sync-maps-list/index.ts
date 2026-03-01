@@ -1,10 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from '../_shared/cors.ts';
+import { createSupabaseClient } from '../_shared/supabase.ts';
+import { validateWebhookToken } from '../_shared/auth.ts';
+import { TYPE_TO_CATEGORY, ALLOWED_TYPES_CSV, GEO_TYPES_CSV } from '../_shared/categories.ts';
+import type { SiteNode } from '../_shared/types.ts';
 
 const BROWSER_HEADERS = {
   "User-Agent":
@@ -13,94 +12,6 @@ const BROWSER_HEADERS = {
   "Accept-Language": "en-US,en;q=0.9",
   "Accept-Encoding": "identity",
 };
-
-// Mirrors TYPE_TO_CATEGORY from recommendation-webhook (full list matching config.json)
-const TYPE_TO_CATEGORY: Record<string, string> = {
-  hotel: "accommodation", glamping: "accommodation", hostel: "accommodation", villa: "accommodation",
-  resort: "accommodation", apartment: "accommodation", guesthouse: "accommodation",
-  bedAndBreakfast: "accommodation", motel: "accommodation", lodge: "accommodation",
-  ecoLodge: "accommodation", boutiqueHotel: "accommodation", capsuleHotel: "accommodation",
-  ryokan: "accommodation", homestay: "accommodation", farmStay: "accommodation",
-  cottage: "accommodation", chalet: "accommodation", bungalow: "accommodation",
-  treehouse: "accommodation", houseboat: "accommodation", campground: "accommodation",
-  campingTent: "accommodation", rvPark: "accommodation", servicedApartment: "accommodation",
-  longStayHotel: "accommodation", luxuryHotel: "accommodation", budgetHotel: "accommodation",
-  otherAccommodation: "accommodation",
-  restaurant: "eatery", cafe: "eatery", bakery: "eatery", deli: "eatery",
-  bistro: "eatery", diner: "eatery", foodTruck: "eatery", foodCourt: "eatery",
-  buffet: "eatery", iceCreamParlor: "eatery", juiceBar: "eatery", pub: "eatery",
-  bar: "eatery", tavern: "eatery", wineBar: "eatery", brewpub: "eatery",
-  sushiBar: "eatery", teahouse: "eatery", steakhouse: "eatery", tapasBar: "eatery",
-  doughnutShop: "eatery", dessertBar: "eatery", streetFood: "eatery",
-  rooftopBar: "eatery", brunchSpot: "eatery", speakeasy: "eatery",
-  fineDining: "eatery", localCuisine: "eatery", veganRestaurant: "eatery",
-  vegetarianRestaurant: "eatery", seafoodRestaurant: "eatery", familyRestaurant: "eatery",
-  otherEatery: "eatery",
-  market: "attraction", park: "attraction", landmark: "attraction", natural: "attraction",
-  historical: "attraction", cultural: "attraction", amusement: "attraction", beach: "attraction",
-  mountain: "attraction", wildlife: "attraction", adventure: "attraction", religious: "attraction",
-  architectural: "attraction", underwater: "attraction", nationalPark: "attraction",
-  scenic: "attraction", museum: "attraction", shopping: "attraction", zoo: "attraction",
-  themePark: "attraction", botanicalGarden: "attraction", sports: "attraction",
-  music: "attraction", art: "attraction", nightlife: "attraction", spa: "attraction",
-  casino: "attraction", viewpoint: "attraction", hikingTrail: "attraction",
-  extremeSports: "attraction", hiddenGem: "attraction", beachClub: "attraction",
-  stargazing: "attraction", streetArt: "attraction", photographySpot: "attraction",
-  temple: "attraction", boatTour: "attraction", playground: "attraction",
-  walkingTour: "attraction", shoppingMall: "attraction", historicSite: "attraction",
-  waterPark: "attraction", skiResort: "attraction", vineyard: "attraction",
-  brewery: "attraction", movieTheater: "attraction", concertHall: "attraction",
-  botanicalPark: "attraction", fishingSpot: "attraction", birdSanctuary: "attraction",
-  zipLine: "attraction", hotSpring: "attraction", canyon: "attraction",
-  volcano: "attraction", observatory: "attraction", lighthouse: "attraction",
-  artGallery: "attraction", aquarium: "attraction", cave: "attraction",
-  waterfall: "attraction", snorkeling: "attraction", diving: "attraction",
-  surfing: "attraction", kayakingActivity: "attraction", rafting: "attraction",
-  climbing: "attraction", trekking: "attraction", jeepTour: "attraction",
-  safari: "attraction", foodTour: "attraction", streetMarketTour: "attraction",
-  cookingClass: "attraction", wineTasting: "attraction", breweryTour: "attraction",
-  kidsAttraction: "attraction", point_of_interest: "attraction", otherActivity: "attraction",
-  festival: "attraction", musicFestival: "attraction", carnival: "attraction",
-  culturalParade: "attraction", foodFestival: "attraction", artExhibition: "attraction",
-  fireworks: "attraction", sportingEvent: "attraction", localFestival: "attraction",
-  religiousFestival: "attraction", streetParade: "attraction", sportsMatch: "attraction",
-  marathon: "attraction", concert: "attraction", theaterShow: "attraction", foodFair: "attraction",
-  car: "transportation", bus: "transportation", train: "transportation", subway: "transportation",
-  bicycle: "transportation", motorcycle: "transportation", taxi: "transportation",
-  ferry: "transportation", airplane: "transportation", scooter: "transportation",
-  cruise: "transportation", tram: "transportation", cruiseShip: "transportation",
-  carRental: "transportation", domesticFlight: "transportation", internationalFlight: "transportation",
-  nightTrain: "transportation", highSpeedTrain: "transportation", cableCar: "transportation",
-  funicular: "transportation", boatTaxi: "transportation", rideshare: "transportation",
-  privateTransfer: "transportation", otherTransportation: "transportation",
-  airport: "transportation", transit_hub: "attraction",
-  atm: "service", travelAgency: "service", laundry: "service", simCard: "service",
-  hospital: "service", pharmacy: "service", currencyExchange: "service",
-  luggageStorage: "service", touristInfo: "service", supermarket: "service",
-  tourGuide: "service", driverService: "service", bikeRental: "service",
-  scooterRental: "service", equipmentRental: "service", locker: "service",
-  showerFacility: "service", wifiHotspot: "service", coworkingSpace: "service",
-  embassy: "service", otherService: "service",
-};
-
-// All non-geo types (for recommendations.category)
-const ALLOWED_TYPES = Object.keys(TYPE_TO_CATEGORY).join(", ");
-
-// Geo types (is_geo_location: true from config.json) — for sites_hierarchy site_type
-const GEO_TYPES = [
-  "continent", "country", "state", "province", "territory", "region",
-  "archipelago", "island_group", "island", "mountain_range", "valley",
-  "canyon", "volcano", "waterfall", "lagoon", "bay", "lake", "coastline",
-  "national_park", "nature_reserve", "metropolitan_area", "municipality",
-  "city", "town", "village", "suburb", "district", "neighborhood",
-  "pedestrian_zone", "transit_hub", "resort_complex", "itinerary_route",
-  "border_crossing", "area", "historicDistrict", "oldTown",
-  "river", "delta", "fjord", "plateau", "desert", "glacier", "reef",
-  "peninsula", "harbor", "monastery", "county", "republic", "oblast",
-  "borough", "capital_city", "department", "reserve", "township",
-  "forest", "governorate", "metropolis", "prefecture", "atoll",
-  "otherGeography",
-].join(", ");
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -125,6 +36,7 @@ interface EnrichedPlace {
   types: string[];
   rating?: number;
   summary: string;
+  imageUrl?: string;
 }
 
 interface AiRecommendation {
@@ -137,12 +49,6 @@ interface AiRecommendation {
     address?: string;
     coordinates?: { lat: number; lng: number };
   };
-}
-
-interface SiteNode {
-  site: string;
-  site_type: string;
-  sub_sites?: SiteNode[];
 }
 
 interface AiOutput {
@@ -161,19 +67,12 @@ serve(async (req) => {
     const body = await req.json();
     const token = body.token;
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabase = createSupabaseClient();
 
     // Validate webhook token
-    const { data: tokenRow } = await supabase
-      .from("webhook_tokens")
-      .select("user_id")
-      .eq("token", token)
-      .single();
-
-    if (!tokenRow) return json({ error: "Invalid token" }, 401);
+    const result = await validateWebhookToken(supabase, token);
+    if (!result.valid) return json({ error: "Invalid token" }, 401);
+    const tokenRow = { user_id: result.userId! };
 
     // ── Resolve list: url-direct mode OR list_id mode ──
     let list: any;
@@ -322,6 +221,12 @@ serve(async (req) => {
     }
 
     // ── Step 6: insert POIs (only for matching countries) ──
+    // Build image lookup from enriched places (keyed by lowercase name)
+    const imageByName = new Map<string, string>();
+    for (const ep of enriched) {
+      if (ep.imageUrl) imageByName.set(ep.name.toLowerCase().trim(), ep.imageUrl);
+    }
+
     if (matchingRecs.length > 0) {
       const poiRows = matchingRecs.map((rec) => {
         const subCat = rec.category in TYPE_TO_CATEGORY ? rec.category : "landmark";
@@ -343,6 +248,7 @@ serve(async (req) => {
             source_url: list.url,
             source_title: list.name,
           },
+          image_url: imageByName.get(rec.name.toLowerCase().trim()) || null,
         };
       });
 
@@ -549,7 +455,7 @@ async function enrichWithGooglePlaces(rawPlaces: RawPlace[]): Promise<EnrichedPl
           "Content-Type": "application/json",
           "X-Goog-Api-Key": mapsKey,
           "X-Goog-FieldMask":
-            "places.displayName,places.formattedAddress,places.location,places.rating,places.types,places.editorialSummary",
+            "places.displayName,places.formattedAddress,places.location,places.rating,places.types,places.editorialSummary,places.photos",
         },
         body: JSON.stringify(body),
       });
@@ -557,6 +463,11 @@ async function enrichWithGooglePlaces(rawPlaces: RawPlace[]): Promise<EnrichedPl
       const data = await res.json();
       const p = data.places?.[0];
       if (p) {
+        let imageUrl: string | undefined;
+        if (p.photos?.length > 0) {
+          const photoName = p.photos[0].name;
+          imageUrl = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=800&maxWidthPx=800&key=${mapsKey}`;
+        }
         result.push({
           name: p.displayName?.text || place.name,
           address: p.formattedAddress || place.address,
@@ -565,6 +476,7 @@ async function enrichWithGooglePlaces(rawPlaces: RawPlace[]): Promise<EnrichedPl
           types: p.types || [],
           rating: p.rating,
           summary: p.editorialSummary?.text || "",
+          imageUrl,
         });
         console.log(`[sync] Places enriched: ${p.displayName?.text}`);
       } else {
@@ -623,13 +535,13 @@ Your output must be a RFC8259 compliant JSON object with the following structure
 }
 
 ### Rules:
-1. Category must be strictly from: ${ALLOWED_TYPES}.
+1. Category must be strictly from: ${ALLOWED_TYPES_CSV}.
 2. The sites_hierarchy (Nested Structure):
  2.1 Construct a nested geographical tree under the key "sites_hierarchy".
  2.2 The first level must be the country or countries that are in the data.
  2.3 Each node must be an object: {"site": "Name", "site_type": "Type", "sub_sites": []}.
  2.4 Use "sub_sites" only if child locations exist.
- 2.5 The sites_hierarchy must represent a geographical hierarchy and must be strictly from: ${GEO_TYPES}
+ 2.5 The sites_hierarchy must represent a geographical hierarchy and must be strictly from: ${GEO_TYPES_CSV}
  2.6 The hierarchy MUST follow a logical path: Country -> State/Region -> City -> Neighborhood/POI.
  2.7 The sites_hierarchy should only contain the sites of the recommendations.
  2.8 All values in the sites_hierarchy must be the english names.

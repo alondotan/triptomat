@@ -86,6 +86,7 @@ export async function createPOI(poi: Omit<PointOfInterest, 'id' | 'createdAt' | 
     details: poi.details as unknown as Json,
     is_cancelled: poi.isCancelled || false,
     is_paid: poi.isPaid ?? false,
+    image_url: poi.imageUrl || null,
   };
   const { data, error } = await supabase
     .from('points_of_interest')
@@ -108,6 +109,7 @@ export async function updatePOI(poiId: string, updates: Partial<PointOfInterest>
   if (updates.details !== undefined) updateData.details = updates.details;
   if (updates.isCancelled !== undefined) updateData.is_cancelled = updates.isCancelled;
   if (updates.isPaid !== undefined) updateData.is_paid = updates.isPaid;
+  if (updates.imageUrl !== undefined) updateData.image_url = updates.imageUrl;
 
   const { error } = await supabase.from('points_of_interest').update(updateData).eq('id', poiId);
   if (error) throw error;
@@ -253,6 +255,7 @@ export function mapPOI(row: Record<string, unknown>): PointOfInterest {
     details: normalizeDetails((row.details as Record<string, unknown>) || {}),
     isCancelled: (row.is_cancelled as boolean) || false,
     isPaid: (row.is_paid as boolean) || false,
+    imageUrl: (row.image_url as string) || undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };

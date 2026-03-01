@@ -1,11 +1,9 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
-};
-
-interface SiteNode { site: string; site_type: string; sub_sites?: SiteNode[]; }
+import { corsHeaders } from '../_shared/cors.ts';
+import { createSupabaseClient } from '../_shared/supabase.ts';
+import { validateWebhookToken } from '../_shared/auth.ts';
+import { mergeWithNewWins } from '../_shared/merge.ts';
+import { fuzzyMatch } from '../_shared/matching.ts';
+import type { SiteNode } from '../_shared/types.ts';
 
 interface WebhookPayload {
   metadata: {
@@ -92,34 +90,6 @@ function extractCities(h?: SiteNode[]): string[] {
   return out;
 }
 
-/** Returns true if a value is considered "present" (not null, undefined, or empty string). */
-function hasValue(v: unknown): boolean {
-  return v !== null && v !== undefined && v !== '';
-}
-
-/**
- * Merge two objects: new wins when both have a value.
- * If incoming field is null/undefined/empty-string, the old value is preserved.
- * Arrays are replaced entirely by the new value.
- */
-function mergeWithNewWins(old: any, incoming: any): any {
-  if (!hasValue(incoming)) return old;
-  if (typeof incoming !== 'object' || Array.isArray(incoming)) return incoming;
-  if (typeof old !== 'object' || old === null || Array.isArray(old)) return incoming;
-  const result = { ...old };
-  for (const key of Object.keys(incoming)) {
-    result[key] = mergeWithNewWins(old[key], incoming[key]);
-  }
-  return result;
-}
-
-function fuzzyMatch(a: string, b: string): boolean {
-  if (!a || !b) return false;
-  const x = a.toLowerCase().trim();
-  const y = b.toLowerCase().trim();
-  if (!x || !y) return false;
-  return x === y || x.includes(y) || y.includes(x);
-}
 
 const toUtcMs = (d: string) => new Date(`${d}T00:00:00Z`).getTime();
 const msPerDay = 86400000;
@@ -290,7 +260,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const supabase = createSupabaseClient();
 
     // ── Resolve user from token ──
     const url = new URL(req.url);
@@ -298,9 +268,8 @@ Deno.serve(async (req) => {
     let userId: string | null = null;
 
     if (token) {
-      const { data: tokenRow } = await supabase
-        .from('webhook_tokens').select('user_id').eq('token', token).maybeSingle();
-      if (tokenRow) userId = tokenRow.user_id;
+      const result = await validateWebhookToken(supabase, token);
+      if (result.valid) userId = result.userId!;
       else {
         return new Response(JSON.stringify({ error: 'Invalid webhook token' }), {
           status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

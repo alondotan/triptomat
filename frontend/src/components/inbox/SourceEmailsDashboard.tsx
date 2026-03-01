@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ExternalLink, Mail, Plane, Hotel, MapPin, Trash2, ChevronDown, ChevronRight, Calendar, DollarSign, MapPinned, User, Hash } from 'lucide-react';
+import { ExternalLink, Mail, Trash2, ChevronDown, ChevronRight, Calendar, DollarSign, MapPinned, User, Hash } from 'lucide-react';
+import { getCategoryIcon } from '@/lib/subCategoryConfig';
 import { SourceEmail } from '@/types/webhook';
 import { fetchSourceEmails, deleteSourceEmail } from '@/services/webhookService';
 import { useToast } from '@/hooks/use-toast';
@@ -120,12 +121,9 @@ export function SourceEmailsDashboard() {
     });
   };
 
-  const getCategoryIcon = (category?: string) => {
-    switch (category) {
-      case 'transportation': return <Plane className="h-4 w-4" />;
-      case 'accommodation': return <Hotel className="h-4 w-4" />;
-      default: return <MapPin className="h-4 w-4" />;
-    }
+  const renderCategoryIcon = (category?: string) => {
+    const Icon = getCategoryIcon(category || '');
+    return <Icon className="h-4 w-4" />;
   };
 
   const getTripName = (tripId?: string) => {
@@ -182,7 +180,7 @@ export function SourceEmailsDashboard() {
                   <CollapsibleTrigger className="flex items-center gap-3 flex-1 min-w-0 text-left cursor-pointer">
                     {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
                     <div className="relative shrink-0">
-                      <div className="p-2 rounded-full bg-muted">{getCategoryIcon(item.parsedData?.metadata?.category)}</div>
+                      <div className="p-2 rounded-full bg-muted">{renderCategoryIcon(item.parsedData?.metadata?.category)}</div>
                       {isUnread && (
                         <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-blue-500 border-2 border-background" />
                       )}

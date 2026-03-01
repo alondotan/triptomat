@@ -14,7 +14,13 @@ const configPath = resolve(__dirname, '../../config.json');
 const outPath = resolve(__dirname, '../supabase/functions/_shared/categories.ts');
 
 const config = JSON.parse(readFileSync(configPath, 'utf8'));
-const { master_list, category_to_db } = config;
+const { master_list, categories } = config;
+
+// Derive category_to_db from unified categories object
+const category_to_db = {};
+for (const [configCat, meta] of Object.entries(categories)) {
+  if (meta.db_name) category_to_db[configCat] = meta.db_name;
+}
 
 // Build TYPE_TO_CATEGORY (non-geo, non-tip types → DB category)
 const typeToCat = {};

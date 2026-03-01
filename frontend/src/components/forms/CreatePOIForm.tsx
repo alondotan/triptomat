@@ -14,6 +14,7 @@ import { SubCategorySelector } from '@/components/shared/SubCategorySelector';
 import { useToast } from '@/hooks/use-toast';
 import { createPOISchema } from '@/schemas/poi.schema';
 import type { POICategory, POIStatus } from '@/types/trip';
+import { getPOICategories, getCategoryLabel } from '@/lib/subCategoryConfig';
 
 export function CreatePOIForm() {
   const { activeTrip, tripSitesHierarchy } = useActiveTrip();
@@ -117,10 +118,9 @@ export function CreatePOIForm() {
               <Select value={category} onValueChange={v => setCategory(v as POICategory)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="accommodation">Accommodation</SelectItem>
-                  <SelectItem value="eatery">Eatery</SelectItem>
-                  <SelectItem value="attraction">Attraction</SelectItem>
-                  <SelectItem value="service">Service</SelectItem>
+                  {getPOICategories().map(c => (
+                    <SelectItem key={c} value={c}>{getCategoryLabel(c)}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

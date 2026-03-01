@@ -351,24 +351,15 @@
   {"type": "otherTip", "icon": "more_horiz", "category": "Tips", "is_geo_location": false}
   ],
 
-  "cat_styles": {
-    "Activities": { "icon": "zap", "color": "text-blue-500" },
-    "Accommodations": { "icon": "bed", "color": "text-indigo-500" },
-    "Eateries": { "icon": "utensils", "color": "text-orange-500" },
-    "Services": { "icon": "wrench", "color": "text-slate-500" },
-    "Tips": { "icon": "lightbulb", "color": "text-yellow-500" },
-    "Geography": { "icon": "map", "color": "text-emerald-500" },
-     "Events": { "icon": "calendar", "color": "text-purple-500" },
-    "Contacts": { "icon": "users", "color": "text-teal-500" }
-  },
-
-  "category_to_db": {
-    "Accommodations": "accommodation",
-    "Eateries": "eatery",
-    "Activities": "attraction",
-    "Events": "attraction",
-    "Transportation": "transportation",
-    "Services": "service",
-    "Contacts": "contact"
+  "categories": {
+    "Activities":     { "db_name": "attraction",     "icon": "zap",       "color": "text-blue-500",    "label_he": "אטרקציות" },
+    "Events":         { "db_name": "attraction",     "icon": "calendar",  "color": "text-purple-500",  "label_he": "אירועים" },
+    "Accommodations": { "db_name": "accommodation",  "icon": "bed",       "color": "text-indigo-500",  "label_he": "לינה" },
+    "Eateries":       { "db_name": "eatery",         "icon": "utensils",  "color": "text-orange-500",  "label_he": "אוכל" },
+    "Transportation": { "db_name": "transportation", "icon": "plane",     "color": "text-cyan-500",    "label_he": "תחבורה" },
+    "Services":       { "db_name": "service",        "icon": "wrench",    "color": "text-slate-500",   "label_he": "שירותים" },
+    "Contacts":       { "db_name": "contact",        "icon": "users",     "color": "text-teal-500",    "label_he": "אנשי קשר" },
+    "Tips":           { "db_name": null,              "icon": "lightbulb", "color": "text-yellow-500",  "label_he": "טיפים" },
+    "Geography":      { "db_name": null,              "icon": "map",       "color": "text-emerald-500", "label_he": "גיאוגרפיה" }
   }
 }

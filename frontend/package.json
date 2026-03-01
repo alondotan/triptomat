@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "generate:categories": "node scripts/generate-categories.mjs"
+    "copy:config": "cp ../config.json public/data/sub-categories.json",
+    "generate:categories": "node scripts/generate-categories.mjs && npm run copy:config"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
