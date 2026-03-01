@@ -1,6 +1,9 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { AppLayout } from '@/components/AppLayout';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { usePOI } from '@/context/POIContext';
+import { useTransport } from '@/context/TransportContext';
+import { useItinerary } from '@/context/ItineraryContext';
 import { updateItineraryDay, createItineraryDay } from '@/services/tripService';
 import { LocationContextPicker } from '@/components/LocationContextPicker';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -694,7 +697,10 @@ function ScheduleZone({ children, activePotentialDrag, isEmpty }: {
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function DndTestPage() {
-  const { state, dispatch, loadTripData, addPOI, updatePOI, addMission, addTransportation, deleteTransportation } = useTrip();
+  const { activeTrip, tripSitesHierarchy } = useActiveTrip();
+  const { pois, addPOI, updatePOI } = usePOI();
+  const { transportation, deleteTransportation } = useTransport();
+  const { itineraryDays, setItineraryDays, addMission, refetchItinerary } = useItinerary();
   const [selectedDayNum, setSelectedDayNum] = useState(1);
   const [addTransportOpen, setAddTransportOpen] = useState(false);
   const [transportFromName, setTransportFromName] = useState('');
@@ -705,18 +711,18 @@ export default function DndTestPage() {
   const [newTbTime, setNewTbTime] = useState('');
 
   const tripDays = useMemo(() => {
-    if (!state.activeTrip) return [];
+    if (!activeTrip) return [];
     return eachDayOfInterval({
-      start: parseISO(state.activeTrip.startDate),
-      end: parseISO(state.activeTrip.endDate),
+      start: parseISO(activeTrip.startDate),
+      end: parseISO(activeTrip.endDate),
     });
-  }, [state.activeTrip?.startDate, state.activeTrip?.endDate]);
+  }, [activeTrip?.startDate, activeTrip?.endDate]);
 
   const locationSpans = useMemo(() => {
     if (tripDays.length === 0) return [];
     const spans: { location: string; startIdx: number; endIdx: number }[] = [];
     for (let i = 0; i < tripDays.length; i++) {
-      const itDay = state.itineraryDays.find(d => d.dayNumber === i + 1);
+      const itDay = itineraryDays.find(d => d.dayNumber === i + 1);
       const loc = itDay?.locationContext || '';
       if (loc && spans.length > 0 && spans[spans.length - 1].location === loc && spans[spans.length - 1].endIdx === i - 1) {
         spans[spans.length - 1].endIdx = i;
@@ -725,7 +731,7 @@ export default function DndTestPage() {
       }
     }
     return spans;
-  }, [tripDays, state.itineraryDays]);
+  }, [tripDays, itineraryDays]);
 
   const [potential, setPotential] = useState<Item[]>([]);
   const [scheduled, setScheduled] = useState<Item[]>([]);
@@ -744,11 +750,11 @@ export default function DndTestPage() {
   const selectedSpan = locationSpans.find(s => s.startIdx <= selectedIdx && s.endIdx >= selectedIdx);
 
   const refreshDays = useCallback(async () => {
-    if (state.activeTrip) await loadTripData(state.activeTrip.id);
-  }, [state.activeTrip, loadTripData]);
+    await refetchItinerary();
+  }, [refetchItinerary]);
 
   const handleAddTransport = useCallback(async (poiId: string) => {
-    const poi = state.pois.find(p => p.id === poiId);
+    const poi = pois.find(p => p.id === poiId);
     const fromName = poi?.name || '';
     // Find the next POI after this one in the scheduled list
     const idx = scheduled.findIndex(i => i.id === poiId);
@@ -764,7 +770,7 @@ export default function DndTestPage() {
 
     // Pre-create the order gap now (before the dialog opens) so the new transport
     // lands between the source POI and the next one after refreshDays().
-    const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    const itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
     if (itDay) {
       const sourceAct = itDay.activities.find(a => a.id === poiId);
       if (sourceAct) {
@@ -772,26 +778,23 @@ export default function DndTestPage() {
           a.order > sourceAct.order ? { ...a, order: a.order + 1 } : a,
         );
         // Update in-memory immediately so the closure in handleTransportCreated sees it
-        dispatch({
-          type: 'SET_ITINERARY_DAYS',
-          payload: state.itineraryDays.map(d =>
-            d.id === itDay.id ? { ...d, activities: updatedActivities } : d,
-          ),
-        });
+        setItineraryDays(itineraryDays.map(d =>
+          d.id === itDay.id ? { ...d, activities: updatedActivities } : d,
+        ));
         // Persist to DB (fire-and-forget — will be in DB well before form is submitted)
         updateItineraryDay(itDay.id, { activities: updatedActivities }).catch(console.error);
       }
     }
 
     setAddTransportOpen(true);
-  }, [state.pois, state.itineraryDays, selectedDayNum, scheduled, dispatch]);
+  }, [pois, itineraryDays, selectedDayNum, scheduled, setItineraryDays]);
 
   const handleTransportCreated = useCallback(async (transportId: string) => {
-    let itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
-    if (!itDay && state.activeTrip) {
+    let itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (!itDay && activeTrip) {
       const day = tripDays[selectedDayNum - 1];
       itDay = await createItineraryDay({
-        tripId: state.activeTrip.id,
+        tripId: activeTrip.id,
         dayNumber: selectedDayNum,
         date: day ? format(day, 'yyyy-MM-dd') : undefined,
         locationContext: '',
@@ -804,10 +807,10 @@ export default function DndTestPage() {
     const newSegments = [...(itDay.transportationSegments || []), { is_selected: true, transportation_id: transportId }];
     await updateItineraryDay(itDay.id, { transportationSegments: newSegments });
     await refreshDays();
-  }, [selectedDayNum, tripDays, state.itineraryDays, state.activeTrip, refreshDays]);
+  }, [selectedDayNum, tripDays, itineraryDays, activeTrip, refreshDays]);
 
   const handleDeleteTransport = useCallback(async (transportId: string) => {
-    const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    const itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
     if (!itDay) return;
     // Remove from itinerary day segments
     const newSegments = (itDay.transportationSegments || []).filter(
@@ -817,7 +820,7 @@ export default function DndTestPage() {
     // Delete the transportation record itself
     await deleteTransportation(transportId);
     await refreshDays();
-  }, [state.itineraryDays, selectedDayNum, deleteTransportation, refreshDays]);
+  }, [itineraryDays, selectedDayNum, deleteTransportation, refreshDays]);
 
   const handleEditTransport = useCallback((transportId: string) => {
     setEditTransportId(transportId);
@@ -825,11 +828,11 @@ export default function DndTestPage() {
 
   const handleAddTimeBlock = useCallback(async () => {
     if (!newTbLabel.trim()) return;
-    let itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
-    if (!itDay && state.activeTrip) {
+    let itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (!itDay && activeTrip) {
       const day = tripDays[selectedDayNum - 1];
       itDay = await createItineraryDay({
-        tripId: state.activeTrip.id,
+        tripId: activeTrip.id,
         dayNumber: selectedDayNum,
         date: day ? format(day, 'yyyy-MM-dd') : undefined,
         locationContext: '',
@@ -848,50 +851,41 @@ export default function DndTestPage() {
       ...(newTbTime ? { time_window: { start: newTbTime } } : {}),
     };
     const updatedActivities = [...itDay.activities, newActivity];
-    dispatch({
-      type: 'SET_ITINERARY_DAYS',
-      payload: state.itineraryDays.map(d => d.id === itDay!.id ? { ...d, activities: updatedActivities } : d),
-    });
+    setItineraryDays(itineraryDays.map(d => d.id === itDay!.id ? { ...d, activities: updatedActivities } : d));
     await updateItineraryDay(itDay.id, { activities: updatedActivities });
     setNewTbLabel('');
     setNewTbTime('');
     setAddingTimeBlock(false);
     await refreshDays();
-  }, [newTbLabel, newTbTime, selectedDayNum, tripDays, state.itineraryDays, state.activeTrip, dispatch, refreshDays]);
+  }, [newTbLabel, newTbTime, selectedDayNum, tripDays, itineraryDays, activeTrip, setItineraryDays, refreshDays]);
 
   const handleUpdateTimeBlock = useCallback(async (itemId: string, label: string, time: string | undefined) => {
     const activityId = itemId.replace('tblock_', '');
-    const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    const itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
     if (!itDay) return;
     const updatedActivities = itDay.activities.map(a =>
       a.id === activityId
         ? { ...a, label, time_window: time ? { start: time } : undefined }
         : a,
     );
-    dispatch({
-      type: 'SET_ITINERARY_DAYS',
-      payload: state.itineraryDays.map(d => d.id === itDay.id ? { ...d, activities: updatedActivities } : d),
-    });
+    setItineraryDays(itineraryDays.map(d => d.id === itDay.id ? { ...d, activities: updatedActivities } : d));
     await updateItineraryDay(itDay.id, { activities: updatedActivities });
     await refreshDays();
-  }, [selectedDayNum, state.itineraryDays, dispatch, refreshDays]);
+  }, [selectedDayNum, itineraryDays, setItineraryDays, refreshDays]);
 
   const handleDeleteTimeBlock = useCallback(async (itemId: string) => {
     const activityId = itemId.replace('tblock_', '');
-    const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    const itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
     if (!itDay) return;
     const updatedActivities = itDay.activities.filter(a => a.id !== activityId);
-    dispatch({
-      type: 'SET_ITINERARY_DAYS',
-      payload: state.itineraryDays.map(d => d.id === itDay.id ? { ...d, activities: updatedActivities } : d),
-    });
+    setItineraryDays(itineraryDays.map(d => d.id === itDay.id ? { ...d, activities: updatedActivities } : d));
     await updateItineraryDay(itDay.id, { activities: updatedActivities });
     await refreshDays();
-  }, [selectedDayNum, state.itineraryDays, dispatch, refreshDays]);
+  }, [selectedDayNum, itineraryDays, setItineraryDays, refreshDays]);
 
   // Rename an auto-generated group → converts it into a time_block-headed group
   const handleRenameAutoGroup = useCallback(async (firstContentItemId: string | undefined, label: string, time: string | undefined) => {
-    const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    const itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
     if (!itDay) return;
 
     // Place the new time_block just before the first content item of this group
@@ -913,24 +907,21 @@ export default function DndTestPage() {
     };
 
     const updatedActivities = [...itDay.activities, newActivity];
-    dispatch({
-      type: 'SET_ITINERARY_DAYS',
-      payload: state.itineraryDays.map(d => d.id === itDay!.id ? { ...d, activities: updatedActivities } : d),
-    });
+    setItineraryDays(itineraryDays.map(d => d.id === itDay!.id ? { ...d, activities: updatedActivities } : d));
     await updateItineraryDay(itDay.id, { activities: updatedActivities });
     await refreshDays();
-  }, [selectedDayNum, state.itineraryDays, dispatch, refreshDays]);
+  }, [selectedDayNum, itineraryDays, setItineraryDays, refreshDays]);
 
   const updateLocationContext = useCallback(async () => {
     const totalDays = 1 + locationDaysForward;
     for (let i = 0; i < totalDays; i++) {
       const dayNum = selectedDayNum + i;
       if (dayNum > tripDays.length) break;
-      let targetDay = state.itineraryDays.find(d => d.dayNumber === dayNum);
-      if (!targetDay && state.activeTrip) {
+      let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
+      if (!targetDay && activeTrip) {
         const day = tripDays[dayNum - 1];
         targetDay = await createItineraryDay({
-          tripId: state.activeTrip.id,
+          tripId: activeTrip.id,
           dayNumber: dayNum,
           date: day ? format(day, 'yyyy-MM-dd') : undefined,
           locationContext: '',
@@ -944,36 +935,36 @@ export default function DndTestPage() {
     setEditingLocation(false);
     setLocationDaysForward(0);
     await refreshDays();
-  }, [locationContext, locationDaysForward, selectedDayNum, tripDays, state.itineraryDays, state.activeTrip, refreshDays]);
+  }, [locationContext, locationDaysForward, selectedDayNum, tripDays, itineraryDays, activeTrip, refreshDays]);
 
   // ── Accommodation (mirrors Index.tsx) ───────────────────────────────────────
   const currentItDay = useMemo(
-    () => state.itineraryDays.find(d => d.dayNumber === selectedDayNum) ?? null,
-    [state.itineraryDays, selectedDayNum],
+    () => itineraryDays.find(d => d.dayNumber === selectedDayNum) ?? null,
+    [itineraryDays, selectedDayNum],
   );
 
   const dayAccommodations = useMemo(() => {
     if (!currentItDay) return [];
     return currentItDay.accommodationOptions
-      .map(opt => ({ ...opt, poi: state.pois.find(p => p.id === opt.poi_id) }))
+      .map(opt => ({ ...opt, poi: pois.find(p => p.id === opt.poi_id) }))
       .filter((opt): opt is typeof opt & { poi: NonNullable<typeof opt.poi> } => !!opt.poi);
-  }, [currentItDay, state.pois]);
+  }, [currentItDay, pois]);
 
   const prevDayAccommodations = useMemo(() => {
     if (selectedDayNum <= 1) return [];
-    const prevItDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum - 1);
+    const prevItDay = itineraryDays.find(d => d.dayNumber === selectedDayNum - 1);
     if (!prevItDay) return [];
     return prevItDay.accommodationOptions
-      .map(opt => ({ ...opt, poi: state.pois.find(p => p.id === opt.poi_id) }))
+      .map(opt => ({ ...opt, poi: pois.find(p => p.id === opt.poi_id) }))
       .filter((opt): opt is typeof opt & { poi: NonNullable<typeof opt.poi> } => !!opt.poi);
-  }, [state.itineraryDays, state.pois, selectedDayNum]);
+  }, [itineraryDays, pois, selectedDayNum]);
 
   const morningAccom = prevDayAccommodations.find(a => a.is_selected) ?? prevDayAccommodations[0];
 
   // Actual location of the current day — for DaySection suggestions (not the edit buffer)
   const currentDayLocation = currentItDay?.locationContext ?? '';
 
-  const availableAccom = state.pois.filter(
+  const availableAccom = pois.filter(
     p => p.category === 'accommodation' && !p.isCancelled && !dayAccommodations.some(d => d.poi_id === p.id),
   );
 
@@ -991,11 +982,11 @@ export default function DndTestPage() {
     for (let i = 0; i < nightCount; i++) {
       const dayNum = selectedDayNum + i;
       if (dayNum > tripDays.length) break;
-      let targetDay = state.itineraryDays.find(d => d.dayNumber === dayNum);
-      if (!targetDay && state.activeTrip) {
+      let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
+      if (!targetDay && activeTrip) {
         const day = tripDays[dayNum - 1];
         targetDay = await createItineraryDay({
-          tripId: state.activeTrip.id,
+          tripId: activeTrip.id,
           dayNumber: dayNum,
           date: day ? format(day, 'yyyy-MM-dd') : undefined,
           locationContext: '',
@@ -1013,12 +1004,12 @@ export default function DndTestPage() {
         }
       }
     }
-    const poi = state.pois.find(p => p.id === entityId);
+    const poi = pois.find(p => p.id === entityId);
     if (poi && (poi.status === 'candidate' || poi.status === 'in_plan')) {
       await updatePOI({ ...poi, status: 'matched' });
     }
     await refreshDays();
-  }, [selectedDayNum, tripDays, state.itineraryDays, state.activeTrip, state.pois, updatePOI, refreshDays]);
+  }, [selectedDayNum, tripDays, itineraryDays, activeTrip, pois, updatePOI, refreshDays]);
 
   const removeAccommodation = useCallback(async (entityId: string) => {
     if (!currentItDay) return;
@@ -1029,10 +1020,10 @@ export default function DndTestPage() {
   }, [currentItDay, refreshDays]);
 
   const createNewAccommodation = useCallback(async (data: Record<string, string>, createBookingMission?: boolean) => {
-    if (!state.activeTrip) return;
+    if (!activeTrip) return;
     const nights = parseInt(data._nights) || 1;
     const newPOI = await addPOI({
-      tripId: state.activeTrip.id,
+      tripId: activeTrip.id,
       category: 'accommodation',
       subCategory: data.subCategory || undefined,
       name: data.name,
@@ -1047,7 +1038,7 @@ export default function DndTestPage() {
       await addAccommodation(newPOI.id, nights);
       if (createBookingMission) {
         await addMission({
-          tripId: state.activeTrip.id,
+          tripId: activeTrip.id,
           title: `להזמין: ${data.name}`,
           description: 'accommodation',
           status: 'pending',
@@ -1057,7 +1048,7 @@ export default function DndTestPage() {
         });
       }
     }
-  }, [state.activeTrip, addPOI, addAccommodation, addMission]);
+  }, [activeTrip, addPOI, addAccommodation, addMission]);
 
   // ── Activity add (mirrors Index.tsx) ────────────────────────────────────────
   const dayActivityIds = useMemo(
@@ -1065,7 +1056,7 @@ export default function DndTestPage() {
     [currentItDay],
   );
 
-  const availableActivities = state.pois.filter(
+  const availableActivities = pois.filter(
     p => p.category !== 'accommodation' && !p.isCancelled && !dayActivityIds.has(p.id),
   );
 
@@ -1076,12 +1067,12 @@ export default function DndTestPage() {
     await updateItineraryDay(currentItDay.id, {
       activities: [...existing, { order: existing.length + 1, type: 'poi' as const, id: entityId }],
     });
-    const poi = state.pois.find(p => p.id === entityId);
+    const poi = pois.find(p => p.id === entityId);
     if (poi && (poi.status === 'candidate' || poi.status === 'in_plan')) {
       await updatePOI({ ...poi, status: 'matched' });
     }
     await refreshDays();
-  }, [currentItDay, state.pois, updatePOI, refreshDays]);
+  }, [currentItDay, pois, updatePOI, refreshDays]);
 
   const removeActivity = useCallback(async (entityId: string) => {
     if (!currentItDay) return;
@@ -1092,9 +1083,9 @@ export default function DndTestPage() {
   }, [currentItDay, refreshDays]);
 
   const createNewActivity = useCallback(async (data: Record<string, string>, createBookingMission?: boolean) => {
-    if (!state.activeTrip) return;
+    if (!activeTrip) return;
     const newPOI = await addPOI({
-      tripId: state.activeTrip.id,
+      tripId: activeTrip.id,
       category: (data.category as any) || 'attraction',
       subCategory: data.subCategory || undefined,
       name: data.name,
@@ -1109,7 +1100,7 @@ export default function DndTestPage() {
       await addActivity(newPOI.id);
       if (createBookingMission) {
         await addMission({
-          tripId: state.activeTrip.id,
+          tripId: activeTrip.id,
           title: `להזמין: ${data.name}`,
           description: data.category,
           status: 'pending',
@@ -1119,14 +1110,14 @@ export default function DndTestPage() {
         });
       }
     }
-  }, [state.activeTrip, addPOI, addActivity, addMission]);
+  }, [activeTrip, addPOI, addActivity, addMission]);
 
   // ── Load real data for selected day ─────────────────────────────────────────
   // potential  = activities with schedule_state !== 'scheduled'
   // scheduled  = activities with schedule_state === 'scheduled'  (in DB array order)
   // lockedIds  = scheduled activities that have a time_window.start (timed anchor)
   useEffect(() => {
-    const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    const itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
     if (!itDay) { setPotential([]); setScheduled([]); setLockedIds(new Set()); return; }
 
     const newPotential: Item[] = [];
@@ -1137,7 +1128,7 @@ export default function DndTestPage() {
     itDay.activities
       .filter(a => a.type === 'poi')
       .forEach(a => {
-        const poi = state.pois.find(p => p.id === a.id);
+        const poi = pois.find(p => p.id === a.id);
         if (!poi) return;
         // time: prefer itinerary time_window, fallback to POI booking hour
         const bookingHour = poi.details?.booking?.reservation_hour;
@@ -1180,7 +1171,7 @@ export default function DndTestPage() {
     // specific leg; if absent we include all segments of that transportation.
     itDay.transportationSegments.forEach(ts => {
       if (!ts.is_selected) return;
-      const transport = state.transportation.find(t => t.id === ts.transportation_id);
+      const transport = transportation.find(t => t.id === ts.transportation_id);
       if (!transport) return;
       const segments = ts.segment_id
         ? transport.segments.filter(s => s.segment_id === ts.segment_id)
@@ -1247,7 +1238,7 @@ export default function DndTestPage() {
     setScheduled(merged);
     setLockedIds(newLocked);
   // resetKey forces reload when user presses Reset
-  }, [selectedDayNum, state.itineraryDays, state.pois, state.transportation, resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedDayNum, itineraryDays, pois, transportation, resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isScheduledDrag = activeId?.startsWith('sched-') ?? false;
   const isPotentialDrag = activeId !== null && !isScheduledDrag;
@@ -1269,7 +1260,7 @@ export default function DndTestPage() {
 
   // Persist scheduled/potential arrays back to itineraryDay.activities + context
   const persistDayActivities = useCallback(async (newScheduled: Item[], newPotential: Item[]) => {
-    const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    const itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
     if (!itDay) return;
 
     const updatedActivities: ItineraryActivity[] = [];
@@ -1315,16 +1306,13 @@ export default function DndTestPage() {
       .forEach(a => updatedActivities.push(a));
 
     // Update context in-memory so useEffect reloads correctly on day switch
-    dispatch({
-      type: 'SET_ITINERARY_DAYS',
-      payload: state.itineraryDays.map(d =>
-        d.id === itDay.id ? { ...d, activities: updatedActivities } : d,
-      ),
-    });
+    setItineraryDays(itineraryDays.map(d =>
+      d.id === itDay.id ? { ...d, activities: updatedActivities } : d,
+    ));
 
     // Persist to DB
     await updateItineraryDay(itDay.id, { activities: updatedActivities });
-  }, [selectedDayNum, state.itineraryDays, dispatch]);
+  }, [selectedDayNum, itineraryDays, setItineraryDays]);
 
   // Delete an auto-generated group → merge its items into the adjacent unlocked group
   const handleDeleteAutoGroup = useCallback(async (contentItemIds: string[]) => {
@@ -1432,8 +1420,8 @@ export default function DndTestPage() {
       const item = isSchedItem ? scheduled.find(i => i.id === itemId) : potential.find(i => i.id === itemId);
       if (!item) return;
 
-      const sourceDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
-      const targetDay = state.itineraryDays.find(d => d.dayNumber === targetDayNum);
+      const sourceDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
+      const targetDay = itineraryDays.find(d => d.dayNumber === targetDayNum);
       if (!sourceDay || !targetDay) { addLog(`  ❌ יום לא נמצא`); return; }
 
       const newSourceActivities = sourceDay.activities.filter(a => a.id !== itemId);
@@ -1448,14 +1436,11 @@ export default function DndTestPage() {
       else setPotential(prev => prev.filter(i => i.id !== itemId));
 
       // Update context in-memory
-      dispatch({
-        type: 'SET_ITINERARY_DAYS',
-        payload: state.itineraryDays.map(d => {
-          if (d.id === sourceDay.id) return { ...d, activities: newSourceActivities };
-          if (d.id === targetDay.id) return { ...d, activities: newTargetActivities };
-          return d;
-        }),
-      });
+      setItineraryDays(itineraryDays.map(d => {
+        if (d.id === sourceDay.id) return { ...d, activities: newSourceActivities };
+        if (d.id === targetDay.id) return { ...d, activities: newTargetActivities };
+        return d;
+      }));
 
       // Persist to DB
       Promise.all([
@@ -1600,7 +1585,7 @@ export default function DndTestPage() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col gap-3 w-full px-4" dir="rtl">
+      <div className="flex flex-col gap-3 w-full px-4 h-[calc(100dvh-9.5rem)] sm:h-[calc(100dvh-10.5rem)] md:h-[calc(100dvh-7rem)] overflow-y-auto md:overflow-hidden" dir="rtl">
 
         <DndContext
           sensors={sensors}
@@ -1608,13 +1593,13 @@ export default function DndTestPage() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          {/* ── Day pills + Location strip ───────────────────── */}
+          {/* ── Day pills + Location strip (sticky, never scrolls) ── */}
           {tripDays.length > 0 ? (
-            <ScrollArea className="w-full">
+            <ScrollArea className="w-full shrink-0 sticky top-0 z-10 bg-background pb-1">
               <div className="flex gap-2 pb-1">
                 {tripDays.map((day, idx) => {
                   const dayNum = idx + 1;
-                  const itDay = state.itineraryDays.find(d => d.dayNumber === dayNum);
+                  const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
                   const hasContent = !!itDay && (
                     (itDay.activities?.length ?? 0) > 0 ||
                     (itDay.accommodationOptions?.length ?? 0) > 0
@@ -1675,10 +1660,10 @@ export default function DndTestPage() {
           )}
 
           {/* Location picker */}
-          {state.activeTrip && editingLocation && (
+          {activeTrip && editingLocation && (
             <div className="w-full sm:w-80">
               <LocationContextPicker
-                countries={state.activeTrip.countries}
+                countries={activeTrip.countries}
                 value={locationContext}
                 onChange={setLocationContext}
                 daysForward={locationDaysForward}
@@ -1686,17 +1671,17 @@ export default function DndTestPage() {
                 maxDaysForward={tripDays.length - selectedDayNum}
                 onSave={updateLocationContext}
                 onCancel={() => { setEditingLocation(false); setLocationDaysForward(0); }}
-                extraHierarchy={state.tripSitesHierarchy}
+                extraHierarchy={tripSitesHierarchy}
               />
             </div>
           )}
 
           {/* ── Two-column body ──────────────────────────────── */}
           {/* In RTL: first column appears on the right (potential), second on the left (timeline) */}
-          <div className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-4 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-4 min-h-0 flex-1 md:[grid-template-rows:minmax(0,1fr)]">
 
             {/* ── Right column: Potential + Add activity ─────── */}
-            <div className="space-y-3">
+            <div className="space-y-3 md:overflow-y-auto md:min-h-0">
               <p className="text-xs font-bold uppercase tracking-widest text-amber-600">
                 פוטנציאל ({potential.length})
               </p>
@@ -1733,14 +1718,14 @@ export default function DndTestPage() {
                 onCreateNew={createNewActivity}
                 addLabel="הוסף פעילות"
                 locationContext={currentDayLocation}
-                countries={state.activeTrip?.countries}
-                extraHierarchy={state.tripSitesHierarchy}
+                countries={activeTrip?.countries}
+                extraHierarchy={tripSitesHierarchy}
                 showBookingMissionOption
               />
             </div>
 
-            {/* ── Left column: Timeline (wake up → schedule → sleep) */}
-            <div className="space-y-3">
+            {/* ── Left column: Timeline (wake up → schedule → sleep) — scrolls independently on desktop */}
+            <div className="space-y-3 md:overflow-y-auto md:min-h-0 pb-4">
 
               {/* Where I wake up */}
               <div className="space-y-1.5">
@@ -1888,8 +1873,8 @@ export default function DndTestPage() {
                   maxNights={tripDays.length - selectedDayNum + 1}
                   showBookingMissionOption
                   locationContext={currentDayLocation}
-                  countries={state.activeTrip?.countries}
-                  extraHierarchy={state.tripSitesHierarchy}
+                  countries={activeTrip?.countries}
+                  extraHierarchy={tripSitesHierarchy}
                 />
               </div>
 
@@ -1927,7 +1912,7 @@ export default function DndTestPage() {
       />
 
       {editTransportId && (() => {
-        const transport = state.transportation.find(t => t.id === editTransportId);
+        const transport = transportation.find(t => t.id === editTransportId);
         return transport ? (
           <TransportDetailDialog
             transport={transport}
