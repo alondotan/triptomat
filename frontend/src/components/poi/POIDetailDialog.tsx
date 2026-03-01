@@ -384,7 +384,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
               </Button>
               <div className="space-y-2">
                 <Label>משך זמן</Label>
-                <div className="flex flex-wrap gap-1.5">
+                <div className="flex flex-wrap gap-1.5 items-center">
                   {[
                     { label: '30 דק׳', value: '30' },
                     { label: 'שעה', value: '60' },
@@ -402,6 +402,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                       {opt.label}
                     </Badge>
                   ))}
+                  <Input type="number" value={!['30','60','90','120','180','480'].includes(duration) ? duration : ''} className="w-[70px] h-7 px-1.5 text-xs" placeholder="דק׳" min="0" onChange={e => setDuration(e.target.value)} />
                 </div>
               </div>
             </>
