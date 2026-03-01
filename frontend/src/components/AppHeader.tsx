@@ -10,6 +10,7 @@ import {
   Table2,
   DollarSign,
   CheckSquare,
+  Users,
   Inbox,
   Hotel,
   Menu,
@@ -17,8 +18,6 @@ import {
   Plus,
   Trash2,
   LogOut,
-  Key,
-  Copy,
   Pencil,
   Settings,
   Check,
@@ -61,6 +60,7 @@ const navItems = [
   { path: '/map', label: 'Map', icon: Map },
   { path: '/budget', label: 'Budget', icon: DollarSign },
   { path: '/tasks', label: 'Tasks', icon: CheckSquare },
+  { path: '/contacts', label: 'Contacts', icon: Users },
   { path: '/inbox', label: 'Inbox', icon: Inbox },
 ];
 
@@ -80,7 +80,6 @@ const COMMON_CURRENCIES = [
 export function AppHeader() {
   const location = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [webhookDialogOpen, setWebhookDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [newTripOpen, setNewTripOpen] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
@@ -89,18 +88,11 @@ export function AppHeader() {
   const [editStartDate, setEditStartDate] = useState('');
   const [editEndDate, setEditEndDate] = useState('');
   const [prefsCurrency, setPrefsCurrency] = useState('');
-  const [webhookToken, setWebhookToken] = useState<string | null>(null);
   const [inboxUnread, setInboxUnread] = useState<number>(() => {
     try { return parseInt(localStorage.getItem('inbox_unread_count') || '0', 10); } catch { return 0; }
   });
   const { state, dispatch, deleteCurrentTrip, updateCurrentTrip } = useTrip();
   const { toast } = useToast();
-
-  useEffect(() => {
-    supabase.from('webhook_tokens').select('token').maybeSingle().then(({ data }) => {
-      if (data) setWebhookToken(data.token);
-    });
-  }, []);
 
   useEffect(() => {
     const handler = (e: Event) => setInboxUnread((e as CustomEvent).detail.count);
@@ -140,20 +132,13 @@ export function AppHeader() {
     setPrefsOpen(false);
   };
 
-  const copyWebhookUrl = (type: 'travel' | 'recommendation') => {
-    const base = import.meta.env.VITE_SUPABASE_URL;
-    const url = `${base}/functions/v1/${type === 'travel' ? 'travel-webhook' : 'recommendation-webhook'}?token=${webhookToken}`;
-    navigator.clipboard.writeText(url);
-    toast({ title: 'Copied!', description: `${type} webhook URL copied to clipboard` });
-  };
-
   return (
     <>
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container px-3 sm:px-6 flex h-14 sm:h-16 items-center justify-between">
 
         {/* ── MOBILE HEADER ── */}
-        <div className="md:hidden grid grid-cols-3 items-center w-full">
+        <div className="md:hidden grid grid-cols-[auto_1fr_auto] items-center w-full">
           {/* Left: Hamburger */}
           <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={() => setHamburgerOpen(true)}>
@@ -162,8 +147,8 @@ export function AppHeader() {
           </div>
 
           {/* Center: Trip name */}
-          <div className="flex items-center justify-center">
-            <span className="font-bold text-base truncate max-w-[140px]">
+          <div className="flex items-center justify-center min-w-0">
+            <span className="font-bold text-base truncate">
               {state.activeTrip?.name || 'Triptomat'}
             </span>
           </div>
@@ -270,9 +255,6 @@ export function AppHeader() {
 
         {/* Desktop user actions */}
         <div className="hidden md:flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => setWebhookDialogOpen(true)} title="Webhook URLs">
-            <Key size={18} />
-          </Button>
           <Button variant="ghost" size="icon" onClick={() => { setPrefsCurrency(state.activeTrip?.currency || 'ILS'); setPrefsOpen(true); }} title="Preferences">
             <Settings size={18} />
           </Button>
@@ -352,12 +334,6 @@ export function AppHeader() {
                 className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
               >
                 <Settings size={16} /> User Preferences
-              </button>
-              <button
-                onClick={() => { setHamburgerOpen(false); setWebhookDialogOpen(true); }}
-                className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
-              >
-                <Key size={16} /> Webhook URLs
               </button>
             </div>
 
@@ -472,47 +448,6 @@ export function AppHeader() {
         </DialogContent>
       </Dialog>
 
-      {/* Webhook URLs Dialog */}
-      <Dialog open={webhookDialogOpen} onOpenChange={setWebhookDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Webhook URLs</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Use these URLs to send data from external services. Your personal token is included.
-            </p>
-            {webhookToken ? (
-              <>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Travel Webhook (emails/bookings)</label>
-                  <div className="flex gap-2">
-                    <code className="flex-1 p-2 bg-muted rounded text-xs break-all">
-                      {import.meta.env.VITE_SUPABASE_URL}/functions/v1/travel-webhook?token={webhookToken}
-                    </code>
-                    <Button size="icon" variant="outline" onClick={() => copyWebhookUrl('travel')}>
-                      <Copy size={14} />
-                    </Button>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Recommendation Webhook</label>
-                  <div className="flex gap-2">
-                    <code className="flex-1 p-2 bg-muted rounded text-xs break-all">
-                      {import.meta.env.VITE_SUPABASE_URL}/functions/v1/recommendation-webhook?token={webhookToken}
-                    </code>
-                    <Button size="icon" variant="outline" onClick={() => copyWebhookUrl('recommendation')}>
-                      <Copy size={14} />
-                    </Button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">Loading token...</p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </header>
     <MobileBottomNav />
     </>
