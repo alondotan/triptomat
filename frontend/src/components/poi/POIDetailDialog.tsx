@@ -65,6 +65,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     }))
   );
   const [orderNumber, setOrderNumber] = useState(poi.details.order_number || '');
+  const [duration, setDuration] = useState(poi.details.activity_details?.duration?.toString() || '');
 
   // Recommendation quotes
   const [quotes, setQuotes] = useState<RecommendationQuote[]>([]);
@@ -94,6 +95,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
       schedule_state: b.schedule_state || (b.reservation_hour ? 'scheduled' : 'potential'),
     })));
     setOrderNumber(poi.details.order_number || '');
+    setDuration(poi.details.activity_details?.duration?.toString() || '');
   }, [poi]);
 
   // Fetch recommendation quotes
@@ -172,6 +174,10 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           reservation_hour: b.schedule_state === 'scheduled' && b.hour ? b.hour : undefined,
           schedule_state: b.schedule_state,
         })),
+        activity_details: (category === 'eatery' || category === 'attraction') ? {
+          ...poi.details.activity_details,
+          duration: duration ? parseInt(duration) : undefined,
+        } : poi.details.activity_details,
         accommodation_details: category === 'accommodation' ? {
           ...poi.details.accommodation_details,
           checkin: (checkinDate || checkinHour) ? { date: checkinDate || undefined, hour: checkinHour || undefined } : poi.details.accommodation_details?.checkin,
@@ -378,6 +384,10 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
               <Button variant="outline" size="sm" className="gap-1" onClick={() => setBookings([...bookings, { date: '', hour: '', schedule_state: 'potential' }])}>
                 <Plus size={14} /> הוסף זמן
               </Button>
+              <div className="space-y-2">
+                <Label>משך זמן (דקות)</Label>
+                <Input type="number" value={duration} onChange={e => setDuration(e.target.value)} placeholder="60" min="0" />
+              </div>
             </>
           )}
 
