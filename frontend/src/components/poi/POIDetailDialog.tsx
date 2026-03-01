@@ -341,24 +341,23 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
               <Separator />
               <h4 className="text-sm font-semibold">זמנים</h4>
               {bookings.map((slot, i) => (
-                <div key={i} className="space-y-1">
-                  {i === 0 && (
-                    <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
-                      <Label className="text-xs">תאריך</Label>
-                      <Label className="text-xs text-center w-[70px]">מצב</Label>
-                      <Label className="text-xs">שעה</Label>
-                      <div className="w-9" />
-                    </div>
-                  )}
-                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
-                    <Input type="date" value={slot.date} onChange={e => {
+                <div key={i} className="space-y-1 border rounded-md p-2">
+                  <div className="flex gap-2 items-center">
+                    <Input type="date" value={slot.date} className="flex-1 min-w-0" onChange={e => {
                       const next = [...bookings];
                       next[i] = { ...slot, date: e.target.value };
                       setBookings(next);
                     }} />
+                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => {
+                      setBookings(bookings.filter((_, j) => j !== i));
+                    }}>
+                      <X size={14} />
+                    </Button>
+                  </div>
+                  <div className="flex gap-2 items-center">
                     <Badge
                       variant={slot.schedule_state === 'scheduled' ? 'default' : 'outline'}
-                      className="cursor-pointer select-none text-xs whitespace-nowrap w-[70px] justify-center"
+                      className="cursor-pointer select-none text-xs whitespace-nowrap"
                       onClick={() => {
                         const next = [...bookings];
                         const newState = slot.schedule_state === 'scheduled' ? 'potential' : 'scheduled';
@@ -368,20 +367,13 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                     >
                       {slot.schedule_state === 'scheduled' ? 'בלו״ז' : 'פוטנציאלי'}
                     </Badge>
-                    {slot.schedule_state === 'scheduled' ? (
+                    {slot.schedule_state === 'scheduled' && (
                       <Input type="time" value={slot.hour} className="w-[100px]" onChange={e => {
                         const next = [...bookings];
                         next[i] = { ...slot, hour: e.target.value };
                         setBookings(next);
                       }} />
-                    ) : (
-                      <div className="w-[100px]" />
                     )}
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => {
-                      setBookings(bookings.filter((_, j) => j !== i));
-                    }}>
-                      <X size={14} />
-                    </Button>
                   </div>
                 </div>
               ))}
