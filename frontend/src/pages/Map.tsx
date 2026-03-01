@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { usePOI } from '@/context/POIContext';
+import { useTransport } from '@/context/TransportContext';
 import { AppLayout } from '@/components/AppLayout';
 import 'leaflet/dist/leaflet.css';
 
@@ -58,14 +60,16 @@ function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
 }
 
 const MapPage = () => {
-  const { state } = useTrip();
+  const { activeTrip } = useActiveTrip();
+  const { pois } = usePOI();
+  const { transportation } = useTransport();
 
-  if (!state.activeTrip) {
+  if (!activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
   }
 
   // ── POI markers ──────────────────────────────────────────────
-  const poiMarkers = state.pois
+  const poiMarkers = pois
     .filter(p => p.location.coordinates?.lat && p.location.coordinates?.lng)
     .map(p => ({
       position: [p.location.coordinates!.lat, p.location.coordinates!.lng] as [number, number],
@@ -87,7 +91,7 @@ const MapPage = () => {
   const transportStops: TransportStop[] = [];
   const routeLines: RouteLine[] = [];
 
-  state.transportation.forEach(t => {
+  transportation.forEach(t => {
     const color = TRANSPORT_COLORS[t.category] ?? TRANSPORT_COLORS.default;
     t.segments.forEach(seg => {
       const fromCoords = seg.from.coordinates;

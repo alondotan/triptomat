@@ -1,5 +1,8 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { usePOI } from '@/context/POIContext';
+import { useTransport } from '@/context/TransportContext';
+import { useItinerary } from '@/context/ItineraryContext';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppLayout } from '@/components/AppLayout';
@@ -84,7 +87,10 @@ function DroppableDayPill({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 const Index = () => {
-  const { state, loadTripData, addPOI, addTransportation, addMission, updatePOI } = useTrip();
+  const { activeTrip, tripSitesHierarchy, isLoading, loadTripData } = useActiveTrip();
+  const { pois, addPOI, updatePOI } = usePOI();
+  const { transportation, addTransportation } = useTransport();
+  const { itineraryDays, addMission } = useItinerary();
   const [selectedDayNum, setSelectedDayNum] = useState(1);
   const [locationContext, setLocationContext] = useState('');
   const [editingLocation, setEditingLocation] = useState(false);
@@ -157,38 +163,38 @@ const Index = () => {
     setEditingLocation(false);
     setSelectedDayNum(1);
     setLocationDaysForward(0);
-  }, [state.activeTrip?.id]);
+  }, [activeTrip?.id]);
 
   // ── Trip data ────────────────────────────────────────────────────────────────
 
   const tripDays = useMemo(() => {
-    if (!state.activeTrip) return [];
+    if (!activeTrip) return [];
     return eachDayOfInterval({
-      start: parseISO(state.activeTrip.startDate),
-      end: parseISO(state.activeTrip.endDate),
+      start: parseISO(activeTrip.startDate),
+      end: parseISO(activeTrip.endDate),
     });
-  }, [state.activeTrip?.startDate, state.activeTrip?.endDate]);
+  }, [activeTrip?.startDate, activeTrip?.endDate]);
 
   const currentItDay = useMemo(() =>
-    state.itineraryDays.find(d => d.dayNumber === selectedDayNum),
-    [state.itineraryDays, selectedDayNum]
+    itineraryDays.find(d => d.dayNumber === selectedDayNum),
+    [itineraryDays, selectedDayNum]
   );
 
   const dayAccommodations = useMemo(() => {
     if (!currentItDay) return [];
     return currentItDay.accommodationOptions
-      .map(opt => ({ ...opt, poi: state.pois.find(p => p.id === opt.poi_id) }))
+      .map(opt => ({ ...opt, poi: pois.find(p => p.id === opt.poi_id) }))
       .filter((opt): opt is typeof opt & { poi: NonNullable<typeof opt.poi> } => !!opt.poi);
-  }, [currentItDay, state.pois]);
+  }, [currentItDay, pois]);
 
   const dayActivities = useMemo(() => {
     if (!currentItDay) return [];
     return currentItDay.activities
       .filter(a => a.type === 'poi')
-      .map(a => ({ ...a, poi: state.pois.find(p => p.id === a.id) }))
+      .map(a => ({ ...a, poi: pois.find(p => p.id === a.id) }))
       .filter((a): a is typeof a & { poi: NonNullable<typeof a.poi> } => !!a.poi)
       .sort((a, b) => a.order - b.order);
-  }, [currentItDay, state.pois]);
+  }, [currentItDay, pois]);
 
   const dayPotentialActivities = useMemo(() =>
     dayActivities.filter(a => !a.schedule_state || a.schedule_state === 'potential'),
@@ -202,26 +208,26 @@ const Index = () => {
     if (!currentItDay) return [];
     return currentItDay.activities
       .filter(a => a.type === 'poi' && a.schedule_state === 'scheduled')
-      .map(a => ({ ...a, poi: state.pois.find(p => p.id === a.id) }))
+      .map(a => ({ ...a, poi: pois.find(p => p.id === a.id) }))
       .filter((a): a is typeof a & { poi: NonNullable<typeof a.poi> } => !!a.poi);
     // NO sort — display order = position in the DB activities array
-  }, [currentItDay, state.pois]);
+  }, [currentItDay, pois]);
 
   const prevDayAccommodations = useMemo(() => {
     if (selectedDayNum <= 1) return [];
-    const prevItDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum - 1);
+    const prevItDay = itineraryDays.find(d => d.dayNumber === selectedDayNum - 1);
     if (!prevItDay) return [];
     return prevItDay.accommodationOptions
-      .map(opt => ({ ...opt, poi: state.pois.find(p => p.id === opt.poi_id) }))
+      .map(opt => ({ ...opt, poi: pois.find(p => p.id === opt.poi_id) }))
       .filter((opt): opt is typeof opt & { poi: NonNullable<typeof opt.poi> } => !!opt.poi);
-  }, [state.itineraryDays, state.pois, selectedDayNum]);
+  }, [itineraryDays, pois, selectedDayNum]);
 
   const dayTransport = useMemo(() => {
     if (!currentItDay) return [];
     return currentItDay.transportationSegments
-      .map(seg => ({ ...seg, transport: state.transportation.find(t => t.id === seg.transportation_id) }))
+      .map(seg => ({ ...seg, transport: transportation.find(t => t.id === seg.transportation_id) }))
       .filter(seg => seg.transport);
-  }, [currentItDay, state.transportation]);
+  }, [currentItDay, transportation]);
 
   const scheduleCells = useMemo(() => {
     type RawCell = {
@@ -379,10 +385,10 @@ const Index = () => {
         suggestions.push({ label, type: 'accommodation' });
       }
     });
-    const prevItDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum - 1);
+    const prevItDay = itineraryDays.find(d => d.dayNumber === selectedDayNum - 1);
     if (prevItDay) {
       prevItDay.accommodationOptions.forEach(opt => {
-        const poi = state.pois.find(p => p.id === opt.poi_id);
+        const poi = pois.find(p => p.id === opt.poi_id);
         if (poi && !suggestions.some(s => s.label.startsWith(poi.name))) {
           const label = poi.location?.city ? `${poi.name} (${poi.location.city})` : poi.name;
           suggestions.push({ label, type: 'accommodation' });
@@ -400,13 +406,13 @@ const Index = () => {
       }
     });
     return suggestions;
-  }, [dayActivities, dayAccommodations, dayTransport, state.itineraryDays, state.pois, selectedDayNum]);
+  }, [dayActivities, dayAccommodations, dayTransport, itineraryDays, pois, selectedDayNum]);
 
   const locationSpans = useMemo(() => {
     if (tripDays.length === 0) return [];
     const spans: { location: string; startIdx: number; endIdx: number }[] = [];
     for (let i = 0; i < tripDays.length; i++) {
-      const itDay = state.itineraryDays.find(d => d.dayNumber === i + 1);
+      const itDay = itineraryDays.find(d => d.dayNumber === i + 1);
       const loc = itDay?.locationContext || '';
       if (loc && spans.length > 0 && spans[spans.length - 1].location === loc && spans[spans.length - 1].endIdx === i - 1) {
         spans[spans.length - 1].endIdx = i;
@@ -415,20 +421,20 @@ const Index = () => {
       }
     }
     return spans;
-  }, [tripDays, state.itineraryDays]);
+  }, [tripDays, itineraryDays]);
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
 
   const refreshDays = useCallback(async () => {
-    if (state.activeTrip) await loadTripData(state.activeTrip.id);
-  }, [state.activeTrip, loadTripData]);
+    if (activeTrip) await loadTripData(activeTrip.id);
+  }, [activeTrip, loadTripData]);
 
   const ensureItDay = useCallback(async () => {
     if (currentItDay) return currentItDay;
-    if (!state.activeTrip) return null;
+    if (!activeTrip) return null;
     const day = tripDays[selectedDayNum - 1];
     return await tripService.createItineraryDay({
-      tripId: state.activeTrip.id,
+      tripId: activeTrip.id,
       dayNumber: selectedDayNum,
       date: day ? format(day, 'yyyy-MM-dd') : undefined,
       locationContext: '',
@@ -436,7 +442,7 @@ const Index = () => {
       activities: [],
       transportationSegments: [],
     });
-  }, [currentItDay, state.activeTrip, selectedDayNum, tripDays]);
+  }, [currentItDay, activeTrip, selectedDayNum, tripDays]);
 
   // ── Entity CRUD ──────────────────────────────────────────────────────────────
 
@@ -456,11 +462,11 @@ const Index = () => {
         if (dayNum <= tripDays.length) dayNumbers.push(dayNum);
       }
       for (const dayNum of dayNumbers) {
-        let targetDay = state.itineraryDays.find(d => d.dayNumber === dayNum);
-        if (!targetDay && state.activeTrip) {
+        let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
+        if (!targetDay && activeTrip) {
           const day = tripDays[dayNum - 1];
           targetDay = await tripService.createItineraryDay({
-            tripId: state.activeTrip.id,
+            tripId: activeTrip.id,
             dayNumber: dayNum,
             date: day ? format(day, 'yyyy-MM-dd') : undefined,
             locationContext: '',
@@ -478,7 +484,7 @@ const Index = () => {
           }
         }
       }
-      const poi = state.pois.find(p => p.id === entityId);
+      const poi = pois.find(p => p.id === entityId);
       if (poi && (poi.status === 'candidate' || poi.status === 'in_plan')) {
         await updatePOI({ ...poi, status: 'matched' });
       }
@@ -488,7 +494,7 @@ const Index = () => {
       await tripService.updateItineraryDay(itDay.id, {
         activities: [...existing, { order: existing.length + 1, type: 'poi', id: entityId }],
       });
-      const poi = state.pois.find(p => p.id === entityId);
+      const poi = pois.find(p => p.id === entityId);
       if (poi && (poi.status === 'candidate' || poi.status === 'in_plan')) {
         await updatePOI({ ...poi, status: 'matched' });
       }
@@ -501,7 +507,7 @@ const Index = () => {
     }
 
     await refreshDays();
-  }, [ensureItDay, refreshDays, selectedDayNum, tripDays, state.itineraryDays, state.activeTrip, state.pois, updatePOI]);
+  }, [ensureItDay, refreshDays, selectedDayNum, tripDays, itineraryDays, activeTrip, pois, updatePOI]);
 
   const removeEntityFromDay = useCallback(async (
     entityType: 'accommodation' | 'activity' | 'transport',
@@ -627,14 +633,14 @@ const Index = () => {
     activityId: string,
     targetDayNum: number,
   ) => {
-    if (!currentItDay || !state.activeTrip) return;
+    if (!currentItDay || !activeTrip) return;
     const updatedActivities = currentItDay.activities.filter(a => a.id !== activityId);
     await tripService.updateItineraryDay(currentItDay.id, { activities: updatedActivities });
-    let targetDay = state.itineraryDays.find(d => d.dayNumber === targetDayNum);
+    let targetDay = itineraryDays.find(d => d.dayNumber === targetDayNum);
     if (!targetDay) {
       const day = tripDays[targetDayNum - 1];
       targetDay = await tripService.createItineraryDay({
-        tripId: state.activeTrip.id,
+        tripId: activeTrip.id,
         dayNumber: targetDayNum,
         date: day ? format(day, 'yyyy-MM-dd') : undefined,
         locationContext: '',
@@ -650,7 +656,7 @@ const Index = () => {
       });
     }
     await refreshDays();
-  }, [currentItDay, state.activeTrip, state.itineraryDays, tripDays, refreshDays]);
+  }, [currentItDay, activeTrip, itineraryDays, tripDays, refreshDays]);
 
   const toggleAccommodationSelected = useCallback(async (poiId: string, selected: boolean) => {
     if (!currentItDay) return;
@@ -667,10 +673,10 @@ const Index = () => {
     data: Record<string, string>,
     createBookingMission?: boolean,
   ) => {
-    if (!state.activeTrip) return;
+    if (!activeTrip) return;
     const nights = parseInt(data._nights) || 1;
     const newPOI = await addPOI({
-      tripId: state.activeTrip.id,
+      tripId: activeTrip.id,
       category: data.category as any,
       subCategory: data.subCategory || undefined,
       name: data.name,
@@ -685,7 +691,7 @@ const Index = () => {
       await addEntityToDay(entityType, newPOI.id, entityType === 'accommodation' ? nights : undefined);
       if (createBookingMission) {
         await addMission({
-          tripId: state.activeTrip.id,
+          tripId: activeTrip.id,
           title: `להזמין: ${data.name}`,
           description: data.category,
           status: 'pending',
@@ -695,16 +701,16 @@ const Index = () => {
         });
       }
     }
-  }, [state.activeTrip, addPOI, addEntityToDay, addMission]);
+  }, [activeTrip, addPOI, addEntityToDay, addMission]);
 
   const handleCreateNewTransport = useCallback(async (data: Record<string, string>) => {
-    if (!state.activeTrip) return;
+    if (!activeTrip) return;
     const newT = await addTransportation({
-      tripId: state.activeTrip.id,
+      tripId: activeTrip.id,
       category: data.category || 'flight',
       status: 'candidate',
       sourceRefs: { email_ids: [], recommendation_ids: [] },
-      cost: { total_amount: 0, currency: state.activeTrip.currency },
+      cost: { total_amount: 0, currency: activeTrip.currency },
       booking: {},
       segments: [{
         from: { name: data.fromName },
@@ -720,7 +726,7 @@ const Index = () => {
       await addEntityToDay('transport', newT.id);
       const label = `${data.fromName} → ${data.toName}`;
       await addMission({
-        tripId: state.activeTrip.id,
+        tripId: activeTrip.id,
         title: `להזמין: ${label}`,
         description: `${data.category || 'flight'}`,
         status: 'pending',
@@ -729,18 +735,18 @@ const Index = () => {
         objectLink: newT.id,
       });
     }
-  }, [state.activeTrip, addTransportation, addEntityToDay, addMission]);
+  }, [activeTrip, addTransportation, addEntityToDay, addMission]);
 
   const updateLocationContext = useCallback(async () => {
     const totalDays = 1 + locationDaysForward;
     for (let i = 0; i < totalDays; i++) {
       const dayNum = selectedDayNum + i;
       if (dayNum > tripDays.length) break;
-      let targetDay = state.itineraryDays.find(d => d.dayNumber === dayNum);
-      if (!targetDay && state.activeTrip) {
+      let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
+      if (!targetDay && activeTrip) {
         const day = tripDays[dayNum - 1];
         targetDay = await tripService.createItineraryDay({
-          tripId: state.activeTrip.id,
+          tripId: activeTrip.id,
           dayNumber: dayNum,
           date: day ? format(day, 'yyyy-MM-dd') : undefined,
           locationContext: '',
@@ -756,7 +762,7 @@ const Index = () => {
     setEditingLocation(false);
     setLocationDaysForward(0);
     await refreshDays();
-  }, [ensureItDay, currentItDay, locationContext, locationDaysForward, selectedDayNum, tripDays, state.itineraryDays, state.activeTrip, refreshDays]);
+  }, [ensureItDay, currentItDay, locationContext, locationDaysForward, selectedDayNum, tripDays, itineraryDays, activeTrip, refreshDays]);
 
   // ── Drag handlers ────────────────────────────────────────────────────────────
 
@@ -816,7 +822,7 @@ const Index = () => {
 
   // ── Loading / no-trip states ─────────────────────────────────────────────────
 
-  if (state.isLoading) {
+  if (isLoading) {
     return (
       <AppLayout>
         <div className="space-y-6">
@@ -828,7 +834,7 @@ const Index = () => {
     );
   }
 
-  if (!state.activeTrip) {
+  if (!activeTrip) {
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -841,12 +847,12 @@ const Index = () => {
     );
   }
 
-  const trip = state.activeTrip;
+  const trip = activeTrip;
   const selectedDate = tripDays[selectedDayNum - 1];
 
-  const availableAccom = state.pois.filter(p => p.category === 'accommodation' && !p.isCancelled && !dayAccommodations.some(d => d.poi_id === p.id));
-  const availableActivities = state.pois.filter(p => p.category !== 'accommodation' && !p.isCancelled && !dayActivities.some(d => d.id === p.id));
-  const availableTransport = state.transportation.filter(t => !t.isCancelled && !dayTransport.some(d => d.transportation_id === t.id));
+  const availableAccom = pois.filter(p => p.category === 'accommodation' && !p.isCancelled && !dayAccommodations.some(d => d.poi_id === p.id));
+  const availableActivities = pois.filter(p => p.category !== 'accommodation' && !p.isCancelled && !dayActivities.some(d => d.id === p.id));
+  const availableTransport = transportation.filter(t => !t.isCancelled && !dayTransport.some(d => d.transportation_id === t.id));
 
   const locationDayWidth = typeof window !== 'undefined' ? (window.innerWidth < 640 ? 64 : 80) : 72;
   const selectedIdx = selectedDayNum - 1;
@@ -880,7 +886,7 @@ const Index = () => {
               {tripDays.map((day, idx) => {
                 const dayNum = idx + 1;
                 const isSelected = dayNum === selectedDayNum;
-                const itDay = state.itineraryDays.find(d => d.dayNumber === dayNum);
+                const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
                 const hasContent = !!itDay && (
                   (itDay.accommodationOptions?.length || 0) > 0 ||
                   (itDay.activities?.length || 0) > 0 ||
@@ -895,7 +901,7 @@ const Index = () => {
                     hasContent={hasContent}
                     onClick={() => {
                       setSelectedDayNum(dayNum);
-                      const it = state.itineraryDays.find(d => d.dayNumber === dayNum);
+                      const it = itineraryDays.find(d => d.dayNumber === dayNum);
                       setLocationContext(it?.locationContext || '');
                       setEditingLocation(false);
                     }}
@@ -953,7 +959,7 @@ const Index = () => {
                 maxDaysForward={tripDays.length - selectedDayNum}
                 onSave={updateLocationContext}
                 onCancel={() => { setEditingLocation(false); setLocationDaysForward(0); }}
-                extraHierarchy={state.tripSitesHierarchy}
+                extraHierarchy={tripSitesHierarchy}
               />
             </div>
           )}
@@ -981,15 +987,15 @@ const Index = () => {
               }))}
               locationContext={currentItDay?.locationContext || ''}
               countries={trip.countries}
-              tripSitesHierarchy={state.tripSitesHierarchy}
+              tripSitesHierarchy={tripSitesHierarchy}
               onMoveActivityToDay={moveActivityToDay}
               onRemoveActivity={(id) => removeEntityFromDay('activity', id)}
               onAddActivity={async (id, _nights, createBooking) => {
                 await addEntityToDay('activity', id);
-                if (createBooking && state.activeTrip) {
-                  const poi = state.pois.find(p => p.id === id);
+                if (createBooking && activeTrip) {
+                  const poi = pois.find(p => p.id === id);
                   await addMission({
-                    tripId: state.activeTrip.id,
+                    tripId: activeTrip.id,
                     title: `להזמין: ${poi?.name || 'פעילות'}`,
                     description: poi?.category || 'activity',
                     status: 'pending',
@@ -1013,13 +1019,13 @@ const Index = () => {
               onRemoveTransport={(id) => removeEntityFromDay('transport', id)}
               onAddTransport={async (id) => {
                 await addEntityToDay('transport', id);
-                if (state.activeTrip) {
-                  const t = state.transportation.find(tr => tr.id === id);
+                if (activeTrip) {
+                  const t = transportation.find(tr => tr.id === id);
                   const label = t && t.segments.length > 0
                     ? `${t.segments[0].from.name} → ${t.segments[t.segments.length - 1].to.name}`
                     : t?.category || 'תחבורה';
                   await addMission({
-                    tripId: state.activeTrip.id,
+                    tripId: activeTrip.id,
                     title: `להזמין: ${label}`,
                     description: t?.category || 'transport',
                     status: 'pending',
@@ -1043,10 +1049,10 @@ const Index = () => {
               onRemoveAccommodation={(id) => removeEntityFromDay('accommodation', id)}
               onAddAccommodation={async (id, nights, createBooking) => {
                 await addEntityToDay('accommodation', id, nights);
-                if (createBooking && state.activeTrip) {
-                  const poi = state.pois.find(p => p.id === id);
+                if (createBooking && activeTrip) {
+                  const poi = pois.find(p => p.id === id);
                   await addMission({
-                    tripId: state.activeTrip.id,
+                    tripId: activeTrip.id,
                     title: `להזמין: ${poi?.name || 'לינה'}`,
                     description: 'accommodation',
                     status: 'pending',

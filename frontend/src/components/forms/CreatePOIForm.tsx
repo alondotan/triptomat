@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { usePOI } from '@/context/POIContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,8 @@ import { SubCategorySelector } from '@/components/SubCategorySelector';
 import type { POICategory, POIStatus } from '@/types/trip';
 
 export function CreatePOIForm() {
-  const { state, addPOI } = useTrip();
+  const { activeTrip, tripSitesHierarchy } = useActiveTrip();
+  const { addPOI } = usePOI();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [category, setCategory] = useState<POICategory>('attraction');
@@ -24,11 +26,11 @@ export function CreatePOIForm() {
   const [manualCountry, setManualCountry] = useState(false);
   const [address, setAddress] = useState('');
   const [costAmount, setCostAmount] = useState('');
-  const [costCurrency, setCostCurrency] = useState(state.activeTrip?.currency || 'ILS');
+  const [costCurrency, setCostCurrency] = useState(activeTrip?.currency || 'ILS');
   const [isPaid, setIsPaid] = useState(false);
   const [notes, setNotes] = useState('');
 
-  const tripCountries = state.activeTrip?.countries || [];
+  const tripCountries = activeTrip?.countries || [];
 
   const resetForm = () => {
     setName('');
@@ -40,17 +42,17 @@ export function CreatePOIForm() {
     setManualCountry(false);
     setAddress('');
     setCostAmount('');
-    setCostCurrency(state.activeTrip?.currency || 'ILS');
+    setCostCurrency(activeTrip?.currency || 'ILS');
     setIsPaid(false);
     setNotes('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!state.activeTrip || !name.trim()) return;
+    if (!activeTrip || !name.trim()) return;
 
     await addPOI({
-      tripId: state.activeTrip.id,
+      tripId: activeTrip.id,
       category,
       subCategory: subCategory || undefined,
       name: name.trim(),
@@ -158,7 +160,7 @@ export function CreatePOIForm() {
               value={city}
               onChange={setCity}
               placeholder="בחר עיר..."
-              extraHierarchy={state.tripSitesHierarchy}
+              extraHierarchy={tripSitesHierarchy}
             />
           </div>
 

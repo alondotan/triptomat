@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Map, RefreshCw, Plus, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
@@ -24,9 +24,9 @@ interface MapListItem {
 }
 
 export function MapListManager() {
-  const { state } = useTrip();
+  const { activeTrip } = useActiveTrip();
   const { toast } = useToast();
-  const tripId = state.activeTrip?.id;
+  const tripId = activeTrip?.id;
 
   const [lists, setLists] = useState<MapList[]>([]);
   const [items, setItems] = useState<Record<string, MapListItem[]>>({});

@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { useFinance } from '@/context/FinanceContext';
+import { usePOI } from '@/context/POIContext';
+import { useTransport } from '@/context/TransportContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -20,9 +23,12 @@ const EXPENSE_CATEGORY_LABELS: Record<string, string> = {
 type PaidFilter = 'all' | 'paid' | 'unpaid';
 
 const BudgetPage = () => {
-  const { getCostBreakdown, formatCurrency, formatDualCurrency, convertToPreferredCurrency, state, updateExpense, deleteExpense, togglePaidStatus } = useTrip();
+  const { activeTrip, exchangeRates } = useActiveTrip();
+  const { expenses, getCostBreakdown, formatCurrency, formatDualCurrency, convertToPreferredCurrency, updateExpense, deleteExpense, togglePaidStatus } = useFinance();
+  const { pois } = usePOI();
+  const { transportation } = useTransport();
   const breakdown = getCostBreakdown();
-  const preferred = state.activeTrip?.currency || 'ILS';
+  const preferred = activeTrip?.currency || 'ILS';
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDesc, setEditDesc] = useState('');
@@ -38,7 +44,7 @@ const BudgetPage = () => {
   ].map(c => ({ ...c, percentage: breakdown.total > 0 ? (c.value / breakdown.total) * 100 : 0 }));
 
   // Build all expense lines
-  const poiExpenses = state.pois
+  const poiExpenses = pois
     .filter(p => p.details.cost && p.details.cost.amount > 0)
     .map(p => ({
       id: p.id,
@@ -51,7 +57,7 @@ const BudgetPage = () => {
       isPaid: p.isPaid,
     }));
 
-  const transportExpenses = state.transportation
+  const transportExpenses = transportation
     .filter(t => t.cost.total_amount > 0)
     .map(t => ({
       id: t.id,
@@ -64,7 +70,7 @@ const BudgetPage = () => {
       isPaid: t.isPaid,
     }));
 
-  const manualExpenses = state.expenses.map(e => ({
+  const manualExpenses = expenses.map(e => ({
     id: e.id,
     type: 'manual' as const,
     entityType: 'expense' as const,
@@ -117,7 +123,7 @@ const BudgetPage = () => {
     setEditingId(null);
   };
 
-  if (!state.activeTrip) {
+  if (!activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
   }
 
@@ -127,9 +133,9 @@ const BudgetPage = () => {
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">סקירה פיננסית</h2>
           <div className="flex items-center gap-2">
-            {state.exchangeRates && (
+            {exchangeRates && (
               <span className="text-xs text-muted-foreground">
-                שערי המרה ל-{preferred} • עודכן {new Date(state.exchangeRates.fetchedAt).toLocaleDateString('he-IL')}
+                שערי המרה ל-{preferred} • עודכן {new Date(exchangeRates.fetchedAt).toLocaleDateString('he-IL')}
               </span>
             )}
             <CreateExpenseForm />
@@ -144,7 +150,7 @@ const BudgetPage = () => {
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">{formatCurrency(Math.round(breakdown.total), preferred)}</p>
-            <p className="text-primary-foreground/70 mt-1">{state.activeTrip.name}</p>
+            <p className="text-primary-foreground/70 mt-1">{activeTrip.name}</p>
             <div className="flex gap-4 mt-3">
               <span className="flex items-center gap-1 text-sm text-primary-foreground/80">
                 <CheckCircle2 size={14} className="text-green-300" />
@@ -269,7 +275,7 @@ const BudgetPage = () => {
                                 </>
                               ) : (
                                 <>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(state.expenses.find(e => e.id === exp.id)!)}><Pencil size={14} /></Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(expenses.find(e => e.id === exp.id)!)}><Pencil size={14} /></Button>
                                   <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteExpense(exp.id)}><Trash2 size={14} /></Button>
                                 </>
                               )}

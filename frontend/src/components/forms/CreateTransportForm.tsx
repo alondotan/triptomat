@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { useTransport } from '@/context/TransportContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,7 +52,8 @@ interface CreateTransportFormProps {
 
 export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, initialFrom, initialTo }: CreateTransportFormProps = {}) {
   const isControlled = openProp !== undefined;
-  const { state, addTransportation } = useTrip();
+  const { activeTrip } = useActiveTrip();
+  const { addTransportation } = useTransport();
   const [openInternal, setOpenInternal] = useState(false);
   const open = isControlled ? openProp! : openInternal;
   const setOpen = (v: boolean) => { isControlled ? onOpenChange?.(v) : setOpenInternal(v); };
@@ -68,7 +70,7 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
   const [orderNumber, setOrderNumber] = useState('');
   const [carrierName, setCarrierName] = useState('');
   const [costAmount, setCostAmount] = useState('');
-  const [costCurrency, setCostCurrency] = useState(state.activeTrip?.currency || 'ILS');
+  const [costCurrency, setCostCurrency] = useState(activeTrip?.currency || 'ILS');
   const [isPaid, setIsPaid] = useState(true);
   const [notes, setNotes] = useState('');
 
@@ -77,7 +79,7 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
     setStatus('candidate');
     setSegments([emptySegment()]);
     setOrderNumber(''); setCarrierName('');
-    setCostAmount(''); setCostCurrency(state.activeTrip?.currency || 'ILS'); setIsPaid(true); setNotes('');
+    setCostAmount(''); setCostCurrency(activeTrip?.currency || 'ILS'); setIsPaid(true); setNotes('');
   };
 
   const updateSegment = (index: number, field: keyof SegmentFormData, value: string) => {
@@ -97,10 +99,10 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!state.activeTrip || !segments[0].fromName.trim() || !segments[0].toName.trim()) return;
+    if (!activeTrip || !segments[0].fromName.trim() || !segments[0].toName.trim()) return;
 
     const result = await addTransportation({
-      tripId: state.activeTrip.id,
+      tripId: activeTrip.id,
       category,
       status,
       sourceRefs: { email_ids: [], recommendation_ids: [] },

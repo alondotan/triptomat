@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useTransport } from '@/context/TransportContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,12 +55,13 @@ function segmentsToForm(transport: Transportation): SegmentFormData[] {
 }
 
 export function TransportDetailDialog({ transport, open, onOpenChange }: TransportDetailDialogProps) {
-  const { updateTransportation, state } = useTrip();
+  const { updateTransportation } = useTransport();
+  const { activeTrip } = useActiveTrip();
 
   const [category, setCategory] = useState(transport.category);
   const [status, setStatus] = useState<TransportStatus>(transport.status);
   const [costAmount, setCostAmount] = useState(transport.cost.total_amount?.toString() || '');
-  const [costCurrency, setCostCurrency] = useState(transport.cost.currency || state.activeTrip?.currency || 'ILS');
+  const [costCurrency, setCostCurrency] = useState(transport.cost.currency || activeTrip?.currency || 'ILS');
   const [isPaid, setIsPaid] = useState(transport.isPaid);
   const [orderNumber, setOrderNumber] = useState(transport.booking.order_number || '');
   const [carrierName, setCarrierName] = useState(transport.booking.carrier_name || '');
@@ -70,7 +72,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
     setCategory(transport.category);
     setStatus(transport.status);
     setCostAmount(transport.cost.total_amount?.toString() || '');
-    setCostCurrency(transport.cost.currency || state.activeTrip?.currency || 'ILS');
+    setCostCurrency(transport.cost.currency || activeTrip?.currency || 'ILS');
     setIsPaid(transport.isPaid);
     setOrderNumber(transport.booking.order_number || '');
     setCarrierName(transport.booking.carrier_name || '');

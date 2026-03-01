@@ -9,12 +9,14 @@ import { Inbox, Link2, ExternalLink, Plane, Hotel, MapPin, Trash2, UtensilsCross
 import { SourceEmail, SourceRecommendation } from '@/types/webhook';
 import { fetchSourceEmails, linkSourceEmailToTrip, deleteSourceEmail } from '@/services/webhookService';
 import { fetchPendingRecommendations, linkRecommendationToTrip, deleteRecommendation } from '@/services/recommendationService';
-import { useTrip } from '@/context/TripContext';
+import { useTripList } from '@/context/TripListContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 export function PendingInbox() {
-  const { state, loadTripData } = useTrip();
+  const { trips } = useTripList();
+  const { activeTrip, loadTripData } = useActiveTrip();
   const { toast } = useToast();
   const [emails, setEmails] = useState<SourceEmail[]>([]);
   const [recommendations, setRecommendations] = useState<SourceRecommendation[]>([]);
@@ -73,7 +75,7 @@ export function PendingInbox() {
       toast({ title: 'Item Linked', description: 'Successfully linked to trip.' });
       setLinkDialogOpen(false);
       loadItems();
-      if (state.activeTrip?.id === selectedTripId) {
+      if (activeTrip?.id === selectedTripId) {
         loadTripData(selectedTripId);
       }
     } catch (error) {
@@ -265,7 +267,7 @@ export function PendingInbox() {
             <Select value={selectedTripId} onValueChange={setSelectedTripId}>
               <SelectTrigger><SelectValue placeholder="Choose a trip..." /></SelectTrigger>
               <SelectContent>
-                {state.trips.map(trip => (
+                {trips.map(trip => (
                   <SelectItem key={trip.id} value={trip.id}>
                     {trip.name} ({format(new Date(trip.startDate), 'MMM d')} - {format(new Date(trip.endDate), 'MMM d, yyyy')})
                   </SelectItem>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -22,8 +22,8 @@ type Status = 'loading' | 'success' | 'cached' | 'list-imported' | 'error' | 'no
 export default function ShareTargetPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { state } = useTrip();
-  const tripId = state.activeTrip?.id;
+  const { activeTrip } = useActiveTrip();
+  const tripId = activeTrip?.id;
 
   const [status, setStatus] = useState<Status>('loading');
   const [message, setMessage] = useState('');

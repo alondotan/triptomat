@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { useFinance } from '@/context/FinanceContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,12 +23,13 @@ const EXPENSE_CATEGORIES = [
 ];
 
 export function CreateExpenseForm() {
-  const { state, addExpense } = useTrip();
+  const { activeTrip } = useActiveTrip();
+  const { addExpense } = useFinance();
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('other');
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState(state.activeTrip?.currency || 'ILS');
+  const [currency, setCurrency] = useState(activeTrip?.currency || 'ILS');
   const [date, setDate] = useState('');
   const [notes, setNotes] = useState('');
   const [isPaid, setIsPaid] = useState(false);
@@ -36,7 +38,7 @@ export function CreateExpenseForm() {
     setDescription('');
     setCategory('other');
     setAmount('');
-    setCurrency(state.activeTrip?.currency || 'ILS');
+    setCurrency(activeTrip?.currency || 'ILS');
     setDate('');
     setNotes('');
     setIsPaid(false);
@@ -44,10 +46,10 @@ export function CreateExpenseForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!state.activeTrip || !description.trim() || !amount) return;
+    if (!activeTrip || !description.trim() || !amount) return;
 
     await addExpense({
-      tripId: state.activeTrip.id,
+      tripId: activeTrip.id,
       description: description.trim(),
       category,
       amount: parseFloat(amount),

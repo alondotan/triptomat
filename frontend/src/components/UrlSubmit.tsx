@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
@@ -15,8 +15,8 @@ function isMapsUrl(url: string) {
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 export function UrlSubmit() {
-  const { state } = useTrip();
-  const tripId = state.activeTrip?.id;
+  const { activeTrip } = useActiveTrip();
+  const tripId = activeTrip?.id;
 
   const [url, setUrl] = useState('');
   const [status, setStatus] = useState<Status>('idle');

@@ -184,7 +184,7 @@ function canDeleteGroup(groups: Group[], index: number): boolean {
 
 // ─── Draggable potential item ──────────────────────────────────────────────────
 
-function DraggableItem({ item, isBeingDragged }: { item: Item; isBeingDragged: boolean }) {
+function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeingDragged: boolean; onRemove?: () => void }) {
   const { attributes, listeners, setNodeRef } = useDraggable({ id: item.id });
   return (
     <div
@@ -205,6 +205,16 @@ function DraggableItem({ item, isBeingDragged }: { item: Item; isBeingDragged: b
           <span className="text-sm font-medium">{item.label}</span>
           {item.remark && <span className="text-xs text-muted-foreground ml-1">{item.remark}</span>}
         </>
+      )}
+      {onRemove && (
+        <button
+          onPointerDown={e => e.stopPropagation()}
+          onClick={e => { e.stopPropagation(); onRemove(); }}
+          className="mr-auto shrink-0 p-1 rounded-md text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
+          title="הסר מהלו״ז"
+        >
+          <X size={14} />
+        </button>
       )}
     </div>
   );
@@ -1079,8 +1089,12 @@ export default function DndTestPage() {
     await updateItineraryDay(currentItDay.id, {
       activities: currentItDay.activities.filter(a => a.id !== entityId),
     });
+    const poi = pois.find(p => p.id === entityId);
+    if (poi && poi.status === 'matched') {
+      await updatePOI({ ...poi, status: 'candidate' });
+    }
     await refreshDays();
-  }, [currentItDay, refreshDays]);
+  }, [currentItDay, pois, updatePOI, refreshDays]);
 
   const createNewActivity = useCallback(async (data: Record<string, string>, createBookingMission?: boolean) => {
     if (!activeTrip) return;
@@ -1694,6 +1708,7 @@ export default function DndTestPage() {
                     key={item.id}
                     item={item}
                     isBeingDragged={activeId === item.id}
+                    onRemove={() => removeActivity(item.id)}
                   />
                 ))}
               </PotentialZone>

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -355,8 +355,7 @@ function LocationInput({ value, onChange, placeholder, suggestions }: {
 }
 
 function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookingMissionOption, countries }: QuickCreateFormProps) {
-  const { state } = useTrip();
-  const tripSitesHierarchy = state.tripSitesHierarchy;
+  const { tripSitesHierarchy } = useActiveTrip();
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [subCategory, setSubCategory] = useState('');

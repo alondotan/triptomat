@@ -7,7 +7,7 @@ import { ExternalLink, Mail, Plane, Hotel, MapPin, Trash2, ChevronDown, ChevronR
 import { SourceEmail } from '@/types/webhook';
 import { fetchSourceEmails, deleteSourceEmail } from '@/services/webhookService';
 import { useToast } from '@/hooks/use-toast';
-import { useTrip } from '@/context/TripContext';
+import { useTripList } from '@/context/TripListContext';
 import { format } from 'date-fns';
 
 // ── Unread tracking ───────────────────────────────────────────────────────────
@@ -42,7 +42,7 @@ function cleanSubject(subject: string): string {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function SourceEmailsDashboard() {
-  const { state } = useTrip();
+  const { trips } = useTripList();
   const { toast } = useToast();
   const [items, setItems] = useState<SourceEmail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -130,7 +130,7 @@ export function SourceEmailsDashboard() {
 
   const getTripName = (tripId?: string) => {
     if (!tripId) return null;
-    const trip = state.trips.find(t => t.id === tripId);
+    const trip = trips.find(t => t.id === tripId);
     return trip?.name;
   };
 

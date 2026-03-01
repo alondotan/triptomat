@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { usePOI } from '@/context/POIContext';
+import { useTransport } from '@/context/TransportContext';
+import { useContacts } from '@/context/ContactsContext';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +18,10 @@ import { TextSubmit } from '@/components/TextSubmit';
 import { MapListManager } from '@/components/MapListManager';
 
 const Recommendations = () => {
-  const { state } = useTrip();
+  const { activeTrip } = useActiveTrip();
+  const { pois } = usePOI();
+  const { transportation } = useTransport();
+  const { contacts } = useContacts();
   const { toast } = useToast();
   const [recommendations, setRecommendations] = useState<SourceRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,17 +38,17 @@ const Recommendations = () => {
   };
 
   useEffect(() => {
-    if (!state.activeTrip) return;
+    if (!activeTrip) return;
     setLoading(true);
-    fetchTripRecommendations(state.activeTrip.id)
+    fetchTripRecommendations(activeTrip.id)
       .then(setRecommendations)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [state.activeTrip?.id]);
+  }, [activeTrip?.id]);
 
   // Real-time: re-fetch when a new recommendation arrives for this trip
   useEffect(() => {
-    const tripId = state.activeTrip?.id;
+    const tripId = activeTrip?.id;
     if (!tripId) return;
     let channel: ReturnType<typeof import('@/integrations/supabase/client')['supabase']['channel']> | null = null;
     import('@/integrations/supabase/client').then(({ supabase }) => {
@@ -61,9 +67,9 @@ const Recommendations = () => {
         if (channel) supabase.removeChannel(channel);
       });
     };
-  }, [state.activeTrip?.id]);
+  }, [activeTrip?.id]);
 
-  if (!state.activeTrip) {
+  if (!activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
   }
 
@@ -108,9 +114,9 @@ const Recommendations = () => {
           const linkedContactIds = rec.linkedEntities
             .filter(e => e.entity_type === 'contact')
             .map(e => e.entity_id);
-          const linkedPois = state.pois.filter(p => linkedPoiIds.includes(p.id));
-          const linkedTransport = state.transportation.filter(t => linkedTransportIds.includes(t.id));
-          const linkedContacts = state.contacts.filter(c => linkedContactIds.includes(c.id));
+          const linkedPois = pois.filter(p => linkedPoiIds.includes(p.id));
+          const linkedTransport = transportation.filter(t => linkedTransportIds.includes(t.id));
+          const linkedContacts = contacts.filter(c => linkedContactIds.includes(c.id));
           const hasLinkedEntities = linkedPois.length > 0 || linkedTransport.length > 0 || linkedContacts.length > 0;
 
           return (

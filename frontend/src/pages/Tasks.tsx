@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { useItinerary } from '@/context/ItineraryContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,16 +12,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 const TasksPage = () => {
-  const { state, addMission, updateMission, deleteMission } = useTrip();
+  const { activeTrip } = useActiveTrip();
+  const { missions, addMission, updateMission, deleteMission } = useItinerary();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!state.activeTrip || !title) return;
+    if (!activeTrip || !title) return;
     await addMission({
-      tripId: state.activeTrip.id,
+      tripId: activeTrip.id,
       title,
       description: description || undefined,
       status: 'pending',
@@ -32,10 +34,10 @@ const TasksPage = () => {
     setOpen(false);
   };
 
-  const pendingMissions = state.missions.filter(m => m.status === 'pending');
-  const completedMissions = state.missions.filter(m => m.status === 'completed');
+  const pendingMissions = missions.filter(m => m.status === 'pending');
+  const completedMissions = missions.filter(m => m.status === 'completed');
 
-  if (!state.activeTrip) {
+  if (!activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
   }
 

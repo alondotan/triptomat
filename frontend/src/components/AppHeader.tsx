@@ -27,7 +27,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { MobileBottomNav } from './MobileBottomNav';
 import { useState, useEffect } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useTripList } from '@/context/TripListContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
 import { CreateTripForm } from './forms/CreateTripForm';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -91,7 +92,8 @@ export function AppHeader() {
   const [inboxUnread, setInboxUnread] = useState<number>(() => {
     try { return parseInt(localStorage.getItem('inbox_unread_count') || '0', 10); } catch { return 0; }
   });
-  const { state, dispatch, deleteCurrentTrip, updateCurrentTrip } = useTrip();
+  const { trips } = useTripList();
+  const { activeTrip, setActiveTrip, deleteCurrentTrip, updateCurrentTrip } = useActiveTrip();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -105,10 +107,10 @@ export function AppHeader() {
   };
 
   const openEditDialog = () => {
-    if (!state.activeTrip) return;
-    setEditName(state.activeTrip.name);
-    setEditStartDate(state.activeTrip.startDate);
-    setEditEndDate(state.activeTrip.endDate);
+    if (!activeTrip) return;
+    setEditName(activeTrip.name);
+    setEditStartDate(activeTrip.startDate);
+    setEditEndDate(activeTrip.endDate);
     setHamburgerOpen(false);
     setEditDialogOpen(true);
   };
@@ -119,13 +121,13 @@ export function AppHeader() {
   };
 
   const openPrefs = () => {
-    setPrefsCurrency(state.activeTrip?.currency || 'ILS');
+    setPrefsCurrency(activeTrip?.currency || 'ILS');
     setHamburgerOpen(false);
     setPrefsOpen(true);
   };
 
   const handleSavePrefs = async () => {
-    if (state.activeTrip) {
+    if (activeTrip) {
       await updateCurrentTrip({ currency: prefsCurrency });
       toast({ title: 'Preferences saved', description: `Currency set to ${prefsCurrency}` });
     }
@@ -149,7 +151,7 @@ export function AppHeader() {
           {/* Center: Trip name */}
           <div className="flex items-center justify-center min-w-0">
             <span className="font-bold text-base truncate">
-              {state.activeTrip?.name || 'Triptomat'}
+              {activeTrip?.name || 'Triptomat'}
             </span>
           </div>
 
@@ -180,20 +182,20 @@ export function AppHeader() {
             </div>
           </RouterNavLink>
 
-          {state.activeTrip ? (
+          {activeTrip ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-1 font-bold text-base sm:text-lg px-1 sm:px-2 max-w-[180px] sm:max-w-none truncate">
-                  {state.activeTrip.name}
+                  {activeTrip.name}
                   <ChevronDown size={16} className="text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56">
-                {state.trips.map(trip => (
+                {trips.map(trip => (
                   <DropdownMenuItem
                     key={trip.id}
-                    onClick={() => dispatch({ type: 'SET_ACTIVE_TRIP', payload: trip.id })}
-                    className={cn(trip.id === state.activeTrip?.id && 'bg-accent')}
+                    onClick={() => setActiveTrip(trip.id)}
+                    className={cn(trip.id === activeTrip?.id && 'bg-accent')}
                   >
                     <div className="flex flex-col">
                       <span>{trip.name}</span>
@@ -255,7 +257,7 @@ export function AppHeader() {
 
         {/* Desktop user actions */}
         <div className="hidden md:flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => { setPrefsCurrency(state.activeTrip?.currency || 'ILS'); setPrefsOpen(true); }} title="Preferences">
+          <Button variant="ghost" size="icon" onClick={() => { setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }} title="Preferences">
             <Settings size={18} />
           </Button>
           <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign out">
@@ -276,13 +278,13 @@ export function AppHeader() {
 
           <div className="flex flex-col overflow-y-auto">
             {/* Trip list */}
-            {state.trips.length > 0 && (
+            {trips.length > 0 && (
               <div className="py-3">
                 <p className="px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">My Trips</p>
-                {state.trips.map(trip => (
+                {trips.map(trip => (
                   <button
                     key={trip.id}
-                    onClick={() => { dispatch({ type: 'SET_ACTIVE_TRIP', payload: trip.id }); setHamburgerOpen(false); }}
+                    onClick={() => { setActiveTrip(trip.id); setHamburgerOpen(false); }}
                     className="w-full flex items-center justify-between px-6 py-2.5 text-sm hover:bg-muted transition-colors"
                   >
                     <div className="text-left">
@@ -291,7 +293,7 @@ export function AppHeader() {
                         <p className="text-xs text-muted-foreground">{trip.countries.join(', ')}</p>
                       )}
                     </div>
-                    {trip.id === state.activeTrip?.id && <Check size={16} className="text-primary shrink-0" />}
+                    {trip.id === activeTrip?.id && <Check size={16} className="text-primary shrink-0" />}
                   </button>
                 ))}
               </div>
@@ -304,7 +306,7 @@ export function AppHeader() {
               <p className="px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Trip</p>
               <button
                 onClick={openEditDialog}
-                disabled={!state.activeTrip}
+                disabled={!activeTrip}
                 className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40"
               >
                 <Pencil size={16} /> Edit Trip
@@ -317,7 +319,7 @@ export function AppHeader() {
               </button>
               <button
                 onClick={() => { setHamburgerOpen(false); setDeleteDialogOpen(true); }}
-                disabled={!state.activeTrip}
+                disabled={!activeTrip}
                 className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-destructive hover:bg-muted transition-colors disabled:opacity-40"
               >
                 <Trash2 size={16} /> Delete Trip
@@ -360,7 +362,7 @@ export function AppHeader() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Trip?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete "{state.activeTrip?.name}" and all its data. This action cannot be undone.
+              This will permanently delete "{activeTrip?.name}" and all its data. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

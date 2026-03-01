@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { useContacts } from '@/context/ContactsContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -97,15 +98,16 @@ function ContactForm({ contact, onSubmit, onCancel }: {
 }
 
 const ContactsPage = () => {
-  const { state, addContact, updateContact, deleteContact } = useTrip();
+  const { activeTrip } = useActiveTrip();
+  const { contacts, addContact, updateContact, deleteContact } = useContacts();
   const { toast } = useToast();
   const [createOpen, setCreateOpen] = useState(false);
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [search, setSearch] = useState('');
 
   const handleCreate = async (data: { name: string; role: ContactRole; phone?: string; email?: string; website?: string; notes?: string }) => {
-    if (!state.activeTrip) return;
-    await addContact({ tripId: state.activeTrip.id, ...data });
+    if (!activeTrip) return;
+    await addContact({ tripId: activeTrip.id, ...data });
     setCreateOpen(false);
   };
 
@@ -116,14 +118,14 @@ const ContactsPage = () => {
   };
 
   const handleImportFromPhone = async () => {
-    if (!state.activeTrip) return;
+    if (!activeTrip) return;
     try {
       const props = ['name', 'tel', 'email'];
       const contacts = await navigator.contacts!.select(props, { multiple: true });
       if (contacts && contacts.length > 0) {
         for (const c of contacts) {
           await addContact({
-            tripId: state.activeTrip.id,
+            tripId: activeTrip.id,
             name: c.name?.[0] || 'Unknown',
             role: 'other',
             phone: c.tel?.[0] || undefined,
@@ -139,7 +141,7 @@ const ContactsPage = () => {
     }
   };
 
-  const filtered = state.contacts.filter(c => {
+  const filtered = contacts.filter(c => {
     if (!search) return true;
     const q = search.toLowerCase();
     return c.name.toLowerCase().includes(q)
@@ -149,7 +151,7 @@ const ContactsPage = () => {
       || c.notes?.toLowerCase().includes(q);
   });
 
-  if (!state.activeTrip) {
+  if (!activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
   }
 
@@ -176,7 +178,7 @@ const ContactsPage = () => {
           </div>
         </div>
 
-        {state.contacts.length > 0 && (
+        {contacts.length > 0 && (
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -188,7 +190,7 @@ const ContactsPage = () => {
           </div>
         )}
 
-        {state.contacts.length === 0 && (
+        {contacts.length === 0 && (
           <Card>
             <CardContent className="py-8 text-center text-muted-foreground">
               <Users className="mx-auto mb-2 h-12 w-12 opacity-40" />
@@ -240,7 +242,7 @@ const ContactsPage = () => {
           </div>
         )}
 
-        {search && filtered.length === 0 && state.contacts.length > 0 && (
+        {search && filtered.length === 0 && contacts.length > 0 && (
           <p className="text-center text-sm text-muted-foreground py-4">No contacts match "{search}"</p>
         )}
       </div>

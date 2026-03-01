@@ -7,7 +7,9 @@ import { Button } from './ui/button';
 import { POIDetailDialog } from './POIDetailDialog';
 import { BookingActions } from './BookingActions';
 import { getSubCategoryEntry } from '@/lib/subCategoryConfig';
-import { useTrip } from '@/context/TripContext';
+import { usePOI } from '@/context/POIContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { useFinance } from '@/context/FinanceContext';
 import type { PointOfInterest, POIStatus } from '@/types/trip';
 
 function formatDuration(minutes: number): string {
@@ -48,7 +50,9 @@ export function POICard({
   onAddTransport,
   className = '',
 }: POICardProps) {
-  const { updatePOI, deletePOI, formatDualCurrency, state } = useTrip();
+  const { updatePOI, deletePOI } = usePOI();
+  const { activeTrip, sourceEmailMap } = useActiveTrip();
+  const { formatDualCurrency } = useFinance();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Level 2 inline edit state
@@ -290,7 +294,7 @@ export function POICard({
             <p className="font-semibold text-primary">
               {formatDualCurrency(
                 poi.details.cost.amount,
-                poi.details.cost.currency || state.activeTrip?.currency || 'USD',
+                poi.details.cost.currency || activeTrip?.currency || 'USD',
               )}
             </p>
           )}
@@ -330,7 +334,7 @@ export function POICard({
           <div className="pt-2 flex justify-between items-center">
             <BookingActions
               orderNumber={poi.details.order_number}
-              emailLinks={poi.sourceRefs.email_ids.map(id => ({ id, ...state.sourceEmailMap[id] }))}
+              emailLinks={poi.sourceRefs.email_ids.map(id => ({ id, ...sourceEmailMap[id] }))}
             />
             {editable && (
               <Button

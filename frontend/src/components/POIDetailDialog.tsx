@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { usePOI } from '@/context/POIContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +31,8 @@ interface RecommendationQuote {
 }
 
 export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProps) {
-  const { updatePOI, state } = useTrip();
+  const { updatePOI } = usePOI();
+  const { activeTrip } = useActiveTrip();
 
   // Editable fields
   const [name, setName] = useState(poi.name);
@@ -41,7 +43,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const [country, setCountry] = useState(poi.location.country || '');
   const [address, setAddress] = useState(poi.location.address || '');
   const [costAmount, setCostAmount] = useState(poi.details.cost?.amount?.toString() || '');
-  const [costCurrency, setCostCurrency] = useState(poi.details.cost?.currency || state.activeTrip?.currency || 'ILS');
+  const [costCurrency, setCostCurrency] = useState(poi.details.cost?.currency || activeTrip?.currency || 'ILS');
   const [isPaid, setIsPaid] = useState(poi.isPaid);
   const [notes, setNotes] = useState(poi.details.notes?.user_summary || '');
 
@@ -71,7 +73,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     setCountry(poi.location.country || '');
     setAddress(poi.location.address || '');
     setCostAmount(poi.details.cost?.amount?.toString() || '');
-    setCostCurrency(poi.details.cost?.currency || state.activeTrip?.currency || 'ILS');
+    setCostCurrency(poi.details.cost?.currency || activeTrip?.currency || 'ILS');
     setIsPaid(poi.isPaid);
     setNotes(poi.details.notes?.user_summary || '');
     setCheckinDate(poi.details.accommodation_details?.checkin?.date || '');

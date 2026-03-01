@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { usePOI } from '@/context/POIContext';
+import { useFinance } from '@/context/FinanceContext';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,13 +22,15 @@ const statusLabels: Record<string, string> = {
 };
 
 const AccommodationPage = () => {
-  const { state, formatDualCurrency, deletePOI } = useTrip();
+  const { activeTrip, sourceEmailMap } = useActiveTrip();
+  const { pois, deletePOI } = usePOI();
+  const { formatDualCurrency } = useFinance();
   const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const accommodations = useMemo(() => {
-    if (!state.activeTrip) return [];
-    let list = state.pois
+    if (!activeTrip) return [];
+    let list = pois
       .filter(p => p.category === 'accommodation')
       .sort((a, b) => {
         const dateA = a.details.accommodation_details?.checkin?.date || '';
@@ -46,9 +50,9 @@ const AccommodationPage = () => {
       );
     }
     return list;
-  }, [state.pois, state.activeTrip, searchQuery]);
+  }, [pois, activeTrip, searchQuery]);
 
-  if (!state.activeTrip) {
+  if (!activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
   }
 
@@ -75,7 +79,7 @@ const AccommodationPage = () => {
 
         {accommodations.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            {state.pois.filter(p => p.category === 'accommodation').length === 0
+            {pois.filter(p => p.category === 'accommodation').length === 0
               ? 'No accommodation added yet. Forward a booking confirmation email or add one manually.'
               : 'אין תוצאות לחיפוש הנוכחי.'}
           </div>
@@ -158,7 +162,7 @@ const AccommodationPage = () => {
                     {poi.details.cost && poi.details.cost.amount > 0 && (
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-primary">
-                          {formatDualCurrency(poi.details.cost.amount, poi.details.cost.currency || state.activeTrip?.currency || 'USD')}
+                          {formatDualCurrency(poi.details.cost.amount, poi.details.cost.currency || activeTrip?.currency || 'USD')}
                         </span>
                         {acc?.price_per_night && (
                           <span className="text-xs text-muted-foreground">
@@ -176,7 +180,7 @@ const AccommodationPage = () => {
                     <div className="pt-1 flex justify-between items-center">
                       <BookingActions
                         orderNumber={poi.details.order_number}
-                        emailLinks={poi.sourceRefs.email_ids.map(id => ({ id, ...state.sourceEmailMap[id] }))}
+                        emailLinks={poi.sourceRefs.email_ids.map(id => ({ id, ...sourceEmailMap[id] }))}
                       />
                       <Button
                         variant="ghost"

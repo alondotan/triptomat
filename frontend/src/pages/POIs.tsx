@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { usePOI } from '@/context/POIContext';
+import { useItinerary } from '@/context/ItineraryContext';
 import { AppLayout } from '@/components/AppLayout';
 import { Badge } from '@/components/ui/badge';
 import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
@@ -10,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
-import type { PointOfInterest, POIStatus } from '@/types/trip';
+import type { PointOfInterest, POIStatus, POICategory } from '@/types/trip';
 import { useCountrySites, type SiteNode } from '@/hooks/useCountrySites';
 import { POICard } from '@/components/POICard';
 
@@ -37,8 +39,11 @@ const statusLabels: Record<string, string> = {
 type GroupBy = 'category' | 'location' | 'status';
 
 const POIsPage = () => {
-  const { state, mergePOIs } = useTrip();
+  const { activeTrip, tripSitesHierarchy } = useActiveTrip();
+  const { pois, mergePOIs } = usePOI();
+  const { itineraryDays } = useItinerary();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
+  const [categoryFilters, setCategoryFilters] = useState<Set<POICategory | 'all'>>(new Set(['all']));
   const [groupBy, setGroupBy] = useState<GroupBy>('category');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -64,16 +69,16 @@ const POIsPage = () => {
   const selectedMergePOIs = useMemo(() => {
     if (selectedForMerge.size !== 2) return null;
     const ids = Array.from(selectedForMerge);
-    const a = state.pois.find(p => p.id === ids[0]);
-    const b = state.pois.find(p => p.id === ids[1]);
+    const a = pois.find(p => p.id === ids[0]);
+    const b = pois.find(p => p.id === ids[1]);
     if (!a || !b) return null;
     return [a, b] as [PointOfInterest, PointOfInterest];
-  }, [selectedForMerge, state.pois]);
+  }, [selectedForMerge, pois]);
 
   // Build a map: poiId -> list of day numbers it's assigned to
   const poiDaysMap = useMemo(() => {
     const map: Record<string, number[]> = {};
-    for (const day of state.itineraryDays) {
+    for (const day of itineraryDays) {
       const poiIds: string[] = [];
       for (const opt of day.accommodationOptions || []) poiIds.push(opt.poi_id);
       for (const act of day.activities || []) if (act.type === 'poi') poiIds.push(act.id);
@@ -85,7 +90,7 @@ const POIsPage = () => {
     // Sort day numbers
     for (const id of Object.keys(map)) map[id].sort((a, b) => a - b);
     return map;
-  }, [state.itineraryDays]);
+  }, [itineraryDays]);
 
   const toggleStatusFilter = (s: POIStatus | 'all') => {
     setStatusFilters(prev => {
@@ -93,6 +98,16 @@ const POIsPage = () => {
       if (s === 'all') return new Set(['all']);
       next.delete('all');
       if (next.has(s)) next.delete(s); else next.add(s);
+      return next.size === 0 ? new Set(['all']) : next;
+    });
+  };
+
+  const toggleCategoryFilter = (c: POICategory | 'all') => {
+    setCategoryFilters(prev => {
+      const next = new Set(prev);
+      if (c === 'all') return new Set(['all']);
+      next.delete('all');
+      if (next.has(c)) next.delete(c); else next.add(c);
       return next.size === 0 ? new Set(['all']) : next;
     });
   };
@@ -118,8 +133,8 @@ const POIsPage = () => {
     });
   };
 
-  const countries = state.activeTrip?.countries || [];
-  const { sites } = useCountrySites(countries, state.tripSitesHierarchy as SiteNode[]);
+  const countries = activeTrip?.countries || [];
+  const { sites } = useCountrySites(countries, tripSitesHierarchy as SiteNode[]);
 
   // Build a lookup: lowercase city name → region label (its parent in hierarchy)
   const cityRegionMap = useMemo(() => {
@@ -132,11 +147,14 @@ const POIsPage = () => {
     return map;
   }, [sites]);
 
-  const nonAccommodationPois = useMemo(() => state.pois.filter(p => p.category !== 'accommodation'), [state.pois]);
+  const nonAccommodationPois = useMemo(() => pois.filter(p => p.category !== 'accommodation'), [pois]);
 
   const filteredPois = useMemo(() => {
-    if (!state.activeTrip) return [];
+    if (!activeTrip) return [];
     let pois = statusFilters.has('all') ? nonAccommodationPois : nonAccommodationPois.filter(p => statusFilters.has(p.status));
+    if (!categoryFilters.has('all')) {
+      pois = pois.filter(p => categoryFilters.has(p.category));
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       pois = pois.filter(p =>
@@ -149,7 +167,7 @@ const POIsPage = () => {
       );
     }
     return pois;
-  }, [nonAccommodationPois, statusFilters, searchQuery, state.activeTrip]);
+  }, [nonAccommodationPois, statusFilters, categoryFilters, searchQuery, activeTrip]);
 
   const grouped = useMemo(() => {
     const groups: Record<string, PointOfInterest[]> = {};
@@ -194,7 +212,16 @@ const POIsPage = () => {
     return counts;
   }, [nonAccommodationPois]);
 
-  if (!state.activeTrip) {
+  // Category counts for filter badges
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of nonAccommodationPois) {
+      counts[p.category] = (counts[p.category] || 0) + 1;
+    }
+    return counts;
+  }, [nonAccommodationPois]);
+
+  if (!activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
   }
 
@@ -252,6 +279,31 @@ const POIsPage = () => {
                     onClick={() => toggleStatusFilter(s)}
                   >
                     {statusLabels[s]} ({statusCounts[s]})
+                  </Badge>
+                ) : null
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 flex-wrap">
+              <Badge
+                variant={categoryFilters.has('all') ? 'default' : 'outline'}
+                className="cursor-pointer text-xs"
+                onClick={() => toggleCategoryFilter('all')}
+              >
+                הכל
+              </Badge>
+              {(['attraction', 'eatery', 'service'] as POICategory[]).map(c => (
+                categoryCounts[c] ? (
+                  <Badge
+                    key={c}
+                    variant={categoryFilters.has(c) ? 'default' : 'outline'}
+                    className="cursor-pointer text-xs gap-1"
+                    onClick={() => toggleCategoryFilter(c)}
+                  >
+                    {categoryIcons[c]}
+                    {categoryLabels[c]} ({categoryCounts[c]})
                   </Badge>
                 ) : null
               ))}

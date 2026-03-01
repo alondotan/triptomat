@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useTrip } from '@/context/TripContext';
+import { useTripList } from '@/context/TripListContext';
 import { CountrySelector } from '@/components/CountrySelector';
 import { Plus } from 'lucide-react';
 
@@ -15,7 +15,7 @@ interface CreateTripFormProps {
 }
 
 export function CreateTripForm({ trigger, open: openProp, onOpenChange }: CreateTripFormProps) {
-  const { createNewTrip } = useTrip();
+  const { createNewTrip } = useTripList();
   const [openInternal, setOpenInternal] = useState(false);
   const open = openProp !== undefined ? openProp : openInternal;
   const setOpen = (v: boolean) => { setOpenInternal(v); onOpenChange?.(v); };

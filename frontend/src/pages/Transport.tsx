@@ -1,5 +1,8 @@
 import { useState, useMemo } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { useTransport } from '@/context/TransportContext';
+import { useItinerary } from '@/context/ItineraryContext';
+import { useFinance } from '@/context/FinanceContext';
 import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +46,10 @@ function formatDateTime(iso: string): string {
 }
 
 const TransportPage = () => {
-  const { state, formatCurrency, formatDualCurrency, deleteTransportation, mergeTransportation } = useTrip();
+  const { activeTrip, sourceEmailMap } = useActiveTrip();
+  const { transportation, deleteTransportation, mergeTransportation } = useTransport();
+  const { itineraryDays } = useItinerary();
+  const { formatCurrency, formatDualCurrency } = useFinance();
   const [selectedTransport, setSelectedTransport] = useState<Transportation | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,26 +70,26 @@ const TransportPage = () => {
   const selectedMergeTransports = useMemo(() => {
     if (selectedForMerge.size !== 2) return null;
     const ids = Array.from(selectedForMerge);
-    const a = state.transportation.find(t => t.id === ids[0]);
-    const b = state.transportation.find(t => t.id === ids[1]);
+    const a = transportation.find(t => t.id === ids[0]);
+    const b = transportation.find(t => t.id === ids[1]);
     if (!a || !b) return null;
     return [a, b] as [Transportation, Transportation];
-  }, [selectedForMerge, state.transportation]);
+  }, [selectedForMerge, transportation]);
   // Build a map: transportId_segmentId -> dayNumber/date
   const segmentDayMap = useMemo(() => {
     const map: Record<string, { dayNumber: number; date?: string }> = {};
-    state.itineraryDays.forEach(day => {
+    itineraryDays.forEach(day => {
       day.transportationSegments.forEach(seg => {
         const key = `${seg.transportation_id}_${seg.segment_id || ''}`;
         map[key] = { dayNumber: day.dayNumber, date: day.date };
       });
     });
     return map;
-  }, [state.itineraryDays]);
+  }, [itineraryDays]);
 
   // Filter and sort
   const filteredTransport = useMemo(() => {
-    let items = categoryFilter === 'all' ? state.transportation : state.transportation.filter(t => t.category === categoryFilter);
+    let items = categoryFilter === 'all' ? transportation : transportation.filter(t => t.category === categoryFilter);
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       items = items.filter(t =>
@@ -105,14 +111,14 @@ const TransportPage = () => {
       const bDate = b.segments[0]?.departure_time || '';
       return aDate.localeCompare(bDate);
     });
-  }, [state.transportation, categoryFilter, searchQuery]);
+  }, [transportation, categoryFilter, searchQuery]);
 
   const categoryOptions = useMemo(() => {
-    const cats = new Set(state.transportation.map(t => t.category));
+    const cats = new Set(transportation.map(t => t.category));
     return Array.from(cats);
-  }, [state.transportation]);
+  }, [transportation]);
 
-  if (!state.activeTrip) {
+  if (!activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
   }
 
@@ -122,7 +128,7 @@ const TransportPage = () => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold">Transportation</h2>
-            <p className="text-muted-foreground">{filteredTransport.length} / {state.transportation.length} items</p>
+            <p className="text-muted-foreground">{filteredTransport.length} / {transportation.length} items</p>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -232,7 +238,7 @@ const TransportPage = () => {
                   {/* Cost & Booking */}
                   <div className="flex flex-wrap gap-4">
                     {t.cost.total_amount > 0 && (
-                      <p className="font-semibold text-primary">{formatDualCurrency(t.cost.total_amount, t.cost.currency || state.activeTrip?.currency || 'USD')}</p>
+                      <p className="font-semibold text-primary">{formatDualCurrency(t.cost.total_amount, t.cost.currency || activeTrip?.currency || 'USD')}</p>
                     )}
                     {t.booking.carrier_name && (
                       <p className="text-xs text-muted-foreground">Carrier: {t.booking.carrier_name}</p>
@@ -254,7 +260,7 @@ const TransportPage = () => {
                     <div className="pt-1 flex justify-between items-center">
                       <BookingActions
                         orderNumber={t.booking.order_number}
-                        emailLinks={t.sourceRefs.email_ids.map(id => ({ id, ...state.sourceEmailMap[id] }))}
+                        emailLinks={t.sourceRefs.email_ids.map(id => ({ id, ...sourceEmailMap[id] }))}
                       />
                       <Button variant="ghost" size="sm" className="text-destructive h-7" onClick={(e) => { e.stopPropagation(); deleteTransportation(t.id); }}>
                         <Trash2 size={14} className="mr-1" /> Delete
@@ -268,7 +274,7 @@ const TransportPage = () => {
 
           {filteredTransport.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
-              {state.transportation.length === 0 ? 'אין פריטי תחבורה עדיין.' : 'אין תוצאות לסינון הנוכחי.'}
+              {transportation.length === 0 ? 'אין פריטי תחבורה עדיין.' : 'אין תוצאות לסינון הנוכחי.'}
             </div>
           )}
         </div>

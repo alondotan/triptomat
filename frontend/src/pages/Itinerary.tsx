@@ -1,5 +1,9 @@
 import { useMemo } from 'react';
-import { useTrip } from '@/context/TripContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import { useItinerary } from '@/context/ItineraryContext';
+import { usePOI } from '@/context/POIContext';
+import { useTransport } from '@/context/TransportContext';
+import { useFinance } from '@/context/FinanceContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AppLayout } from '@/components/AppLayout';
@@ -8,17 +12,21 @@ import { SubCategoryIcon } from '@/components/SubCategoryIcon';
 import { format, eachDayOfInterval, parseISO } from 'date-fns';
 
 const ItineraryPage = () => {
-  const { state, formatCurrency } = useTrip();
+  const { activeTrip } = useActiveTrip();
+  const { itineraryDays } = useItinerary();
+  const { pois } = usePOI();
+  const { transportation } = useTransport();
+  const { formatCurrency } = useFinance();
 
   const tripDays = useMemo(() => {
-    if (!state.activeTrip) return [];
+    if (!activeTrip) return [];
     return eachDayOfInterval({
-      start: parseISO(state.activeTrip.startDate),
-      end: parseISO(state.activeTrip.endDate),
+      start: parseISO(activeTrip.startDate),
+      end: parseISO(activeTrip.endDate),
     });
-  }, [state.activeTrip?.startDate, state.activeTrip?.endDate]);
+  }, [activeTrip?.startDate, activeTrip?.endDate]);
 
-  if (!state.activeTrip) {
+  if (!activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
   }
 
@@ -30,28 +38,28 @@ const ItineraryPage = () => {
             <CalendarDays size={24} /> סיכום מסלול
           </h2>
           <p className="text-muted-foreground">
-            {state.activeTrip.name} • {format(parseISO(state.activeTrip.startDate), 'MMM d')} – {format(parseISO(state.activeTrip.endDate), 'MMM d, yyyy')}
+            {activeTrip.name} • {format(parseISO(activeTrip.startDate), 'MMM d')} – {format(parseISO(activeTrip.endDate), 'MMM d, yyyy')}
           </p>
         </div>
 
         <div className="space-y-3">
           {tripDays.map((day, idx) => {
             const dayNum = idx + 1;
-            const itDay = state.itineraryDays.find(d => d.dayNumber === dayNum);
+            const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
 
             // Resolve linked entities
             const accommodations = (itDay?.accommodationOptions || [])
-              .map(opt => state.pois.find(p => p.id === opt.poi_id))
+              .map(opt => pois.find(p => p.id === opt.poi_id))
               .filter(Boolean);
 
             const activities = (itDay?.activities || [])
               .filter(a => a.type === 'poi')
               .sort((a, b) => a.order - b.order)
-              .map(a => state.pois.find(p => p.id === a.id))
+              .map(a => pois.find(p => p.id === a.id))
               .filter(Boolean);
 
             const transports = (itDay?.transportationSegments || [])
-              .map(seg => state.transportation.find(t => t.id === seg.transportation_id))
+              .map(seg => transportation.find(t => t.id === seg.transportation_id))
               .filter(Boolean);
 
             const hasContent = accommodations.length > 0 || activities.length > 0 || transports.length > 0;
