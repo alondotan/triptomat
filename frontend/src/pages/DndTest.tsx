@@ -337,7 +337,7 @@ function SortableScheduledItem({
         transform: transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
         transition,
       }}
-      className={`flex items-center gap-2.5 bg-card border rounded-lg px-3 py-2.5 transition-opacity ${
+      className={`flex items-center gap-1.5 sm:gap-2.5 bg-card border rounded-lg px-1.5 sm:px-3 py-2 sm:py-2.5 transition-opacity ${
         isLocked ? 'opacity-70' : ''
       } ${isDragging ? 'opacity-40' : ''}`}
     >
@@ -444,27 +444,31 @@ function TimeBlockSectionHeader({ item, canDelete, onUpdate, onDelete }: {
   }
 
   return (
-    <div className="flex items-center gap-1 py-0.5 px-1">
-      <span className="text-[10px] font-semibold tracking-widest text-primary/80 uppercase flex-1">{item.label}</span>
-      {item.time && (
-        <span className="text-[10px] text-primary/50 font-mono shrink-0">{item.time}</span>
-      )}
-      <button
-        type="button"
-        onClick={() => { setEditLabel(item.label); setEditTime(item.time ?? ''); setIsEditing(true); }}
-        className="p-0.5 text-muted-foreground/40 hover:text-primary transition-colors"
-      >
-        <Pencil size={11} />
-      </button>
-      {canDelete !== false && (
+    <div className="flex flex-col gap-0.5 py-0.5 px-1">
+      <div className="flex items-center gap-1">
+        <span className="text-[10px] font-semibold tracking-widest text-primary/80 uppercase flex-1">{item.label}</span>
+        {item.time && (
+          <span className="text-[10px] text-primary/50 font-mono shrink-0">{item.time}</span>
+        )}
+      </div>
+      <div className="flex items-center gap-0.5">
         <button
           type="button"
-          onClick={onDelete}
-          className="p-0.5 text-muted-foreground/40 hover:text-destructive transition-colors"
+          onClick={() => { setEditLabel(item.label); setEditTime(item.time ?? ''); setIsEditing(true); }}
+          className="p-0.5 text-muted-foreground/40 hover:text-primary transition-colors"
         >
-          <Trash2 size={11} />
+          <Pencil size={11} />
         </button>
-      )}
+        {canDelete !== false && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="p-0.5 text-muted-foreground/40 hover:text-destructive transition-colors"
+          >
+            <Trash2 size={11} />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -547,24 +551,26 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
           </button>
         </div>
       ) : (
-        <div className="flex items-center gap-1 py-0.5 px-1">
-          <span className="text-[10px] font-semibold tracking-widest text-primary/70 uppercase flex-1">{label}</span>
-          <button
-            type="button"
-            onClick={() => { setEditLabel(label); setEditTime(''); setIsEditing(true); }}
-            className="p-0.5 text-muted-foreground/40 hover:text-primary transition-colors"
-          >
-            <Pencil size={11} />
-          </button>
-          {canDelete && (
+        <div className="flex flex-col gap-0.5 py-0.5 px-1">
+          <span className="text-[10px] font-semibold tracking-widest text-primary/70 uppercase">{label}</span>
+          <div className="flex items-center gap-0.5">
             <button
               type="button"
-              onClick={onDeleteGroup}
-              className="p-0.5 text-muted-foreground/40 hover:text-destructive transition-colors"
+              onClick={() => { setEditLabel(label); setEditTime(''); setIsEditing(true); }}
+              className="p-0.5 text-muted-foreground/40 hover:text-primary transition-colors"
             >
-              <Trash2 size={11} />
+              <Pencil size={11} />
             </button>
-          )}
+            {canDelete && (
+              <button
+                type="button"
+                onClick={onDeleteGroup}
+                className="p-0.5 text-muted-foreground/40 hover:text-destructive transition-colors"
+              >
+                <Trash2 size={11} />
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -693,7 +699,7 @@ function ScheduleZone({ children, activePotentialDrag, isEmpty }: {
   return (
     <div
       ref={setNodeRef}
-      className={`border-2 rounded-xl p-3 transition-all ${
+      className={`border-2 rounded-xl p-1.5 sm:p-3 transition-all ${
         isOver && isEmpty
           ? 'border-primary/60 border-dashed bg-primary/5 min-h-[80px]'
           : activePotentialDrag && isEmpty
@@ -1601,7 +1607,7 @@ export default function DndTestPage() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col gap-3 w-full px-4 h-full" dir="rtl">
+      <div className="flex flex-col gap-3 w-full px-1 sm:px-4 h-full" dir="rtl">
 
         <DndContext
           sensors={sensors}
@@ -1783,15 +1789,15 @@ export default function DndTestPage() {
 
                   <div className="relative space-y-0.5">
                     {/* Vertical timeline line */}
-                    <div className="absolute right-2.5 top-0 bottom-0 w-px bg-border/60 pointer-events-none" />
+                    <div className="absolute right-1.5 sm:right-2.5 top-0 bottom-0 w-px bg-border/60 pointer-events-none" />
 
                     {/* Gap before first group */}
                     <DropGap index={0} active={isAnyDragging} />
 
                     {groups.map((group, gi) => (
                       <div key={group.id} className="relative space-y-0.5">
-                        <div className="absolute right-1.5 top-[8px] w-2 h-2 rounded-full bg-orange-400 pointer-events-none z-10" />
-                        <div className="pr-6">
+                        <div className="absolute right-0.5 sm:right-1.5 top-[8px] w-2 h-2 rounded-full bg-orange-400 pointer-events-none z-10" />
+                        <div className="pr-4 sm:pr-6">
                           <GroupFrame
                             group={group}
                             label={groupLabel(groups, gi)}
