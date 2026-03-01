@@ -13,6 +13,11 @@ function syncSubCategories(): Plugin {
   const dest = path.resolve(__dirname, "public/data/sub-categories.json");
 
   function copy() {
+    if (!fs.existsSync(src)) {
+      // On Vercel the root is frontend/ so ../config.json doesn't exist;
+      // the checked-in public/data/sub-categories.json is used instead.
+      return;
+    }
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     fs.copyFileSync(src, dest);
   }
