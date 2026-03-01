@@ -1,6 +1,6 @@
-import { AppLayout } from '@/components/AppLayout';
-import { PendingInbox } from '@/components/PendingInbox';
-import { SourceEmailsDashboard } from '@/components/SourceEmailsDashboard';
+import { AppLayout } from '@/components/layout';
+import { PendingInbox } from '@/components/inbox/PendingInbox';
+import { SourceEmailsDashboard } from '@/components/inbox/SourceEmailsDashboard';
 
 const InboxPage = () => {
   return (

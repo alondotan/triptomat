@@ -5,14 +5,14 @@ import { useTransport } from '@/context/TransportContext';
 import { useItinerary } from '@/context/ItineraryContext';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AppLayout } from '@/components/AppLayout';
+import { AppLayout } from '@/components/layout';
 import { CreateTripForm } from '@/components/forms/CreateTripForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { CalendarDays, Pencil } from 'lucide-react';
 import { format, eachDayOfInterval, parseISO } from 'date-fns';
-import * as tripService from '@/services/tripService';
+import { createItineraryDay, updateItineraryDay } from '@/services/itineraryService';
 import { type LocationSuggestion } from '@/components/DaySection';
-import { LocationContextPicker } from '@/components/LocationContextPicker';
+import { LocationContextPicker } from '@/components/shared/LocationContextPicker';
 import { ItineraryDayContent, DragPreview } from '@/components/ItineraryDayContent';
 import {
   DndContext,
@@ -433,7 +433,7 @@ const Index = () => {
     if (currentItDay) return currentItDay;
     if (!activeTrip) return null;
     const day = tripDays[selectedDayNum - 1];
-    return await tripService.createItineraryDay({
+    return await createItineraryDay({
       tripId: activeTrip.id,
       dayNumber: selectedDayNum,
       date: day ? format(day, 'yyyy-MM-dd') : undefined,
@@ -465,7 +465,7 @@ const Index = () => {
         let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
         if (!targetDay && activeTrip) {
           const day = tripDays[dayNum - 1];
-          targetDay = await tripService.createItineraryDay({
+          targetDay = await createItineraryDay({
             tripId: activeTrip.id,
             dayNumber: dayNum,
             date: day ? format(day, 'yyyy-MM-dd') : undefined,
@@ -478,7 +478,7 @@ const Index = () => {
         if (targetDay) {
           const existing = targetDay.accommodationOptions || [];
           if (!existing.some(o => o.poi_id === entityId)) {
-            await tripService.updateItineraryDay(targetDay.id, {
+            await updateItineraryDay(targetDay.id, {
               accommodationOptions: [...existing, { is_selected: false, poi_id: entityId }],
             });
           }
@@ -491,7 +491,7 @@ const Index = () => {
     } else if (entityType === 'activity') {
       const existing = itDay.activities || [];
       if (existing.some(a => a.id === entityId)) return;
-      await tripService.updateItineraryDay(itDay.id, {
+      await updateItineraryDay(itDay.id, {
         activities: [...existing, { order: existing.length + 1, type: 'poi', id: entityId }],
       });
       const poi = pois.find(p => p.id === entityId);
@@ -501,7 +501,7 @@ const Index = () => {
     } else if (entityType === 'transport') {
       const existing = itDay.transportationSegments || [];
       if (existing.some(s => s.transportation_id === entityId)) return;
-      await tripService.updateItineraryDay(itDay.id, {
+      await updateItineraryDay(itDay.id, {
         transportationSegments: [...existing, { is_selected: true, transportation_id: entityId }],
       });
     }
@@ -515,15 +515,15 @@ const Index = () => {
   ) => {
     if (!currentItDay) return;
     if (entityType === 'accommodation') {
-      await tripService.updateItineraryDay(currentItDay.id, {
+      await updateItineraryDay(currentItDay.id, {
         accommodationOptions: currentItDay.accommodationOptions.filter(o => o.poi_id !== entityId),
       });
     } else if (entityType === 'activity') {
-      await tripService.updateItineraryDay(currentItDay.id, {
+      await updateItineraryDay(currentItDay.id, {
         activities: currentItDay.activities.filter(a => a.id !== entityId),
       });
     } else if (entityType === 'transport') {
-      await tripService.updateItineraryDay(currentItDay.id, {
+      await updateItineraryDay(currentItDay.id, {
         transportationSegments: currentItDay.transportationSegments.filter(s => s.transportation_id !== entityId),
       });
     }
@@ -538,7 +538,7 @@ const Index = () => {
     const updated = currentItDay.activities.map(a =>
       a.id === activityId ? { ...a, schedule_state: scheduleState } : a
     );
-    await tripService.updateItineraryDay(currentItDay.id, { activities: updated });
+    await updateItineraryDay(currentItDay.id, { activities: updated });
     await refreshDays();
   }, [currentItDay, refreshDays]);
 
@@ -549,7 +549,7 @@ const Index = () => {
       return existing ? { ...existing, order: idx + 1 } : null;
     }).filter((a): a is NonNullable<typeof a> => a !== null);
     const others = currentItDay.activities.filter(a => !orderedIds.includes(a.id));
-    await tripService.updateItineraryDay(currentItDay.id, { activities: [...reordered, ...others] });
+    await updateItineraryDay(currentItDay.id, { activities: [...reordered, ...others] });
     await refreshDays();
   }, [currentItDay, refreshDays]);
 
@@ -604,7 +604,7 @@ const Index = () => {
     }).filter((a): a is NonNullable<typeof a> => a !== null);
     const others = withToggled.filter(a => !orderedIds.includes(a.id));
 
-    await tripService.updateItineraryDay(currentItDay.id, { activities: [...reordered, ...others] });
+    await updateItineraryDay(currentItDay.id, { activities: [...reordered, ...others] });
     await refreshDays();
   }, [currentItDay, scheduledActivityOrder, activityInsertPoint, refreshDays]);
 
@@ -635,11 +635,11 @@ const Index = () => {
   ) => {
     if (!currentItDay || !activeTrip) return;
     const updatedActivities = currentItDay.activities.filter(a => a.id !== activityId);
-    await tripService.updateItineraryDay(currentItDay.id, { activities: updatedActivities });
+    await updateItineraryDay(currentItDay.id, { activities: updatedActivities });
     let targetDay = itineraryDays.find(d => d.dayNumber === targetDayNum);
     if (!targetDay) {
       const day = tripDays[targetDayNum - 1];
-      targetDay = await tripService.createItineraryDay({
+      targetDay = await createItineraryDay({
         tripId: activeTrip.id,
         dayNumber: targetDayNum,
         date: day ? format(day, 'yyyy-MM-dd') : undefined,
@@ -651,7 +651,7 @@ const Index = () => {
     }
     if (targetDay) {
       const existing = targetDay.activities || [];
-      await tripService.updateItineraryDay(targetDay.id, {
+      await updateItineraryDay(targetDay.id, {
         activities: [...existing, { order: existing.length + 1, type: 'poi' as const, id: activityId }],
       });
     }
@@ -664,7 +664,7 @@ const Index = () => {
       ...o,
       is_selected: o.poi_id === poiId ? selected : false,
     }));
-    await tripService.updateItineraryDay(currentItDay.id, { accommodationOptions: updated });
+    await updateItineraryDay(currentItDay.id, { accommodationOptions: updated });
     await refreshDays();
   }, [currentItDay, refreshDays]);
 
@@ -745,7 +745,7 @@ const Index = () => {
       let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
       if (!targetDay && activeTrip) {
         const day = tripDays[dayNum - 1];
-        targetDay = await tripService.createItineraryDay({
+        targetDay = await createItineraryDay({
           tripId: activeTrip.id,
           dayNumber: dayNum,
           date: day ? format(day, 'yyyy-MM-dd') : undefined,
@@ -756,7 +756,7 @@ const Index = () => {
         });
       }
       if (targetDay) {
-        await tripService.updateItineraryDay(targetDay.id, { locationContext });
+        await updateItineraryDay(targetDay.id, { locationContext });
       }
     }
     setEditingLocation(false);

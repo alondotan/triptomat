@@ -6,9 +6,9 @@ import { useTransport } from '@/context/TransportContext';
 import { useFinance } from '@/context/FinanceContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AppLayout } from '@/components/AppLayout';
+import { AppLayout } from '@/components/layout';
 import { Building2, MapPin, Plane, CalendarDays } from 'lucide-react';
-import { SubCategoryIcon } from '@/components/SubCategoryIcon';
+import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { format, eachDayOfInterval, parseISO } from 'date-fns';
 
 const ItineraryPage = () => {

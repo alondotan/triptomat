@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Merge, Loader2 } from 'lucide-react';
-import { SubCategoryIcon } from './SubCategoryIcon';
+import { SubCategoryIcon } from './shared/SubCategoryIcon';
 import type { PointOfInterest, Transportation } from '@/types/trip';
 
 const statusLabels: Record<string, string> = {

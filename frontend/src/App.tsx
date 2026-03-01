@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { TripProvider } from "./context/TripProviderComposed";
 import { AuthGuard } from "./components/AuthGuard";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import AuthPage from "./pages/Auth";
 
 const ItineraryPage = lazy(() => import("./pages/Itinerary"));
@@ -26,40 +27,42 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={<div className="flex items-center justify-center h-screen"><Loader2 className="animate-spin h-8 w-8" /></div>}>
-          <Routes>
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/*" element={
-              <AuthGuard>
-                <TripProvider>
-                  <Routes>
-                    <Route path="/" element={<DndTestPage />} />
-                    <Route path="/itinerary" element={<ItineraryPage />} />
-                    <Route path="/pois" element={<POIsPage />} />
-                    <Route path="/transport" element={<TransportPage />} />
-                    <Route path="/recommendations" element={<RecommendationsPage />} />
-                    <Route path="/map" element={<MapPage />} />
-                    <Route path="/budget" element={<BudgetPage />} />
-                    <Route path="/tasks" element={<TasksPage />} />
-                    <Route path="/inbox" element={<InboxPage />} />
-                    <Route path="/accommodation" element={<AccommodationPage />} />
-                    <Route path="/contacts" element={<ContactsPage />} />
-                    <Route path="/share-target" element={<ShareTargetPage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </TripProvider>
-              </AuthGuard>
-            } />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<div className="flex items-center justify-center h-screen"><Loader2 className="animate-spin h-8 w-8" /></div>}>
+            <Routes>
+              <Route path="/auth" element={<ErrorBoundary><AuthPage /></ErrorBoundary>} />
+              <Route path="/*" element={
+                <AuthGuard>
+                  <TripProvider>
+                    <Routes>
+                      <Route path="/" element={<ErrorBoundary><DndTestPage /></ErrorBoundary>} />
+                      <Route path="/itinerary" element={<ErrorBoundary><ItineraryPage /></ErrorBoundary>} />
+                      <Route path="/pois" element={<ErrorBoundary><POIsPage /></ErrorBoundary>} />
+                      <Route path="/transport" element={<ErrorBoundary><TransportPage /></ErrorBoundary>} />
+                      <Route path="/recommendations" element={<ErrorBoundary><RecommendationsPage /></ErrorBoundary>} />
+                      <Route path="/map" element={<ErrorBoundary><MapPage /></ErrorBoundary>} />
+                      <Route path="/budget" element={<ErrorBoundary><BudgetPage /></ErrorBoundary>} />
+                      <Route path="/tasks" element={<ErrorBoundary><TasksPage /></ErrorBoundary>} />
+                      <Route path="/inbox" element={<ErrorBoundary><InboxPage /></ErrorBoundary>} />
+                      <Route path="/accommodation" element={<ErrorBoundary><AccommodationPage /></ErrorBoundary>} />
+                      <Route path="/contacts" element={<ErrorBoundary><ContactsPage /></ErrorBoundary>} />
+                      <Route path="/share-target" element={<ErrorBoundary><ShareTargetPage /></ErrorBoundary>} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </TripProvider>
+                </AuthGuard>
+              } />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

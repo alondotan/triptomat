@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plane, Building2, MapPin, DollarSign, Wrench, Trash2, Pencil, X, Check, CheckCircle2, Clock } from 'lucide-react';
-import { AppLayout } from '@/components/AppLayout';
+import { AppLayout } from '@/components/layout';
 import { CreateExpenseForm } from '@/components/forms/CreateExpenseForm';
 import type { Expense } from '@/types/trip';
 

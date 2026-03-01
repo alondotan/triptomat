@@ -4,7 +4,7 @@ import L from 'leaflet';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
-import { AppLayout } from '@/components/AppLayout';
+import { AppLayout } from '@/components/layout';
 import 'leaflet/dist/leaflet.css';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;

@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { SubCategoryIcon } from '@/components/SubCategoryIcon';
+import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { DaySection, type LocationSuggestion } from '@/components/DaySection';
 import type { PointOfInterest } from '@/types/trip';
 import type { SiteNode } from '@/hooks/useCountrySites';
