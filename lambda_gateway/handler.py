@@ -31,11 +31,37 @@ def lambda_handler(event, context):
     try:
         body = json.loads(event.get("body", "{}"))
         url = body.get("url")
+        text = body.get("text")
         overwrite = body.get("overwrite", False)
         webhook_token = body.get("webhook_token", "")
 
+        # ── Text paste flow: skip cache, skip scraping, go straight to analysis ──
+        if text and text.strip():
+            text = text.strip()
+            job_id = str(uuid.uuid4())
+            synthetic_url = f"text://paste-{job_id}"
+            title = text[:80].split("\n")[0]
+
+            sqs.send_message(
+                QueueUrl=ANALYSIS_QUEUE_URL,
+                MessageBody=json.dumps({
+                    "job_id": job_id,
+                    "url": synthetic_url,
+                    "source_type": "web",
+                    "source_metadata": {"title": title, "image": ""},
+                    "text": text[:5000],
+                    "webhook_token": webhook_token,
+                })
+            )
+
+            return _response(202, {
+                "status": "processing",
+                "job_id": job_id,
+                "message": "Text submitted for analysis"
+            })
+
         if not url:
-            return _response(400, {"error": "Missing 'url' in request body"})
+            return _response(400, {"error": "Missing 'url' or 'text' in request body"})
 
         # Check DynamoDB cache
         if not overwrite:

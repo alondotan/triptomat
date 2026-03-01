@@ -1,1 +1,3 @@
 .vercel
+# Auto-generated from root config.json by Vite plugin
+public/data/sub-categories.json

@@ -1,17 +1,18 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTrip } from '@/context/TripContext';
 import { AppLayout } from '@/components/AppLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
-import { POIDetailDialog } from '@/components/POIDetailDialog';
 import { SubCategoryIcon } from '@/components/SubCategoryIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, UtensilsCrossed, Wrench, Trash2, Filter, LayoutGrid, CalendarDays, Heart, ChevronDown, ChevronRight, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { MapPin, UtensilsCrossed, Wrench, Filter, LayoutGrid, ChevronDown, ChevronRight, Search, Merge } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
 import type { PointOfInterest, POIStatus } from '@/types/trip';
-import { BookingActions } from '@/components/BookingActions';
+import { useCountrySites, type SiteNode } from '@/hooks/useCountrySites';
+import { POICard } from '@/components/POICard';
 
 const categoryIcons: Record<string, React.ReactNode> = {
   attraction: <MapPin size={16} />,
@@ -36,12 +37,38 @@ const statusLabels: Record<string, string> = {
 type GroupBy = 'category' | 'location' | 'status';
 
 const POIsPage = () => {
-  const { state, formatDualCurrency, deletePOI, updatePOI } = useTrip();
-  const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
+  const { state, mergePOIs } = useTrip();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [groupBy, setGroupBy] = useState<GroupBy>('category');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // Merge mode
+  const [mergeMode, setMergeMode] = useState(false);
+  const [selectedForMerge, setSelectedForMerge] = useState<Set<string>>(new Set());
+  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
+
+  const toggleMergeSelection = (poi: PointOfInterest) => {
+    setSelectedForMerge(prev => {
+      const next = new Set(prev);
+      if (next.has(poi.id)) {
+        next.delete(poi.id);
+      } else {
+        if (next.size >= 2) return prev;
+        next.add(poi.id);
+      }
+      return next;
+    });
+  };
+
+  const selectedMergePOIs = useMemo(() => {
+    if (selectedForMerge.size !== 2) return null;
+    const ids = Array.from(selectedForMerge);
+    const a = state.pois.find(p => p.id === ids[0]);
+    const b = state.pois.find(p => p.id === ids[1]);
+    if (!a || !b) return null;
+    return [a, b] as [PointOfInterest, PointOfInterest];
+  }, [selectedForMerge, state.pois]);
 
   // Build a map: poiId -> list of day numbers it's assigned to
   const poiDaysMap = useMemo(() => {
@@ -70,14 +97,6 @@ const POIsPage = () => {
     });
   };
 
-  const toggleLike = async (poi: PointOfInterest, e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Don't allow toggling like if already matched/booked/visited
-    if (poi.status === 'matched' || poi.status === 'booked' || poi.status === 'visited') return;
-    const newStatus: POIStatus = poi.status === 'in_plan' ? 'candidate' : 'in_plan';
-    await updatePOI({ ...poi, status: newStatus });
-  };
-
   const [expandedSubGroups, setExpandedSubGroups] = useState<Set<string>>(new Set());
 
   // Reset expanded state when groupBy changes (group keys change)
@@ -98,6 +117,20 @@ const POIsPage = () => {
       return next;
     });
   };
+
+  const countries = state.activeTrip?.countries || [];
+  const { sites } = useCountrySites(countries, state.tripSitesHierarchy as SiteNode[]);
+
+  // Build a lookup: lowercase city name → region label (its parent in hierarchy)
+  const cityRegionMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const s of sites) {
+      if (s.path.length >= 2) {
+        map[s.label.toLowerCase()] = s.path[s.path.length - 2];
+      }
+    }
+    return map;
+  }, [sites]);
 
   const nonAccommodationPois = useMemo(() => state.pois.filter(p => p.category !== 'accommodation'), [state.pois]);
 
@@ -126,7 +159,8 @@ const POIsPage = () => {
       if (groupBy === 'category') {
         key = poi.category;
       } else if (groupBy === 'location') {
-        key = poi.location.city || poi.location.country || 'לא ידוע';
+        const city = poi.location.city?.toLowerCase() || '';
+        key = cityRegionMap[city] || poi.location.country || 'לא ידוע';
       } else {
         key = poi.status;
       }
@@ -137,7 +171,7 @@ const POIsPage = () => {
     // Sort keys
     const sortedEntries = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
     return sortedEntries;
-  }, [filteredPois, groupBy]);
+  }, [filteredPois, groupBy, cityRegionMap]);
 
   const getGroupLabel = (key: string): string => {
     if (groupBy === 'category') return categoryLabels[key] || key;
@@ -172,7 +206,18 @@ const POIsPage = () => {
             <h2 className="text-2xl font-bold">Points of Interest</h2>
             <p className="text-muted-foreground">{filteredPois.length} / {nonAccommodationPois.length} items</p>
           </div>
-          <CreatePOIForm />
+          <div className="flex items-center gap-2">
+            <Button
+              variant={mergeMode ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => { setMergeMode(prev => !prev); setSelectedForMerge(new Set()); }}
+              className="gap-1"
+            >
+              <Merge size={14} />
+              {mergeMode ? 'בטל מיזוג' : 'מזג'}
+            </Button>
+            {!mergeMode && <CreatePOIForm />}
+          </div>
         </div>
 
         {/* Search */}
@@ -231,12 +276,14 @@ const POIsPage = () => {
         {grouped.map(([key, pois]) => {
           const isExpanded = expandedGroups.has(key);
 
-          // Build sub-groups by subCategory when grouping by category
-          const subGroups: [string, PointOfInterest[]][] = groupBy === 'category'
+          // Build sub-groups: by subCategory for category mode, by city for location mode
+          const subGroups: [string, PointOfInterest[]][] = (groupBy === 'category' || groupBy === 'location')
             ? (() => {
                 const map: Record<string, PointOfInterest[]> = {};
                 for (const poi of pois) {
-                  const sub = poi.subCategory || '—';
+                  const sub = groupBy === 'category'
+                    ? (poi.subCategory || '—')
+                    : (poi.location.city || poi.location.country || '—');
                   if (!map[sub]) map[sub] = [];
                   map[sub].push(poi);
                 }
@@ -244,86 +291,6 @@ const POIsPage = () => {
               })()
             : [];
 
-          const renderCard = (poi: PointOfInterest) => (
-            <Card key={poi.id} className={`cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${poi.isCancelled ? 'opacity-50' : ''}`} onClick={() => setSelectedPOI(poi)}>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={(e) => toggleLike(poi, e)}
-                      className={`shrink-0 transition-colors ${
-                        poi.status === 'in_plan' || poi.status === 'matched' ? 'text-red-500' :
-                        poi.status === 'booked' || poi.status === 'visited' ? 'text-muted-foreground/30 cursor-default' :
-                        'text-muted-foreground/40 hover:text-red-400'
-                      }`}
-                      title={poi.status === 'matched' ? 'משודך ליום' : poi.status === 'in_plan' ? 'הסר מהתוכנית' : 'הוסף לתוכנית'}
-                    >
-                      <Heart size={16} fill={poi.status === 'in_plan' || poi.status === 'matched' ? 'currentColor' : 'none'} />
-                    </button>
-                    <CardTitle className="text-base">{poi.name}</CardTitle>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Badge variant={poi.status === 'booked' ? 'default' : 'secondary'} className="text-xs">{statusLabels[poi.status] || poi.status}</Badge>
-                    {poi.isCancelled && <Badge variant="destructive">בוטל</Badge>}
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm">
-                {poi.subCategory && groupBy !== 'category' && (
-                  <Badge variant="outline" className="text-xs flex items-center gap-1">
-                    <SubCategoryIcon type={poi.subCategory} size={12} />
-                    {poi.subCategory}
-                  </Badge>
-                )}
-
-                {(poi.location.city || poi.location.country || poi.location.address) && (
-                  <p className="text-muted-foreground">
-                    📍 {[poi.location.address, poi.location.city, poi.location.country].filter(Boolean).join(', ')}
-                  </p>
-                )}
-
-                {poi.details.cost && poi.details.cost.amount > 0 && (
-                  <p className="font-semibold text-primary">
-                    {formatDualCurrency(poi.details.cost.amount, poi.details.cost.currency || state.activeTrip?.currency || 'USD')}
-                  </p>
-                )}
-
-                {poi.details.accommodation_details && (
-                  <div className="text-xs text-muted-foreground space-y-0.5">
-                    {poi.details.accommodation_details.checkin?.date && (
-                      <p>Check-in: {poi.details.accommodation_details.checkin.date} {poi.details.accommodation_details.checkin.hour || ''}</p>
-                    )}
-                    {poi.details.accommodation_details.checkout?.date && (
-                      <p>Check-out: {poi.details.accommodation_details.checkout.date} {poi.details.accommodation_details.checkout.hour || ''}</p>
-                    )}
-                  </div>
-                )}
-
-                {poi.details.notes?.user_summary && (
-                  <p className="text-xs text-muted-foreground italic">{poi.details.notes.user_summary}</p>
-                )}
-
-                {poiDaysMap[poi.id] && poiDaysMap[poi.id].length > 0 && (
-                  <div className="flex items-center gap-1 flex-wrap">
-                    <CalendarDays size={12} className="text-muted-foreground" />
-                    {poiDaysMap[poi.id].map(d => (
-                      <Badge key={d} variant="outline" className="text-[10px] px-1.5 py-0">יום {d}</Badge>
-                    ))}
-                  </div>
-                )}
-
-                <div className="pt-2 flex justify-between items-center">
-                  <BookingActions
-                    orderNumber={poi.details.order_number}
-                    emailLinks={poi.sourceRefs.email_ids.map(id => ({ id, ...state.sourceEmailMap[id] }))}
-                  />
-                  <Button variant="ghost" size="sm" className="text-destructive h-7" onClick={(e) => { e.stopPropagation(); deletePOI(poi.id); }}>
-                    <Trash2 size={14} className="mr-1" /> מחק
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
 
           return (
           <div key={key}>
@@ -340,7 +307,7 @@ const POIsPage = () => {
               <Badge variant="secondary" className="text-xs ml-1">{pois.length}</Badge>
             </button>
             {isExpanded && (
-              groupBy === 'category' ? (
+              (groupBy === 'category' || groupBy === 'location') ? (
                 <div className="space-y-1 mb-4 ml-5">
                   {subGroups.map(([subKey, subPois]) => {
                     const subGroupKey = `${key}::${subKey}`;
@@ -355,13 +322,30 @@ const POIsPage = () => {
                             ? <ChevronDown size={13} className="text-muted-foreground group-hover:text-primary transition-colors" />
                             : <ChevronRight size={13} className="text-muted-foreground group-hover:text-primary transition-colors" />
                           }
-                          <SubCategoryIcon type={subKey} size={13} />
+                          {groupBy === 'category'
+                            ? <SubCategoryIcon type={subKey} size={13} />
+                            : <MapPin size={13} className="text-muted-foreground shrink-0" />
+                          }
                           <span className="text-sm font-medium">{subKey}</span>
                           <Badge variant="outline" className="text-[10px] ml-1">{subPois.length}</Badge>
                         </button>
                         {isSubExpanded && (
                           <div className="grid gap-3 md:grid-cols-2 mb-3 ml-4">
-                            {subPois.map(renderCard)}
+                            {subPois.map(p => (
+                              <div key={p.id} className="relative">
+                                {mergeMode && (
+                                  <div className="absolute top-3 left-3 z-10" onClick={e => e.stopPropagation()}>
+                                    <Checkbox
+                                      checked={selectedForMerge.has(p.id)}
+                                      onCheckedChange={() => toggleMergeSelection(p)}
+                                    />
+                                  </div>
+                                )}
+                                <div className={mergeMode && selectedForMerge.has(p.id) ? 'ring-2 ring-primary rounded-lg' : ''}>
+                                  <POICard poi={p} level={3} editable={!mergeMode} showSubCategory={false} poiDaysMap={poiDaysMap} />
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         )}
                       </div>
@@ -370,7 +354,21 @@ const POIsPage = () => {
                 </div>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2 mb-2">
-                  {pois.map(renderCard)}
+                  {pois.map(p => (
+                    <div key={p.id} className="relative">
+                      {mergeMode && (
+                        <div className="absolute top-3 left-3 z-10" onClick={e => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedForMerge.has(p.id)}
+                            onCheckedChange={() => toggleMergeSelection(p)}
+                          />
+                        </div>
+                      )}
+                      <div className={mergeMode && selectedForMerge.has(p.id) ? 'ring-2 ring-primary rounded-lg' : ''}>
+                        <POICard poi={p} level={3} editable={!mergeMode} showSubCategory poiDaysMap={poiDaysMap} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )
             )}
@@ -384,11 +382,29 @@ const POIsPage = () => {
           </div>
         )}
 
-        {selectedPOI && (
-          <POIDetailDialog
-            poi={selectedPOI}
-            open={!!selectedPOI}
-            onOpenChange={(open) => { if (!open) setSelectedPOI(null); }}
+        {mergeMode && selectedForMerge.size === 2 && (
+          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
+            <Button onClick={() => setMergeDialogOpen(true)} className="gap-1.5 shadow-lg">
+              <Merge size={16} /> מזג פריטים נבחרים
+            </Button>
+          </div>
+        )}
+
+        {mergeDialogOpen && selectedMergePOIs && (
+          <MergeConfirmDialog
+            open={mergeDialogOpen}
+            onOpenChange={(open) => {
+              setMergeDialogOpen(open);
+              if (!open) { setSelectedForMerge(new Set()); setMergeMode(false); }
+            }}
+            items={selectedMergePOIs}
+            entityType="poi"
+            onConfirm={async (primaryId, secondaryId) => {
+              await mergePOIs(primaryId, secondaryId);
+              setMergeDialogOpen(false);
+              setSelectedForMerge(new Set());
+              setMergeMode(false);
+            }}
           />
         )}
       </div>

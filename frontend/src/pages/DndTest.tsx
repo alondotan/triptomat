@@ -5,7 +5,10 @@ import { updateItineraryDay, createItineraryDay } from '@/services/tripService';
 import { LocationContextPicker } from '@/components/LocationContextPicker';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { eachDayOfInterval, parseISO, format } from 'date-fns';
-import type { ItineraryActivity } from '@/types/trip';
+import type { ItineraryActivity, PointOfInterest } from '@/types/trip';
+import { POICard } from '@/components/POICard';
+import { CreateTransportForm } from '@/components/forms/CreateTransportForm';
+import { TransportDetailDialog } from '@/components/TransportDetailDialog';
 import {
   DndContext,
   DragEndEvent,
@@ -28,8 +31,10 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Building2, GripVertical, Moon, Pencil, Sun } from 'lucide-react';
+import { Building2, Check, Clock, GripVertical, Moon, Pencil, Sun, Trash2, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { DaySection } from '@/components/DaySection';
+import { getSubCategoryEntry } from '@/lib/subCategoryConfig';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -39,6 +44,9 @@ interface Item {
   emoji: string;
   time?: string;   // time_window.start for timed activities
   sublabel?: string; // city / subCategory
+  remark?: string;   // e.g. "הזמין כרטיסים מראש"
+  poi?: PointOfInterest; // original POI object when item represents a POI
+  isTimeBlock?: boolean; // named section divider
 }
 
 // Emoji by POI category
@@ -78,6 +86,13 @@ function buildGroups(items: Item[], lockedIds: Set<string>): Group[] {
   let current: Group | null = null;
 
   for (const item of items) {
+    // Time blocks always start a new unlocked group (they act as section headers)
+    if (item.isTimeBlock) {
+      if (current) { groups.push(current); current = null; }
+      current = { id: `unlocked-${item.id}`, items: [item], isLocked: false };
+      continue;
+    }
+
     const locked = lockedIds.has(item.id);
     if (locked) {
       if (current) { groups.push(current); current = null; }
@@ -110,8 +125,21 @@ function slotLabel(minutes: number): string {
 function groupLabel(groups: Group[], index: number): string {
   const group = groups[index];
 
-  // Locked group: show the time of its single item
-  if (group.isLocked) return group.items[0]?.time ?? '🔒';
+  // Locked group: time_block shows its own label; timed POI shows HH:mm
+  if (group.isLocked) {
+    const item = group.items[0];
+    if (item?.isTimeBlock) return item.label + (item.time ? ` · ${item.time}` : '');
+    return item?.time ?? '🔒';
+  }
+
+  // Unlocked group: if immediately preceded by a time_block, inherit its label
+  for (let i = index - 1; i >= 0; i--) {
+    if (groups[i].isLocked) {
+      const prevItem = groups[i].items[0];
+      if (prevItem?.isTimeBlock) return prevItem.label;
+      break;
+    }
+  }
 
   // Unlocked group: find surrounding locked neighbours
   const anyLocked = groups.some(g => g.isLocked);
@@ -140,6 +168,17 @@ function groupLabel(groups: Group[], index: number): string {
   return slotLabel(mid);
 }
 
+// Can this unlocked group be deleted? Only if there's another unlocked group in
+// the same "section" (consecutive run of unlocked groups, bounded by locked groups).
+function canDeleteGroup(groups: Group[], index: number): boolean {
+  const group = groups[index];
+  if (group.isLocked) return false;
+  let unlockedInSection = 1; // count self
+  for (let i = index - 1; i >= 0 && !groups[i].isLocked; i--) unlockedInSection++;
+  for (let i = index + 1; i < groups.length && !groups[i].isLocked; i++) unlockedInSection++;
+  return unlockedInSection > 1;
+}
+
 // ─── Draggable potential item ──────────────────────────────────────────────────
 
 function DraggableItem({ item, isBeingDragged }: { item: Item; isBeingDragged: boolean }) {
@@ -155,8 +194,15 @@ function DraggableItem({ item, isBeingDragged }: { item: Item; isBeingDragged: b
       {...listeners}
     >
       <GripVertical size={14} className="text-muted-foreground/50 shrink-0" />
-      <span className="text-base">{item.emoji}</span>
-      <span className="text-sm font-medium">{item.label}</span>
+      {item.poi ? (
+        <POICard poi={item.poi} level={2} editable />
+      ) : (
+        <>
+          <span className="material-symbols-outlined">{item.emoji}</span>
+          <span className="text-sm font-medium">{item.label}</span>
+          {item.remark && <span className="text-xs text-muted-foreground ml-1">{item.remark}</span>}
+        </>
+      )}
     </div>
   );
 }
@@ -164,16 +210,110 @@ function DraggableItem({ item, isBeingDragged }: { item: Item; isBeingDragged: b
 // ─── Sortable scheduled item ───────────────────────────────────────────────────
 
 function SortableScheduledItem({
-  item, isLocked, onToggleLock,
+  item, isLocked, onToggleLock, onAddTransport, onDeleteTransport, onEditTransport,
+  onUpdateTimeBlock, onDeleteTimeBlock,
 }: {
   item: Item;
   isLocked: boolean;
   onToggleLock: (id: string) => void;
+  onAddTransport?: () => void;
+  onDeleteTransport?: () => void;
+  onEditTransport?: () => void;
+  onUpdateTimeBlock?: (label: string, time: string | undefined) => void;
+  onDeleteTimeBlock?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `sched-${item.id}`,
     disabled: isLocked,
   });
+  const isTransport = !item.poi && item.id.startsWith('trans_');
+
+  // Inline edit state for time_block items
+  const [isEditing, setIsEditing] = useState(false);
+  const [editLabel, setEditLabel] = useState(item.label);
+  const [editTime, setEditTime] = useState(item.time ?? '');
+
+  const saveEdit = () => {
+    onUpdateTimeBlock?.(editLabel.trim() || item.label, editTime || undefined);
+    setIsEditing(false);
+  };
+  const cancelEdit = () => {
+    setEditLabel(item.label);
+    setEditTime(item.time ?? '');
+    setIsEditing(false);
+  };
+
+  // Time-block item: render as a section-divider row
+  if (item.isTimeBlock) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={{
+          transform: transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
+          transition,
+          touchAction: 'none',
+        }}
+        className={`flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1.5 transition-opacity ${isDragging ? 'opacity-40' : ''}`}
+      >
+        <button
+          {...attributes}
+          {...(isLocked ? {} : listeners)}
+          disabled={isLocked}
+          className="shrink-0 p-0.5 touch-none select-none opacity-30 cursor-not-allowed"
+        >
+          <GripVertical size={13} />
+        </button>
+        <Clock size={13} className="text-primary/60 shrink-0" />
+        {isEditing ? (
+          <>
+            <Input
+              value={editLabel}
+              onChange={e => setEditLabel(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }}
+              className="h-6 text-xs flex-1 min-w-0 px-1.5"
+              autoFocus
+            />
+            <input
+              type="time"
+              value={editTime}
+              onChange={e => setEditTime(e.target.value)}
+              className="h-6 text-xs border border-input rounded px-1.5 bg-background w-24"
+            />
+            <button type="button" onClick={saveEdit} className="p-0.5 text-primary hover:text-primary/80 transition-colors shrink-0">
+              <Check size={13} />
+            </button>
+            <button type="button" onClick={cancelEdit} className="p-0.5 text-muted-foreground hover:text-foreground transition-colors shrink-0">
+              <X size={13} />
+            </button>
+          </>
+        ) : (
+          <>
+            <span className="flex-1 text-xs font-semibold text-primary/80 truncate">{item.label}</span>
+            {item.time && (
+              <span className="text-[10px] text-primary/50 shrink-0 font-mono">{item.time}</span>
+            )}
+            <div className="flex items-center gap-0.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="p-1 rounded text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-colors"
+              >
+                <Pencil size={12} />
+              </button>
+              <button
+                type="button"
+                onClick={onDeleteTimeBlock}
+                className="p-1 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       ref={setNodeRef}
@@ -182,8 +322,8 @@ function SortableScheduledItem({
         transition,
         touchAction: 'none',
       }}
-      className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 transition-opacity ${
-        isLocked ? 'bg-background/50' : 'bg-background/70'
+      className={`flex items-center gap-2.5 bg-card border rounded-lg px-3 py-2.5 transition-opacity ${
+        isLocked ? 'opacity-70' : ''
       } ${isDragging ? 'opacity-40' : ''}`}
     >
       <button
@@ -198,42 +338,246 @@ function SortableScheduledItem({
       >
         <GripVertical size={14} />
       </button>
+      {item.poi ? (
+        <POICard poi={item.poi} level={2} editable onAddTransport={onAddTransport} />
+      ) : (
+        <>
+          <span className="material-symbols-outlined text-base">{item.emoji}</span>
+          <div className="flex-1 min-w-0">
+            <span className={`text-sm font-medium block truncate ${isLocked ? 'text-muted-foreground' : ''}`}>
+              {item.label}
+            </span>
+            {item.sublabel && (
+              <span className="text-xs text-muted-foreground truncate block">{item.sublabel}</span>
+            )}
+          </div>
+          {item.remark && (
+            <span className={`text-xs text-muted-foreground ${isLocked ? 'opacity-60' : ''}`}>
+              {item.remark}
+            </span>
+          )}
+          {isTransport && (
+            <div className="flex items-center gap-0.5 shrink-0">
+              <button
+                type="button"
+                onClick={onEditTransport}
+                className="p-1 rounded text-muted-foreground/50 hover:text-primary hover:bg-primary/10 transition-colors"
+              >
+                <Pencil size={13} />
+              </button>
+              <button
+                type="button"
+                onClick={onDeleteTransport}
+                className="p-1 rounded text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <Trash2 size={13} />
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
-      <span className="text-base">{item.emoji}</span>
-      <span className={`flex-1 text-sm font-medium ${isLocked ? 'text-muted-foreground' : ''}`}>
-        {item.label}
-      </span>
+// ─── Time-block section header ─────────────────────────────────────────────────
+
+function TimeBlockSectionHeader({ item, canDelete, onUpdate, onDelete }: {
+  item: Item;
+  canDelete?: boolean;
+  onUpdate: (label: string, time: string | undefined) => void;
+  onDelete: () => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editLabel, setEditLabel] = useState(item.label);
+  const [editTime, setEditTime] = useState(item.time ?? '');
+
+  const save = () => {
+    onUpdate(editLabel.trim() || item.label, editTime || undefined);
+    setIsEditing(false);
+  };
+  const cancel = () => {
+    setEditLabel(item.label);
+    setEditTime(item.time ?? '');
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center gap-1.5 py-0.5 px-1">
+        <Input
+          value={editLabel}
+          onChange={e => setEditLabel(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') cancel(); }}
+          className="h-6 text-xs flex-1 min-w-0"
+          autoFocus
+        />
+        <input
+          type="time"
+          value={editTime}
+          onChange={e => setEditTime(e.target.value)}
+          className="h-6 text-xs border border-input rounded px-1.5 bg-background w-24"
+        />
+        <button type="button" onClick={save} className="p-0.5 text-primary hover:text-primary/80 transition-colors shrink-0">
+          <Check size={12} />
+        </button>
+        <button type="button" onClick={cancel} className="p-0.5 text-muted-foreground hover:text-foreground transition-colors shrink-0">
+          <X size={12} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1 py-0.5 px-1">
+      <span className="text-[10px] font-semibold tracking-widest text-primary/80 uppercase flex-1">{item.label}</span>
+      {item.time && (
+        <span className="text-[10px] text-primary/50 font-mono shrink-0">{item.time}</span>
+      )}
+      <button
+        type="button"
+        onClick={() => { setEditLabel(item.label); setEditTime(item.time ?? ''); setIsEditing(true); }}
+        className="p-0.5 text-muted-foreground/40 hover:text-primary transition-colors"
+      >
+        <Pencil size={11} />
+      </button>
+      {canDelete !== false && (
+        <button
+          type="button"
+          onClick={onDelete}
+          className="p-0.5 text-muted-foreground/40 hover:text-destructive transition-colors"
+        >
+          <Trash2 size={11} />
+        </button>
+      )}
     </div>
   );
 }
 
 // ─── Group frame ───────────────────────────────────────────────────────────────
 
-function GroupFrame({ group, label, lockedIds, onToggleLock }: {
+function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onDeleteTransport, onEditTransport, onUpdateTimeBlock, onDeleteTimeBlock, canDelete, onRenameGroup, onDeleteGroup }: {
   group: Group;
   label: string;
   lockedIds: Set<string>;
   onToggleLock: (id: string) => void;
+  onAddTransport?: (poiId: string) => void;
+  onDeleteTransport?: (transportId: string) => void;
+  onEditTransport?: (transportId: string) => void;
+  onUpdateTimeBlock?: (itemId: string, label: string, time: string | undefined) => void;
+  onDeleteTimeBlock?: (itemId: string) => void;
+  canDelete?: boolean;
+  onRenameGroup?: (label: string, time: string | undefined) => void;
+  onDeleteGroup?: () => void;
 }) {
+  // Time block item at the start of the group acts as a section header
+  const timeBlockItem = group.items.find(i => i.isTimeBlock);
+  const contentItems = group.items.filter(i => !i.isTimeBlock);
+
+  // Inline editing state for auto-generated group labels
+  const [isEditing, setIsEditing] = useState(false);
+  const [editLabel, setEditLabel] = useState(label);
+  const [editTime, setEditTime] = useState('');
+
+  const saveAutoLabel = () => {
+    onRenameGroup?.(editLabel.trim() || label, editTime || undefined);
+    setIsEditing(false);
+  };
+  const cancelEdit = () => {
+    setEditLabel(label);
+    setEditTime('');
+    setIsEditing(false);
+  };
+
+  // Unlocked groups act as a drop target — user can drag any item onto the frame
+  const { setNodeRef: setFrameRef, isOver } = useDroppable({
+    id: `group-frame-${group.id}`,
+    disabled: group.isLocked,
+  });
+
   return (
-    <div>
-      <span className={`text-[10px] font-semibold tracking-widest px-1 ${
-        group.isLocked ? 'text-amber-500/70' : 'text-primary/70 uppercase'
-      }`}>{label}</span>
+    <div
+      ref={setFrameRef}
+      className={`rounded-lg transition-colors ${isOver ? 'ring-2 ring-primary/40 bg-primary/5' : ''}`}
+    >
+      {timeBlockItem ? (
+        <TimeBlockSectionHeader
+          item={timeBlockItem}
+          canDelete={canDelete}
+          onUpdate={(lbl, t) => onUpdateTimeBlock?.(timeBlockItem.id, lbl, t)}
+          onDelete={() => onDeleteTimeBlock?.(timeBlockItem.id)}
+        />
+      ) : group.isLocked ? (
+        <span className="text-[10px] font-semibold tracking-widest px-1 text-amber-500/70">{label}</span>
+      ) : isEditing ? (
+        <div className="flex items-center gap-1.5 py-0.5 px-1">
+          <Input
+            value={editLabel}
+            onChange={e => setEditLabel(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') saveAutoLabel(); if (e.key === 'Escape') cancelEdit(); }}
+            className="h-6 text-xs flex-1 min-w-0"
+            autoFocus
+          />
+          <input
+            type="time"
+            value={editTime}
+            onChange={e => setEditTime(e.target.value)}
+            className="h-6 text-xs border border-input rounded px-1.5 bg-background w-24"
+          />
+          <button type="button" onClick={saveAutoLabel} className="p-0.5 text-primary hover:text-primary/80 transition-colors shrink-0">
+            <Check size={12} />
+          </button>
+          <button type="button" onClick={cancelEdit} className="p-0.5 text-muted-foreground hover:text-foreground transition-colors shrink-0">
+            <X size={12} />
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-1 py-0.5 px-1">
+          <span className="text-[10px] font-semibold tracking-widest text-primary/70 uppercase flex-1">{label}</span>
+          <button
+            type="button"
+            onClick={() => { setEditLabel(label); setEditTime(''); setIsEditing(true); }}
+            className="p-0.5 text-muted-foreground/40 hover:text-primary transition-colors"
+          >
+            <Pencil size={11} />
+          </button>
+          {canDelete && (
+            <button
+              type="button"
+              onClick={onDeleteGroup}
+              className="p-0.5 text-muted-foreground/40 hover:text-destructive transition-colors"
+            >
+              <Trash2 size={11} />
+            </button>
+          )}
+        </div>
+      )}
 
       <SortableContext
-        items={group.items.map(i => `sched-${i.id}`)}
+        items={contentItems.map(i => `sched-${i.id}`)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-1 mt-0.5">
-          {group.items.map(item => (
-            <SortableScheduledItem
-              key={item.id}
-              item={item}
-              isLocked={lockedIds.has(item.id)}
-              onToggleLock={onToggleLock}
-            />
-          ))}
+        <div className={`space-y-1 ${contentItems.length > 0 ? 'mt-0.5' : ''}`}>
+          {contentItems.length === 0 && isOver && (
+            <p className="text-xs text-center py-2 text-primary/60">שחרר כאן</p>
+          )}
+          {contentItems.map(item => {
+            // Extract transport id from "trans_<transportId>_<segmentId>"
+            const transportId = item.id.startsWith('trans_')
+              ? item.id.replace(/^trans_/, '').replace(/_[^_]+$/, '')
+              : undefined;
+            return (
+              <SortableScheduledItem
+                key={item.id}
+                item={item}
+                isLocked={lockedIds.has(item.id)}
+                onToggleLock={onToggleLock}
+                onAddTransport={item.poi ? () => onAddTransport?.(item.poi!.id) : undefined}
+                onDeleteTransport={transportId ? () => onDeleteTransport?.(transportId) : undefined}
+                onEditTransport={transportId ? () => onEditTransport?.(transportId) : undefined}
+              />
+            );
+          })}
         </div>
       </SortableContext>
     </div>
@@ -286,7 +630,7 @@ function DropGap({ index, active }: { index: number; active: boolean }) {
         isOver
           ? 'h-12 border-2 border-dashed border-primary/70 bg-primary/10 flex items-center justify-center'
           : active
-            ? 'h-4 border border-dashed border-primary/20'
+            ? 'h-7 border border-dashed border-primary/30'
             : 'h-1'
       }`}
     >
@@ -350,8 +694,15 @@ function ScheduleZone({ children, activePotentialDrag, isEmpty }: {
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function DndTestPage() {
-  const { state, dispatch, loadTripData, addPOI, updatePOI, addMission } = useTrip();
+  const { state, dispatch, loadTripData, addPOI, updatePOI, addMission, addTransportation, deleteTransportation } = useTrip();
   const [selectedDayNum, setSelectedDayNum] = useState(1);
+  const [addTransportOpen, setAddTransportOpen] = useState(false);
+  const [transportFromName, setTransportFromName] = useState('');
+  const [transportToName, setTransportToName] = useState('');
+  const [editTransportId, setEditTransportId] = useState<string | null>(null);
+  const [addingTimeBlock, setAddingTimeBlock] = useState(false);
+  const [newTbLabel, setNewTbLabel] = useState('');
+  const [newTbTime, setNewTbTime] = useState('');
 
   const tripDays = useMemo(() => {
     if (!state.activeTrip) return [];
@@ -395,6 +746,180 @@ export default function DndTestPage() {
   const refreshDays = useCallback(async () => {
     if (state.activeTrip) await loadTripData(state.activeTrip.id);
   }, [state.activeTrip, loadTripData]);
+
+  const handleAddTransport = useCallback(async (poiId: string) => {
+    const poi = state.pois.find(p => p.id === poiId);
+    const fromName = poi?.name || '';
+    // Find the next POI after this one in the scheduled list
+    const idx = scheduled.findIndex(i => i.id === poiId);
+    let toName = '';
+    for (let i = idx + 1; i < scheduled.length; i++) {
+      if (scheduled[i].poi) {
+        toName = scheduled[i].poi!.name || '';
+        break;
+      }
+    }
+    setTransportFromName(fromName);
+    setTransportToName(toName);
+
+    // Pre-create the order gap now (before the dialog opens) so the new transport
+    // lands between the source POI and the next one after refreshDays().
+    const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (itDay) {
+      const sourceAct = itDay.activities.find(a => a.id === poiId);
+      if (sourceAct) {
+        const updatedActivities = itDay.activities.map(a =>
+          a.order > sourceAct.order ? { ...a, order: a.order + 1 } : a,
+        );
+        // Update in-memory immediately so the closure in handleTransportCreated sees it
+        dispatch({
+          type: 'SET_ITINERARY_DAYS',
+          payload: state.itineraryDays.map(d =>
+            d.id === itDay.id ? { ...d, activities: updatedActivities } : d,
+          ),
+        });
+        // Persist to DB (fire-and-forget — will be in DB well before form is submitted)
+        updateItineraryDay(itDay.id, { activities: updatedActivities }).catch(console.error);
+      }
+    }
+
+    setAddTransportOpen(true);
+  }, [state.pois, state.itineraryDays, selectedDayNum, scheduled, dispatch]);
+
+  const handleTransportCreated = useCallback(async (transportId: string) => {
+    let itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (!itDay && state.activeTrip) {
+      const day = tripDays[selectedDayNum - 1];
+      itDay = await createItineraryDay({
+        tripId: state.activeTrip.id,
+        dayNumber: selectedDayNum,
+        date: day ? format(day, 'yyyy-MM-dd') : undefined,
+        locationContext: '',
+        accommodationOptions: [],
+        activities: [],
+        transportationSegments: [],
+      });
+    }
+    if (!itDay) return;
+    const newSegments = [...(itDay.transportationSegments || []), { is_selected: true, transportation_id: transportId }];
+    await updateItineraryDay(itDay.id, { transportationSegments: newSegments });
+    await refreshDays();
+  }, [selectedDayNum, tripDays, state.itineraryDays, state.activeTrip, refreshDays]);
+
+  const handleDeleteTransport = useCallback(async (transportId: string) => {
+    const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (!itDay) return;
+    // Remove from itinerary day segments
+    const newSegments = (itDay.transportationSegments || []).filter(
+      ts => ts.transportation_id !== transportId,
+    );
+    await updateItineraryDay(itDay.id, { transportationSegments: newSegments });
+    // Delete the transportation record itself
+    await deleteTransportation(transportId);
+    await refreshDays();
+  }, [state.itineraryDays, selectedDayNum, deleteTransportation, refreshDays]);
+
+  const handleEditTransport = useCallback((transportId: string) => {
+    setEditTransportId(transportId);
+  }, []);
+
+  const handleAddTimeBlock = useCallback(async () => {
+    if (!newTbLabel.trim()) return;
+    let itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (!itDay && state.activeTrip) {
+      const day = tripDays[selectedDayNum - 1];
+      itDay = await createItineraryDay({
+        tripId: state.activeTrip.id,
+        dayNumber: selectedDayNum,
+        date: day ? format(day, 'yyyy-MM-dd') : undefined,
+        locationContext: '',
+        accommodationOptions: [],
+        activities: [],
+        transportationSegments: [],
+      });
+    }
+    if (!itDay) return;
+    const maxOrder = itDay.activities.reduce((m, a) => Math.max(m, a.order), 0);
+    const newActivity = {
+      order: maxOrder + 1,
+      type: 'time_block' as const,
+      id: crypto.randomUUID(),
+      label: newTbLabel.trim(),
+      ...(newTbTime ? { time_window: { start: newTbTime } } : {}),
+    };
+    const updatedActivities = [...itDay.activities, newActivity];
+    dispatch({
+      type: 'SET_ITINERARY_DAYS',
+      payload: state.itineraryDays.map(d => d.id === itDay!.id ? { ...d, activities: updatedActivities } : d),
+    });
+    await updateItineraryDay(itDay.id, { activities: updatedActivities });
+    setNewTbLabel('');
+    setNewTbTime('');
+    setAddingTimeBlock(false);
+    await refreshDays();
+  }, [newTbLabel, newTbTime, selectedDayNum, tripDays, state.itineraryDays, state.activeTrip, dispatch, refreshDays]);
+
+  const handleUpdateTimeBlock = useCallback(async (itemId: string, label: string, time: string | undefined) => {
+    const activityId = itemId.replace('tblock_', '');
+    const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (!itDay) return;
+    const updatedActivities = itDay.activities.map(a =>
+      a.id === activityId
+        ? { ...a, label, time_window: time ? { start: time } : undefined }
+        : a,
+    );
+    dispatch({
+      type: 'SET_ITINERARY_DAYS',
+      payload: state.itineraryDays.map(d => d.id === itDay.id ? { ...d, activities: updatedActivities } : d),
+    });
+    await updateItineraryDay(itDay.id, { activities: updatedActivities });
+    await refreshDays();
+  }, [selectedDayNum, state.itineraryDays, dispatch, refreshDays]);
+
+  const handleDeleteTimeBlock = useCallback(async (itemId: string) => {
+    const activityId = itemId.replace('tblock_', '');
+    const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (!itDay) return;
+    const updatedActivities = itDay.activities.filter(a => a.id !== activityId);
+    dispatch({
+      type: 'SET_ITINERARY_DAYS',
+      payload: state.itineraryDays.map(d => d.id === itDay.id ? { ...d, activities: updatedActivities } : d),
+    });
+    await updateItineraryDay(itDay.id, { activities: updatedActivities });
+    await refreshDays();
+  }, [selectedDayNum, state.itineraryDays, dispatch, refreshDays]);
+
+  // Rename an auto-generated group → converts it into a time_block-headed group
+  const handleRenameAutoGroup = useCallback(async (firstContentItemId: string | undefined, label: string, time: string | undefined) => {
+    const itDay = state.itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (!itDay) return;
+
+    // Place the new time_block just before the first content item of this group
+    let insertOrder: number;
+    if (firstContentItemId) {
+      const rawId = firstContentItemId.startsWith('tblock_') ? firstContentItemId.replace('tblock_', '') : firstContentItemId;
+      const firstAct = itDay.activities.find(a => a.id === rawId);
+      insertOrder = firstAct ? firstAct.order - 0.5 : 0;
+    } else {
+      insertOrder = itDay.activities.reduce((m, a) => Math.max(m, a.order), 0) + 1;
+    }
+
+    const newActivity = {
+      order: insertOrder,
+      type: 'time_block' as const,
+      id: crypto.randomUUID(),
+      label,
+      ...(time ? { time_window: { start: time } } : {}),
+    };
+
+    const updatedActivities = [...itDay.activities, newActivity];
+    dispatch({
+      type: 'SET_ITINERARY_DAYS',
+      payload: state.itineraryDays.map(d => d.id === itDay!.id ? { ...d, activities: updatedActivities } : d),
+    });
+    await updateItineraryDay(itDay.id, { activities: updatedActivities });
+    await refreshDays();
+  }, [selectedDayNum, state.itineraryDays, dispatch, refreshDays]);
 
   const updateLocationContext = useCallback(async () => {
     const totalDays = 1 + locationDaysForward;
@@ -620,12 +1145,16 @@ export default function DndTestPage() {
         // time: prefer itinerary time_window, fallback to POI booking hour
         const bookingHour = poi.details?.booking?.reservation_hour;
         const time = a.time_window?.start ?? bookingHour ?? undefined;
+        console.log(getSubCategoryEntry(poi.subCategory)?.icon);
+        console.log(poi);
         const item: Item = {
           id: a.id,
           label: poi.name,
-          emoji: categoryEmoji(poi.category),
+          emoji: getSubCategoryEntry(poi.subCategory)?.icon || categoryEmoji(poi.category),
           time,
           sublabel: [poi.subCategory, poi.location?.city].filter(Boolean).join(' · '),
+          remark: poi.details?.notes?.user_summary,
+          poi,
         };
         const isScheduled = a.schedule_state === 'scheduled' || !!time;
         if (isScheduled) {
@@ -635,6 +1164,20 @@ export default function DndTestPage() {
           newPotential.push(item);
         }
       });
+
+    // ── Time blocks (named section headers) ─────────────────────────────────
+    itDay.activities.filter(a => a.type === 'time_block').forEach(a => {
+      const itemId = `tblock_${a.id}`;
+      const item: Item = {
+        id: itemId,
+        label: a.label || 'חלון זמן',
+        emoji: '⏰',
+        time: a.time_window?.start,
+        isTimeBlock: true,
+      };
+      newScheduled.push(item);
+      // NOT added to lockedIds — time blocks live in unlocked groups as section headers
+    });
 
     // ── Transport segments ────────────────────────────────────────────────────
     // Each selected transport segment appears as a locked item on the day its
@@ -660,9 +1203,10 @@ export default function DndTestPage() {
           time: timeLabel,
           sublabel: [transport.booking?.carrier_name, seg.flight_or_vessel_number]
             .filter(Boolean).join(' '),
+          remark: transport.booking ? 'הזמין מראש' : undefined,
         };
         newScheduled.push(item);
-        newLocked.add(itemId); // transport segments are always locked
+        if (timeLabel) newLocked.add(itemId); // lock only if has a departure time
       });
     });
 
@@ -673,10 +1217,11 @@ export default function DndTestPage() {
     const poiArr = newScheduled.filter(i => !i.id.startsWith('trans_'));
     const transArr = newScheduled.filter(i => i.id.startsWith('trans_'));
 
-    // Sort POIs by saved order (unordered items go to end)
+    // Sort POIs + time_blocks by saved order (unordered items go to end)
+    const rawActivityId = (id: string) => id.startsWith('tblock_') ? id.replace('tblock_', '') : id;
     poiArr.sort((a, b) => {
-      const oA = itDay.activities.find(act => act.id === a.id)?.order ?? 9999;
-      const oB = itDay.activities.find(act => act.id === b.id)?.order ?? 9999;
+      const oA = itDay.activities.find(act => act.id === rawActivityId(a.id))?.order ?? 9999;
+      const oB = itDay.activities.find(act => act.id === rawActivityId(b.id))?.order ?? 9999;
       return oA - oB;
     });
 
@@ -694,7 +1239,7 @@ export default function DndTestPage() {
     const transQ = [...transArr];
     let prevOrder = 0;
     for (const poi of poiArr) {
-      const poiOrder = itDay.activities.find(act => act.id === poi.id)?.order ?? 9999;
+      const poiOrder = itDay.activities.find(act => act.id === rawActivityId(poi.id))?.order ?? 9999;
       const gapSlots = Math.max(0, poiOrder - prevOrder - 1);
       for (let i = 0; i < gapSlots && transQ.length > 0; i++) merged.push(transQ.shift()!);
       merged.push(poi);
@@ -738,6 +1283,13 @@ export default function DndTestPage() {
     // This preserves the interleaved position so transport gaps survive a reload.
     newScheduled.forEach((item, idx) => {
       if (item.id.startsWith('trans_')) return; // transport lives in transportationSegments, skip
+      if (item.id.startsWith('tblock_')) {
+        // Time block — preserve all fields, just update order
+        const activityId = item.id.replace('tblock_', '');
+        const existing = itDay.activities.find(a => a.id === activityId);
+        if (existing) updatedActivities.push({ ...existing, order: idx + 1 });
+        return;
+      }
       const existing = itDay.activities.find(a => a.id === item.id);
       updatedActivities.push({
         order: idx + 1, // full positional index including transport item slots
@@ -764,7 +1316,7 @@ export default function DndTestPage() {
     // Preserve any collection-type activities we didn't touch
     const handledIds = new Set(updatedActivities.map(a => a.id));
     itDay.activities
-      .filter(a => a.type !== 'poi' || !handledIds.has(a.id))
+      .filter(a => !handledIds.has(a.id))
       .forEach(a => updatedActivities.push(a));
 
     // Update context in-memory so useEffect reloads correctly on day switch
@@ -778,6 +1330,46 @@ export default function DndTestPage() {
     // Persist to DB
     await updateItineraryDay(itDay.id, { activities: updatedActivities });
   }, [selectedDayNum, state.itineraryDays, dispatch]);
+
+  // Delete an auto-generated group → merge its items into the adjacent unlocked group
+  const handleDeleteAutoGroup = useCallback(async (contentItemIds: string[]) => {
+    if (contentItemIds.length === 0) return;
+
+    const itemIdSet = new Set(contentItemIds);
+    const lastItemIdx = scheduled.findIndex(i => i.id === contentItemIds[contentItemIds.length - 1]);
+
+    // The adjacent group must be the NEXT one (auto groups are always at the start of a section).
+    // Find the next time_block after this group's items.
+    let tblockIdx = -1;
+    for (let i = lastItemIdx + 1; i < scheduled.length; i++) {
+      if (lockedIds.has(scheduled[i].id)) break;
+      if (scheduled[i].isTimeBlock) { tblockIdx = i; break; }
+    }
+
+    // If no time_block found forward, try merging backward (into previous group's tail)
+    if (tblockIdx === -1) {
+      const firstIdx = scheduled.findIndex(i => i.id === contentItemIds[0]);
+      if (firstIdx > 0) {
+        const withoutItems = scheduled.filter(i => !itemIdSet.has(i.id));
+        setScheduled(withoutItems);
+        persistDayActivities(withoutItems, potential);
+        return;
+      }
+      return;
+    }
+
+    // Move items to after the time_block
+    const items = contentItemIds.map(id => scheduled.find(i => i.id === id)!);
+    const withoutItems = scheduled.filter(i => !itemIdSet.has(i.id));
+    const newTblockIdx = withoutItems.findIndex(i => i.id === scheduled[tblockIdx].id);
+    const newScheduled = [
+      ...withoutItems.slice(0, newTblockIdx + 1),
+      ...items,
+      ...withoutItems.slice(newTblockIdx + 1),
+    ];
+    setScheduled(newScheduled);
+    persistDayActivities(newScheduled, potential);
+  }, [scheduled, potential, lockedIds, persistDayActivities]);
 
   // Collision: day buckets > gaps (both drag types) > schedule-zone (potential only) > closestCenter
   const collisionDetection: CollisionDetection = useCallback((args) => {
@@ -795,12 +1387,21 @@ export default function DndTestPage() {
     if (!isSchedDrag) {
       const zoneHit = hits.find(c => c.id === 'schedule-zone');
       if (zoneHit) return [zoneHit];
+      // Prefer group-frame over individual items for potential-to-schedule drops
+      const frameHit = hits.find(c => c.id.toString().startsWith('group-frame-'));
+      if (frameHit) return [frameHit];
       if (hits.length > 0) return [hits[0]];
       return closestCenter(args);
     } else {
       const potentialHit = hits.find(c => c.id === 'potential-zone');
       if (potentialHit) return [potentialHit];
-      return closestCenter(args);
+      // Prefer individual sched-* items (precise reorder) over group frames
+      const ccHits = closestCenter(args);
+      if (ccHits.length > 0 && ccHits[0].id.toString().startsWith('sched-')) return ccHits;
+      // Fall back to group-frame drop when pointer is over empty space in a group
+      const frameHit = hits.find(c => c.id.toString().startsWith('group-frame-'));
+      if (frameHit) return [frameHit];
+      return ccHits;
     }
   }, []);
 
@@ -911,6 +1512,31 @@ export default function DndTestPage() {
         return;
       }
 
+      // → Drop on group frame — append item to end of that group
+      if (overId.startsWith('group-frame-')) {
+        const currentGroups = buildGroups(scheduled, lockedIds);
+        const groupId = overId.replace('group-frame-', '');
+        const targetGroup = currentGroups.find(g => g.id === groupId);
+        if (!targetGroup || targetGroup.isLocked) return;
+
+        const lastItemInGroup = targetGroup.items[targetGroup.items.length - 1];
+        const insertAfterIdx = lastItemInGroup
+          ? scheduled.findIndex(i => i.id === lastItemInGroup.id)
+          : -1;
+        const insertPos = insertAfterIdx + 1; // append after last item in group
+
+        const oldIdx = scheduled.findIndex(i => i.id === itemId);
+        if (oldIdx === -1 || oldIdx === insertPos - 1) return; // already there
+        const item = scheduled[oldIdx];
+        const next = scheduled.filter(i => i.id !== itemId);
+        const adjustedPos = oldIdx < insertPos ? insertPos - 1 : insertPos;
+        next.splice(adjustedPos, 0, item);
+        setScheduled(next);
+        persistDayActivities(next, potential);
+        addLog(`  ↕ moved "${item.label}" into group "${groupId}"`);
+        return;
+      }
+
       // → Reorder within schedule via closestCenter (sched-* target)
       if (overId.startsWith('sched-')) {
         const overItemId = overId.replace('sched-', '');
@@ -940,6 +1566,15 @@ export default function DndTestPage() {
       const currentGroups = buildGroups(scheduled, lockedIds);
       arrayInsertPos = 0;
       for (let i = 0; i < gapGroupIndex; i++) arrayInsertPos += currentGroups[i].items.length;
+    } else if (overId.startsWith('group-frame-')) {
+      // Drop onto a group container — append after last item in group
+      const currentGroups = buildGroups(scheduled, lockedIds);
+      const groupId = overId.replace('group-frame-', '');
+      const targetGroup = currentGroups.find(g => g.id === groupId);
+      if (!targetGroup || targetGroup.isLocked) { addLog(`  ❌ locked group`); return; }
+      const lastItem = targetGroup.items[targetGroup.items.length - 1];
+      const lastIdx = lastItem ? scheduled.findIndex(i => i.id === lastItem.id) : -1;
+      arrayInsertPos = lastIdx + 1;
     } else if (overId === 'schedule-zone') {
       arrayInsertPos = 0;
     } else {
@@ -1158,7 +1793,6 @@ export default function DndTestPage() {
 
                     {groups.map((group, gi) => (
                       <div key={group.id} className="relative space-y-0.5">
-                        {/* Orange dot centered on the line, at header height */}
                         <div className="absolute right-1.5 top-[8px] w-2 h-2 rounded-full bg-orange-400 pointer-events-none z-10" />
                         <div className="pr-6">
                           <GroupFrame
@@ -1166,6 +1800,20 @@ export default function DndTestPage() {
                             label={groupLabel(groups, gi)}
                             lockedIds={lockedIds}
                             onToggleLock={toggleLock}
+                            onAddTransport={handleAddTransport}
+                            onDeleteTransport={handleDeleteTransport}
+                            onEditTransport={handleEditTransport}
+                            onUpdateTimeBlock={handleUpdateTimeBlock}
+                            onDeleteTimeBlock={handleDeleteTimeBlock}
+                            canDelete={canDeleteGroup(groups, gi)}
+                            onRenameGroup={(lbl, time) => {
+                              const content = group.items.filter(i => !i.isTimeBlock);
+                              handleRenameAutoGroup(content[0]?.id, lbl, time);
+                            }}
+                            onDeleteGroup={() => {
+                              const content = group.items.filter(i => !i.isTimeBlock);
+                              handleDeleteAutoGroup(content.map(i => i.id));
+                            }}
                           />
                         </div>
                         {/* Gap after each group */}
@@ -1174,6 +1822,41 @@ export default function DndTestPage() {
                     ))}
                   </div>
                 </ScheduleZone>
+
+                {/* Add time window */}
+                {addingTimeBlock ? (
+                  <div className="flex gap-1.5 items-center mt-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
+                    <Input
+                      placeholder="שם החלון (למשל: ביקור בעיר)"
+                      value={newTbLabel}
+                      onChange={e => setNewTbLabel(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleAddTimeBlock(); if (e.key === 'Escape') { setAddingTimeBlock(false); setNewTbLabel(''); setNewTbTime(''); } }}
+                      className="h-7 text-xs flex-1 min-w-0"
+                      autoFocus
+                    />
+                    <input
+                      type="time"
+                      value={newTbTime}
+                      onChange={e => setNewTbTime(e.target.value)}
+                      className="h-7 text-xs border border-input rounded-md px-2 bg-background w-[88px] shrink-0"
+                    />
+                    <button type="button" onClick={handleAddTimeBlock} className="p-1 rounded text-primary hover:bg-primary/10 transition-colors shrink-0">
+                      <Check size={14} />
+                    </button>
+                    <button type="button" onClick={() => { setAddingTimeBlock(false); setNewTbLabel(''); setNewTbTime(''); }} className="p-1 rounded text-muted-foreground hover:bg-muted transition-colors shrink-0">
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setAddingTimeBlock(true)}
+                    className="mt-2 w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground/60 hover:text-primary hover:bg-primary/5 border border-dashed border-primary/20 hover:border-primary/40 rounded-lg py-1.5 transition-colors"
+                  >
+                    <Clock size={12} />
+                    הוסף חלון זמן
+                  </button>
+                )}
               </div>
 
               {/* Where I sleep */}
@@ -1225,14 +1908,39 @@ export default function DndTestPage() {
             {activeItem && (
               <div className="flex items-center gap-2.5 bg-card border border-primary/50 rounded-xl px-3 py-2.5 shadow-lg rotate-1 cursor-grabbing">
                 <GripVertical size={14} className="text-muted-foreground/50 shrink-0" />
-                <span className="text-base">{activeItem.emoji}</span>
-                <span className="text-sm font-medium">{activeItem.label}</span>
+                {activeItem.poi ? (
+                  <POICard poi={activeItem.poi} level={1} />
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined">{activeItem.emoji}</span>
+                    <span className="text-sm font-medium">{activeItem.label}</span>
+                  </>
+                )}
               </div>
             )}
           </DragOverlay>
         </DndContext>
 
       </div>
+
+      <CreateTransportForm
+        open={addTransportOpen}
+        onOpenChange={setAddTransportOpen}
+        onCreated={handleTransportCreated}
+        initialFrom={transportFromName}
+        initialTo={transportToName}
+      />
+
+      {editTransportId && (() => {
+        const transport = state.transportation.find(t => t.id === editTransportId);
+        return transport ? (
+          <TransportDetailDialog
+            transport={transport}
+            open={!!editTransportId}
+            onOpenChange={open => { if (!open) { setEditTransportId(null); refreshDays(); } }}
+          />
+        ) : null;
+      })()}
     </AppLayout>
   );
 }

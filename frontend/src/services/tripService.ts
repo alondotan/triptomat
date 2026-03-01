@@ -4,6 +4,7 @@ import {
   Trip, PointOfInterest, Transportation, Collection,
   Mission, ItineraryDay, POILocation, SourceRefs, POIDetails,
   TransportCost, TransportBooking, TransportSegment,
+  Contact,
 } from '@/types/trip';
 
 // ============================================================
@@ -92,11 +93,11 @@ export async function fetchPOIs(tripId: string): Promise<PointOfInterest[]> {
 
 // ── Merge utilities ─────────────────────────────────────────────
 
-function hasValue(v: unknown): boolean {
+export function hasValue(v: unknown): boolean {
   return v !== null && v !== undefined && v !== '';
 }
 
-function mergeWithNewWins(old: unknown, incoming: unknown): unknown {
+export function mergeWithNewWins(old: unknown, incoming: unknown): unknown {
   if (!hasValue(incoming)) return old;
   if (typeof incoming !== 'object' || Array.isArray(incoming)) return incoming;
   if (typeof old !== 'object' || old === null || Array.isArray(old)) return incoming;
@@ -117,7 +118,7 @@ function fuzzyMatch(a: string, b: string): boolean {
   return x === y || x.includes(y) || y.includes(x);
 }
 
-const STATUS_PRIORITY: Record<string, number> = {
+export const STATUS_PRIORITY: Record<string, number> = {
   booked: 4, visited: 3, in_plan: 2, matched: 1, candidate: 0,
 };
 
@@ -531,6 +532,69 @@ export async function fetchCollections(tripId: string): Promise<Collection[]> {
   return (data || []).map(mapCollection);
 }
 
+// ============================================================
+// CONTACTS
+// ============================================================
+export async function fetchContacts(tripId: string): Promise<Contact[]> {
+  const { data, error } = await supabase
+    .from('contacts')
+    .select('*')
+    .eq('trip_id', tripId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data || []).map(mapContact);
+}
+
+export async function createContact(c: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>): Promise<Contact> {
+  const { data, error } = await supabase
+    .from('contacts')
+    .insert([{
+      trip_id: c.tripId,
+      name: c.name,
+      role: c.role,
+      phone: c.phone || null,
+      email: c.email || null,
+      website: c.website || null,
+      notes: c.notes || null,
+    }])
+    .select()
+    .single();
+  if (error) throw error;
+  return mapContact(data);
+}
+
+export async function updateContact(id: string, updates: Partial<Contact>): Promise<void> {
+  const updateData: Record<string, unknown> = {};
+  if (updates.name !== undefined) updateData.name = updates.name;
+  if (updates.role !== undefined) updateData.role = updates.role;
+  if (updates.phone !== undefined) updateData.phone = updates.phone;
+  if (updates.email !== undefined) updateData.email = updates.email;
+  if (updates.website !== undefined) updateData.website = updates.website;
+  if (updates.notes !== undefined) updateData.notes = updates.notes;
+  const { error } = await supabase.from('contacts').update(updateData).eq('id', id);
+  if (error) throw error;
+}
+
+export async function deleteContact(id: string): Promise<void> {
+  const { error } = await supabase.from('contacts').delete().eq('id', id);
+  if (error) throw error;
+}
+
+function mapContact(row: Record<string, unknown>): Contact {
+  return {
+    id: row.id as string,
+    tripId: row.trip_id as string,
+    name: row.name as string,
+    role: (row.role as Contact['role']) || 'other',
+    phone: (row.phone as string) || undefined,
+    email: (row.email as string) || undefined,
+    website: (row.website as string) || undefined,
+    notes: (row.notes as string) || undefined,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+  };
+}
+
 function mapCollection(row: Record<string, unknown>): Collection {
   return {
     id: row.id as string,
@@ -543,4 +607,165 @@ function mapCollection(row: Record<string, unknown>): Collection {
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
+}
+
+// ============================================================
+// MANUAL MERGE
+// ============================================================
+
+const TRANSPORT_STATUS_PRIORITY: Record<string, number> = {
+  completed: 4, booked: 3, in_plan: 2, candidate: 0,
+};
+
+function mergeSourceRefs(a: SourceRefs, b: SourceRefs): SourceRefs {
+  return {
+    email_ids: [...new Set([...(a.email_ids || []), ...(b.email_ids || [])])],
+    recommendation_ids: [...new Set([...(a.recommendation_ids || []), ...(b.recommendation_ids || [])])],
+  };
+}
+
+/**
+ * Merge two POIs. The primary survives; secondary fills gaps then is deleted.
+ * Uses mergeWithNewWins(secondary, primary) so primary's values win.
+ */
+export async function mergeTwoPOIs(
+  primary: PointOfInterest,
+  secondary: PointOfInterest,
+): Promise<PointOfInterest> {
+  const mergedLocation = mergeWithNewWins(secondary.location, primary.location) as POILocation;
+  const mergedDetails = mergeWithNewWins(secondary.details, primary.details) as POIDetails;
+
+  const updates: Partial<PointOfInterest> = {
+    location: mergedLocation,
+    details: mergedDetails,
+    sourceRefs: mergeSourceRefs(primary.sourceRefs, secondary.sourceRefs),
+  };
+
+  if (!hasValue(primary.subCategory) && hasValue(secondary.subCategory)) {
+    updates.subCategory = secondary.subCategory;
+  }
+
+  // Status: never downgrade
+  const secPriority = STATUS_PRIORITY[secondary.status] ?? 0;
+  const priPriority = STATUS_PRIORITY[primary.status] ?? 0;
+  if (secPriority > priPriority) updates.status = secondary.status;
+
+  // isPaid: additive
+  if (secondary.isPaid) updates.isPaid = true;
+
+  // isCancelled: un-cancel if either is not cancelled
+  if (primary.isCancelled && !secondary.isCancelled) updates.isCancelled = false;
+
+  await updatePOI(primary.id, updates);
+  await deletePOI(secondary.id);
+
+  return { ...primary, ...updates };
+}
+
+/**
+ * Merge two Transportation items. Primary survives; secondary fills gaps then is deleted.
+ */
+export async function mergeTwoTransportations(
+  primary: Transportation,
+  secondary: Transportation,
+): Promise<Transportation> {
+  const mergedBooking = mergeWithNewWins(secondary.booking, primary.booking) as TransportBooking;
+  const mergedAdditionalInfo = mergeWithNewWins(
+    secondary.additionalInfo, primary.additionalInfo,
+  ) as Transportation['additionalInfo'];
+
+  const updates: Partial<Transportation> = {
+    booking: mergedBooking,
+    additionalInfo: mergedAdditionalInfo,
+    sourceRefs: mergeSourceRefs(primary.sourceRefs, secondary.sourceRefs),
+  };
+
+  // Cost: take primary's unless zero, then take secondary's
+  if ((!primary.cost.total_amount || primary.cost.total_amount === 0) && secondary.cost.total_amount > 0) {
+    updates.cost = secondary.cost;
+  }
+
+  // Segments: keep primary's if non-empty, otherwise take secondary's
+  if (primary.segments.length === 0 && secondary.segments.length > 0) {
+    updates.segments = secondary.segments;
+  }
+
+  // Status: never downgrade
+  const secPriority = TRANSPORT_STATUS_PRIORITY[secondary.status] ?? 0;
+  const priPriority = TRANSPORT_STATUS_PRIORITY[primary.status] ?? 0;
+  if (secPriority > priPriority) updates.status = secondary.status;
+
+  // isPaid: additive
+  if (secondary.isPaid) updates.isPaid = true;
+
+  // isCancelled: un-cancel if either is not cancelled
+  if (primary.isCancelled && !secondary.isCancelled) updates.isCancelled = false;
+
+  await updateTransportation(primary.id, updates);
+  await deleteTransportation(secondary.id);
+
+  return { ...primary, ...updates };
+}
+
+/**
+ * After merging, remap itinerary_days references from secondaryId → primaryId.
+ */
+export async function repairItineraryReferences(
+  tripId: string,
+  secondaryId: string,
+  primaryId: string,
+  entityType: 'poi' | 'transportation',
+): Promise<void> {
+  const days = await fetchItineraryDays(tripId);
+  for (const day of days) {
+    let changed = false;
+
+    if (entityType === 'poi') {
+      const newAccomm = day.accommodationOptions.map(opt => {
+        if (opt.poi_id === secondaryId) { changed = true; return { ...opt, poi_id: primaryId }; }
+        return opt;
+      });
+      const seenAccomm = new Set<string>();
+      const dedupedAccomm = newAccomm.filter(opt => {
+        if (seenAccomm.has(opt.poi_id)) return false;
+        seenAccomm.add(opt.poi_id);
+        return true;
+      });
+
+      const newActivities = day.activities.map(act => {
+        if (act.type === 'poi' && act.id === secondaryId) { changed = true; return { ...act, id: primaryId }; }
+        return act;
+      });
+      const seenAct = new Set<string>();
+      const dedupedActivities = newActivities.filter(act => {
+        if (act.type !== 'poi') return true;
+        if (seenAct.has(act.id)) return false;
+        seenAct.add(act.id);
+        return true;
+      });
+
+      if (changed) {
+        await updateItineraryDay(day.id, {
+          accommodationOptions: dedupedAccomm,
+          activities: dedupedActivities,
+        });
+      }
+    } else {
+      const newSegments = day.transportationSegments.map(seg => {
+        if (seg.transportation_id === secondaryId) { changed = true; return { ...seg, transportation_id: primaryId }; }
+        return seg;
+      });
+      const seenSeg = new Set<string>();
+      const dedupedSegments = newSegments.filter(seg => {
+        const key = `${seg.transportation_id}_${seg.segment_id || ''}`;
+        if (seenSeg.has(key)) return false;
+        seenSeg.add(key);
+        return true;
+      });
+
+      if (changed) {
+        await updateItineraryDay(day.id, { transportationSegments: dedupedSegments });
+      }
+    }
+  }
 }

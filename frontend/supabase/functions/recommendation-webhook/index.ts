@@ -83,6 +83,11 @@ const TYPE_TO_CATEGORY: Record<string, string> = {
   scooterRental: 'service', equipmentRental: 'service', locker: 'service',
   showerFacility: 'service', wifiHotspot: 'service', coworkingSpace: 'service',
   embassy: 'service', otherService: 'service',
+
+  // Contacts → contact entity
+  tourGuideContact: 'contact', hostContact: 'contact', driverContact: 'contact',
+  agencyContact: 'contact', rentalContact: 'contact', restaurantContact: 'contact',
+  otherContact: 'contact',
 };
 
 // Types that are geographic locations (not actionable POIs)
@@ -125,11 +130,20 @@ interface RecommendationPayload {
       site: string;
       location?: { address?: string; coordinates?: { lat: number; lng: number } };
     }>;
+    contacts?: Array<{
+      name: string;
+      role?: string;
+      phone?: string;
+      email?: string;
+      website?: string;
+      paragraph?: string;
+      site?: string;
+    }>;
   };
 }
 
 interface LinkedEntity {
-  entity_type: 'poi' | 'transportation';
+  entity_type: 'poi' | 'transportation' | 'contact';
   entity_id: string;
   description: string;
   matched_existing: boolean;
@@ -231,9 +245,10 @@ Deno.serve(async (req) => {
     const linkedEntities: LinkedEntity[] = [];
     if (matchedTripId) {
       // Pre-fetch existing entities for this trip
-      const [{ data: existingPois }, { data: existingTransport }] = await Promise.all([
+      const [{ data: existingPois }, { data: existingTransport }, { data: existingContacts }] = await Promise.all([
         supabase.from('points_of_interest').select('id, name, category, location, source_refs').eq('trip_id', matchedTripId),
         supabase.from('transportation').select('id, category, additional_info, source_refs').eq('trip_id', matchedTripId),
+        supabase.from('contacts').select('id, name, role').eq('trip_id', matchedTripId),
       ]);
 
       const items = payload.analysis.recommendations || [];
@@ -345,6 +360,45 @@ Deno.serve(async (req) => {
                 description: item.name, matched_existing: false,
               });
             }
+          }
+        }
+      }
+
+      // Process contacts extracted by the AI
+      const contacts = payload.analysis.contacts || [];
+      for (const contact of contacts) {
+        if (!contact.name) continue;
+
+        // Fuzzy match against existing contacts
+        const matchedContact = existingContacts?.find(c => fuzzyMatch(c.name, contact.name));
+
+        if (matchedContact) {
+          linkedEntities.push({
+            entity_type: 'contact', entity_id: matchedContact.id,
+            description: contact.name, matched_existing: true,
+          });
+        } else {
+          const ROLE_MAP: Record<string, string> = {
+            guide: 'guide', host: 'host', rental: 'rental',
+            restaurant: 'restaurant', driver: 'driver', agency: 'agency',
+          };
+          const role = ROLE_MAP[contact.role || ''] || 'other';
+
+          const { data: newContact } = await supabase.from('contacts').insert([{
+            trip_id: matchedTripId,
+            name: contact.name,
+            role,
+            phone: contact.phone || null,
+            email: contact.email || null,
+            website: contact.website || null,
+            notes: contact.paragraph || null,
+          }]).select('id').single();
+
+          if (newContact) {
+            linkedEntities.push({
+              entity_type: 'contact', entity_id: newContact.id,
+              description: contact.name, matched_existing: false,
+            });
           }
         }
       }

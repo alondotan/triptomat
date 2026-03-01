@@ -334,6 +334,13 @@
 {"type":"connectivityTip","icon":"wifi","category":"Tips","is_geo_location":false},
 {"type":"familyTravelTip","icon":"family_restroom","category":"Tips","is_geo_location":false},
 
+{"type": "tourGuideContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
+{"type": "hostContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
+{"type": "driverContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
+{"type": "agencyContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
+{"type": "rentalContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
+{"type": "restaurantContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
+{"type": "otherContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
 
   {"type": "otherActivity", "icon": "more_horiz", "category": "Activities", "is_geo_location": false},
   {"type": "otherGeography", "icon": "more_horiz", "category": "Geography", "is_geo_location": true},
@@ -351,6 +358,7 @@
     "Services": { "icon": "wrench", "color": "text-slate-500" },
     "Tips": { "icon": "lightbulb", "color": "text-yellow-500" },
     "Geography": { "icon": "map", "color": "text-emerald-500" },
-     "Events": { "icon": "calendar", "color": "text-purple-500" }
+     "Events": { "icon": "calendar", "color": "text-purple-500" },
+    "Contacts": { "icon": "users", "color": "text-teal-500" }
   }
 }

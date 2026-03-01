@@ -33,7 +33,7 @@ export interface SourceEmail {
     additional_info?: { summary?: string; raw_notes?: string };
   };
   linkedEntities: Array<{
-    entity_type: 'poi' | 'transportation';
+    entity_type: 'poi' | 'transportation' | 'contact';
     entity_id: string;
     description?: string;
   }>;
@@ -68,9 +68,18 @@ export interface SourceRecommendation {
         entity_id?: string;
       };
     }>;
+    contacts?: Array<{
+      name: string;
+      role?: string;
+      phone?: string;
+      email?: string;
+      website?: string;
+      paragraph?: string;
+      site?: string;
+    }>;
   };
   linkedEntities: Array<{
-    entity_type: 'poi' | 'transportation';
+    entity_type: 'poi' | 'transportation' | 'contact';
     entity_id: string;
     description?: string;
     matched_existing?: boolean;

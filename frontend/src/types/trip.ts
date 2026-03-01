@@ -57,7 +57,7 @@ export interface AccommodationDetails {
 }
 
 export interface ActivityDetails {
-  duration?: string;
+  duration?: number; // minutes
   opening_hours?: string;
 }
 
@@ -189,10 +189,11 @@ export interface ItineraryAccommodationOption {
 
 export interface ItineraryActivity {
   order: number;
-  type: 'poi' | 'collection';
+  type: 'poi' | 'collection' | 'time_block';
   id: string;
   schedule_state?: 'potential' | 'scheduled';
   time_window?: { start?: string; end?: string };
+  label?: string; // custom label for time_block activities
 }
 
 export interface ItineraryTransportSegment {
@@ -228,6 +229,24 @@ export interface Expense {
   date?: string;
   notes?: string;
   isPaid: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================================
+// CONTACT
+// ============================================================
+export type ContactRole = 'guide' | 'host' | 'rental' | 'restaurant' | 'driver' | 'agency' | 'emergency' | 'other';
+
+export interface Contact {
+  id: string;
+  tripId: string;
+  name: string;
+  role: ContactRole;
+  phone?: string;
+  email?: string;
+  website?: string;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }

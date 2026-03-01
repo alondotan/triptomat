@@ -1,14 +1,23 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useTrip } from '@/context/TripContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+function isMapsUrl(url: string) {
+  return /maps\.app\.goo\.gl|google\.com\/maps|goo\.gl\/maps/.test(url);
+}
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 export function UrlSubmit() {
+  const { state } = useTrip();
+  const tripId = state.activeTrip?.id;
+
   const [url, setUrl] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState('');
@@ -24,16 +33,46 @@ export function UrlSubmit() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url.trim() || !webhookToken) return;
+    const trimmed = url.trim();
+    if (!trimmed || !webhookToken) return;
 
     setStatus('loading');
     setMessage('');
 
     try {
+      // For Google Maps URLs: try the saved-list flow first
+      if (isMapsUrl(trimmed) && tripId) {
+        const listRes = await fetch(`${SUPABASE_URL}/functions/v1/sync-maps-list`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: trimmed, trip_id: tripId, token: webhookToken }),
+        });
+        const listData = await listRes.json();
+
+        if (listRes.ok) {
+          setStatus('success');
+          setMessage(
+            listData.new_places > 0
+              ? `List imported! ${listData.new_places} places added to POIs.`
+              : 'List synced — no new places found.'
+          );
+          setUrl('');
+          return;
+        }
+
+        // NOT_A_LIST → fall through to gateway
+        if (listRes.status !== 422 || listData.type !== 'NOT_A_LIST') {
+          setStatus('error');
+          setMessage(listData.error || 'Sync failed.');
+          return;
+        }
+      }
+
+      // Gateway flow: videos, websites, single Maps place
       const res = await fetch(GATEWAY_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url.trim(), webhook_token: webhookToken }),
+        body: JSON.stringify({ url: trimmed, webhook_token: webhookToken }),
       });
 
       const data = await res.json();

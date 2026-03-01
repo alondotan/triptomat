@@ -11,6 +11,7 @@ import {
   Table2,
   DollarSign,
   CheckSquare,
+  Users,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -28,6 +29,7 @@ const moreItems = [
   { path: '/itinerary', label: 'Itinerary', icon: Table2 },
   { path: '/budget', label: 'Budget', icon: DollarSign },
   { path: '/tasks', label: 'Tasks', icon: CheckSquare },
+  { path: '/contacts', label: 'Contacts', icon: Users },
 ];
 
 export function MobileBottomNav() {

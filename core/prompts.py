@@ -34,6 +34,17 @@ Your output must be a RFC8259 compliant JSON object with the following structure
                 }}
             }}
         }}
+    ],
+    "contacts": [
+        {{
+            "name": "Name of the person or business",
+            "role": "guide | host | rental | restaurant | driver | agency | other",
+            "phone": "phone number if mentioned, else null",
+            "email": "email if mentioned, else null",
+            "website": "website or social media link if mentioned, else null",
+            "paragraph": "The exact quote mentioning this contact",
+            "site": "The location/city"
+        }}
     ]
 }}
 
@@ -57,6 +68,12 @@ Your output must be a RFC8259 compliant JSON object with the following structure
  3.5 Put coordinates and address only if unknown.
 4. The recommendations
  4.1 The data in the paragraph should be in the origen language
-5. Only provide the JSON object. No prose or explanations.
-6. Perform a JSON integrity check before responding.
+5. Contacts Extraction:
+ 5.1 Extract contacts when a specific person, guide, host, driver, agency, or service provider is recommended by name.
+ 5.2 Do not extract generic business names that are already captured as recommendations — only extract contacts when there is personal/direct contact information or a personal recommendation for a specific provider.
+ 5.3 The "role" must be one of: guide, host, rental, restaurant, driver, agency, other.
+ 5.4 Include phone, email, or website only if explicitly mentioned. Otherwise set to null.
+ 5.5 If no contacts are found, return an empty array.
+6. Only provide the JSON object. No prose or explanations.
+7. Perform a JSON integrity check before responding.
 """

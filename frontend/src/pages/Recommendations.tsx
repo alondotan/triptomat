@@ -4,12 +4,15 @@ import { AppLayout } from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExternalLink, ThumbsUp, ThumbsDown, Star, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { ExternalLink, ThumbsUp, ThumbsDown, Star, Trash2, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { SubCategoryIcon } from '@/components/SubCategoryIcon';
 import { SourceRecommendation } from '@/types/webhook';
 import { fetchTripRecommendations, deleteRecommendation } from '@/services/recommendationService';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { UrlSubmit } from '@/components/UrlSubmit';
+import { TextSubmit } from '@/components/TextSubmit';
+import { MapListManager } from '@/components/MapListManager';
 
 const Recommendations = () => {
   const { state } = useTrip();
@@ -84,6 +87,10 @@ const Recommendations = () => {
           <p className="text-muted-foreground">{recommendations.length} sources</p>
         </div>
 
+        <UrlSubmit />
+        <TextSubmit />
+        <MapListManager />
+
         {recommendations.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
             No recommendations yet for this trip.
@@ -98,9 +105,13 @@ const Recommendations = () => {
           const linkedTransportIds = rec.linkedEntities
             .filter(e => e.entity_type === 'transportation')
             .map(e => e.entity_id);
+          const linkedContactIds = rec.linkedEntities
+            .filter(e => e.entity_type === 'contact')
+            .map(e => e.entity_id);
           const linkedPois = state.pois.filter(p => linkedPoiIds.includes(p.id));
           const linkedTransport = state.transportation.filter(t => linkedTransportIds.includes(t.id));
-          const hasLinkedEntities = linkedPois.length > 0 || linkedTransport.length > 0;
+          const linkedContacts = state.contacts.filter(c => linkedContactIds.includes(c.id));
+          const hasLinkedEntities = linkedPois.length > 0 || linkedTransport.length > 0 || linkedContacts.length > 0;
 
           return (
             <Card key={rec.id} className="overflow-hidden">
@@ -189,6 +200,32 @@ const Recommendations = () => {
                   </div>
                 )}
 
+                {/* Extracted contacts */}
+                {rec.analysis.contacts && rec.analysis.contacts.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Contacts mentioned:</p>
+                    <div className="space-y-1.5">
+                      {rec.analysis.contacts.map((contact, i) => (
+                        <div key={i} className="flex items-start gap-2 p-2 rounded bg-muted/50">
+                          <Users size={14} className="text-teal-500 mt-0.5 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{contact.name}</span>
+                              {contact.role && (
+                                <Badge variant="outline" className="text-xs capitalize">{contact.role}</Badge>
+                              )}
+                              {contact.site && <span className="text-xs text-muted-foreground">@ {contact.site}</span>}
+                            </div>
+                            {contact.paragraph && (
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{contact.paragraph}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Linked entities — shown when expanded */}
                 {isExpanded && hasLinkedEntities && (
                   <div className="pt-3 border-t">
@@ -218,6 +255,15 @@ const Recommendations = () => {
                             )}
                           </div>
                           <Badge variant="outline" className="text-xs shrink-0">{t.status}</Badge>
+                        </div>
+                      ))}
+                      {linkedContacts.map(c => (
+                        <div key={c.id} className="flex items-center gap-2 p-2 rounded bg-primary/5 border border-primary/10">
+                          <Users size={14} className="text-teal-500 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <span className="font-medium">{c.name}</span>
+                            <span className="text-xs text-muted-foreground ml-1 capitalize">({c.role})</span>
+                          </div>
                         </div>
                       ))}
                     </div>

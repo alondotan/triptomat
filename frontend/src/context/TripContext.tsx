@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, useCallback } from 'react';
-import { Trip, PointOfInterest, Transportation, Mission, ItineraryDay, CostBreakdown, Expense } from '@/types/trip';
+import { Trip, PointOfInterest, Transportation, Mission, ItineraryDay, CostBreakdown, Expense, Contact } from '@/types/trip';
 import { SiteHierarchyNode } from '@/types/webhook';
 import * as tripService from '@/services/tripService';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,7 @@ interface TripState {
   missions: Mission[];
   itineraryDays: ItineraryDay[];
   expenses: Expense[];
+  contacts: Contact[];
   tripSitesHierarchy: SiteHierarchyNode[];
   sourceEmailMap: Record<string, { permalink?: string; subject?: string }>;
   exchangeRates: ExchangeRates | null;
@@ -49,6 +50,10 @@ type TripAction =
   | { type: 'ADD_EXPENSE'; payload: Expense }
   | { type: 'UPDATE_EXPENSE'; payload: Expense }
   | { type: 'DELETE_EXPENSE'; payload: string }
+  | { type: 'SET_CONTACTS'; payload: Contact[] }
+  | { type: 'ADD_CONTACT'; payload: Contact }
+  | { type: 'UPDATE_CONTACT'; payload: Contact }
+  | { type: 'DELETE_CONTACT'; payload: string }
   | { type: 'SET_SOURCE_EMAIL_MAP'; payload: Record<string, { permalink?: string; subject?: string }> };
 
 function tripReducer(state: TripState, action: TripAction): TripState {
@@ -66,14 +71,14 @@ function tripReducer(state: TripState, action: TripAction): TripState {
       };
     case 'SET_ACTIVE_TRIP': {
       const trip = state.trips.find(t => t.id === action.payload);
-      return { ...state, activeTrip: trip || null, pois: [], transportation: [], missions: [], itineraryDays: [], expenses: [], tripSitesHierarchy: [], sourceEmailMap: {} };
+      return { ...state, activeTrip: trip || null, pois: [], transportation: [], missions: [], itineraryDays: [], expenses: [], contacts: [], tripSitesHierarchy: [], sourceEmailMap: {} };
     }
     case 'CREATE_TRIP':
       return {
         ...state,
         trips: [action.payload, ...state.trips],
         activeTrip: action.payload,
-        pois: [], transportation: [], missions: [], itineraryDays: [], expenses: [], tripSitesHierarchy: [], sourceEmailMap: {},
+        pois: [], transportation: [], missions: [], itineraryDays: [], expenses: [], contacts: [], tripSitesHierarchy: [], sourceEmailMap: {},
       };
     case 'DELETE_TRIP': {
       const filtered = state.trips.filter(t => t.id !== action.payload);
@@ -81,7 +86,7 @@ function tripReducer(state: TripState, action: TripAction): TripState {
         ...state,
         trips: filtered,
         activeTrip: filtered.length > 0 ? filtered[0] : null,
-        pois: [], transportation: [], missions: [], itineraryDays: [], expenses: [], tripSitesHierarchy: [], sourceEmailMap: {},
+        pois: [], transportation: [], missions: [], itineraryDays: [], expenses: [], contacts: [], tripSitesHierarchy: [], sourceEmailMap: {},
       };
     }
     case 'UPDATE_TRIP': {
@@ -130,6 +135,14 @@ function tripReducer(state: TripState, action: TripAction): TripState {
       return { ...state, expenses: state.expenses.map(e => e.id === action.payload.id ? action.payload : e) };
     case 'DELETE_EXPENSE':
       return { ...state, expenses: state.expenses.filter(e => e.id !== action.payload) };
+    case 'SET_CONTACTS':
+      return { ...state, contacts: action.payload };
+    case 'ADD_CONTACT':
+      return { ...state, contacts: [action.payload, ...state.contacts] };
+    case 'UPDATE_CONTACT':
+      return { ...state, contacts: state.contacts.map(c => c.id === action.payload.id ? action.payload : c) };
+    case 'DELETE_CONTACT':
+      return { ...state, contacts: state.contacts.filter(c => c.id !== action.payload) };
     default:
       return state;
   }
@@ -156,6 +169,11 @@ interface TripContextType {
   addExpense: (e: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateExpense: (id: string, updates: Partial<Expense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+  addContact: (c: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateContact: (id: string, updates: Partial<Contact>) => Promise<void>;
+  deleteContact: (id: string) => Promise<void>;
+  mergePOIs: (primaryId: string, secondaryId: string) => Promise<void>;
+  mergeTransportation: (primaryId: string, secondaryId: string) => Promise<void>;
   togglePaidStatus: (entityType: 'poi' | 'transport' | 'expense', id: string, isPaid: boolean) => Promise<void>;
   getCostBreakdown: () => CostBreakdown;
   formatCurrency: (amount: number, currency?: string) => string;
@@ -175,6 +193,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
     missions: [],
     itineraryDays: [],
     expenses: [],
+    contacts: [],
     tripSitesHierarchy: [],
     sourceEmailMap: {},
     exchangeRates: null,
@@ -208,6 +227,14 @@ export function TripProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_MISSIONS', payload: missions });
       dispatch({ type: 'SET_ITINERARY_DAYS', payload: itineraryDays });
       dispatch({ type: 'SET_EXPENSES', payload: expenses });
+
+      // Contacts loaded separately so a failure doesn't break everything else
+      try {
+        const contacts = await tripService.fetchContacts(tripId);
+        dispatch({ type: 'SET_CONTACTS', payload: contacts });
+      } catch (e) {
+        console.error('Failed to load contacts:', e);
+      }
 
       // Load sites_hierarchy from source_emails AND source_recommendations for this trip
       try {
@@ -462,6 +489,73 @@ export function TripProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addContactAction = async (c: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const newC = await tripService.createContact(c);
+      dispatch({ type: 'ADD_CONTACT', payload: newC });
+    } catch (error) {
+      console.error('Failed to add contact:', error);
+      toast({ title: 'Error', description: 'Failed to add contact.', variant: 'destructive' });
+    }
+  };
+
+  const updateContactAction = async (id: string, updates: Partial<Contact>) => {
+    try {
+      await tripService.updateContact(id, updates);
+      const existing = state.contacts.find(c => c.id === id);
+      if (existing) dispatch({ type: 'UPDATE_CONTACT', payload: { ...existing, ...updates } });
+    } catch (error) {
+      console.error('Failed to update contact:', error);
+      toast({ title: 'Error', description: 'Failed to update contact.', variant: 'destructive' });
+    }
+  };
+
+  const deleteContactAction = async (id: string) => {
+    try {
+      await tripService.deleteContact(id);
+      dispatch({ type: 'DELETE_CONTACT', payload: id });
+    } catch (error) {
+      console.error('Failed to delete contact:', error);
+      toast({ title: 'Error', description: 'Failed to delete contact.', variant: 'destructive' });
+    }
+  };
+
+  const mergePOIsAction = async (primaryId: string, secondaryId: string) => {
+    const primary = state.pois.find(p => p.id === primaryId);
+    const secondary = state.pois.find(p => p.id === secondaryId);
+    if (!primary || !secondary || !state.activeTrip) return;
+    try {
+      const merged = await tripService.mergeTwoPOIs(primary, secondary);
+      await tripService.repairItineraryReferences(state.activeTrip.id, secondaryId, primaryId, 'poi');
+      dispatch({ type: 'UPDATE_POI', payload: merged });
+      dispatch({ type: 'DELETE_POI', payload: secondaryId });
+      const days = await tripService.fetchItineraryDays(state.activeTrip.id);
+      dispatch({ type: 'SET_ITINERARY_DAYS', payload: days });
+      toast({ title: 'מוזג בהצלחה', description: `"${secondary.name}" מוזג לתוך "${primary.name}"` });
+    } catch (error) {
+      console.error('Failed to merge POIs:', error);
+      toast({ title: 'שגיאה', description: 'המיזוג נכשל.', variant: 'destructive' });
+    }
+  };
+
+  const mergeTransportationAction = async (primaryId: string, secondaryId: string) => {
+    const primary = state.transportation.find(t => t.id === primaryId);
+    const secondary = state.transportation.find(t => t.id === secondaryId);
+    if (!primary || !secondary || !state.activeTrip) return;
+    try {
+      const merged = await tripService.mergeTwoTransportations(primary, secondary);
+      await tripService.repairItineraryReferences(state.activeTrip.id, secondaryId, primaryId, 'transportation');
+      dispatch({ type: 'UPDATE_TRANSPORTATION', payload: merged });
+      dispatch({ type: 'DELETE_TRANSPORTATION', payload: secondaryId });
+      const days = await tripService.fetchItineraryDays(state.activeTrip.id);
+      dispatch({ type: 'SET_ITINERARY_DAYS', payload: days });
+      toast({ title: 'מוזג בהצלחה', description: 'פריטי התחבורה מוזגו.' });
+    } catch (error) {
+      console.error('Failed to merge transportation:', error);
+      toast({ title: 'שגיאה', description: 'המיזוג נכשל.', variant: 'destructive' });
+    }
+  };
+
   const togglePaidStatus = async (entityType: 'poi' | 'transport' | 'expense', id: string, isPaid: boolean) => {
     try {
       if (entityType === 'poi') {
@@ -547,6 +641,8 @@ export function TripProvider({ children }: { children: ReactNode }) {
       addTransportation: addTransportationAction, updateTransportation: updateTransportationAction, deleteTransportation: deleteTransportationAction,
       addMission: addMissionAction, updateMission: updateMissionAction, deleteMission: deleteMissionAction,
       addExpense: addExpenseAction, updateExpense: updateExpenseAction, deleteExpense: deleteExpenseAction,
+      addContact: addContactAction, updateContact: updateContactAction, deleteContact: deleteContactAction,
+      mergePOIs: mergePOIsAction, mergeTransportation: mergeTransportationAction,
       togglePaidStatus,
       getCostBreakdown, formatCurrency, formatDualCurrency, convertToPreferredCurrency,
     }}>

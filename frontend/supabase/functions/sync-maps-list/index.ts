@@ -114,6 +114,7 @@ interface RawPlace {
 interface FetchResult {
   places: RawPlace[];
   listName: string | null;
+  is_list: boolean;
 }
 
 interface EnrichedPlace {
@@ -157,7 +158,8 @@ serve(async (req) => {
   }
 
   try {
-    const { list_id, token } = await req.json();
+    const body = await req.json();
+    const token = body.token;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -173,18 +175,49 @@ serve(async (req) => {
 
     if (!tokenRow) return json({ error: "Invalid token" }, 401);
 
-    // Get the list (must belong to this user)
-    const { data: list } = await supabase
-      .from("map_lists")
-      .select("*")
-      .eq("id", list_id)
-      .eq("user_id", tokenRow.user_id)
-      .single();
+    // ── Resolve list: url-direct mode OR list_id mode ──
+    let list: any;
+    let list_id: string;
+    let prefetched: FetchResult | null = null;
 
-    if (!list) return json({ error: "List not found" }, 404);
+    if (body.url && body.trip_id) {
+      // url-direct: probe first to avoid creating a DB record for non-list URLs
+      const probe = await fetchRawPlacesFromGoogleMaps(body.url);
+      if (!probe.is_list) {
+        return json({ type: "NOT_A_LIST", error: "Not a Google Maps saved list" }, 422);
+      }
+      const { data: newList, error: insertError } = await supabase
+        .from("map_lists")
+        .insert({
+          trip_id: body.trip_id,
+          user_id: tokenRow.user_id,
+          url: body.url,
+          name: probe.listName || "Google Maps List",
+        })
+        .select()
+        .single();
+      if (insertError || !newList) return json({ error: "Failed to create list" }, 500);
+      list = newList;
+      list_id = newList.id;
+      prefetched = probe;
+    } else {
+      // Existing mode: look up list by list_id
+      const { data: existingList } = await supabase
+        .from("map_lists")
+        .select("*")
+        .eq("id", body.list_id)
+        .eq("user_id", tokenRow.user_id)
+        .single();
+      if (!existingList) return json({ error: "List not found" }, 404);
+      list = existingList;
+      list_id = existingList.id;
+    }
 
     // ── Step 1: fetch raw places from Google Maps entitylist API ──
-    const { places: rawPlaces, listName } = await fetchRawPlacesFromGoogleMaps(list.url);
+    const { places: rawPlaces, listName, is_list } = prefetched ?? await fetchRawPlacesFromGoogleMaps(list.url);
+    if (!is_list) {
+      return json({ type: "NOT_A_LIST", error: "URL is not a Google Maps saved list" }, 422);
+    }
     if (rawPlaces.length === 0) {
       if (listName) {
         await supabase.from("map_lists").update({ name: listName }).eq("id", list_id);
@@ -243,10 +276,54 @@ serve(async (req) => {
     console.log(`[sync] AI returned ${aiOutput.recommendations.length} recommendations`);
     console.log("[sync] sites_hierarchy:", JSON.stringify(aiOutput.sites_hierarchy));
 
-    // ── Step 6: insert POIs ──
-    const recs = aiOutput.recommendations.filter((r) => r.name);
-    if (recs.length > 0) {
-      const poiRows = recs.map((rec) => {
+    // ── Step 5b: filter recommendations by trip countries ──
+    const allRecs = aiOutput.recommendations.filter((r) => r.name);
+
+    // Fetch trip's countries to filter recommendations
+    const { data: tripData } = await supabase
+      .from("trips")
+      .select("countries")
+      .eq("id", list.trip_id)
+      .single();
+
+    const tripCountries = (tripData?.countries || []).map((c: string) => c.toLowerCase());
+
+    let matchingRecs = allRecs;
+    let nonMatchingRecs: AiRecommendation[] = [];
+    let matchingHierarchy = aiOutput.sites_hierarchy;
+    let nonMatchingHierarchy: SiteNode[] = [];
+
+    // Only filter if the trip has countries defined
+    if (tripCountries.length > 0 && aiOutput.sites_hierarchy.length > 0) {
+      const siteToCountry = buildSiteToCountryMap(aiOutput.sites_hierarchy);
+
+      matchingRecs = [];
+      nonMatchingRecs = [];
+
+      for (const rec of allRecs) {
+        const country = siteToCountry[(rec.site || "").toLowerCase()];
+        // If we can't determine the country, include it (better safe than sorry)
+        if (!country || tripCountries.includes(country.toLowerCase())) {
+          matchingRecs.push(rec);
+        } else {
+          nonMatchingRecs.push(rec);
+        }
+      }
+
+      // Split hierarchy: matching countries vs non-matching
+      matchingHierarchy = aiOutput.sites_hierarchy.filter(
+        (node) => node.site_type !== "country" || tripCountries.includes(node.site.toLowerCase())
+      );
+      nonMatchingHierarchy = aiOutput.sites_hierarchy.filter(
+        (node) => node.site_type === "country" && !tripCountries.includes(node.site.toLowerCase())
+      );
+
+      console.log(`[sync] Country filter: ${matchingRecs.length} matching, ${nonMatchingRecs.length} non-matching (trip countries: ${tripCountries.join(", ")})`);
+    }
+
+    // ── Step 6: insert POIs (only for matching countries) ──
+    if (matchingRecs.length > 0) {
+      const poiRows = matchingRecs.map((rec) => {
         const subCat = rec.category in TYPE_TO_CATEGORY ? rec.category : "landmark";
         const category = TYPE_TO_CATEGORY[subCat] || "attraction";
         return {
@@ -284,10 +361,8 @@ serve(async (req) => {
     if (listName) metaUpdate.name = listName;
     await supabase.from("map_lists").update(metaUpdate).eq("id", list_id);
 
-    // ── Step 8: update trip hierarchy + countries (same as recommendation-webhook) ──
-    // Insert a source_recommendations record so TripContext picks up the sites_hierarchy
-    // (used by city selectors, location pickers, etc.)
-    if (aiOutput.sites_hierarchy.length > 0) {
+    // ── Step 8: update trip hierarchy (only matching countries) ──
+    if (matchingHierarchy.length > 0) {
       await supabase.from("source_recommendations").insert([{
         recommendation_id: crypto.randomUUID(),
         trip_id: list.trip_id,
@@ -295,16 +370,29 @@ serve(async (req) => {
         source_url: list.url,
         source_title: list.name,
         source_image: null,
-        analysis: { sites_hierarchy: aiOutput.sites_hierarchy, recommendations: [] },
+        analysis: { sites_hierarchy: matchingHierarchy, recommendations: [] },
         status: "linked",
         linked_entities: [],
       }]);
-
-      // Note: we intentionally do NOT auto-update trips.countries here.
-      // Countries on a trip are managed explicitly by the user.
     }
 
-    return json({ success: true, new_places: recs.length, total_places: totalCount });
+    // ── Step 9: non-matching countries → pending source_recommendation ──
+    if (nonMatchingRecs.length > 0) {
+      await supabase.from("source_recommendations").insert([{
+        recommendation_id: crypto.randomUUID(),
+        trip_id: null,
+        timestamp: new Date().toISOString(),
+        source_url: list.url,
+        source_title: `${list.name || "Maps List"} (unmatched countries)`,
+        source_image: null,
+        analysis: { sites_hierarchy: nonMatchingHierarchy, recommendations: nonMatchingRecs },
+        status: "pending",
+        linked_entities: [],
+      }]);
+      console.log(`[sync] Created pending source_recommendation for ${nonMatchingRecs.length} non-matching POIs`);
+    }
+
+    return json({ success: true, new_places: matchingRecs.length, skipped_country_mismatch: nonMatchingRecs.length, total_places: totalCount });
   } catch (e) {
     console.error("[sync] Error:", e);
     return json({ error: String(e) }, 500);
@@ -332,7 +420,7 @@ async function fetchRawPlacesFromGoogleMaps(url: string): Promise<FetchResult> {
 
   if (!googleListId) {
     console.error("[sync] Could not extract list ID from:", finalUrl);
-    return { places: [], listName: null };
+    return { places: [], listName: null, is_list: false };
   }
   console.log(`[sync] Google list ID: ${googleListId}`);
 
@@ -356,7 +444,7 @@ async function fetchRawPlacesFromGoogleMaps(url: string): Promise<FetchResult> {
   const jsonStr = rawBody.replace(/^\s*\)\]\}'\s*/, "").trim();
   if (!jsonStr.startsWith("[")) {
     console.error("[sync] Unexpected entitylist response:", rawBody.substring(0, 300));
-    return { places: [], listName: null };
+    return { places: [], listName: null, is_list: true };
   }
 
   let data: any;
@@ -364,7 +452,7 @@ async function fetchRawPlacesFromGoogleMaps(url: string): Promise<FetchResult> {
     data = JSON.parse(jsonStr);
   } catch (e) {
     console.error("[sync] JSON parse failed:", e);
-    return { places: [], listName: null };
+    return { places: [], listName: null, is_list: true };
   }
 
   // Log structure of data[0] (up to index 7, before the places array at [8]) for debugging
@@ -406,7 +494,7 @@ async function fetchRawPlacesFromGoogleMaps(url: string): Promise<FetchResult> {
   const placesArray = data?.[0]?.[8];
   if (!Array.isArray(placesArray)) {
     console.warn("[sync] No places array at data[0][8]");
-    return { places: [], listName };
+    return { places: [], listName, is_list: true };
   }
 
   const result: RawPlace[] = [];
@@ -426,7 +514,7 @@ async function fetchRawPlacesFromGoogleMaps(url: string): Promise<FetchResult> {
   }
 
   console.log(`[sync] Raw places: ${result.length}`);
-  return { places: result, listName };
+  return { places: result, listName, is_list: true };
 }
 
 // ─── Step 2: Google Places API enrichment ────────────────────────────────────
@@ -699,4 +787,24 @@ function extractCountriesFromHierarchy(nodes: SiteNode[]): string[] {
     if (node.sub_sites) countries.push(...extractCountriesFromHierarchy(node.sub_sites));
   }
   return countries;
+}
+
+/** Build a map from every site name (lowercased) → its parent country name */
+function buildSiteToCountryMap(hierarchy: SiteNode[]): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const node of hierarchy) {
+    if (node.site_type === "country") {
+      collectSitesUnderCountry(node, node.site, map);
+    }
+  }
+  return map;
+}
+
+function collectSitesUnderCountry(node: SiteNode, country: string, map: Record<string, string>) {
+  map[node.site.toLowerCase()] = country;
+  if (node.sub_sites) {
+    for (const sub of node.sub_sites) {
+      collectSitesUnderCountry(sub, country, map);
+    }
+  }
 }

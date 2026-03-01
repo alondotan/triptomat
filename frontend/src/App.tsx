@@ -17,6 +17,7 @@ import InboxPage from "./pages/Inbox";
 import AccommodationPage from "./pages/Accommodation";
 import DndTestPage from "./pages/DndTest";
 import ShareTargetPage from "./pages/ShareTarget";
+import ContactsPage from "./pages/Contacts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
                   <Route path="/tasks" element={<TasksPage />} />
                   <Route path="/inbox" element={<InboxPage />} />
                   <Route path="/accommodation" element={<AccommodationPage />} />
+                  <Route path="/contacts" element={<ContactsPage />} />
                   <Route path="/share-target" element={<ShareTargetPage />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>

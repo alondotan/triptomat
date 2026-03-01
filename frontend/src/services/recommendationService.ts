@@ -50,9 +50,10 @@ export async function linkRecommendationToTrip(
   const linkedEntities: Array<{ entity_type: string; entity_id: string; description: string; matched_existing: boolean }> = [];
 
   // Pre-fetch existing entities for this trip
-  const [{ data: existingPois }, { data: existingTransport }] = await Promise.all([
+  const [{ data: existingPois }, { data: existingTransport }, { data: existingContacts }] = await Promise.all([
     supabase.from('points_of_interest').select('id, name, category, source_refs').eq('trip_id', tripId),
     supabase.from('transportation').select('id, category, additional_info, source_refs').eq('trip_id', tripId),
+    supabase.from('contacts').select('id, name, role').eq('trip_id', tripId),
   ]);
 
   // Category mapping (simplified version matching the webhook)
@@ -196,6 +197,38 @@ export async function linkRecommendationToTrip(
           details: { from_recommendation: true, paragraph: item.paragraph, source_url: rec.source_url } as unknown as Json,
         }]).select('id').single();
         if (newPoi) linkedEntities.push({ entity_type: 'poi', entity_id: newPoi.id, description: item.name, matched_existing: false });
+      }
+    }
+  }
+
+  // Process contacts from the analysis
+  const analysisContacts = analysis?.contacts || [];
+  for (const contact of analysisContacts) {
+    if (!contact.name) continue;
+
+    const matchedContact = existingContacts?.find(c => fuzzyMatch(c.name, contact.name));
+
+    if (matchedContact) {
+      linkedEntities.push({ entity_type: 'contact', entity_id: matchedContact.id, description: contact.name, matched_existing: true });
+    } else {
+      const ROLE_MAP: Record<string, string> = {
+        guide: 'guide', host: 'host', rental: 'rental',
+        restaurant: 'restaurant', driver: 'driver', agency: 'agency',
+      };
+      const role = ROLE_MAP[contact.role || ''] || 'other';
+
+      const { data: newContact } = await supabase.from('contacts').insert([{
+        trip_id: tripId,
+        name: contact.name,
+        role,
+        phone: contact.phone || null,
+        email: contact.email || null,
+        website: contact.website || null,
+        notes: contact.paragraph || null,
+      }]).select('id').single();
+
+      if (newContact) {
+        linkedEntities.push({ entity_type: 'contact', entity_id: newContact.id, description: contact.name, matched_existing: false });
       }
     }
   }
