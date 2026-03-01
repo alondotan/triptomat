@@ -367,13 +367,11 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                     >
                       {slot.schedule_state === 'scheduled' ? 'בלו״ז' : 'פוטנציאלי'}
                     </Badge>
-                    {slot.schedule_state === 'scheduled' && (
-                      <Input type="time" value={slot.hour} className="w-[100px]" onChange={e => {
-                        const next = [...bookings];
-                        next[i] = { ...slot, hour: e.target.value };
-                        setBookings(next);
-                      }} />
-                    )}
+                    <Input type="time" value={slot.hour} className="w-[100px]" onChange={e => {
+                      const next = [...bookings];
+                      next[i] = { ...slot, hour: e.target.value };
+                      setBookings(next);
+                    }} />
                   </div>
                 </div>
               ))}
