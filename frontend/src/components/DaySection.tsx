@@ -10,9 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, X, Star, Moon, Heart, ArrowRight, CalendarDays } from 'lucide-react';
-import { CitySelector } from '@/components/CitySelector';
-import { SubCategorySelector } from '@/components/SubCategorySelector';
-import { SubCategoryIcon } from '@/components/SubCategoryIcon';
+import { CitySelector } from '@/components/trip/CitySelector';
+import { SubCategorySelector } from '@/components/shared/SubCategorySelector';
+import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { useCountrySites, type SiteNode } from '@/hooks/useCountrySites';
 
 export interface DaySectionItem {

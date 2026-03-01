@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Clock, Heart, Trash2, CalendarDays } from 'lucide-react';
-import { SubCategoryIcon } from './SubCategoryIcon';
-import { Badge } from './ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
+import { SubCategoryIcon } from '../shared/SubCategoryIcon';
+import { Badge } from '../ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
 import { POIDetailDialog } from './POIDetailDialog';
-import { BookingActions } from './BookingActions';
+import { BookingActions } from '../BookingActions';
 import { getSubCategoryEntry } from '@/lib/subCategoryConfig';
 import { usePOI } from '@/context/POIContext';
 import { useActiveTrip } from '@/context/ActiveTripContext';

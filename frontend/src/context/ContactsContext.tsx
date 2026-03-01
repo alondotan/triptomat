@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { Contact } from '@/types/trip';
-import * as tripService from '@/services/tripService';
+import { fetchContacts, createContact as createContactService, updateContact as updateContactService, deleteContact as deleteContactService } from '@/services/contactService';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveTrip } from './ActiveTripContext';
 
@@ -48,7 +48,7 @@ export function ContactsProvider({ children }: { children: ReactNode }) {
   // Load contacts when active trip changes
   useEffect(() => {
     if (activeTrip) {
-      tripService.fetchContacts(activeTrip.id)
+      fetchContacts(activeTrip.id)
         .then(contacts => dispatch({ type: 'SET_CONTACTS', payload: contacts }))
         .catch(e => console.error('Failed to load contacts:', e));
     } else {
@@ -58,7 +58,7 @@ export function ContactsProvider({ children }: { children: ReactNode }) {
 
   const addContact = useCallback(async (c: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const newC = await tripService.createContact(c);
+      const newC = await createContactService(c);
       dispatch({ type: 'ADD_CONTACT', payload: newC });
     } catch (error) {
       console.error('Failed to add contact:', error);
@@ -68,7 +68,7 @@ export function ContactsProvider({ children }: { children: ReactNode }) {
 
   const updateContact = useCallback(async (id: string, updates: Partial<Contact>) => {
     try {
-      await tripService.updateContact(id, updates);
+      await updateContactService(id, updates);
       const existing = state.contacts.find(c => c.id === id);
       if (existing) dispatch({ type: 'UPDATE_CONTACT', payload: { ...existing, ...updates } });
     } catch (error) {
@@ -79,7 +79,7 @@ export function ContactsProvider({ children }: { children: ReactNode }) {
 
   const deleteContact = useCallback(async (id: string) => {
     try {
-      await tripService.deleteContact(id);
+      await deleteContactService(id);
       dispatch({ type: 'DELETE_CONTACT', payload: id });
     } catch (error) {
       console.error('Failed to delete contact:', error);

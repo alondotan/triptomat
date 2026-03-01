@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { Transportation } from '@/types/trip';
-import * as tripService from '@/services/tripService';
+import { fetchTransportation, createTransportation as createTransportationService, updateTransportation as updateTransportationService, deleteTransportation as deleteTransportationService, mergeTwoTransportations } from '@/services/transportService';
+import { repairItineraryReferences } from '@/services/tripService';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveTrip } from './ActiveTripContext';
 
@@ -49,7 +50,7 @@ export function TransportProvider({ children }: { children: ReactNode }) {
   // Load transportation when active trip changes
   useEffect(() => {
     if (activeTrip) {
-      tripService.fetchTransportation(activeTrip.id).then(t => dispatch({ type: 'SET_TRANSPORTATION', payload: t }));
+      fetchTransportation(activeTrip.id).then(t => dispatch({ type: 'SET_TRANSPORTATION', payload: t }));
     } else {
       dispatch({ type: 'SET_TRANSPORTATION', payload: [] });
     }
@@ -66,7 +67,7 @@ export function TransportProvider({ children }: { children: ReactNode }) {
       channel = supabase
         .channel(`transport-realtime-${tripId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'transportation', filter: `trip_id=eq.${tripId}` }, () => {
-          tripService.fetchTransportation(tripId).then(t => dispatch({ type: 'SET_TRANSPORTATION', payload: t }));
+          fetchTransportation(tripId).then(t => dispatch({ type: 'SET_TRANSPORTATION', payload: t }));
         })
         .subscribe();
     });
@@ -80,7 +81,7 @@ export function TransportProvider({ children }: { children: ReactNode }) {
 
   const addTransportation = useCallback(async (t: Omit<Transportation, 'id' | 'createdAt' | 'updatedAt'>): Promise<Transportation | undefined> => {
     try {
-      const newT = await tripService.createTransportation(t);
+      const newT = await createTransportationService(t);
       dispatch({ type: 'ADD_TRANSPORTATION', payload: newT });
       return newT;
     } catch (error) {
@@ -92,7 +93,7 @@ export function TransportProvider({ children }: { children: ReactNode }) {
 
   const updateTransportation = useCallback(async (t: Transportation) => {
     try {
-      await tripService.updateTransportation(t.id, t);
+      await updateTransportationService(t.id, t);
       dispatch({ type: 'UPDATE_TRANSPORTATION', payload: t });
     } catch (error) {
       console.error('Failed to update transportation:', error);
@@ -102,7 +103,7 @@ export function TransportProvider({ children }: { children: ReactNode }) {
 
   const deleteTransportation = useCallback(async (id: string) => {
     try {
-      await tripService.deleteTransportation(id);
+      await deleteTransportationService(id);
       dispatch({ type: 'DELETE_TRANSPORTATION', payload: id });
     } catch (error) {
       console.error('Failed to delete transportation:', error);
@@ -115,8 +116,8 @@ export function TransportProvider({ children }: { children: ReactNode }) {
     const secondary = state.transportation.find(t => t.id === secondaryId);
     if (!primary || !secondary || !activeTrip) return;
     try {
-      const merged = await tripService.mergeTwoTransportations(primary, secondary);
-      await tripService.repairItineraryReferences(activeTrip.id, secondaryId, primaryId, 'transportation');
+      const merged = await mergeTwoTransportations(primary, secondary);
+      await repairItineraryReferences(activeTrip.id, secondaryId, primaryId, 'transportation');
       dispatch({ type: 'UPDATE_TRANSPORTATION', payload: merged });
       dispatch({ type: 'DELETE_TRANSPORTATION', payload: secondaryId });
       // Itinerary realtime subscription will auto-sync

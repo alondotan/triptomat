@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
 import { Expense, CostBreakdown } from '@/types/trip';
-import * as tripService from '@/services/tripService';
+import { fetchExpenses, createExpense, updateExpense as updateExpenseService, deleteExpense as deleteExpenseService } from '@/services/expenseService';
+import { updatePOI } from '@/services/poiService';
+import { updateTransportation } from '@/services/transportService';
 import { convertToPreferred, fetchSingleRate } from '@/services/exchangeRateService';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveTrip } from './ActiveTripContext';
@@ -70,7 +72,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   // Load expenses when active trip changes
   useEffect(() => {
     if (activeTrip) {
-      tripService.fetchExpenses(activeTrip.id).then(expenses => dispatch({ type: 'SET_EXPENSES', payload: expenses }));
+      fetchExpenses(activeTrip.id).then(expenses => dispatch({ type: 'SET_EXPENSES', payload: expenses }));
     } else {
       dispatch({ type: 'SET_EXPENSES', payload: [] });
     }
@@ -78,7 +80,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const addExpense = useCallback(async (e: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const newE = await tripService.createExpense(e);
+      const newE = await createExpense(e);
       dispatch({ type: 'ADD_EXPENSE', payload: newE });
     } catch (error) {
       console.error('Failed to add expense:', error);
@@ -88,7 +90,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const updateExpense = useCallback(async (id: string, updates: Partial<Expense>) => {
     try {
-      await tripService.updateExpense(id, updates);
+      await updateExpenseService(id, updates);
       const existing = state.expenses.find(e => e.id === id);
       if (existing) dispatch({ type: 'UPDATE_EXPENSE', payload: { ...existing, ...updates } });
     } catch (error) {
@@ -99,7 +101,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   const deleteExpense = useCallback(async (id: string) => {
     try {
-      await tripService.deleteExpense(id);
+      await deleteExpenseService(id);
       dispatch({ type: 'DELETE_EXPENSE', payload: id });
     } catch (error) {
       console.error('Failed to delete expense:', error);
@@ -110,15 +112,15 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const togglePaidStatus = useCallback(async (entityType: 'poi' | 'transport' | 'expense', id: string, isPaid: boolean) => {
     try {
       if (entityType === 'poi') {
-        await tripService.updatePOI(id, { isPaid });
+        await updatePOI(id, { isPaid });
         const existing = pois.find(p => p.id === id);
         if (existing) updatePOIInContext({ ...existing, isPaid });
       } else if (entityType === 'transport') {
-        await tripService.updateTransportation(id, { isPaid });
+        await updateTransportation(id, { isPaid });
         const existing = transportation.find(t => t.id === id);
         if (existing) updateTransportInContext({ ...existing, isPaid });
       } else {
-        await tripService.updateExpense(id, { isPaid });
+        await updateExpenseService(id, { isPaid });
         const existing = state.expenses.find(e => e.id === id);
         if (existing) dispatch({ type: 'UPDATE_EXPENSE', payload: { ...existing, isPaid } });
       }

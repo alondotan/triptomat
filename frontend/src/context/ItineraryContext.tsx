@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { ItineraryDay, Mission } from '@/types/trip';
-import * as tripService from '@/services/tripService';
+import { fetchItineraryDays } from '@/services/itineraryService';
+import { fetchMissions, createMission as createMissionService, updateMission as updateMissionService, deleteMission as deleteMissionService } from '@/services/missionService';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveTrip } from './ActiveTripContext';
 
@@ -56,8 +57,8 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (activeTrip) {
       Promise.all([
-        tripService.fetchItineraryDays(activeTrip.id),
-        tripService.fetchMissions(activeTrip.id),
+        fetchItineraryDays(activeTrip.id),
+        fetchMissions(activeTrip.id),
       ]).then(([days, missions]) => {
         dispatch({ type: 'SET_ITINERARY_DAYS', payload: days });
         dispatch({ type: 'SET_MISSIONS', payload: missions });
@@ -79,7 +80,7 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
       channel = supabase
         .channel(`itinerary-realtime-${tripId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'itinerary_days', filter: `trip_id=eq.${tripId}` }, () => {
-          tripService.fetchItineraryDays(tripId).then(days => dispatch({ type: 'SET_ITINERARY_DAYS', payload: days }));
+          fetchItineraryDays(tripId).then(days => dispatch({ type: 'SET_ITINERARY_DAYS', payload: days }));
         })
         .subscribe();
     });
@@ -93,7 +94,7 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
 
   const addMission = useCallback(async (m: Omit<Mission, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const newM = await tripService.createMission(m);
+      const newM = await createMissionService(m);
       dispatch({ type: 'ADD_MISSION', payload: newM });
     } catch (error) {
       console.error('Failed to add mission:', error);
@@ -103,7 +104,7 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
 
   const updateMission = useCallback(async (id: string, updates: Partial<Mission>) => {
     try {
-      await tripService.updateMission(id, updates);
+      await updateMissionService(id, updates);
       dispatch({ type: 'UPDATE_MISSION', payload: { id, updates } });
     } catch (error) {
       console.error('Failed to update mission:', error);
@@ -113,7 +114,7 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
 
   const deleteMission = useCallback(async (id: string) => {
     try {
-      await tripService.deleteMission(id);
+      await deleteMissionService(id);
       dispatch({ type: 'DELETE_MISSION', payload: id });
     } catch (error) {
       console.error('Failed to delete mission:', error);
@@ -123,7 +124,7 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
 
   const refetchItinerary = useCallback(async () => {
     if (!activeTrip) return;
-    const days = await tripService.fetchItineraryDays(activeTrip.id);
+    const days = await fetchItineraryDays(activeTrip.id);
     dispatch({ type: 'SET_ITINERARY_DAYS', payload: days });
   }, [activeTrip]);
 

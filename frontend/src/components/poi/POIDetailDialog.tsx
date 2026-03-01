@@ -9,9 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ExternalLink, Quote, Save } from 'lucide-react';
+import { ExternalLink, Plus, Quote, Save, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { SubCategorySelector } from '@/components/SubCategorySelector';
+import { SubCategorySelector } from '@/components/shared/SubCategorySelector';
 import type { PointOfInterest, POICategory, POIStatus } from '@/types/trip';
 
 const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
@@ -55,9 +55,10 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const [roomType, setRoomType] = useState(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
   const [occupancy, setOccupancy] = useState(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
 
-  // Booking fields
-  const [reservationDate, setReservationDate] = useState(poi.details.booking?.reservation_date || '');
-  const [reservationHour, setReservationHour] = useState(poi.details.booking?.reservation_hour || '');
+  // Booking fields (multiple time slots)
+  const [bookings, setBookings] = useState<Array<{ date: string; hour: string }>>(
+    (poi.details.bookings || []).map(b => ({ date: b.reservation_date || '', hour: b.reservation_hour || '' }))
+  );
   const [orderNumber, setOrderNumber] = useState(poi.details.order_number || '');
 
   // Recommendation quotes
@@ -82,8 +83,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     setCheckoutHour(poi.details.accommodation_details?.checkout?.hour || '');
     setRoomType(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
     setOccupancy(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
-    setReservationDate(poi.details.booking?.reservation_date || '');
-    setReservationHour(poi.details.booking?.reservation_hour || '');
+    setBookings((poi.details.bookings || []).map(b => ({ date: b.reservation_date || '', hour: b.reservation_hour || '' })));
     setOrderNumber(poi.details.order_number || '');
   }, [poi]);
 
@@ -158,11 +158,10 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
         cost: costAmount ? { amount: parseFloat(costAmount), currency: costCurrency } : poi.details.cost,
         notes: notes ? { ...poi.details.notes, user_summary: notes } : poi.details.notes,
         order_number: orderNumber || poi.details.order_number,
-        booking: (reservationDate || reservationHour) ? {
-          ...poi.details.booking,
-          reservation_date: reservationDate || undefined,
-          reservation_hour: reservationHour || undefined,
-        } : poi.details.booking,
+        bookings: bookings.filter(b => b.date || b.hour).map(b => ({
+          reservation_date: b.date || undefined,
+          reservation_hour: b.hour || undefined,
+        })),
         accommodation_details: category === 'accommodation' ? {
           ...poi.details.accommodation_details,
           checkin: (checkinDate || checkinHour) ? { date: checkinDate || undefined, hour: checkinHour || undefined } : poi.details.accommodation_details?.checkin,
@@ -319,21 +318,39 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
             </>
           )}
 
-          {/* Booking fields for eatery */}
+          {/* Booking fields for eatery/attraction — multiple time slots */}
           {(category === 'eatery' || category === 'attraction') && (
             <>
               <Separator />
-              <h4 className="text-sm font-semibold">פרטי הזמנה</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>תאריך הזמנה</Label>
-                  <Input type="date" value={reservationDate} onChange={e => setReservationDate(e.target.value)} />
+              <h4 className="text-sm font-semibold">זמנים</h4>
+              {bookings.map((slot, i) => (
+                <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+                  <div className="space-y-1">
+                    {i === 0 && <Label className="text-xs">תאריך</Label>}
+                    <Input type="date" value={slot.date} onChange={e => {
+                      const next = [...bookings];
+                      next[i] = { ...slot, date: e.target.value };
+                      setBookings(next);
+                    }} />
+                  </div>
+                  <div className="space-y-1">
+                    {i === 0 && <Label className="text-xs">שעה</Label>}
+                    <Input type="time" value={slot.hour} onChange={e => {
+                      const next = [...bookings];
+                      next[i] = { ...slot, hour: e.target.value };
+                      setBookings(next);
+                    }} />
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => {
+                    setBookings(bookings.filter((_, j) => j !== i));
+                  }}>
+                    <X size={14} />
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label>שעת הזמנה</Label>
-                  <Input type="time" value={reservationHour} onChange={e => setReservationHour(e.target.value)} />
-                </div>
-              </div>
+              ))}
+              <Button variant="outline" size="sm" className="gap-1" onClick={() => setBookings([...bookings, { date: '', hour: '' }])}>
+                <Plus size={14} /> הוסף זמן
+              </Button>
             </>
           )}
 

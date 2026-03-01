@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { SourceEmail } from '@/types/webhook';
-import { ensureItineraryDayForDate } from '@/services/itineraryDayService';
+import { ensureItineraryDayForDate } from '@/services/itineraryService';
 
 // ── Helpers ──────────────────────────────────────────────────────
 
@@ -344,20 +344,32 @@ export async function linkSourceEmailToTrip(sourceEmailId: string, tripId: strin
           details: {
             cost: cost ? { amount: cost.amount, currency: cost.currency } : undefined,
             order_number: orderNumber,
-            booking: {
-              reservation_date: (details.reservation_date as string) || undefined,
-              reservation_hour: (details.reservation_hour as string) || undefined,
-            },
+            bookings: [{ reservation_date: (details.reservation_date as string) || undefined, reservation_hour: (details.reservation_hour as string) || undefined }]
+              .filter(b => b.reservation_date || b.reservation_hour),
           },
         };
 
         const existing = orderNumber ? await findExistingPoi(tripId, orderNumber, category) : null;
 
         if (existing) {
+          const mergedDetails = deepMerge(existing.details, newData.details);
+          // Bookings: append + deduplicate instead of replace
+          const existingDetails = existing.details as Record<string, any> | undefined;
+          const existingBookings = (existingDetails?.bookings || (existingDetails?.booking ? [existingDetails.booking] : [])) as Array<{ reservation_date?: string; reservation_hour?: string }>;
+          const allBookings = [...existingBookings, ...(newData.details.bookings || [])];
+          const seen = new Set<string>();
+          mergedDetails.bookings = allBookings.filter((b: any) => {
+            if (!b || (!b.reservation_date && !b.reservation_hour)) return false;
+            const key = `${b.reservation_date || ''}|${b.reservation_hour || ''}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          delete mergedDetails.booking;
           const merged = {
             ...newData,
             location: deepMerge(existing.location, newData.location),
-            details: deepMerge(existing.details, newData.details),
+            details: mergedDetails,
             source_refs: addEmailToSourceRefs(existing.source_refs, sourceEmailId),
           };
           if (!name) merged.name = existing.name;

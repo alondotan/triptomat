@@ -28,7 +28,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { useState, useEffect } from 'react';
 import { useTripList } from '@/context/TripListContext';
 import { useActiveTrip } from '@/context/ActiveTripContext';
-import { CreateTripForm } from './forms/CreateTripForm';
+import { CreateTripForm } from '@/components/forms/CreateTripForm';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';

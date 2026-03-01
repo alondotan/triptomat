@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { Trip } from '@/types/trip';
-import * as tripService from '@/services/tripService';
+import { fetchTrips, createTrip } from '@/services/tripService';
 import { useToast } from '@/hooks/use-toast';
 
 // State
@@ -78,7 +78,7 @@ export function TripListProvider({ children }: { children: ReactNode }) {
   const loadTrips = useCallback(async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const trips = await tripService.fetchTrips();
+      const trips = await fetchTrips();
       dispatch({ type: 'LOAD_TRIPS', payload: trips });
     } catch (error) {
       console.error('Failed to load trips:', error);
@@ -93,7 +93,7 @@ export function TripListProvider({ children }: { children: ReactNode }) {
 
   const createNewTrip = useCallback(async (name: string, description: string, startDate: string, endDate: string, countries: string[] = []) => {
     try {
-      const newTrip = await tripService.createTrip({
+      const newTrip = await createTrip({
         name, description, startDate, endDate, currency: 'ILS', countries, status: 'research',
       });
       dispatch({ type: 'ADD_TRIP', payload: newTrip });

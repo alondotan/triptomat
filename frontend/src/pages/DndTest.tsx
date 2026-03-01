@@ -1,17 +1,17 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { AppLayout } from '@/components/AppLayout';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
 import { useItinerary } from '@/context/ItineraryContext';
-import { updateItineraryDay, createItineraryDay } from '@/services/tripService';
-import { LocationContextPicker } from '@/components/LocationContextPicker';
+import { updateItineraryDay, createItineraryDay } from '@/services/itineraryService';
+import { LocationContextPicker } from '@/components/shared/LocationContextPicker';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { eachDayOfInterval, parseISO, format } from 'date-fns';
 import type { ItineraryActivity, PointOfInterest } from '@/types/trip';
-import { POICard } from '@/components/POICard';
+import { POICard } from '@/components/poi/POICard';
 import { CreateTransportForm } from '@/components/forms/CreateTransportForm';
-import { TransportDetailDialog } from '@/components/TransportDetailDialog';
+import { TransportDetailDialog } from '@/components/transport/TransportDetailDialog';
 import {
   DndContext,
   DragEndEvent,
@@ -1153,7 +1153,11 @@ export default function DndTestPage() {
         const poi = pois.find(p => p.id === a.id);
         if (!poi) return;
         // time: prefer itinerary time_window, fallback to POI booking hour
-        const bookingHour = poi.details?.booking?.reservation_hour;
+        const dayDate = itDay.date;
+        const matchingBooking = dayDate
+          ? poi.details?.bookings?.find(b => b.reservation_date === dayDate)
+          : undefined;
+        const bookingHour = matchingBooking?.reservation_hour ?? poi.details?.bookings?.[0]?.reservation_hour;
         const time = a.time_window?.start ?? bookingHour ?? undefined;
         const item: Item = {
           id: a.id,

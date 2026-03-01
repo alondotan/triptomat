@@ -2,10 +2,10 @@ import { useState, useMemo, useEffect } from 'react';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { useItinerary } from '@/context/ItineraryContext';
-import { AppLayout } from '@/components/AppLayout';
+import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/badge';
 import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
-import { SubCategoryIcon } from '@/components/SubCategoryIcon';
+import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin, UtensilsCrossed, Wrench, Filter, LayoutGrid, ChevronDown, ChevronRight, Search, Merge } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
 import type { PointOfInterest, POIStatus, POICategory } from '@/types/trip';
 import { useCountrySites, type SiteNode } from '@/hooks/useCountrySites';
-import { POICard } from '@/components/POICard';
+import { POICard } from '@/components/poi/POICard';
 
 const categoryIcons: Record<string, React.ReactNode> = {
   attraction: <MapPin size={16} />,

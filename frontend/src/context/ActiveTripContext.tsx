@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
 import { Trip } from '@/types/trip';
 import { SiteHierarchyNode } from '@/types/webhook';
-import * as tripService from '@/services/tripService';
+import { updateTrip, deleteTrip } from '@/services/tripService';
 import { ExchangeRates, fetchExchangeRates } from '@/services/exchangeRateService';
 import { useToast } from '@/hooks/use-toast';
 import { useTripList } from './TripListContext';
@@ -77,7 +77,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
   const updateCurrentTrip = useCallback(async (updates: Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>) => {
     if (!activeTrip) return;
     try {
-      await tripService.updateTrip(activeTrip.id, updates);
+      await updateTrip(activeTrip.id, updates);
       updateTripInList({ id: activeTrip.id, ...updates });
       toast({ title: 'Trip updated' });
     } catch (error) {
@@ -89,7 +89,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
   const deleteCurrentTrip = useCallback(async () => {
     if (!activeTrip) return;
     try {
-      await tripService.deleteTrip(activeTrip.id);
+      await deleteTrip(activeTrip.id);
       removeTrip(activeTrip.id);
       dispatch({ type: 'RESET_TRIP_DATA' });
       toast({ title: 'Trip Deleted' });

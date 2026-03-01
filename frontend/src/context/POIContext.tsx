@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { PointOfInterest } from '@/types/trip';
-import * as tripService from '@/services/tripService';
+import { fetchPOIs, createOrMergePOI, updatePOI as updatePOIService, deletePOI as deletePOIService, mergeTwoPOIs } from '@/services/poiService';
+import { repairItineraryReferences } from '@/services/tripService';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveTrip } from './ActiveTripContext';
 
@@ -49,7 +50,7 @@ export function POIProvider({ children }: { children: ReactNode }) {
   // Load POIs when active trip changes
   useEffect(() => {
     if (activeTrip) {
-      tripService.fetchPOIs(activeTrip.id).then(pois => dispatch({ type: 'SET_POIS', payload: pois }));
+      fetchPOIs(activeTrip.id).then(pois => dispatch({ type: 'SET_POIS', payload: pois }));
     } else {
       dispatch({ type: 'SET_POIS', payload: [] });
     }
@@ -66,7 +67,7 @@ export function POIProvider({ children }: { children: ReactNode }) {
       channel = supabase
         .channel(`poi-realtime-${tripId}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'points_of_interest', filter: `trip_id=eq.${tripId}` }, () => {
-          tripService.fetchPOIs(tripId).then(pois => dispatch({ type: 'SET_POIS', payload: pois }));
+          fetchPOIs(tripId).then(pois => dispatch({ type: 'SET_POIS', payload: pois }));
         })
         .subscribe();
     });
@@ -80,7 +81,7 @@ export function POIProvider({ children }: { children: ReactNode }) {
 
   const addPOI = useCallback(async (poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>): Promise<PointOfInterest | undefined> => {
     try {
-      const { poi: result, merged } = await tripService.createOrMergePOI(poi);
+      const { poi: result, merged } = await createOrMergePOI(poi);
       if (merged) {
         dispatch({ type: 'UPDATE_POI', payload: result });
         toast({ title: 'מוזג עם מקום קיים', description: `"${result.name}" כבר קיים — המידע שהוספת שולב עמו.` });
@@ -97,7 +98,7 @@ export function POIProvider({ children }: { children: ReactNode }) {
 
   const updatePOI = useCallback(async (poi: PointOfInterest) => {
     try {
-      await tripService.updatePOI(poi.id, poi);
+      await updatePOIService(poi.id, poi);
       dispatch({ type: 'UPDATE_POI', payload: poi });
     } catch (error) {
       console.error('Failed to update POI:', error);
@@ -107,7 +108,7 @@ export function POIProvider({ children }: { children: ReactNode }) {
 
   const deletePOI = useCallback(async (poiId: string) => {
     try {
-      await tripService.deletePOI(poiId);
+      await deletePOIService(poiId);
       dispatch({ type: 'DELETE_POI', payload: poiId });
     } catch (error) {
       console.error('Failed to delete POI:', error);
@@ -120,8 +121,8 @@ export function POIProvider({ children }: { children: ReactNode }) {
     const secondary = state.pois.find(p => p.id === secondaryId);
     if (!primary || !secondary || !activeTrip) return;
     try {
-      const merged = await tripService.mergeTwoPOIs(primary, secondary);
-      await tripService.repairItineraryReferences(activeTrip.id, secondaryId, primaryId, 'poi');
+      const merged = await mergeTwoPOIs(primary, secondary);
+      await repairItineraryReferences(activeTrip.id, secondaryId, primaryId, 'poi');
       dispatch({ type: 'UPDATE_POI', payload: merged });
       dispatch({ type: 'DELETE_POI', payload: secondaryId });
       // Itinerary realtime subscription will auto-sync
