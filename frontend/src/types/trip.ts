@@ -64,7 +64,7 @@ export interface ActivityDetails {
 export interface POIDetails {
   cost?: POICost;
   order_number?: string;
-  booking?: POIBooking;
+  bookings?: POIBooking[];
   accommodation_details?: AccommodationDetails;
   activity_details?: ActivityDetails;
   notes?: { user_summary?: string; raw_notes?: string };
