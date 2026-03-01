@@ -1,0 +1,49 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: eu-central-1
+  ECR_REGISTRY: 664923616128.dkr.ecr.eu-central-1.amazonaws.com
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    strategy:
+      matrix:
+        lambda: [gateway, downloader, worker, mail_handler]
+      max-parallel: 4
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, push, and deploy ${{ matrix.lambda }}
+        run: |
+          IMAGE_NAME=triptomat-$(echo "${{ matrix.lambda }}" | tr '_' '-')
+          IMAGE_URI=${{ env.ECR_REGISTRY }}/${IMAGE_NAME}:latest
+
+          docker build --provenance=false \
+            -f lambda_${{ matrix.lambda }}/Dockerfile \
+            -t ${IMAGE_URI} .
+
+          docker push ${IMAGE_URI}
+
+          aws lambda update-function-code \
+            --function-name ${IMAGE_NAME} \
+            --image-uri ${IMAGE_URI} \
+            --region ${{ env.AWS_REGION }}
