@@ -1678,7 +1678,7 @@ export default function DndTestPage() {
 
           {/* ── Two-column body ──────────────────────────────── */}
           {/* In RTL: first column appears on the right (potential), second on the left (timeline) */}
-          <div className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-4 min-h-0 flex-1 md:[grid-template-rows:minmax(0,1fr)]">
+          <div className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-4 md:flex-1 md:min-h-0 md:[grid-template-rows:minmax(0,1fr)]">
 
             {/* ── Right column: Potential + Add activity ─────── */}
             <div className="space-y-3 md:overflow-y-auto md:min-h-0">
