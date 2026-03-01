@@ -201,7 +201,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" onOpenAutoFocus={e => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle className="text-lg">{poi.name}</DialogTitle>
         </DialogHeader>
@@ -383,8 +383,26 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                 <Plus size={14} /> הוסף זמן
               </Button>
               <div className="space-y-2">
-                <Label>משך זמן (דקות)</Label>
-                <Input type="number" value={duration} onChange={e => setDuration(e.target.value)} placeholder="60" min="0" />
+                <Label>משך זמן</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {[
+                    { label: '30 דק׳', value: '30' },
+                    { label: 'שעה', value: '60' },
+                    { label: '1.5 שעות', value: '90' },
+                    { label: '2 שעות', value: '120' },
+                    { label: '3 שעות', value: '180' },
+                    { label: 'יום שלם', value: '480' },
+                  ].map(opt => (
+                    <Badge
+                      key={opt.value}
+                      variant={duration === opt.value ? 'default' : 'outline'}
+                      className="cursor-pointer select-none text-xs"
+                      onClick={() => setDuration(duration === opt.value ? '' : opt.value)}
+                    >
+                      {opt.label}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </>
           )}
