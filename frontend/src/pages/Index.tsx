@@ -493,7 +493,7 @@ const Index = () => {
       const existing = itDay.activities || [];
       if (existing.some(a => a.id === entityId)) return;
       await updateItineraryDay(itDay.id, {
-        activities: [...existing, { order: existing.length + 1, type: 'poi', id: entityId }],
+        activities: [...existing, { order: existing.length + 1, type: 'poi' as const, id: entityId }],
       });
       if (activeTrip) await rebuildPOIBookingsFromDays(activeTrip.id, entityId);
       const poi = pois.find(p => p.id === entityId);

@@ -956,6 +956,23 @@ export default function DndTestPage() {
     await refreshDays();
   }, [locationContext, locationDaysForward, selectedDayNum, tripDays, itineraryDays, activeTrip, refreshDays]);
 
+  // ── Ensure itinerary day exists ─────────────────────────────────────────────
+  const ensureItDay = useCallback(async () => {
+    const existing = itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (existing) return existing;
+    if (!activeTrip) return null;
+    const day = tripDays[selectedDayNum - 1];
+    return await createItineraryDay({
+      tripId: activeTrip.id,
+      dayNumber: selectedDayNum,
+      date: day ? format(day, 'yyyy-MM-dd') : undefined,
+      locationContext: '',
+      accommodationOptions: [],
+      activities: [],
+      transportationSegments: [],
+    });
+  }, [itineraryDays, selectedDayNum, activeTrip, tripDays]);
+
   // ── Accommodation (mirrors Index.tsx) ───────────────────────────────────────
   const currentItDay = useMemo(
     () => itineraryDays.find(d => d.dayNumber === selectedDayNum) ?? null,
@@ -1080,18 +1097,20 @@ export default function DndTestPage() {
   );
 
   const addActivity = useCallback(async (entityId: string) => {
-    if (!currentItDay) return;
-    const existing = currentItDay.activities;
+    const itDay = await ensureItDay();
+    if (!itDay) return;
+    const existing = itDay.activities || [];
     if (existing.some(a => a.id === entityId)) return;
-    await updateItineraryDay(currentItDay.id, {
+    await updateItineraryDay(itDay.id, {
       activities: [...existing, { order: existing.length + 1, type: 'poi' as const, id: entityId }],
     });
+    if (activeTrip) await rebuildPOIBookingsFromDays(activeTrip.id, entityId);
     const poi = pois.find(p => p.id === entityId);
     if (poi && (poi.status === 'candidate' || poi.status === 'in_plan')) {
       await updatePOI({ ...poi, status: 'matched' });
     }
     await refreshDays();
-  }, [currentItDay, pois, updatePOI, refreshDays]);
+  }, [ensureItDay, activeTrip, pois, updatePOI, refreshDays]);
 
   const removeActivity = useCallback(async (entityId: string) => {
     if (!currentItDay) return;
