@@ -170,28 +170,33 @@ describe("mergeSourceRefs", () => {
 describe("STATUS_PRIORITY", () => {
   it("contains all expected statuses", () => {
     expect(Object.keys(STATUS_PRIORITY)).toEqual(
-      expect.arrayContaining(["booked", "visited", "in_plan", "matched", "candidate"]),
+      expect.arrayContaining(["booked", "visited", "skipped", "scheduled", "planned", "interested", "suggested"]),
     );
   });
 
   it("has correct ordering", () => {
     expect(STATUS_PRIORITY.booked).toBeGreaterThan(STATUS_PRIORITY.visited);
-    expect(STATUS_PRIORITY.visited).toBeGreaterThan(STATUS_PRIORITY.in_plan);
-    expect(STATUS_PRIORITY.in_plan).toBeGreaterThan(STATUS_PRIORITY.matched);
-    expect(STATUS_PRIORITY.matched).toBeGreaterThan(STATUS_PRIORITY.candidate);
+    expect(STATUS_PRIORITY.visited).toBeGreaterThan(STATUS_PRIORITY.skipped);
+    expect(STATUS_PRIORITY.skipped).toBeGreaterThan(STATUS_PRIORITY.scheduled);
+    expect(STATUS_PRIORITY.scheduled).toBeGreaterThan(STATUS_PRIORITY.planned);
+    expect(STATUS_PRIORITY.planned).toBeGreaterThan(STATUS_PRIORITY.interested);
+    expect(STATUS_PRIORITY.interested).toBeGreaterThan(STATUS_PRIORITY.suggested);
   });
 });
 
 describe("TRANSPORT_STATUS_PRIORITY", () => {
   it("contains all expected statuses", () => {
     expect(Object.keys(TRANSPORT_STATUS_PRIORITY)).toEqual(
-      expect.arrayContaining(["completed", "booked", "in_plan", "candidate"]),
+      expect.arrayContaining(["booked", "visited", "skipped", "scheduled", "planned", "interested", "suggested"]),
     );
   });
 
   it("has correct ordering", () => {
-    expect(TRANSPORT_STATUS_PRIORITY.completed).toBeGreaterThan(TRANSPORT_STATUS_PRIORITY.booked);
-    expect(TRANSPORT_STATUS_PRIORITY.booked).toBeGreaterThan(TRANSPORT_STATUS_PRIORITY.in_plan);
-    expect(TRANSPORT_STATUS_PRIORITY.in_plan).toBeGreaterThan(TRANSPORT_STATUS_PRIORITY.candidate);
+    expect(TRANSPORT_STATUS_PRIORITY.booked).toBeGreaterThan(TRANSPORT_STATUS_PRIORITY.visited);
+    expect(TRANSPORT_STATUS_PRIORITY.visited).toBeGreaterThan(TRANSPORT_STATUS_PRIORITY.skipped);
+    expect(TRANSPORT_STATUS_PRIORITY.skipped).toBeGreaterThan(TRANSPORT_STATUS_PRIORITY.scheduled);
+    expect(TRANSPORT_STATUS_PRIORITY.scheduled).toBeGreaterThan(TRANSPORT_STATUS_PRIORITY.planned);
+    expect(TRANSPORT_STATUS_PRIORITY.planned).toBeGreaterThan(TRANSPORT_STATUS_PRIORITY.interested);
+    expect(TRANSPORT_STATUS_PRIORITY.interested).toBeGreaterThan(TRANSPORT_STATUS_PRIORITY.suggested);
   });
 });

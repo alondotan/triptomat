@@ -87,7 +87,7 @@ describe("mapPOI", () => {
 
     const result = mapPOI(row);
     expect(result.subCategory).toBeUndefined();
-    expect(result.status).toBe("candidate");
+    expect(result.status).toBe("suggested");
     expect(result.location).toEqual({});
     expect(result.sourceRefs).toEqual({ email_ids: [], recommendation_ids: [] });
     expect(result.isCancelled).toBe(false);
@@ -145,7 +145,7 @@ describe("createOrMergePOI", () => {
     tripId: "trip-1",
     category: "attraction" as const,
     name: "Anne Frank House",
-    status: "candidate" as const,
+    status: "suggested" as const,
     location: { city: "Amsterdam", country: "Netherlands" } as POILocation,
     sourceRefs: { email_ids: [], recommendation_ids: [] } as SourceRefs,
     details: {} as POIDetails,
@@ -163,7 +163,7 @@ describe("createOrMergePOI", () => {
     };
     // Mock: insert returns new POI
     const insertResult = {
-      data: { id: "new-poi", trip_id: "trip-1", category: "attraction", name: "Anne Frank House", status: "candidate", location: { city: "Amsterdam" }, source_refs: { email_ids: [], recommendation_ids: [] }, details: {}, is_cancelled: false, is_paid: false, created_at: "2026-01-01", updated_at: "2026-01-01" },
+      data: { id: "new-poi", trip_id: "trip-1", category: "attraction", name: "Anne Frank House", status: "suggested", location: { city: "Amsterdam" }, source_refs: { email_ids: [], recommendation_ids: [] }, details: {}, is_cancelled: false, is_paid: false, created_at: "2026-01-01", updated_at: "2026-01-01" },
       error: null,
     };
     const insertChain = {
@@ -254,8 +254,8 @@ describe("createOrMergePOI", () => {
       update: vi.fn().mockReturnValue(updateChain),
     }));
 
-    // New POI has status "candidate" (lower priority)
-    const result = await createOrMergePOI({ ...basePoi, status: "candidate" });
+    // New POI has status "suggested" (lower priority)
+    const result = await createOrMergePOI({ ...basePoi, status: "suggested" });
     expect(result.merged).toBe(true);
     // Status should remain "booked" (not downgraded)
     expect(result.poi.status).toBe("booked");
@@ -274,7 +274,7 @@ describe("mergeTwoPOIs", () => {
     tripId: "trip-1",
     category: "attraction",
     name: "Place A",
-    status: "candidate",
+    status: "suggested",
     location: {} as POILocation,
     sourceRefs: { email_ids: [], recommendation_ids: [] },
     details: {} as POIDetails,
@@ -355,7 +355,7 @@ describe("mergeTwoPOIs", () => {
   it("upgrades status from secondary if higher", async () => {
     setupMergeChains();
 
-    const primary = makePOI({ id: "p1", status: "candidate" });
+    const primary = makePOI({ id: "p1", status: "suggested" });
     const secondary = makePOI({ id: "p2", status: "booked" });
 
     const result = await mergeTwoPOIs(primary, secondary);
@@ -366,7 +366,7 @@ describe("mergeTwoPOIs", () => {
     setupMergeChains();
 
     const primary = makePOI({ id: "p1", status: "booked" });
-    const secondary = makePOI({ id: "p2", status: "candidate" });
+    const secondary = makePOI({ id: "p2", status: "suggested" });
 
     const result = await mergeTwoPOIs(primary, secondary);
     expect(result.status).toBe("booked");
