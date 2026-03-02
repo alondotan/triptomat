@@ -98,11 +98,11 @@ export function DaySection({
     return names;
   }, [locationContext, sites]);
 
-  // Sort by status: in_plan/matched first, then others
+  // Sort by status: interested/planned/scheduled first, then others
   const sortByStatus = (items: typeof availableItems) => {
     return [...items].sort((a, b) => {
-      const aInPlan = (a.status === 'in_plan' || a.status === 'matched') ? 0 : 1;
-      const bInPlan = (b.status === 'in_plan' || b.status === 'matched') ? 0 : 1;
+      const aInPlan = (a.status === 'interested' || a.status === 'planned' || a.status === 'scheduled') ? 0 : 1;
+      const bInPlan = (b.status === 'interested' || b.status === 'planned' || b.status === 'scheduled') ? 0 : 1;
       return aInPlan - bInPlan;
     });
   };
@@ -234,7 +234,7 @@ export function DaySection({
                           onClick={() => { onAdd(item.id, entityType === 'accommodation' ? nights : undefined, createBookingMission); setShowPicker(false); setNights(1); setCreateBookingMission(false); }}
                           className="w-full text-right px-3 py-2 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
                         >
-                          {(item.status === 'in_plan' || item.status === 'matched') && <Heart size={12} className="text-red-500 shrink-0" fill="currentColor" />}
+                          {item.status !== 'suggested' && <Heart size={12} className="text-red-500 shrink-0" fill="currentColor" />}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium">{item.label}</p>
                             {item.sublabel && <p className="text-xs text-muted-foreground">{item.sublabel}</p>}
@@ -255,7 +255,7 @@ export function DaySection({
                       onClick={() => { onAdd(item.id, entityType === 'accommodation' ? nights : undefined, createBookingMission); setShowPicker(false); setNights(1); setCreateBookingMission(false); }}
                       className="w-full text-right px-3 py-2 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
                     >
-                      {(item.status === 'in_plan' || item.status === 'matched') && <Heart size={12} className="text-red-500 shrink-0" fill="currentColor" />}
+                      {item.status !== 'suggested' && <Heart size={12} className="text-red-500 shrink-0" fill="currentColor" />}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium">{item.label}</p>
                         {item.sublabel && <p className="text-xs text-muted-foreground">{item.sublabel}</p>}

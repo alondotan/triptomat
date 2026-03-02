@@ -7,9 +7,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { Save, Plus, Trash2, ArrowDown } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import type { Transportation, TransportStatus } from '@/types/trip';
+
+const statusLabels: Record<string, string> = {
+  suggested: 'מוצע',
+  interested: 'מעניין',
+  planned: 'מתוכנן',
+  scheduled: 'בלו״ז',
+  booked: 'הוזמן',
+  visited: 'בוקר',
+  skipped: 'דילגתי',
+};
 
 const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
 
@@ -59,7 +70,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
   const { activeTrip } = useActiveTrip();
 
   const [category, setCategory] = useState(transport.category);
-  const [status, setStatus] = useState<TransportStatus>(transport.status);
+  const [isBooked, setIsBooked] = useState(transport.status === 'booked');
   const [costAmount, setCostAmount] = useState(transport.cost.total_amount?.toString() || '');
   const [costCurrency, setCostCurrency] = useState(transport.cost.currency || activeTrip?.currency || 'ILS');
   const [isPaid, setIsPaid] = useState(transport.isPaid);
@@ -70,7 +81,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
 
   useEffect(() => {
     setCategory(transport.category);
-    setStatus(transport.status);
+    setIsBooked(transport.status === 'booked');
     setCostAmount(transport.cost.total_amount?.toString() || '');
     setCostCurrency(transport.cost.currency || activeTrip?.currency || 'ILS');
     setIsPaid(transport.isPaid);
@@ -112,7 +123,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
       ...transport,
       isPaid,
       category,
-      status,
+      status: isBooked ? 'booked' : (['visited', 'skipped'].includes(transport.status) ? transport.status : transport.status === 'booked' ? 'suggested' : transport.status),
       cost: { total_amount: costAmount ? parseFloat(costAmount) : 0, currency: costCurrency },
       booking: { ...transport.booking, order_number: orderNumber || undefined, carrier_name: carrierName || undefined },
       segments: updatedSegments,
@@ -195,15 +206,11 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                 </div>
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">סטטוס</Label>
-                  <Select value={status} onValueChange={v => setStatus(v as TransportStatus)}>
-                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="candidate">מועמד</SelectItem>
-                      <SelectItem value="in_plan">בתוכנית</SelectItem>
-                      <SelectItem value="booked">הוזמן</SelectItem>
-                      <SelectItem value="completed">הושלם</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="h-8 flex items-center">
+                    <Badge variant={transport.status === 'booked' ? 'default' : 'secondary'} className="text-xs">
+                      {statusLabels[transport.status] || transport.status}
+                    </Badge>
+                  </div>
                 </div>
               </div>
 
@@ -233,6 +240,10 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                 </div>
               </div>
 
+              <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-1.5">
+                <Label htmlFor="transport-detail-is-booked" className="text-sm">הוזמן?</Label>
+                <Switch id="transport-detail-is-booked" checked={isBooked} onCheckedChange={setIsBooked} />
+              </div>
               <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-1.5">
                 <Label htmlFor="transport-detail-is-paid" className="text-sm">שולם?</Label>
                 <Switch id="transport-detail-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />

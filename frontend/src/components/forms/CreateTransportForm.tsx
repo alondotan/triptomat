@@ -79,7 +79,7 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
   const open = isControlled ? openProp! : openInternal;
   const setOpen = (v: boolean) => { if (isControlled) { onOpenChange?.(v); } else { setOpenInternal(v); } };
   const [category, setCategory] = useState('airplane');
-  const [status, setStatus] = useState<TransportStatus>('candidate');
+  const status: TransportStatus = 'suggested';
   const [segments, setSegments] = useState<SegmentFormData[]>([emptySegment()]);
 
   // Pre-fill from/to when the controlled dialog opens
@@ -97,7 +97,7 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
 
   const resetForm = () => {
     setCategory('airplane');
-    setStatus('candidate');
+    // status is always 'suggested' for new transports
     setSegments([emptySegment()]);
     setOrderNumber(''); setCarrierName('');
     setCostAmount(''); setCostCurrency(activeTrip?.currency || 'ILS'); setIsPaid(true); setNotes('');
@@ -245,18 +245,6 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
                       {TRANSPORT_CATEGORIES.map(c => (
                         <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Status</Label>
-                  <Select value={status} onValueChange={v => setStatus(v as TransportStatus)}>
-                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="candidate">Candidate</SelectItem>
-                      <SelectItem value="in_plan">In Plan</SelectItem>
-                      <SelectItem value="booked">Booked</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

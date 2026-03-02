@@ -14,11 +14,13 @@ import { BookingActions } from '@/components/BookingActions';
 import type { PointOfInterest } from '@/types/trip';
 
 const statusLabels: Record<string, string> = {
-  candidate: 'מועמד',
-  in_plan: 'בתוכנית',
-  matched: 'משודך',
+  suggested: 'מוצע',
+  interested: 'מעניין',
+  planned: 'מתוכנן',
+  scheduled: 'בלו״ז',
   booked: 'הוזמן',
   visited: 'בוקר',
+  skipped: 'דילגתי',
 };
 
 const AccommodationPage = () => {

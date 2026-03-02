@@ -35,9 +35,9 @@ export function mergeSourceRefs(a: SourceRefs, b: SourceRefs): SourceRefs {
 }
 
 export const STATUS_PRIORITY: Record<string, number> = {
-  booked: 4, visited: 3, in_plan: 2, matched: 1, candidate: 0,
+  booked: 6, visited: 5, skipped: 4, scheduled: 3, planned: 2, interested: 1, suggested: 0,
 };
 
 export const TRANSPORT_STATUS_PRIORITY: Record<string, number> = {
-  completed: 4, booked: 3, in_plan: 2, candidate: 0,
+  booked: 6, visited: 5, skipped: 4, scheduled: 3, planned: 2, interested: 1, suggested: 0,
 };

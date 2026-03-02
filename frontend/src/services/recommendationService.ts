@@ -87,7 +87,7 @@ export async function linkRecommendationToTrip(
         linkedEntities.push({ entity_type: 'transportation', entity_id: matchedTransport.id, description: item.name, matched_existing: true });
       } else {
         const { data: newT } = await supabase.from('transportation').insert([{
-          trip_id: tripId, category: itemType, status: 'candidate',
+          trip_id: tripId, category: itemType, status: 'suggested',
           source_refs: { email_ids: [], recommendation_ids: [recommendationId] } as unknown as Json,
           cost: { total_amount: 0, currency: 'USD' } as unknown as Json,
           booking: {} as unknown as Json,
@@ -112,7 +112,7 @@ export async function linkRecommendationToTrip(
       } else {
         const { data: newPoi } = await supabase.from('points_of_interest').insert([{
           trip_id: tripId, category: poiCategory, sub_category: itemType, name: item.name,
-          status: 'candidate',
+          status: 'suggested',
           location: { city: item.site } as unknown as Json,
           source_refs: { email_ids: [], recommendation_ids: [recommendationId] } as unknown as Json,
           details: { from_recommendation: true, paragraph: item.paragraph, source_url: rec.source_url } as unknown as Json,

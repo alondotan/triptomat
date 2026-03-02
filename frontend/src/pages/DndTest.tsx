@@ -1039,8 +1039,8 @@ export default function DndTestPage() {
       }
     }
     const poi = pois.find(p => p.id === entityId);
-    if (poi && (poi.status === 'candidate' || poi.status === 'in_plan')) {
-      await updatePOI({ ...poi, status: 'matched' });
+    if (poi && (poi.status === 'suggested' || poi.status === 'interested')) {
+      await updatePOI({ ...poi, status: 'planned' });
     }
     await refreshDays();
   }, [selectedDayNum, tripDays, itineraryDays, activeTrip, pois, updatePOI, refreshDays]);
@@ -1061,7 +1061,7 @@ export default function DndTestPage() {
       category: 'accommodation',
       subCategory: data.subCategory || undefined,
       name: data.name,
-      status: 'candidate',
+      status: 'suggested',
       location: { city: data.city || undefined },
       sourceRefs: { email_ids: [], recommendation_ids: [] },
       details: {},
@@ -1104,8 +1104,8 @@ export default function DndTestPage() {
     });
     if (activeTrip) await rebuildPOIBookingsFromDays(activeTrip.id, entityId);
     const poi = pois.find(p => p.id === entityId);
-    if (poi && (poi.status === 'candidate' || poi.status === 'in_plan')) {
-      await updatePOI({ ...poi, status: 'matched' });
+    if (poi && (poi.status === 'suggested' || poi.status === 'interested')) {
+      await updatePOI({ ...poi, status: 'planned' });
     }
     await refreshDays();
   }, [ensureItDay, activeTrip, pois, updatePOI, refreshDays]);
@@ -1116,8 +1116,8 @@ export default function DndTestPage() {
       activities: currentItDay.activities.filter(a => a.id !== entityId),
     });
     const poi = pois.find(p => p.id === entityId);
-    if (poi && poi.status === 'matched') {
-      await updatePOI({ ...poi, status: 'candidate' });
+    if (poi && poi.status === 'planned') {
+      await updatePOI({ ...poi, status: 'suggested' });
     }
     await refreshDays();
   }, [currentItDay, pois, updatePOI, refreshDays]);
@@ -1129,7 +1129,7 @@ export default function DndTestPage() {
       category: (data.category as any) || 'attraction',
       subCategory: data.subCategory || undefined,
       name: data.name,
-      status: 'candidate',
+      status: 'suggested',
       location: { city: data.city || undefined },
       sourceRefs: { email_ids: [], recommendation_ids: [] },
       details: {},

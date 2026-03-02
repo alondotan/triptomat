@@ -111,7 +111,7 @@ export function mapTransportation(row: Record<string, unknown>): Transportation 
     id: row.id as string,
     tripId: row.trip_id as string,
     category: row.category as string,
-    status: (row.status as Transportation['status']) || 'candidate',
+    status: (row.status as Transportation['status']) || 'suggested',
     sourceRefs: (row.source_refs as SourceRefs) || { email_ids: [], recommendation_ids: [] },
     cost: (row.cost as TransportCost) || { total_amount: 0, currency: 'USD' },
     booking: (row.booking as TransportBooking) || {},

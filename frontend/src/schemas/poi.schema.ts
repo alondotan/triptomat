@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const poiCategories = ['accommodation', 'eatery', 'attraction', 'service'] as const;
-const poiStatuses = ['candidate', 'in_plan', 'matched', 'booked', 'visited'] as const;
+const poiStatuses = ['suggested', 'interested', 'planned', 'scheduled', 'booked', 'visited', 'skipped'] as const;
 
 export const createPOISchema = z.object({
   name: z.string().min(1, "Name is required").max(255),

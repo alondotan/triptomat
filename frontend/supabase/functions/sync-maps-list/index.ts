@@ -237,7 +237,7 @@ serve(async (req) => {
           name: rec.name,
           category,
           sub_category: subCat,
-          status: "candidate",
+          status: "suggested",
           location: {
             country: siteToCountry[(rec.site || "").toLowerCase()] || null,
             city: rec.site || null,

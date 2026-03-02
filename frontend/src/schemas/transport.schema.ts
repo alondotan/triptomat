@@ -10,7 +10,7 @@ const transportCategories = [
   'boatTaxi', 'cableCar', 'funicular', 'rv',
   'otherTransportation',
 ] as const;
-const transportStatuses = ['candidate', 'in_plan', 'booked', 'completed'] as const;
+const transportStatuses = ['suggested', 'interested', 'planned', 'scheduled', 'booked', 'visited', 'skipped'] as const;
 
 const segmentSchema = z.object({
   fromName: z.string().min(1, "Departure location is required").max(255),

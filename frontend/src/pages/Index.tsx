@@ -489,8 +489,8 @@ const Index = () => {
         }
       }
       const poi = pois.find(p => p.id === entityId);
-      if (poi && (poi.status === 'candidate' || poi.status === 'in_plan')) {
-        await updatePOI({ ...poi, status: 'matched' });
+      if (poi && (poi.status === 'suggested' || poi.status === 'interested')) {
+        await updatePOI({ ...poi, status: 'planned' });
       }
     } else if (entityType === 'activity') {
       const existing = itDay.activities || [];
@@ -500,8 +500,8 @@ const Index = () => {
       });
       if (activeTrip) await rebuildPOIBookingsFromDays(activeTrip.id, entityId);
       const poi = pois.find(p => p.id === entityId);
-      if (poi && (poi.status === 'candidate' || poi.status === 'in_plan')) {
-        await updatePOI({ ...poi, status: 'matched' });
+      if (poi && (poi.status === 'suggested' || poi.status === 'interested')) {
+        await updatePOI({ ...poi, status: 'planned' });
       }
     } else if (entityType === 'transport') {
       const existing = itDay.transportationSegments || [];
@@ -689,7 +689,7 @@ const Index = () => {
       category: data.category as any,
       subCategory: data.subCategory || undefined,
       name: data.name,
-      status: 'candidate',
+      status: 'suggested',
       location: { city: data.city || undefined },
       sourceRefs: { email_ids: [], recommendation_ids: [] },
       details: {},
@@ -717,7 +717,7 @@ const Index = () => {
     const newT = await addTransportation({
       tripId: activeTrip.id,
       category: data.category || 'flight',
-      status: 'candidate',
+      status: 'suggested',
       sourceRefs: { email_ids: [], recommendation_ids: [] },
       cost: { total_amount: 0, currency: activeTrip.currency },
       booking: {},

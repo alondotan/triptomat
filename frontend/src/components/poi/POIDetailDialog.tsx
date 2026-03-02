@@ -17,6 +17,16 @@ import { getPOICategories, getCategoryLabel } from '@/lib/subCategoryConfig';
 import { syncActivityBookingsToDays } from '@/services/itineraryService';
 
 const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
+
+const statusLabels: Record<string, string> = {
+  suggested: 'מוצע',
+  interested: 'מעניין',
+  planned: 'מתוכנן',
+  scheduled: 'בלו״ז',
+  booked: 'הוזמן',
+  visited: 'בוקר',
+  skipped: 'דילגתי',
+};
 import type { SourceRecommendation } from '@/types/webhook';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -40,7 +50,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const [name, setName] = useState(poi.name);
   const [category, setCategory] = useState<POICategory>(poi.category);
   const [subCategory, setSubCategory] = useState(poi.subCategory || '');
-  const [status, setStatus] = useState<POIStatus>(poi.status);
+  const [isBooked, setIsBooked] = useState(poi.status === 'booked');
   const [city, setCity] = useState(poi.location.city || '');
   const [country, setCountry] = useState(poi.location.country || '');
   const [address, setAddress] = useState(poi.location.address || '');
@@ -63,11 +73,10 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   );
 
   // Booking fields (multiple time slots)
-  const [bookings, setBookings] = useState<Array<{ date: string; hour: string; schedule_state: 'potential' | 'scheduled' }>>(
+  const [bookings, setBookings] = useState<Array<{ date: string; hour: string }>>(
     (poi.details.bookings || []).map(b => ({
       date: b.reservation_date || '',
       hour: b.reservation_hour || '',
-      schedule_state: b.schedule_state || (b.reservation_hour ? 'scheduled' : 'potential'),
     }))
   );
   const [orderNumber, setOrderNumber] = useState(poi.details.order_number || '');
@@ -81,7 +90,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     setName(poi.name);
     setCategory(poi.category);
     setSubCategory(poi.subCategory || '');
-    setStatus(poi.status);
+    setIsBooked(poi.status === 'booked');
     setCity(poi.location.city || '');
     setCountry(poi.location.country || '');
     setAddress(poi.location.address || '');
@@ -98,7 +107,6 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     setBookings((poi.details.bookings || []).map(b => ({
       date: b.reservation_date || '',
       hour: b.reservation_hour || '',
-      schedule_state: b.schedule_state || (b.reservation_hour ? 'scheduled' : 'potential'),
     })));
     setOrderNumber(poi.details.order_number || '');
     setDuration(poi.details.activity_details?.duration?.toString() || '');
@@ -157,13 +165,28 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   }, [open, poi]);
 
   const handleSave = async () => {
+    // Auto-compute status from bookings and booked toggle
+    let finalStatus: POIStatus = poi.status;
+    if (isBooked) {
+      finalStatus = 'booked';
+    } else if (!['visited', 'skipped'].includes(poi.status)) {
+      const hasTime = bookings.some(b => b.date && b.hour);
+      const hasDate = bookings.some(b => b.date);
+      if (hasTime) finalStatus = 'scheduled';
+      else if (hasDate) finalStatus = 'planned';
+      else if (poi.status === 'booked' || poi.status === 'scheduled' || poi.status === 'planned') {
+        // Was booked/scheduled/planned but all dates/times removed → downgrade to interested
+        finalStatus = 'interested';
+      }
+    }
+
     const updatedPOI: PointOfInterest = {
       ...poi,
       isPaid,
       name,
       category,
       subCategory: subCategory || undefined,
-      status,
+      status: finalStatus,
       location: {
         ...poi.location,
         city: city || undefined,
@@ -178,7 +201,6 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
         bookings: bookings.filter(b => b.date).map(b => ({
           reservation_date: b.date,
           reservation_hour: b.hour || undefined,
-          schedule_state: b.hour ? 'scheduled' : 'potential',
         })),
         activity_details: (category === 'eatery' || category === 'attraction') ? {
           ...poi.details.activity_details,
@@ -264,15 +286,11 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
             </div>
             <div className="space-y-2">
               <Label>סטטוס</Label>
-              <Select value={status} onValueChange={v => setStatus(v as POIStatus)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="candidate">מועמד</SelectItem>
-                  <SelectItem value="in_plan">בתוכנית</SelectItem>
-                  <SelectItem value="booked">הוזמן</SelectItem>
-                  <SelectItem value="visited">בוקר</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="h-9 flex items-center">
+                <Badge variant={poi.status === 'booked' ? 'default' : 'secondary'}>
+                  {statusLabels[poi.status] || poi.status}
+                </Badge>
+              </div>
             </div>
           </div>
 
@@ -308,6 +326,11 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label htmlFor="poi-detail-is-booked">הוזמן?</Label>
+            <Switch id="poi-detail-is-booked" checked={isBooked} onCheckedChange={setIsBooked} />
           </div>
 
           <div className="flex items-center justify-between">
@@ -371,17 +394,9 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                   }} />
                   <Input type="time" value={slot.hour} className="w-[80px] shrink-0 px-1.5" disabled={!slot.date} onChange={e => {
                     const next = [...bookings];
-                    next[i] = { ...slot, hour: e.target.value, schedule_state: e.target.value ? 'scheduled' : 'potential' };
+                    next[i] = { ...slot, hour: e.target.value };
                     setBookings(next);
                   }} />
-                  {slot.date && (
-                    <Badge
-                      variant={slot.hour ? 'default' : 'outline'}
-                      className="select-none text-xs whitespace-nowrap shrink-0"
-                    >
-                      {slot.hour ? 'בלו״ז' : 'פוטנציאלי'}
-                    </Badge>
-                  )}
                   <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => {
                     setBookings(bookings.filter((_, j) => j !== i));
                   }}>
@@ -389,7 +404,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                   </Button>
                 </div>
               ))}
-              <Button variant="outline" size="sm" className="gap-1" onClick={() => setBookings([...bookings, { date: '', hour: '', schedule_state: 'potential' }])}>
+              <Button variant="outline" size="sm" className="gap-1" onClick={() => setBookings([...bookings, { date: '', hour: '' }])}>
                 <Plus size={14} /> הוסף זמן
               </Button>
               <div className="space-y-2">

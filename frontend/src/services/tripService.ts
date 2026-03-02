@@ -91,7 +91,7 @@ function mapCollection(row: Record<string, unknown>): Collection {
     id: row.id as string,
     tripId: row.trip_id as string,
     collectionName: row.collection_name as string,
-    status: (row.status as Collection['status']) || 'candidate',
+    status: (row.status as Collection['status']) || 'suggested',
     timeWindow: (row.time_window as Collection['timeWindow']) || {},
     items: (row.items as Collection['items']) || [],
     sourceRefs: (row.source_refs as Collection['sourceRefs']) || { recommendation_ids: [] },

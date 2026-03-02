@@ -24,7 +24,7 @@ export function CreatePOIForm() {
   const [name, setName] = useState('');
   const [category, setCategory] = useState<POICategory>('attraction');
   const [subCategory, setSubCategory] = useState('');
-  const [status, setStatus] = useState<POIStatus>('candidate');
+  const status: POIStatus = 'suggested';
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
   const [manualCountry, setManualCountry] = useState(false);
@@ -40,7 +40,6 @@ export function CreatePOIForm() {
     setName('');
     setCategory('attraction');
     setSubCategory('');
-    setStatus('candidate');
     setCity('');
     setCountry('');
     setManualCountry(false);
@@ -121,18 +120,6 @@ export function CreatePOIForm() {
                   {getPOICategories().map(c => (
                     <SelectItem key={c} value={c}>{getCategoryLabel(c)}</SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={status} onValueChange={v => setStatus(v as POIStatus)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="candidate">Candidate</SelectItem>
-                  <SelectItem value="in_plan">In Plan</SelectItem>
-                  <SelectItem value="booked">Booked</SelectItem>
-                  <SelectItem value="visited">Visited</SelectItem>
                 </SelectContent>
               </Select>
             </div>

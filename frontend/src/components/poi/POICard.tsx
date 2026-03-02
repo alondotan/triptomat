@@ -20,11 +20,13 @@ function formatDuration(minutes: number): string {
 }
 
 const statusLabels: Record<string, string> = {
-  candidate: 'מועמד',
-  in_plan: 'בתוכנית',
-  matched: 'משודך',
+  suggested: 'מוצע',
+  interested: 'מעניין',
+  planned: 'מתוכנן',
+  scheduled: 'בלו״ז',
   booked: 'הוזמן',
   visited: 'בוקר',
+  skipped: 'דילגתי',
 };
 
 interface POICardProps {
@@ -243,8 +245,8 @@ export function POICard({
   // ─── Level 3: full card (POIs page) ───────────────────────────────────────
   const handleToggleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (poi.status === 'matched' || poi.status === 'booked' || poi.status === 'visited') return;
-    const newStatus: POIStatus = poi.status === 'in_plan' ? 'candidate' : 'in_plan';
+    if (['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(poi.status)) return;
+    const newStatus: POIStatus = poi.status === 'interested' ? 'suggested' : 'interested';
     await updatePOI({ ...poi, status: newStatus });
   };
 
@@ -265,15 +267,15 @@ export function POICard({
               <button
                 onClick={handleToggleLike}
                 className={`shrink-0 transition-colors ${
-                  poi.status === 'in_plan' || poi.status === 'matched' ? 'text-red-500' :
-                  poi.status === 'booked' || poi.status === 'visited' ? 'text-muted-foreground/30 cursor-default' :
+                  poi.status === 'interested' || poi.status === 'planned' || poi.status === 'scheduled' ? 'text-red-500' :
+                  poi.status === 'booked' || poi.status === 'visited' || poi.status === 'skipped' ? 'text-muted-foreground/30 cursor-default' :
                   'text-muted-foreground/40 hover:text-red-400'
                 }`}
-                title={poi.status === 'matched' ? 'משודך ליום' : poi.status === 'in_plan' ? 'הסר מהתוכנית' : 'הוסף לתוכנית'}
+                title={['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(poi.status) ? statusLabels[poi.status] : poi.status === 'interested' ? 'הסר עניין' : 'מעניין אותי'}
               >
                 <Heart
                   size={16}
-                  fill={poi.status === 'in_plan' || poi.status === 'matched' ? 'currentColor' : 'none'}
+                  fill={poi.status !== 'suggested' ? 'currentColor' : 'none'}
                 />
               </button>
               <CardTitle className="text-base">{poi.name}</CardTitle>

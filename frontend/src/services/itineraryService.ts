@@ -159,13 +159,12 @@ export async function syncActivityBookingsToDays(
     bookings.map(b => b.reservation_date).filter((d): d is string => !!d),
   );
 
-  // Build a map: bookingDate → { hour, schedule_state }
-  const dateToBooking = new Map<string, { hour?: string; schedule_state?: string }>();
+  // Build a map: bookingDate → { hour }
+  const dateToBooking = new Map<string, { hour?: string }>();
   for (const b of bookings) {
     if (b.reservation_date) {
       dateToBooking.set(b.reservation_date, {
         hour: b.reservation_hour,
-        schedule_state: b.schedule_state,
       });
     }
   }
@@ -194,7 +193,7 @@ export async function syncActivityBookingsToDays(
       // Day matches a booking → update schedule_state and time_window
       const info = dateToBooking.get(dayDate);
       if (!info) continue;
-      const isScheduled = info.schedule_state === 'scheduled';
+      const isScheduled = !!info.hour;
       const needsUpdate =
         activities[idx].schedule_state !== (isScheduled ? 'scheduled' : undefined) ||
         activities[idx].time_window?.start !== (info.hour || undefined);
@@ -213,7 +212,7 @@ export async function syncActivityBookingsToDays(
   for (const date of bookingDates) {
     const existingDay = days.find(d => d.date === date);
     const info = dateToBooking.get(date);
-    const isScheduled = info?.schedule_state === 'scheduled';
+    const isScheduled = !!info?.hour;
 
     const newActivity: ActivityEntry = {
       order: 0, // will be set below

@@ -3,8 +3,9 @@
 export type Currency = string;
 export type TripStatus = 'research' | 'planning' | 'active' | 'completed';
 export type POICategory = 'accommodation' | 'eatery' | 'attraction' | 'service';
-export type POIStatus = 'candidate' | 'in_plan' | 'matched' | 'booked' | 'visited';
-export type TransportStatus = 'candidate' | 'in_plan' | 'booked' | 'completed';
+export type EntityStatus = 'suggested' | 'interested' | 'planned' | 'scheduled' | 'booked' | 'visited' | 'skipped';
+export type POIStatus = EntityStatus;
+export type TransportStatus = EntityStatus;
 export type MissionStatus = 'pending' | 'completed' | 'cancelled';
 
 // ============================================================
@@ -47,7 +48,6 @@ export interface POIBooking {
   reservation_date?: string;
   reservation_hour?: string;
   number_of_people?: number;
-  schedule_state?: 'potential' | 'scheduled';
 }
 
 export interface AccommodationDetails {
@@ -156,7 +156,7 @@ export interface Collection {
   id: string;
   tripId: string;
   collectionName: string;
-  status: 'candidate' | 'in_plan' | 'booked';
+  status: EntityStatus;
   timeWindow: { start_time?: string; end_time?: string };
   items: CollectionItem[];
   sourceRefs: { recommendation_ids: string[] };

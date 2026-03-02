@@ -18,11 +18,13 @@ import { POICard } from '@/components/poi/POICard';
 import { getCategoryIcon, getCategoryLabel, getPOICategories } from '@/lib/subCategoryConfig';
 
 const statusLabels: Record<string, string> = {
-  candidate: 'מועמד',
-  in_plan: 'בתוכנית',
-  matched: 'משודך',
+  suggested: 'מוצע',
+  interested: 'מעניין',
+  planned: 'מתוכנן',
+  scheduled: 'בלו״ז',
   booked: 'הוזמן',
   visited: 'בוקר',
+  skipped: 'דילגתי',
 };
 
 type GroupBy = 'category' | 'location' | 'status';
@@ -259,7 +261,7 @@ const POIsPage = () => {
               >
                 הכל ({statusCounts.all || 0})
               </Badge>
-              {(['candidate', 'in_plan', 'matched', 'booked', 'visited'] as POIStatus[]).map(s => (
+              {(['suggested', 'interested', 'planned', 'scheduled', 'booked', 'visited', 'skipped'] as POIStatus[]).map(s => (
                 statusCounts[s] ? (
                   <Badge
                     key={s}

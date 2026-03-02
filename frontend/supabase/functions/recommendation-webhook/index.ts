@@ -150,7 +150,7 @@ Deno.serve(async (req)=>{
               {
                 trip_id: matchedTripId,
                 category: itemType,
-                status: 'candidate',
+                status: 'suggested',
                 is_paid: false,
                 source_refs: {
                   email_ids: [],
@@ -238,7 +238,7 @@ Deno.serve(async (req)=>{
                 category: poiCategory,
                 sub_category: itemType,
                 name: item.name,
-                status: 'candidate',
+                status: 'suggested',
                 is_paid: false,
                 location: {
                   city: item.site,

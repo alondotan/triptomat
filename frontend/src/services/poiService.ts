@@ -57,7 +57,7 @@ export async function createOrMergePOI(
     // Keep sub_category if new one is provided
     if (hasValue(poi.subCategory)) updates.subCategory = poi.subCategory;
 
-    // Upgrade status only; never downgrade (e.g. don't overwrite 'booked' with 'candidate')
+    // Upgrade status only; never downgrade (e.g. don't overwrite 'booked' with 'suggested')
     const newPriority = STATUS_PRIORITY[poi.status] ?? 0;
     const existingPriority = STATUS_PRIORITY[existingPoi.status] ?? 0;
     if (newPriority > existingPriority) updates.status = poi.status;
@@ -207,7 +207,6 @@ export async function rebuildPOIBookingsFromDays(tripId: string, poiId: string):
       newBookings.push({
         reservation_date: dayDate,
         reservation_hour: match.time_window?.start || undefined,
-        schedule_state: match.schedule_state === 'scheduled' ? 'scheduled' : 'potential',
       });
     }
   }
@@ -230,8 +229,8 @@ export async function rebuildPOIBookingsFromDays(tripId: string, poiId: string):
   }
 
   // 4. Compare and update if changed
-  const oldKey = JSON.stringify(existingBookings.map(b => `${b.reservation_date}|${b.reservation_hour || ''}|${b.schedule_state || ''}`).sort());
-  const newKey = JSON.stringify(newBookings.map(b => `${b.reservation_date}|${b.reservation_hour || ''}|${b.schedule_state || ''}`).sort());
+  const oldKey = JSON.stringify(existingBookings.map(b => `${b.reservation_date}|${b.reservation_hour || ''}`).sort());
+  const newKey = JSON.stringify(newBookings.map(b => `${b.reservation_date}|${b.reservation_hour || ''}`).sort());
   if (oldKey === newKey) return;
 
   details.bookings = newBookings.length > 0 ? newBookings : undefined;
@@ -249,7 +248,7 @@ export function mapPOI(row: Record<string, unknown>): PointOfInterest {
     category: row.category as PointOfInterest['category'],
     subCategory: (row.sub_category as string) || undefined,
     name: row.name as string,
-    status: (row.status as PointOfInterest['status']) || 'candidate',
+    status: (row.status as PointOfInterest['status']) || 'suggested',
     location: (row.location as POILocation) || {},
     sourceRefs: (row.source_refs as SourceRefs) || { email_ids: [], recommendation_ids: [] },
     details: normalizeDetails((row.details as Record<string, unknown>) || {}),
