@@ -126,7 +126,7 @@ export interface TransportSegment {
 export interface Transportation {
   id: string;
   tripId: string;
-  category: string; // flight, train, ferry, bus, taxi, car_rental, etc.
+  category: string; // airplane, domesticFlight, internationalFlight, train, nightTrain, highSpeedTrain, bus, subway, tram, ferry, cruise, cruiseShip, taxi, carRental, rideshare, privateTransfer, car, bicycle, motorcycle, scooter, boatTaxi, cableCar, funicular, rv, otherTransportation
   status: TransportStatus;
   sourceRefs: SourceRefs;
   cost: TransportCost;

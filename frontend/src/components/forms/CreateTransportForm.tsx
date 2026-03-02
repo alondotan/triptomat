@@ -16,13 +16,31 @@ import type { TransportStatus } from '@/types/trip';
 const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
 
 const TRANSPORT_CATEGORIES = [
-  { value: 'flight', label: 'Flight' },
-  { value: 'train', label: 'Train' },
-  { value: 'bus', label: 'Bus' },
-  { value: 'ferry', label: 'Ferry' },
-  { value: 'taxi', label: 'Taxi' },
-  { value: 'car_rental', label: 'Car Rental' },
-  { value: 'other', label: 'Other' },
+  { value: 'airplane',            label: 'Airplane' },
+  { value: 'domesticFlight',      label: 'Domestic Flight' },
+  { value: 'internationalFlight', label: 'International Flight' },
+  { value: 'train',               label: 'Train' },
+  { value: 'nightTrain',          label: 'Night Train' },
+  { value: 'highSpeedTrain',      label: 'High-Speed Train' },
+  { value: 'bus',                 label: 'Bus' },
+  { value: 'subway',              label: 'Subway / Metro' },
+  { value: 'tram',                label: 'Tram' },
+  { value: 'ferry',               label: 'Ferry' },
+  { value: 'cruise',              label: 'Cruise' },
+  { value: 'cruiseShip',          label: 'Cruise Ship' },
+  { value: 'taxi',                label: 'Taxi' },
+  { value: 'carRental',           label: 'Car Rental' },
+  { value: 'rideshare',           label: 'Rideshare' },
+  { value: 'privateTransfer',     label: 'Private Transfer' },
+  { value: 'car',                 label: 'Car' },
+  { value: 'bicycle',             label: 'Bicycle' },
+  { value: 'motorcycle',          label: 'Motorcycle' },
+  { value: 'scooter',             label: 'Scooter' },
+  { value: 'boatTaxi',            label: 'Boat Taxi' },
+  { value: 'cableCar',            label: 'Cable Car' },
+  { value: 'funicular',           label: 'Funicular' },
+  { value: 'rv',                  label: 'RV / Campervan' },
+  { value: 'otherTransportation', label: 'Other' },
 ];
 
 interface SegmentFormData {
@@ -60,7 +78,7 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
   const [openInternal, setOpenInternal] = useState(false);
   const open = isControlled ? openProp! : openInternal;
   const setOpen = (v: boolean) => { if (isControlled) { onOpenChange?.(v); } else { setOpenInternal(v); } };
-  const [category, setCategory] = useState('flight');
+  const [category, setCategory] = useState('airplane');
   const [status, setStatus] = useState<TransportStatus>('candidate');
   const [segments, setSegments] = useState<SegmentFormData[]>([emptySegment()]);
 
@@ -78,7 +96,7 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
   const [notes, setNotes] = useState('');
 
   const resetForm = () => {
-    setCategory('flight');
+    setCategory('airplane');
     setStatus('candidate');
     setSegments([emptySegment()]);
     setOrderNumber(''); setCarrierName('');

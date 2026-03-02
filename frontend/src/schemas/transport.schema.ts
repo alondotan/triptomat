@@ -1,6 +1,15 @@
 import { z } from 'zod';
 
-const transportCategories = ['flight', 'train', 'bus', 'ferry', 'taxi', 'car_rental', 'other'] as const;
+const transportCategories = [
+  'airplane', 'domesticFlight', 'internationalFlight',
+  'train', 'nightTrain', 'highSpeedTrain',
+  'bus', 'subway', 'tram',
+  'ferry', 'cruise', 'cruiseShip',
+  'taxi', 'carRental', 'rideshare', 'privateTransfer',
+  'car', 'bicycle', 'motorcycle', 'scooter',
+  'boatTaxi', 'cableCar', 'funicular', 'rv',
+  'otherTransportation',
+] as const;
 const transportStatuses = ['candidate', 'in_plan', 'booked', 'completed'] as const;
 
 const segmentSchema = z.object({

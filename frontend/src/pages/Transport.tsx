@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CreateTransportForm } from '@/components/forms/CreateTransportForm';
 import { TransportDetailDialog } from '@/components/transport/TransportDetailDialog';
-import { Plane, Train, Ship, Bus, Car, Trash2, Filter, Search, Merge } from 'lucide-react';
+import { Plane, Train, Ship, Bus, Car, Bike, Trash2, Filter, Search, Merge } from 'lucide-react';
 import { BookingActions } from '@/components/BookingActions';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,21 +20,59 @@ import { format, parseISO } from 'date-fns';
 import type { Transportation } from '@/types/trip';
 
 const categoryLabels: Record<string, string> = {
-  flight: 'טיסה',
-  train: 'רכבת',
-  ferry: 'מעבורת',
-  bus: 'אוטובוס',
-  taxi: 'מונית',
-  car_rental: 'השכרת רכב',
+  airplane:            'טיסה',
+  domesticFlight:      'טיסה פנים ארצית',
+  internationalFlight: 'טיסה בינלאומית',
+  train:               'רכבת',
+  nightTrain:          'רכבת לילה',
+  highSpeedTrain:      'רכבת מהירה',
+  bus:                 'אוטובוס',
+  subway:              'רכבת תחתית',
+  tram:                'חשמלית',
+  ferry:               'מעבורת',
+  cruise:              'שייט',
+  cruiseShip:          'ספינת שייט',
+  taxi:                'מונית',
+  carRental:           'השכרת רכב',
+  rideshare:           'שיתוף נסיעות',
+  privateTransfer:     'הסעה פרטית',
+  car:                 'רכב פרטי',
+  bicycle:             'אופניים',
+  motorcycle:          'אופנוע',
+  scooter:             'קורקינט',
+  boatTaxi:            'מונית מים',
+  cableCar:            'רכבל',
+  funicular:           'רכבל הר',
+  rv:                  'RV / קרוואן',
+  otherTransportation: 'אחר',
 };
 
 const categoryIcons: Record<string, React.ReactNode> = {
-  flight: <Plane size={16} />,
-  train: <Train size={16} />,
-  ferry: <Ship size={16} />,
-  bus: <Bus size={16} />,
-  taxi: <Car size={16} />,
-  car_rental: <Car size={16} />,
+  airplane:            <Plane size={16} />,
+  domesticFlight:      <Plane size={16} />,
+  internationalFlight: <Plane size={16} />,
+  train:               <Train size={16} />,
+  nightTrain:          <Train size={16} />,
+  highSpeedTrain:      <Train size={16} />,
+  bus:                 <Bus size={16} />,
+  subway:              <Train size={16} />,
+  tram:                <Train size={16} />,
+  ferry:               <Ship size={16} />,
+  cruise:              <Ship size={16} />,
+  cruiseShip:          <Ship size={16} />,
+  taxi:                <Car size={16} />,
+  carRental:           <Car size={16} />,
+  rideshare:           <Car size={16} />,
+  privateTransfer:     <Car size={16} />,
+  car:                 <Car size={16} />,
+  bicycle:             <Bike size={16} />,
+  motorcycle:          <Bike size={16} />,
+  scooter:             <Bike size={16} />,
+  boatTaxi:            <Ship size={16} />,
+  cableCar:            <Car size={16} />,
+  funicular:           <Car size={16} />,
+  rv:                  <Car size={16} />,
+  otherTransportation: <Car size={16} />,
 };
 
 function formatDateTime(iso: string): string {
