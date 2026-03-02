@@ -201,15 +201,28 @@ export function POICard({
           {/* Notes */}
           {editable ? (
             editingNotes ? (
-              <textarea
-                className="text-xs border rounded px-1.5 py-0.5 w-full resize-none bg-background"
-                value={notesValue}
-                onChange={e => setNotesValue(e.target.value)}
-                onBlur={handleSaveNotes}
+              <div
+                className="flex flex-col gap-1"
                 onPointerDown={e => e.stopPropagation()}
                 onClick={e => e.stopPropagation()}
-                rows={2}
-              />
+              >
+                <textarea
+                  className="text-xs border rounded px-1.5 py-0.5 w-full resize-none bg-background"
+                  value={notesValue}
+                  onChange={e => setNotesValue(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Escape') setEditingNotes(false); }}
+                  rows={2}
+                  autoFocus
+                />
+                <div className="flex gap-1 items-center">
+                  <button type="button" className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded" onClick={handleSaveNotes}>
+                    שמור
+                  </button>
+                  <button type="button" className="text-xs px-2 py-0.5 border border-border rounded hover:bg-muted" onClick={() => setEditingNotes(false)}>
+                    ביטול
+                  </button>
+                </div>
+              </div>
             ) : (
               <p
                 className="text-xs text-muted-foreground/70 italic truncate cursor-pointer hover:text-muted-foreground"
