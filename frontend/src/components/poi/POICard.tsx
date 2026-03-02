@@ -120,7 +120,7 @@ export function POICard({
           <img
             src={poi.imageUrl}
             alt=""
-            className="w-16 self-stretch rounded-lg object-cover shrink-0 cursor-pointer"
+            className="w-20 self-stretch rounded-lg object-cover shrink-0 cursor-pointer"
             onClick={() => setDialogOpen(true)}
           />
         )}
@@ -135,9 +135,6 @@ export function POICard({
               : <SubCategoryIcon type={poi.subCategory || ''} size={14} className="shrink-0" />
             )}
             <span className="text-sm font-medium truncate">{poi.name}</span>
-            {poi.location.city && (
-              <span className="text-xs text-muted-foreground shrink-0">{poi.location.city}</span>
-            )}
           </div>
 
           {/* Duration */}
