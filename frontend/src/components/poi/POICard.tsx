@@ -120,7 +120,7 @@ export function POICard({
           <img
             src={poi.imageUrl}
             alt=""
-            className="w-12 self-stretch rounded-lg object-cover shrink-0 cursor-pointer"
+            className="w-16 self-stretch rounded-lg object-cover shrink-0 cursor-pointer"
             onClick={() => setDialogOpen(true)}
           />
         )}
