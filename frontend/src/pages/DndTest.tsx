@@ -8,7 +8,8 @@ import { updateItineraryDay, createItineraryDay } from '@/services/itineraryServ
 import { rebuildPOIBookingsFromDays } from '@/services/poiService';
 import { LocationContextPicker } from '@/components/shared/LocationContextPicker';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { eachDayOfInterval, parseISO, format } from 'date-fns';
+import { parseISO, format } from 'date-fns';
+import { useTripDays, tripDayDate } from '@/hooks/useTripDays';
 import type { ItineraryActivity, PointOfInterest } from '@/types/trip';
 import { POICard } from '@/components/poi/POICard';
 import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
@@ -36,7 +37,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Building2, Check, Clock, GripVertical, Moon, Pencil, Sun, Trash2, X } from 'lucide-react';
+import { Building2, CalendarDays, Check, Clock, GripVertical, Moon, Pencil, Sun, Trash2, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { DaySection } from '@/components/DaySection';
 import { getSubCategoryEntry } from '@/lib/subCategoryConfig';
@@ -606,10 +607,10 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
 // ─── Droppable day pill (real trip days) ─────────────────────────────────────
 
 function DroppableDayPill({
-  dayNum, day, isSelected, hasContent, onClick,
+  dayNum, shortLabel, isSelected, hasContent, onClick,
 }: {
   dayNum: number;
-  day: Date;
+  shortLabel: { line1: string; line2: string; line3: string };
   isSelected: boolean;
   hasContent: boolean;
   onClick: () => void;
@@ -629,9 +630,9 @@ function DroppableDayPill({
               : 'border-transparent bg-muted/30 hover:bg-muted text-muted-foreground'
       }`}
     >
-      <span className="text-[10px] sm:text-xs">{format(day, 'EEE')}</span>
-      <span className="text-base sm:text-lg font-bold">{format(day, 'd')}</span>
-      <span className="text-[9px] sm:text-[10px]">{format(day, 'MMM')}</span>
+      <span className="text-[10px] sm:text-xs">{shortLabel.line1}</span>
+      <span className="text-base sm:text-lg font-bold">{shortLabel.line2}</span>
+      {shortLabel.line3 && <span className="text-[9px] sm:text-[10px]">{shortLabel.line3}</span>}
       {hasContent && !isSelected && <div className="w-1.5 h-1.5 rounded-full bg-current mt-1 opacity-60" />}
     </button>
   );
@@ -727,13 +728,7 @@ export default function DndTestPage() {
   const [newTbLabel, setNewTbLabel] = useState('');
   const [newTbTime, setNewTbTime] = useState('');
 
-  const tripDays = useMemo(() => {
-    if (!activeTrip) return [];
-    return eachDayOfInterval({
-      start: parseISO(activeTrip.startDate),
-      end: parseISO(activeTrip.endDate),
-    });
-  }, [activeTrip?.startDate, activeTrip?.endDate]);
+  const tripDays = useTripDays();
 
   const locationSpans = useMemo(() => {
     if (tripDays.length === 0) return [];
@@ -809,11 +804,10 @@ export default function DndTestPage() {
   const handleTransportCreated = useCallback(async (transportId: string) => {
     let itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
     if (!itDay && activeTrip) {
-      const day = tripDays[selectedDayNum - 1];
       itDay = await createItineraryDay({
         tripId: activeTrip.id,
         dayNumber: selectedDayNum,
-        date: day ? format(day, 'yyyy-MM-dd') : undefined,
+        date: tripDays[selectedDayNum - 1]?.dateStr,
         locationContext: '',
         accommodationOptions: [],
         activities: [],
@@ -847,11 +841,10 @@ export default function DndTestPage() {
     if (!newTbLabel.trim()) return;
     let itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
     if (!itDay && activeTrip) {
-      const day = tripDays[selectedDayNum - 1];
       itDay = await createItineraryDay({
         tripId: activeTrip.id,
         dayNumber: selectedDayNum,
-        date: day ? format(day, 'yyyy-MM-dd') : undefined,
+        date: tripDays[selectedDayNum - 1]?.dateStr,
         locationContext: '',
         accommodationOptions: [],
         activities: [],
@@ -936,11 +929,10 @@ export default function DndTestPage() {
       if (dayNum > tripDays.length) break;
       let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
       if (!targetDay && activeTrip) {
-        const day = tripDays[dayNum - 1];
         targetDay = await createItineraryDay({
           tripId: activeTrip.id,
           dayNumber: dayNum,
-          date: day ? format(day, 'yyyy-MM-dd') : undefined,
+          date: tripDays[dayNum - 1]?.dateStr,
           locationContext: '',
           accommodationOptions: [],
           activities: [],
@@ -959,11 +951,10 @@ export default function DndTestPage() {
     const existing = itineraryDays.find(d => d.dayNumber === selectedDayNum);
     if (existing) return existing;
     if (!activeTrip) return null;
-    const day = tripDays[selectedDayNum - 1];
     return await createItineraryDay({
       tripId: activeTrip.id,
       dayNumber: selectedDayNum,
-      date: day ? format(day, 'yyyy-MM-dd') : undefined,
+      date: tripDays[selectedDayNum - 1]?.dateStr,
       locationContext: '',
       accommodationOptions: [],
       activities: [],
@@ -1018,11 +1009,10 @@ export default function DndTestPage() {
       if (dayNum > tripDays.length) break;
       let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
       if (!targetDay && activeTrip) {
-        const day = tripDays[dayNum - 1];
         targetDay = await createItineraryDay({
           tripId: activeTrip.id,
           dayNumber: dayNum,
-          date: day ? format(day, 'yyyy-MM-dd') : undefined,
+          date: tripDays[dayNum - 1]?.dateStr,
           locationContext: '',
           accommodationOptions: [],
           activities: [],
@@ -1653,24 +1643,36 @@ export default function DndTestPage() {
           onDragEnd={handleDragEnd}
         >
           {/* ── Day pills + Location strip (sticky, never scrolls) ── */}
-          {tripDays.length > 0 ? (
+          {activeTrip?.status === 'research' ? (
+            <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
+              <CalendarDays size={48} className="text-muted-foreground/50" />
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">מצב מחקר</h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  כדי לתכנן ימי טיול, יש להגדיר קודם את משך הטיול או תאריכים מדויקים.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  ניתן להוסיף פעילויות ומקומות גם במצב מחקר, ולשבץ אותם ליומים אחר כך.
+                </p>
+              </div>
+            </div>
+          ) : tripDays.length > 0 ? (
             <ScrollArea className="w-full shrink-0 pb-1">
               <div className="flex gap-2 pb-1">
-                {tripDays.map((day, idx) => {
-                  const dayNum = idx + 1;
-                  const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
+                {tripDays.map((td) => {
+                  const itDay = itineraryDays.find(d => d.dayNumber === td.dayNum);
                   const hasContent = !!itDay && (
                     (itDay.activities?.length ?? 0) > 0 ||
                     (itDay.accommodationOptions?.length ?? 0) > 0
                   );
                   return (
                     <DroppableDayPill
-                      key={dayNum}
-                      dayNum={dayNum}
-                      day={day}
-                      isSelected={selectedDayNum === dayNum}
+                      key={td.dayNum}
+                      dayNum={td.dayNum}
+                      shortLabel={td.shortLabel}
+                      isSelected={selectedDayNum === td.dayNum}
                       hasContent={hasContent}
-                      onClick={() => setSelectedDayNum(dayNum)}
+                      onClick={() => setSelectedDayNum(td.dayNum)}
                     />
                   );
                 })}

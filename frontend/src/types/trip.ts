@@ -1,7 +1,7 @@
 // Trip Planner Data Types - New Schema
 
 export type Currency = string;
-export type TripStatus = 'research' | 'planning' | 'active' | 'completed';
+export type TripStatus = 'research' | 'planning' | 'detailed_planning' | 'active' | 'completed';
 export type POICategory = 'accommodation' | 'eatery' | 'attraction' | 'service';
 export type EntityStatus = 'suggested' | 'interested' | 'planned' | 'scheduled' | 'booked' | 'visited' | 'skipped';
 export type POIStatus = EntityStatus;
@@ -16,8 +16,9 @@ export interface Trip {
   name: string;
   description?: string;
   countries: string[];
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
+  numberOfDays?: number;
   status: TripStatus;
   currency: Currency;
   createdAt: string;
@@ -48,12 +49,15 @@ export interface POIBooking {
   reservation_date?: string;
   reservation_hour?: string;
   number_of_people?: number;
+  trip_day_number?: number;
 }
 
 export interface AccommodationDetails {
   rooms?: Array<{ room_type?: string; occupancy?: string }>;
   checkin?: { date?: string; hour?: string };
   checkout?: { date?: string; hour?: string };
+  checkin_day_number?: number;
+  checkout_day_number?: number;
   price_per_night?: number;
   free_cancellation_until?: string | null;
 }
@@ -119,6 +123,8 @@ export interface TransportSegment {
   };
   departure_time: string; // ISO8601
   arrival_time: string;
+  departure_day_number?: number;
+  arrival_day_number?: number;
   carrier_code?: string;
   flight_or_vessel_number?: string;
   seat_info?: string;

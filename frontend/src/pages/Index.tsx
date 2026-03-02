@@ -169,7 +169,7 @@ const Index = () => {
   // ── Trip data ────────────────────────────────────────────────────────────────
 
   const tripDays = useMemo(() => {
-    if (!activeTrip) return [];
+    if (!activeTrip?.startDate || !activeTrip?.endDate) return [];
     return eachDayOfInterval({
       start: parseISO(activeTrip.startDate),
       end: parseISO(activeTrip.endDate),

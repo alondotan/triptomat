@@ -1,7 +1,26 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
-import { SourceRecommendation } from '@/types/webhook';
+import type { SourceRecommendation, SiteHierarchyNode } from '@/types/webhook';
 import { getTypeToCategoryMap, getGeoTypes, getTipTypes } from '@/lib/subCategoryConfig';
+
+function buildSiteToCountryMap(hierarchy: SiteHierarchyNode[]): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const node of hierarchy) {
+    if (node.site_type === 'country') {
+      collectSitesUnderCountry(node, node.site, map);
+    }
+  }
+  return map;
+}
+
+function collectSitesUnderCountry(node: SiteHierarchyNode, country: string, map: Record<string, string>) {
+  map[node.site.toLowerCase()] = country;
+  if (node.sub_sites) {
+    for (const sub of node.sub_sites) {
+      collectSitesUnderCountry(sub, country, map);
+    }
+  }
+}
 
 export async function fetchRecommendations(tripId?: string): Promise<SourceRecommendation[]> {
   let query = supabase
@@ -47,7 +66,9 @@ export async function linkRecommendationToTrip(
   if (fetchError || !rec) throw new Error('Recommendation not found');
 
   const analysis = rec.analysis as SourceRecommendation['analysis'];
+  const rawAnalysis = rec.analysis as Record<string, unknown>;
   const extractedItems = analysis?.extracted_items || [];
+  const siteToCountry = buildSiteToCountryMap((rawAnalysis?.sites_hierarchy as SiteHierarchyNode[]) || []);
   const linkedEntities: Array<{ entity_type: string; entity_id: string; description: string; matched_existing: boolean }> = [];
 
   // Pre-fetch existing entities for this trip
@@ -113,7 +134,7 @@ export async function linkRecommendationToTrip(
         const { data: newPoi } = await supabase.from('points_of_interest').insert([{
           trip_id: tripId, category: poiCategory, sub_category: itemType, name: item.name,
           status: 'suggested',
-          location: { city: item.site } as unknown as Json,
+          location: { country: siteToCountry[(item.site || '').toLowerCase()] || undefined, city: item.site } as unknown as Json,
           source_refs: { email_ids: [], recommendation_ids: [recommendationId] } as unknown as Json,
           details: { from_recommendation: true, paragraph: item.paragraph, source_url: rec.source_url } as unknown as Json,
         }]).select('id').single();

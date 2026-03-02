@@ -24,8 +24,9 @@ export async function createTrip(trip: Omit<Trip, 'id' | 'createdAt' | 'updatedA
     .insert({
       name: trip.name,
       description: trip.description,
-      start_date: trip.startDate,
-      end_date: trip.endDate,
+      start_date: trip.startDate || null,
+      end_date: trip.endDate || null,
+      number_of_days: trip.numberOfDays || null,
       currency: trip.currency,
       countries: trip.countries,
       status: trip.status || 'research',
@@ -42,8 +43,9 @@ export async function updateTrip(tripId: string, updates: Partial<Trip>): Promis
   const updateData: Record<string, unknown> = {};
   if (updates.name !== undefined) updateData.name = updates.name;
   if (updates.description !== undefined) updateData.description = updates.description;
-  if (updates.startDate !== undefined) updateData.start_date = updates.startDate;
-  if (updates.endDate !== undefined) updateData.end_date = updates.endDate;
+  if ('startDate' in updates) updateData.start_date = updates.startDate || null;
+  if ('endDate' in updates) updateData.end_date = updates.endDate || null;
+  if ('numberOfDays' in updates) updateData.number_of_days = updates.numberOfDays || null;
   if (updates.currency !== undefined) updateData.currency = updates.currency;
   if (updates.countries !== undefined) updateData.countries = updates.countries;
   if (updates.status !== undefined) updateData.status = updates.status;
@@ -63,8 +65,9 @@ function mapTrip(row: Record<string, unknown>): Trip {
     name: row.name as string,
     description: (row.description as string) || undefined,
     countries: (row.countries as string[]) || [],
-    startDate: row.start_date as string,
-    endDate: row.end_date as string,
+    startDate: (row.start_date as string) || undefined,
+    endDate: (row.end_date as string) || undefined,
+    numberOfDays: (row.number_of_days as number) || undefined,
     status: (row.status as Trip['status']) || 'research',
     currency: (row.currency as Trip['currency']) || 'USD',
     createdAt: row.created_at as string,

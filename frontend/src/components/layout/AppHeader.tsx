@@ -29,6 +29,7 @@ import { useState, useEffect } from 'react';
 import { useTripList } from '@/context/TripListContext';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { CreateTripForm } from '@/components/forms/CreateTripForm';
+import { TripStatusDialog } from '@/components/trip/TripStatusDialog';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -81,6 +82,7 @@ export function AppHeader() {
   const location = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [newTripOpen, setNewTripOpen] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
@@ -108,10 +110,15 @@ export function AppHeader() {
   const openEditDialog = () => {
     if (!activeTrip) return;
     setEditName(activeTrip.name);
-    setEditStartDate(activeTrip.startDate);
-    setEditEndDate(activeTrip.endDate);
+    setEditStartDate(activeTrip.startDate || '');
+    setEditEndDate(activeTrip.endDate || '');
     setHamburgerOpen(false);
     setEditDialogOpen(true);
+  };
+
+  const openStatusDialog = () => {
+    setHamburgerOpen(false);
+    setStatusDialogOpen(true);
   };
 
   const handleSaveEdit = async () => {
@@ -186,6 +193,11 @@ export function AppHeader() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="gap-1 font-bold text-base sm:text-lg px-1 sm:px-2 max-w-[180px] sm:max-w-none truncate">
                   {activeTrip.name}
+                  {activeTrip.status !== 'detailed_planning' && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-normal">
+                      {activeTrip.status === 'research' ? 'מחקר' : 'תכנון'}
+                    </Badge>
+                  )}
                   <ChevronDown size={16} className="text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
@@ -205,6 +217,9 @@ export function AppHeader() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={openEditDialog}>
                   <Pencil size={14} className="mr-2" /> Edit Trip
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={openStatusDialog}>
+                  <Settings size={14} className="mr-2" /> מצב הטיול
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setNewTripOpen(true)}>
                   <Plus size={14} className="mr-2" /> New Trip
@@ -309,6 +324,13 @@ export function AppHeader() {
                 className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40"
               >
                 <Pencil size={16} /> Edit Trip
+              </button>
+              <button
+                onClick={openStatusDialog}
+                disabled={!activeTrip}
+                className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40"
+              >
+                <Settings size={16} /> מצב הטיול
               </button>
               <button
                 onClick={() => { setHamburgerOpen(false); setNewTripOpen(true); }}
@@ -448,6 +470,9 @@ export function AppHeader() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Trip Status Dialog */}
+      <TripStatusDialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen} />
 
     </header>
     </>

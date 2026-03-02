@@ -12,6 +12,8 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { createTransportSchema } from '@/schemas/transport.schema';
 import type { TransportStatus } from '@/types/trip';
+import { useTripMode } from '@/hooks/useTripMode';
+import { TripDaySelect } from '@/components/shared/TripDaySelect';
 
 const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
 
@@ -74,6 +76,7 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
   const isControlled = openProp !== undefined;
   const { activeTrip } = useActiveTrip();
   const { addTransportation } = useTransport();
+  const { isResearch, isPlanning } = useTripMode();
   const { toast } = useToast();
   const [openInternal, setOpenInternal] = useState(false);
   const open = isControlled ? openProp! : openInternal;
@@ -207,17 +210,33 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
                       <Input value={seg.toName} onChange={e => updateSegment(i, 'toName', e.target.value)} required placeholder="To" className="h-7 text-sm bg-background/50" />
                       <Input value={seg.toCode} onChange={e => updateSegment(i, 'toCode', e.target.value)} placeholder="CDG" className="h-7 text-sm w-14 bg-background/50 text-center" />
                     </div>
-                    <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
-                      <div>
-                        <Label className="text-[10px] text-muted-foreground">Departure</Label>
-                        <Input type="datetime-local" value={seg.departureTime} onChange={e => updateSegment(i, 'departureTime', e.target.value)} className="h-7 text-[11px] bg-background/50" />
+                    {!isResearch && (
+                      <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
+                        <div>
+                          <Label className="text-[10px] text-muted-foreground">{isPlanning ? 'יום יציאה' : 'Departure'}</Label>
+                          {isPlanning ? (
+                            <div className="flex gap-1">
+                              <TripDaySelect value={seg.departureTime ? parseInt(seg.departureTime) || '' : ''} onChange={(v) => updateSegment(i, 'departureTime', v ? String(v) : '')} className="h-7 text-[11px]" />
+                              <Input type="time" value="" onChange={e => updateSegment(i, 'departureTime', seg.departureTime + 'T' + e.target.value)} className="h-7 text-[11px] w-20 bg-background/50" placeholder="HH:mm" />
+                            </div>
+                          ) : (
+                            <Input type="datetime-local" value={seg.departureTime} onChange={e => updateSegment(i, 'departureTime', e.target.value)} className="h-7 text-[11px] bg-background/50" />
+                          )}
+                        </div>
+                        <div>
+                          <Label className="text-[10px] text-muted-foreground">{isPlanning ? 'יום הגעה' : 'Arrival'}</Label>
+                          {isPlanning ? (
+                            <div className="flex gap-1">
+                              <TripDaySelect value={seg.arrivalTime ? parseInt(seg.arrivalTime) || '' : ''} onChange={(v) => updateSegment(i, 'arrivalTime', v ? String(v) : '')} className="h-7 text-[11px]" />
+                              <Input type="time" value="" onChange={e => updateSegment(i, 'arrivalTime', seg.arrivalTime + 'T' + e.target.value)} className="h-7 text-[11px] w-20 bg-background/50" placeholder="HH:mm" />
+                            </div>
+                          ) : (
+                            <Input type="datetime-local" value={seg.arrivalTime} onChange={e => updateSegment(i, 'arrivalTime', e.target.value)} className="h-7 text-[11px] bg-background/50" />
+                          )}
+                        </div>
+                        <Input value={seg.flightNumber} onChange={e => updateSegment(i, 'flightNumber', e.target.value)} placeholder="Flight #" className="h-7 text-sm w-20 bg-background/50" />
                       </div>
-                      <div>
-                        <Label className="text-[10px] text-muted-foreground">Arrival</Label>
-                        <Input type="datetime-local" value={seg.arrivalTime} onChange={e => updateSegment(i, 'arrivalTime', e.target.value)} className="h-7 text-[11px] bg-background/50" />
-                      </div>
-                      <Input value={seg.flightNumber} onChange={e => updateSegment(i, 'flightNumber', e.target.value)} placeholder="Flight #" className="h-7 text-sm w-20 bg-background/50" />
-                    </div>
+                    )}
                   </div>
                   {i < segments.length - 1 && (
                     <div className="flex justify-center py-0.5">

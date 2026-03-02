@@ -15,6 +15,8 @@ import { SubCategorySelector } from '@/components/shared/SubCategorySelector';
 import type { PointOfInterest, POICategory, POIStatus, POIBooking } from '@/types/trip';
 import { getPOICategories, getCategoryLabel } from '@/lib/subCategoryConfig';
 import { syncActivityBookingsToDays } from '@/services/itineraryService';
+import { useTripMode } from '@/hooks/useTripMode';
+import { TripDaySelect } from '@/components/shared/TripDaySelect';
 
 const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
 
@@ -45,6 +47,7 @@ interface RecommendationQuote {
 export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProps) {
   const { updatePOI } = usePOI();
   const { activeTrip } = useActiveTrip();
+  const { isResearch, isPlanning } = useTripMode();
 
   // Editable fields
   const [name, setName] = useState(poi.name);
@@ -346,13 +349,17 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           </div>
 
           {/* Accommodation-specific fields */}
-          {category === 'accommodation' && (
+          {category === 'accommodation' && !isResearch && (
             <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Accommodation</span>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label>תאריך צ׳ק-אין</Label>
-                  <Input type="date" value={checkinDate} onChange={e => setCheckinDate(e.target.value)} />
+                  <Label>{isPlanning ? 'יום צ׳ק-אין' : 'תאריך צ׳ק-אין'}</Label>
+                  {isPlanning ? (
+                    <TripDaySelect value={checkinDate ? parseInt(checkinDate) || '' : ''} onChange={(v) => setCheckinDate(v ? String(v) : '')} />
+                  ) : (
+                    <Input type="date" value={checkinDate} onChange={e => setCheckinDate(e.target.value)} />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>שעת צ׳ק-אין</Label>
@@ -361,8 +368,12 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label>תאריך צ׳ק-אאוט</Label>
-                  <Input type="date" value={checkoutDate} onChange={e => setCheckoutDate(e.target.value)} />
+                  <Label>{isPlanning ? 'יום צ׳ק-אאוט' : 'תאריך צ׳ק-אאוט'}</Label>
+                  {isPlanning ? (
+                    <TripDaySelect value={checkoutDate ? parseInt(checkoutDate) || '' : ''} onChange={(v) => setCheckoutDate(v ? String(v) : '')} />
+                  ) : (
+                    <Input type="date" value={checkoutDate} onChange={e => setCheckoutDate(e.target.value)} />
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>שעת צ׳ק-אאוט</Label>
@@ -387,16 +398,28 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           )}
 
           {/* Booking fields for eatery/attraction — multiple time slots */}
-          {(category === 'eatery' || category === 'attraction') && (
+          {(category === 'eatery' || category === 'attraction') && !isResearch && (
             <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Schedule</span>
               {bookings.map((slot, i) => (
                 <div key={i} className="flex gap-1.5 items-center overflow-hidden">
-                  <Input type="date" value={slot.date} className="flex-1 min-w-0 w-0 px-1.5" onChange={e => {
-                    const next = [...bookings];
-                    next[i] = { ...slot, date: e.target.value };
-                    setBookings(next);
-                  }} />
+                  {isPlanning ? (
+                    <TripDaySelect
+                      value={slot.date ? parseInt(slot.date) || '' : ''}
+                      onChange={(v) => {
+                        const next = [...bookings];
+                        next[i] = { ...slot, date: v ? String(v) : '' };
+                        setBookings(next);
+                      }}
+                      className="flex-1 min-w-0"
+                    />
+                  ) : (
+                    <Input type="date" value={slot.date} className="flex-1 min-w-0 w-0 px-1.5" onChange={e => {
+                      const next = [...bookings];
+                      next[i] = { ...slot, date: e.target.value };
+                      setBookings(next);
+                    }} />
+                  )}
                   <Input type="time" value={slot.hour} className="w-[80px] shrink-0 px-1.5" disabled={!slot.date} onChange={e => {
                     const next = [...bookings];
                     next[i] = { ...slot, hour: e.target.value };

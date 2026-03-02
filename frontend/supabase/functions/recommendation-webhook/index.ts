@@ -4,6 +4,7 @@ import { validateWebhookToken } from '../_shared/auth.ts';
 import { mergeWithNewWins } from '../_shared/merge.ts';
 import { fuzzyMatch } from '../_shared/matching.ts';
 import { TYPE_TO_CATEGORY, GEO_TYPES, TIP_TYPES } from '../_shared/categories.ts';
+import { buildSiteToCountryMap } from '../_shared/mapUtils.ts';
 Deno.serve(async (req)=>{
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
@@ -105,6 +106,7 @@ Deno.serve(async (req)=>{
         supabase.from('contacts').select('id, name, role').eq('trip_id', matchedTripId)
       ]);
       const items = payload.analysis.recommendations || [];
+      const siteToCountry = buildSiteToCountryMap(payload.analysis.sites_hierarchy || []);
       console.log(`[debug] Processing ${items.length} items`);
       for (const item of items){
         const itemType = item.category;
@@ -199,6 +201,7 @@ Deno.serve(async (req)=>{
             const recIds = refs.recommendation_ids || [];
             if (!recIds.includes(sourceRecId)) {
               const incomingLocation = {
+                country: siteToCountry[(item.site || "").toLowerCase()] || undefined,
                 city: item.site || undefined,
                 address: item.location?.address || undefined,
                 coordinates: item.location?.coordinates || undefined
@@ -241,6 +244,7 @@ Deno.serve(async (req)=>{
                 status: 'suggested',
                 is_paid: false,
                 location: {
+                  country: siteToCountry[(item.site || "").toLowerCase()] || null,
                   city: item.site,
                   address: item.location?.address,
                   coordinates: item.location?.coordinates

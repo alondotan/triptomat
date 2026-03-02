@@ -1,7 +1,18 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { Trip } from '@/types/trip';
+import { Trip, TripStatus } from '@/types/trip';
 import { fetchTrips, createTrip } from '@/services/tripService';
 import { useToast } from '@/hooks/use-toast';
+
+export interface CreateTripData {
+  name: string;
+  description?: string;
+  countries: string[];
+  currency?: string;
+  status: TripStatus;
+  numberOfDays?: number;
+  startDate?: string;
+  endDate?: string;
+}
 
 // State
 interface TripListState {
@@ -59,7 +70,7 @@ interface TripListContextType {
   error: string | null;
   loadTrips: () => Promise<void>;
   setActiveTripId: (id: string) => void;
-  createNewTrip: (name: string, description: string, startDate: string, endDate: string, countries?: string[]) => Promise<void>;
+  createNewTrip: (data: CreateTripData) => Promise<void>;
   removeTrip: (id: string) => void;
   updateTripInList: (updates: Partial<Trip> & { id: string }) => void;
 }
@@ -91,13 +102,20 @@ export function TripListProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_ACTIVE_TRIP_ID', payload: id });
   }, []);
 
-  const createNewTrip = useCallback(async (name: string, description: string, startDate: string, endDate: string, countries: string[] = []) => {
+  const createNewTrip = useCallback(async (data: CreateTripData) => {
     try {
       const newTrip = await createTrip({
-        name, description, startDate, endDate, currency: 'ILS', countries, status: 'research',
+        name: data.name,
+        description: data.description,
+        countries: data.countries,
+        currency: data.currency || 'ILS',
+        status: data.status,
+        numberOfDays: data.numberOfDays,
+        startDate: data.startDate,
+        endDate: data.endDate,
       });
       dispatch({ type: 'ADD_TRIP', payload: newTrip });
-      toast({ title: 'Trip Created', description: `"${name}" has been created.` });
+      toast({ title: 'Trip Created', description: `"${data.name}" has been created.` });
     } catch (error) {
       console.error('Failed to create trip:', error);
       toast({ title: 'Error', description: 'Failed to create trip.', variant: 'destructive' });

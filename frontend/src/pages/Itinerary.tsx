@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { useItinerary } from '@/context/ItineraryContext';
 import { usePOI } from '@/context/POIContext';
@@ -9,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { AppLayout } from '@/components/layout';
 import { Building2, MapPin, Plane, CalendarDays } from 'lucide-react';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
-import { format, eachDayOfInterval, parseISO } from 'date-fns';
+import { useTripDays } from '@/hooks/useTripDays';
 
 const ItineraryPage = () => {
   const { activeTrip } = useActiveTrip();
@@ -17,18 +16,31 @@ const ItineraryPage = () => {
   const { pois } = usePOI();
   const { transportation } = useTransport();
   const { formatCurrency } = useFinance();
-
-  const tripDays = useMemo(() => {
-    if (!activeTrip) return [];
-    return eachDayOfInterval({
-      start: parseISO(activeTrip.startDate),
-      end: parseISO(activeTrip.endDate),
-    });
-  }, [activeTrip?.startDate, activeTrip?.endDate]);
+  const tripDays = useTripDays();
 
   if (!activeTrip) {
     return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
   }
+
+  // Research mode: no days to show
+  if (activeTrip.status === 'research') {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+          <CalendarDays size={48} className="text-muted-foreground/50" />
+          <h3 className="text-lg font-semibold">מצב מחקר</h3>
+          <p className="text-sm text-muted-foreground max-w-md">
+            כדי לראות סיכום מסלול, יש להגדיר קודם את משך הטיול או תאריכים מדויקים.
+          </p>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // Header subtitle
+  const subtitle = activeTrip.startDate && activeTrip.endDate
+    ? `${activeTrip.name} • ${activeTrip.startDate} – ${activeTrip.endDate}`
+    : `${activeTrip.name} • ${activeTrip.numberOfDays} ימים`;
 
   return (
     <AppLayout>
@@ -37,15 +49,12 @@ const ItineraryPage = () => {
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <CalendarDays size={24} /> סיכום מסלול
           </h2>
-          <p className="text-muted-foreground">
-            {activeTrip.name} • {format(parseISO(activeTrip.startDate), 'MMM d')} – {format(parseISO(activeTrip.endDate), 'MMM d, yyyy')}
-          </p>
+          <p className="text-muted-foreground">{subtitle}</p>
         </div>
 
         <div className="space-y-3">
-          {tripDays.map((day, idx) => {
-            const dayNum = idx + 1;
-            const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
+          {tripDays.map((td) => {
+            const itDay = itineraryDays.find(d => d.dayNumber === td.dayNum);
 
             // Resolve linked entities
             const accommodations = (itDay?.accommodationOptions || [])
@@ -65,20 +74,20 @@ const ItineraryPage = () => {
             const hasContent = accommodations.length > 0 || activities.length > 0 || transports.length > 0;
 
             return (
-              <Card key={dayNum} className={hasContent ? 'border-primary/20' : 'border-border/50'}>
+              <Card key={td.dayNum} className={hasContent ? 'border-primary/20' : 'border-border/50'}>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className={`flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold shrink-0 ${
                       hasContent ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                     }`}>
-                      {dayNum}
+                      {td.dayNum}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-sm">{format(day, 'EEEE, MMM d')}</span>
+                        <span className="font-semibold text-sm">{td.label}</span>
                         {itDay?.locationContext && (
-                          <Badge variant="outline" className="text-xs">📍 {itDay.locationContext}</Badge>
+                          <Badge variant="outline" className="text-xs">{itDay.locationContext}</Badge>
                         )}
                       </div>
 
