@@ -116,16 +116,24 @@ export function POICard({
 
     return (
       <>
+        {poi.imageUrl && (
+          <img
+            src={poi.imageUrl}
+            alt=""
+            className="w-12 self-stretch rounded-lg object-cover shrink-0 cursor-pointer"
+            onClick={() => setDialogOpen(true)}
+          />
+        )}
         <div
           className={`flex flex-col gap-0.5 flex-1 min-w-0 cursor-pointer ${className}`}
           onClick={() => setDialogOpen(true)}
         >
           {/* Name row */}
           <div className="flex items-center gap-2">
-            {iconName
+            {!poi.imageUrl && (iconName
               ? <span className="material-symbols-outlined text-sm shrink-0">{iconName}</span>
               : <SubCategoryIcon type={poi.subCategory || ''} size={14} className="shrink-0" />
-            }
+            )}
             <span className="text-sm font-medium truncate">{poi.name}</span>
             {poi.location.city && (
               <span className="text-xs text-muted-foreground shrink-0">{poi.location.city}</span>
