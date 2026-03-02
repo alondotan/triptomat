@@ -235,48 +235,53 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
             <div className="max-sm:h-px max-sm:bg-border max-sm:my-4 sm:w-px sm:bg-border" />
 
             {/* Right column: details */}
-            <div className="space-y-3 max-sm:mt-0">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Type</Label>
-                  <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {TRANSPORT_CATEGORIES.map(c => (
-                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            <div className="space-y-4 max-sm:mt-0">
+              {/* Transport Details */}
+              <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Details</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Type</Label>
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {TRANSPORT_CATEGORIES.map(c => (
+                          <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Carrier</Label>
+                    <Input value={carrierName} onChange={e => setCarrierName(e.target.value)} placeholder="El Al" className="h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Order #</Label>
+                    <Input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="ABC123" className="h-8" />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              {/* Cost */}
+              <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cost</span>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Carrier</Label>
-                  <Input value={carrierName} onChange={e => setCarrierName(e.target.value)} placeholder="El Al" className="h-8" />
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="h-8" />
+                    <Select value={costCurrency} onValueChange={setCostCurrency}>
+                      <SelectTrigger className="h-8 w-[72px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Order #</Label>
-                  <Input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="ABC123" className="h-8" />
+                <div className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2.5">
+                  <Label htmlFor="transport-is-paid" className="text-sm">Paid</Label>
+                  <Switch id="transport-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
                 </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Cost</Label>
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="h-8" />
-                  <Select value={costCurrency} onValueChange={setCostCurrency}>
-                    <SelectTrigger className="h-8 w-[72px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-1.5">
-                <Label htmlFor="transport-is-paid" className="text-sm">Paid</Label>
-                <Switch id="transport-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
               </div>
 
               <div className="space-y-1">

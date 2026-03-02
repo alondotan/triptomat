@@ -266,83 +266,89 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
         )}
 
         {/* Edit Form */}
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>שם</Label>
-            <Input value={name} onChange={e => setName(e.target.value)} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-5">
+          {/* Details */}
+          <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Details</span>
             <div className="space-y-2">
-              <Label>קטגוריה</Label>
-              <Select value={category} onValueChange={v => setCategory(v as POICategory)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {getPOICategories().map(c => (
-                    <SelectItem key={c} value={c}>{getCategoryLabel(c)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>שם</Label>
+              <Input value={name} onChange={e => setName(e.target.value)} />
             </div>
-            <div className="space-y-2">
-              <Label>סטטוס</Label>
-              <div className="h-9 flex items-center">
-                <Badge variant={poi.status === 'booked' ? 'default' : 'secondary'}>
-                  {statusLabels[poi.status] || poi.status}
-                </Badge>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>קטגוריה</Label>
+                <Select value={category} onValueChange={v => setCategory(v as POICategory)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {getPOICategories().map(c => (
+                      <SelectItem key={c} value={c}>{getCategoryLabel(c)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>סטטוס</Label>
+                <div className="h-9 flex items-center">
+                  <Badge variant={poi.status === 'booked' ? 'default' : 'secondary'}>
+                    {statusLabels[poi.status] || poi.status}
+                  </Badge>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>תת-קטגוריה</Label>
-            <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} placeholder="בחר תת-קטגוריה..." />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>עיר</Label>
-              <Input value={city} onChange={e => setCity(e.target.value)} />
+              <Label>תת-קטגוריה</Label>
+              <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} placeholder="בחר תת-קטגוריה..." />
+            </div>
+          </div>
+
+          {/* Location */}
+          <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Location</span>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>עיר</Label>
+                <Input value={city} onChange={e => setCity(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>מדינה</Label>
+                <Input value={country} onChange={e => setCountry(e.target.value)} />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label>מדינה</Label>
-              <Input value={country} onChange={e => setCountry(e.target.value)} />
+              <Label>כתובת</Label>
+              <Input value={address} onChange={e => setAddress(e.target.value)} />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>כתובת</Label>
-            <Input value={address} onChange={e => setAddress(e.target.value)} />
-          </div>
-
-          <div className="space-y-2">
-            <Label>עלות</Label>
-            <div className="grid grid-cols-3 gap-2">
-              <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" />
-              <Select value={costCurrency} onValueChange={setCostCurrency}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
+          {/* Cost & Booking */}
+          <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cost & Booking</span>
+            <div className="space-y-2">
+              <Label>עלות</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" />
+                <Select value={costCurrency} onValueChange={setCostCurrency}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="poi-detail-is-booked">הוזמן?</Label>
-            <Switch id="poi-detail-is-booked" checked={isBooked} onCheckedChange={setIsBooked} />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="poi-detail-is-paid">שולם?</Label>
-            <Switch id="poi-detail-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
+            <div className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2.5">
+              <Label htmlFor="poi-detail-is-booked">הוזמן?</Label>
+              <Switch id="poi-detail-is-booked" checked={isBooked} onCheckedChange={setIsBooked} />
+            </div>
+            <div className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2.5">
+              <Label htmlFor="poi-detail-is-paid">שולם?</Label>
+              <Switch id="poi-detail-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
+            </div>
           </div>
 
           {/* Accommodation-specific fields */}
           {category === 'accommodation' && (
-            <>
-              <Separator />
-              <h4 className="text-sm font-semibold">פרטי לינה</h4>
+            <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Accommodation</span>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label>תאריך צ׳ק-אין</Label>
@@ -377,14 +383,13 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                 <Label>ביטול חינם עד</Label>
                 <Input type="datetime-local" value={freeCancellationUntil} onChange={e => setFreeCancellationUntil(e.target.value)} />
               </div>
-            </>
+            </div>
           )}
 
           {/* Booking fields for eatery/attraction — multiple time slots */}
           {(category === 'eatery' || category === 'attraction') && (
-            <>
-              <Separator />
-              <h4 className="text-sm font-semibold">זמנים</h4>
+            <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Schedule</span>
               {bookings.map((slot, i) => (
                 <div key={i} className="flex gap-1.5 items-center overflow-hidden">
                   <Input type="date" value={slot.date} className="flex-1 min-w-0 w-0 px-1.5" onChange={e => {
@@ -430,19 +435,20 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                   <Input type="number" value={!['30','60','90','120','180','480'].includes(duration) ? duration : ''} className="w-[70px] h-7 px-1.5 text-xs" placeholder="דק׳" min="0" onChange={e => setDuration(e.target.value)} />
                 </div>
               </div>
-            </>
+            </div>
           )}
 
-          {/* Order number */}
-          <div className="space-y-2">
-            <Label>מספר הזמנה</Label>
-            <Input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="Booking ref..." />
-          </div>
-
           {/* Notes */}
-          <div className="space-y-2">
-            <Label>הערות</Label>
-            <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="הוסף הערה..." rows={3} />
+          <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Notes</span>
+            <div className="space-y-2">
+              <Label>מספר הזמנה</Label>
+              <Input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="Booking ref..." />
+            </div>
+            <div className="space-y-2">
+              <Label>הערות</Label>
+              <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="הוסף הערה..." rows={3} />
+            </div>
           </div>
 
           <Button onClick={handleSave} className="w-full gap-1.5">

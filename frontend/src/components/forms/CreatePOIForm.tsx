@@ -105,95 +105,100 @@ export function CreatePOIForm() {
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader><DialogTitle>Add Point of Interest</DialogTitle></DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Name *</Label>
-            <Input value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Eiffel Tower" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Basic Info */}
+          <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Basic Info</span>
             <div className="space-y-2">
-              <Label>Category</Label>
-              <Select value={category} onValueChange={v => setCategory(v as POICategory)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {getPOICategories().map(c => (
-                    <SelectItem key={c} value={c}>{getCategoryLabel(c)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Name *</Label>
+              <Input value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Eiffel Tower" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Select value={category} onValueChange={v => setCategory(v as POICategory)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {getPOICategories().map(c => (
+                      <SelectItem key={c} value={c}>{getCategoryLabel(c)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Sub-category</Label>
+              <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} placeholder="בחר תת-קטגוריה..." />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Sub-category</Label>
-            <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} placeholder="בחר תת-קטגוריה..." />
+          {/* Location */}
+          <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Location</span>
+            <div className="space-y-2">
+              <Label>Country</Label>
+              {manualCountry ? (
+                <div className="flex gap-1">
+                  <Input value={country} onChange={e => setCountry(e.target.value)} placeholder="הזן מדינה ידנית..." className="flex-1" />
+                  <Button type="button" variant="ghost" size="sm" className="shrink-0 text-xs" onClick={() => setManualCountry(false)}>
+                    רשימה
+                  </Button>
+                </div>
+              ) : tripCountries.length > 0 ? (
+                <div className="flex gap-1">
+                  <Select value={country} onValueChange={v => { setCountry(v); setCity(''); }}>
+                    <SelectTrigger className="flex-1"><SelectValue placeholder="בחר מדינה..." /></SelectTrigger>
+                    <SelectContent>
+                      {tripCountries.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => setManualCountry(true)} title="הזנה ידנית">
+                    <Pencil size={14} />
+                  </Button>
+                </div>
+              ) : (
+                <Input value={country} onChange={e => setCountry(e.target.value)} placeholder="France" />
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>City</Label>
+              <CitySelector
+                countries={citySelectorCountries}
+                value={city}
+                onChange={setCity}
+                placeholder="בחר עיר..."
+                extraHierarchy={tripSitesHierarchy}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Address</Label>
+              <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="5 Avenue Anatole" />
+            </div>
           </div>
 
-          {/* Country selector */}
-          <div className="space-y-2">
-            <Label>Country</Label>
-            {manualCountry ? (
-              <div className="flex gap-1">
-                <Input value={country} onChange={e => setCountry(e.target.value)} placeholder="הזן מדינה ידנית..." className="flex-1" />
-                <Button type="button" variant="ghost" size="sm" className="shrink-0 text-xs" onClick={() => setManualCountry(false)}>
-                  רשימה
-                </Button>
-              </div>
-            ) : tripCountries.length > 0 ? (
-              <div className="flex gap-1">
-                <Select value={country} onValueChange={v => { setCountry(v); setCity(''); }}>
-                  <SelectTrigger className="flex-1"><SelectValue placeholder="בחר מדינה..." /></SelectTrigger>
+          {/* Cost & Payment */}
+          <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cost</span>
+            <div className="space-y-2">
+              <Label>עלות</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" />
+                <Select value={costCurrency} onValueChange={setCostCurrency}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {tripCountries.map(c => (
+                    {['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'].map(c => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => setManualCountry(true)} title="הזנה ידנית">
-                  <Pencil size={14} />
-                </Button>
               </div>
-            ) : (
-              <Input value={country} onChange={e => setCountry(e.target.value)} placeholder="France" />
-            )}
-          </div>
-
-          {/* City selector */}
-          <div className="space-y-2">
-            <Label>City</Label>
-            <CitySelector
-              countries={citySelectorCountries}
-              value={city}
-              onChange={setCity}
-              placeholder="בחר עיר..."
-              extraHierarchy={tripSitesHierarchy}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Address</Label>
-            <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="5 Avenue Anatole" />
-          </div>
-
-          <div className="space-y-2">
-            <Label>עלות</Label>
-            <div className="grid grid-cols-3 gap-2">
-              <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" />
-              <Select value={costCurrency} onValueChange={setCostCurrency}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'].map(c => (
-                    <SelectItem key={c} value={c}>{c}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <Label htmlFor="poi-is-paid">שולם?</Label>
-            <Switch id="poi-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
+            <div className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2.5">
+              <Label htmlFor="poi-is-paid">שולם?</Label>
+              <Switch id="poi-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
+            </div>
           </div>
 
           <div className="space-y-2">

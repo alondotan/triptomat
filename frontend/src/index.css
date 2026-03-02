@@ -8,34 +8,34 @@
   :root,
   .dark {
     /* ── Core palette ───────────────────────────────── */
-    /* Background: #0a0a0a */
-    --background: 0 0% 4%;
-    --foreground: 0 0% 100%;
+    /* Background: warm dark slate */
+    --background: 220 5% 7%;
+    --foreground: 0 0% 95%;
 
-    /* Surface (cards, panels): #1a1a1a */
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 100%;
+    /* Surface (cards, panels) */
+    --card: 220 5% 13%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 220 5% 13%;
+    --popover-foreground: 0 0% 95%;
 
     /* Accent/Primary: #FF8C69 (warm peach) */
     --primary: 14 100% 71%;
     --primary-foreground: 0 0% 4%;
 
-    /* Surface secondary: #222222 */
-    --secondary: 0 0% 13%;
-    --secondary-foreground: 0 0% 100%;
+    /* Surface secondary */
+    --secondary: 220 4% 18%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 0 0% 13%;
-    --muted-foreground: 0 0% 53%;   /* #888888 */
+    --muted: 220 4% 18%;
+    --muted-foreground: 220 3% 58%;
 
     --accent: 14 100% 71%;
     --accent-foreground: 0 0% 4%;
 
-    /* Borders: #222222 */
-    --border: 0 0% 13%;
-    --input: 0 0% 16%;
+    /* Borders */
+    --border: 220 4% 22%;
+    --input: 220 5% 11%;
     --ring: 14 100% 71%;
 
     /* Alert: #ef4444 */
@@ -65,7 +65,7 @@
 
     /* ── Gradients ──────────────────────────────────── */
     --gradient-hero: linear-gradient(135deg, #FF8C69 0%, #ff6b3d 100%);
-    --gradient-card: linear-gradient(180deg, #1a1a1a 0%, #111111 100%);
+    --gradient-card: linear-gradient(180deg, hsl(220 5% 13%) 0%, hsl(220 5% 10%) 100%);
     --gradient-sunset: linear-gradient(135deg, #FF8C69 0%, #ff6b3d 100%);
 
     /* ── Shadows ────────────────────────────────────── */
@@ -75,13 +75,13 @@
     --shadow-card: 0 4px 20px -4px rgb(255 140 105 / 0.15);
 
     /* ── Sidebar (reuse surface colors) ─────────────── */
-    --sidebar-background: 0 0% 7%;
-    --sidebar-foreground: 0 0% 100%;
+    --sidebar-background: 220 5% 9%;
+    --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 14 100% 71%;
     --sidebar-primary-foreground: 0 0% 4%;
-    --sidebar-accent: 0 0% 13%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 13%;
+    --sidebar-accent: 220 4% 18%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 220 4% 22%;
     --sidebar-ring: 14 100% 71%;
   }
 }
@@ -186,21 +186,21 @@
 .leaflet-container {
   @apply rounded-lg;
   font-family: inherit;
-  background: #0a0a0a;
+  background: #101214;
 }
 .leaflet-popup-content-wrapper {
-  background: #1a1a1a;
-  color: #fff;
+  background: #1e2024;
+  color: #f2f2f2;
   @apply rounded-lg shadow-lg;
 }
 .leaflet-control-zoom {
   @apply border-none shadow-md rounded-lg overflow-hidden;
 }
 .leaflet-control-zoom a {
-  background: #1a1a1a;
-  color: #fff;
+  background: #1e2024;
+  color: #f2f2f2;
   @apply border-none;
 }
 .leaflet-control-zoom a:hover {
-  background: #222222;
+  background: #2a2d32;
 }

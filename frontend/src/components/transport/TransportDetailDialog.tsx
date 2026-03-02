@@ -191,62 +191,67 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
             <div className="max-sm:h-px max-sm:bg-border max-sm:my-4 sm:w-px sm:bg-border" />
 
             {/* Right column: details */}
-            <div className="space-y-3 max-sm:mt-0">
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">סוג</Label>
-                  <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {TRANSPORT_CATEGORIES.map(c => (
-                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            <div className="space-y-4 max-sm:mt-0">
+              {/* Transport Details */}
+              <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Details</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">סוג</Label>
+                    <Select value={category} onValueChange={setCategory}>
+                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {TRANSPORT_CATEGORIES.map(c => (
+                          <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">סטטוס</Label>
+                    <div className="h-8 flex items-center">
+                      <Badge variant={transport.status === 'booked' ? 'default' : 'secondary'} className="text-xs">
+                        {statusLabels[transport.status] || transport.status}
+                      </Badge>
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">סטטוס</Label>
-                  <div className="h-8 flex items-center">
-                    <Badge variant={transport.status === 'booked' ? 'default' : 'secondary'} className="text-xs">
-                      {statusLabels[transport.status] || transport.status}
-                    </Badge>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">מוביל</Label>
+                    <Input value={carrierName} onChange={e => setCarrierName(e.target.value)} className="h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">מספר הזמנה</Label>
+                    <Input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} className="h-8" />
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              {/* Cost & Booking */}
+              <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cost & Booking</span>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">מוביל</Label>
-                  <Input value={carrierName} onChange={e => setCarrierName(e.target.value)} className="h-8" />
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="h-8" />
+                    <Select value={costCurrency} onValueChange={setCostCurrency}>
+                      <SelectTrigger className="h-8 w-[72px]"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {CURRENCIES.map(c => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">מספר הזמנה</Label>
-                  <Input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} className="h-8" />
+                <div className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2.5">
+                  <Label htmlFor="transport-detail-is-booked" className="text-sm">הוזמן?</Label>
+                  <Switch id="transport-detail-is-booked" checked={isBooked} onCheckedChange={setIsBooked} />
                 </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">עלות</Label>
-                <div className="grid grid-cols-[1fr_auto] gap-2">
-                  <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="h-8" />
-                  <Select value={costCurrency} onValueChange={setCostCurrency}>
-                    <SelectTrigger className="h-8 w-[72px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {CURRENCIES.map(c => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2.5">
+                  <Label htmlFor="transport-detail-is-paid" className="text-sm">שולם?</Label>
+                  <Switch id="transport-detail-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-1.5">
-                <Label htmlFor="transport-detail-is-booked" className="text-sm">הוזמן?</Label>
-                <Switch id="transport-detail-is-booked" checked={isBooked} onCheckedChange={setIsBooked} />
-              </div>
-              <div className="flex items-center justify-between rounded-lg bg-secondary/30 px-3 py-1.5">
-                <Label htmlFor="transport-detail-is-paid" className="text-sm">שולם?</Label>
-                <Switch id="transport-detail-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
               </div>
 
               <div className="space-y-1">
