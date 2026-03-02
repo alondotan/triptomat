@@ -192,7 +192,7 @@ serve(async (req) => {
     let nonMatchingRecs: AiRecommendation[] = [];
     let matchingHierarchy = aiOutput.sites_hierarchy;
     let nonMatchingHierarchy: SiteNode[] = [];
-    let siteToCountry: Record<string, string> = buildSiteToCountryMap(aiOutput.sites_hierarchy);
+    const siteToCountry: Record<string, string> = buildSiteToCountryMap(aiOutput.sites_hierarchy);
 
     // Only filter if the trip has countries defined
     if (tripCountries.length > 0 && aiOutput.sites_hierarchy.length > 0) {
