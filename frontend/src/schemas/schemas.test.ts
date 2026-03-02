@@ -60,7 +60,7 @@ describe("createPOISchema", () => {
   const validPOI = {
     name: "Anne Frank House",
     category: "attraction" as const,
-    status: "candidate" as const,
+    status: "suggested" as const,
   };
 
   it("accepts valid POI with required fields only", () => {
@@ -104,7 +104,7 @@ describe("createPOISchema", () => {
 
 describe("createTransportSchema", () => {
   const validTransport = {
-    category: "flight" as const,
+    category: "airplane" as const,
     status: "booked" as const,
     segments: [{ fromName: "AMS", toName: "TLV" }],
   };
