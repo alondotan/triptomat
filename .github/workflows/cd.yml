@@ -1,4 +1,4 @@
-# CD pipeline for Lambda deployments
+# CD pipeline for Lambda + Frontend deployments
 name: CD
 
 on:
@@ -48,3 +48,25 @@ jobs:
             --function-name ${IMAGE_NAME} \
             --image-uri ${IMAGE_URI} \
             --region ${{ env.AWS_REGION }}
+
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Deploy to Vercel
+        working-directory: frontend
+        run: vercel --prod --yes --token ${{ secrets.VERCEL_TOKEN }}
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
