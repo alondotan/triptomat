@@ -43,6 +43,7 @@ export interface ScheduleCellItem {
   category?: string;
   duration?: string;
   notes?: string;
+  imageUrl?: string;
 }
 
 export interface ScheduleCellData {
@@ -58,6 +59,7 @@ export interface ScheduleCellData {
   groupItems?: ScheduleCellItem[];
   duration?: string;
   notes?: string;
+  imageUrl?: string;
 }
 
 export interface AccommodationOption {
@@ -209,9 +211,11 @@ function SortableActivityItem({
         <GripVertical size={14} />
       </button>
 
-      {activity.poi.subCategory && (
+      {activity.poi.imageUrl ? (
+        <img src={activity.poi.imageUrl} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+      ) : activity.poi.subCategory ? (
         <SubCategoryIcon type={activity.poi.subCategory} size={13} className="text-muted-foreground shrink-0" />
-      )}
+      ) : null}
 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{activity.poi.name}</p>
@@ -391,7 +395,7 @@ function AddTransportDialog({
 // ─── Locked (timed) new-schedule item ────────────────────────────────────────
 
 function LockedNewSchedItem({
-  activityId, label, sublabel, category, time, endTime, duration, notes, onRemove,
+  activityId, label, sublabel, category, time, endTime, duration, notes, imageUrl, onRemove,
 }: {
   activityId: string;
   label: string;
@@ -401,6 +405,7 @@ function LockedNewSchedItem({
   endTime?: string;
   duration?: string;
   notes?: string;
+  imageUrl?: string;
   onRemove: (id: string) => Promise<void>;
 }) {
   return (
@@ -412,7 +417,11 @@ function LockedNewSchedItem({
       </div>
       <div className="flex items-center gap-2 px-2.5 py-2">
         <div className="shrink-0 w-[18px]" />
-        {category && <SubCategoryIcon type={category} size={13} className="text-muted-foreground shrink-0" />}
+        {imageUrl ? (
+          <img src={imageUrl} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+        ) : category ? (
+          <SubCategoryIcon type={category} size={13} className="text-muted-foreground shrink-0" />
+        ) : null}
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold truncate">{label}</p>
           {sublabel && <p className="text-[10px] text-muted-foreground truncate">{sublabel}</p>}
@@ -440,7 +449,7 @@ function LockedNewSchedItem({
 // ─── Sortable new-schedule item ───────────────────────────────────────────────
 
 function SortableNewSchedItem({
-  activityId, label, sublabel, category, time, endTime, duration, notes, onRemove,
+  activityId, label, sublabel, category, time, endTime, duration, notes, imageUrl, onRemove,
 }: {
   activityId: string;
   label: string;
@@ -450,6 +459,7 @@ function SortableNewSchedItem({
   endTime?: string;
   duration?: string;
   notes?: string;
+  imageUrl?: string;
   onRemove: (id: string) => Promise<void>;
 }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -479,7 +489,11 @@ function SortableNewSchedItem({
         >
           <GripVertical size={13} />
         </button>
-        {category && <SubCategoryIcon type={category} size={13} className="text-muted-foreground shrink-0" />}
+        {imageUrl ? (
+          <img src={imageUrl} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+        ) : category ? (
+          <SubCategoryIcon type={category} size={13} className="text-muted-foreground shrink-0" />
+        ) : null}
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold truncate">{label}</p>
           {sublabel && <p className="text-[10px] text-muted-foreground truncate">{sublabel}</p>}
@@ -606,6 +620,7 @@ function NewScheduleDropZone({
                       endTime={cell.endTime}
                       duration={cell.duration}
                       notes={cell.notes}
+                      imageUrl={cell.imageUrl}
                       onRemove={onRemoveActivity}
                     />
                   );
@@ -618,6 +633,7 @@ function NewScheduleDropZone({
                       category={cell.category}
                       duration={cell.duration}
                       notes={cell.notes}
+                      imageUrl={cell.imageUrl}
                       onRemove={onRemoveActivity}
                     />
                   );
@@ -639,6 +655,7 @@ function NewScheduleDropZone({
                           category={gi.category}
                           duration={gi.duration}
                           notes={gi.notes}
+                          imageUrl={gi.imageUrl}
                           onRemove={onRemoveActivity}
                         />
                       ))}

@@ -101,7 +101,13 @@ const ItineraryPage = () => {
 
                         {activities.map(poi => (
                           <div key={poi!.id} className="flex items-center gap-2 text-sm">
-                            {poi!.subCategory ? <SubCategoryIcon type={poi!.subCategory} size={13} className="text-primary shrink-0" /> : <MapPin size={13} className="text-primary shrink-0" />}
+                            {poi!.imageUrl ? (
+                              <img src={poi!.imageUrl} alt="" className="w-7 h-7 rounded object-cover shrink-0" />
+                            ) : poi!.subCategory ? (
+                              <SubCategoryIcon type={poi!.subCategory} size={13} className="text-primary shrink-0" />
+                            ) : (
+                              <MapPin size={13} className="text-primary shrink-0" />
+                            )}
                             <span className="truncate">{poi!.name}</span>
                             {poi!.subCategory && <span className="text-xs text-muted-foreground">({poi!.subCategory})</span>}
                             <Badge variant={poi!.status === 'booked' ? 'default' : 'secondary'} className="text-[10px] shrink-0">{poi!.status}</Badge>
@@ -110,7 +116,11 @@ const ItineraryPage = () => {
 
                         {accommodations.map(poi => (
                           <div key={poi!.id} className="flex items-center gap-2 text-sm">
-                            <Building2 size={13} className="text-primary shrink-0" />
+                            {poi!.imageUrl ? (
+                              <img src={poi!.imageUrl} alt="" className="w-7 h-7 rounded object-cover shrink-0" />
+                            ) : (
+                              <Building2 size={13} className="text-primary shrink-0" />
+                            )}
                             <span className="truncate">{poi!.name}</span>
                             <Badge variant={poi!.status === 'booked' ? 'default' : 'secondary'} className="text-[10px] shrink-0">{poi!.status}</Badge>
                             {poi!.details.cost && poi!.details.cost.amount > 0 && (
