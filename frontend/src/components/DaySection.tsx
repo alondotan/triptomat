@@ -53,6 +53,7 @@ export interface DaySectionProps {
   onMoveToDay?: (id: string, dayNum: number) => void;
   tripDays?: Date[];
   selectedDayNum?: number;
+  onOpen?: (id: string) => void;
 }
 
 
@@ -76,7 +77,7 @@ export function DaySection({
   title, icon, items, onRemove, availableItems, onAdd,
   onCreateNew, onToggleSelected, addLabel, entityType, maxNights, locationSuggestions,
   showBookingMissionOption, locationContext, countries, extraHierarchy,
-  hideHeader, hideEmptyState, onMoveToSchedule, onMoveToDay, tripDays, selectedDayNum,
+  hideHeader, hideEmptyState, onMoveToSchedule, onMoveToDay, tripDays, selectedDayNum, onOpen,
 }: DaySectionProps) {
   const [showPicker, setShowPicker] = useState(false);
   const [nights, setNights] = useState(1);
@@ -137,7 +138,10 @@ export function DaySection({
               <Star size={16} fill={item.isSelected ? 'currentColor' : 'none'} />
             </button>
           )}
-          <div className="flex-1 min-w-0 flex items-center gap-2">
+          <div
+            className={`flex-1 min-w-0 flex items-center gap-2 ${onOpen ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+            onClick={onOpen ? () => onOpen(item.id) : undefined}
+          >
             {item.subCategory && <SubCategoryIcon type={item.subCategory} size={15} className="shrink-0 text-muted-foreground" />}
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">{item.label}</p>

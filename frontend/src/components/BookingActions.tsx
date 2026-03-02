@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Mail, Copy, Check } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { EmailViewDialog } from './EmailViewDialog';
 
 interface EmailLink {
   id: string;
@@ -15,9 +16,9 @@ interface BookingActionsProps {
 
 export function BookingActions({ orderNumber, emailLinks }: BookingActionsProps) {
   const [copied, setCopied] = useState(false);
+  const [viewingEmail, setViewingEmail] = useState<EmailLink | null>(null);
 
-  const validEmails = emailLinks.filter(e => e.permalink);
-  if (!orderNumber && validEmails.length === 0) return null;
+  if (!orderNumber && emailLinks.length === 0) return null;
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -30,18 +31,27 @@ export function BookingActions({ orderNumber, emailLinks }: BookingActionsProps)
 
   return (
     <div className="flex items-center gap-1 flex-wrap">
-      {validEmails.map(email => (
+      {emailLinks.map(email => (
         <Tooltip key={email.id}>
           <TooltipTrigger asChild>
-            <a
-              href={email.permalink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
-              onClick={e => e.stopPropagation()}
-            >
-              <Mail size={13} />
-            </a>
+            {email.permalink ? (
+              <a
+                href={email.permalink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
+                onClick={e => e.stopPropagation()}
+              >
+                <Mail size={13} />
+              </a>
+            ) : (
+              <button
+                className="inline-flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
+                onClick={e => { e.stopPropagation(); setViewingEmail(email); }}
+              >
+                <Mail size={13} />
+              </button>
+            )}
           </TooltipTrigger>
           <TooltipContent side="top">
             {email.subject ? `פתח מייל: ${email.subject}` : 'פתח מייל'}
@@ -64,6 +74,15 @@ export function BookingActions({ orderNumber, emailLinks }: BookingActionsProps)
           </TooltipTrigger>
           <TooltipContent side="top">העתק מספר הזמנה</TooltipContent>
         </Tooltip>
+      )}
+
+      {viewingEmail && (
+        <EmailViewDialog
+          emailId={viewingEmail.id}
+          subject={viewingEmail.subject}
+          open={!!viewingEmail}
+          onOpenChange={(open) => { if (!open) setViewingEmail(null); }}
+        />
       )}
     </div>
   );

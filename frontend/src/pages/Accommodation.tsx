@@ -9,7 +9,7 @@ import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Building2, CalendarDays, BedDouble, Trash2, ArrowRight, Search } from 'lucide-react';
+import { Building2, CalendarDays, BedDouble, Trash2, ArrowRight, Search, Clock } from 'lucide-react';
 import { BookingActions } from '@/components/BookingActions';
 import type { PointOfInterest } from '@/types/trip';
 
@@ -171,6 +171,20 @@ const AccommodationPage = () => {
                         )}
                       </div>
                     )}
+
+                    {/* Free cancellation deadline */}
+                    {acc?.free_cancellation_until && (() => {
+                      const deadline = new Date(acc.free_cancellation_until);
+                      const isPast = deadline < new Date();
+                      const dateStr = deadline.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' });
+                      const timeStr = deadline.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+                      return (
+                        <div className={`flex items-center gap-1.5 text-xs rounded-md px-2 py-1 w-fit ${isPast ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'}`}>
+                          <Clock size={12} />
+                          <span>ביטול חינם עד {dateStr} {timeStr}</span>
+                        </div>
+                      );
+                    })()}
 
                     {/* Notes */}
                     {poi.details.notes?.user_summary && (

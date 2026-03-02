@@ -11,6 +11,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { eachDayOfInterval, parseISO, format } from 'date-fns';
 import type { ItineraryActivity, PointOfInterest } from '@/types/trip';
 import { POICard } from '@/components/poi/POICard';
+import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
 import { CreateTransportForm } from '@/components/forms/CreateTransportForm';
 import { TransportDetailDialog } from '@/components/transport/TransportDetailDialog';
 import {
@@ -359,7 +360,10 @@ function SortableScheduledItem({
       ) : (
         <>
           <span className="material-symbols-outlined text-base">{item.emoji}</span>
-          <div className="flex-1 min-w-0">
+          <div
+            className={`flex-1 min-w-0 ${isTransport ? 'cursor-pointer' : ''}`}
+            onClick={isTransport ? onEditTransport : undefined}
+          >
             <span className={`text-sm font-medium block truncate ${isLocked ? 'text-muted-foreground' : ''}`}>
               {item.label}
             </span>
@@ -374,13 +378,6 @@ function SortableScheduledItem({
           )}
           {isTransport && (
             <div className="flex items-center gap-0.5 shrink-0">
-              <button
-                type="button"
-                onClick={onEditTransport}
-                className="p-1 rounded text-muted-foreground/50 hover:text-primary hover:bg-primary/10 transition-colors"
-              >
-                <Pencil size={13} />
-              </button>
               <button
                 type="button"
                 onClick={onDeleteTransport}
@@ -725,6 +722,7 @@ export default function DndTestPage() {
   const [transportFromName, setTransportFromName] = useState('');
   const [transportToName, setTransportToName] = useState('');
   const [editTransportId, setEditTransportId] = useState<string | null>(null);
+  const [openedPoiId, setOpenedPoiId] = useState<string | null>(null);
   const [addingTimeBlock, setAddingTimeBlock] = useState(false);
   const [newTbLabel, setNewTbLabel] = useState('');
   const [newTbTime, setNewTbTime] = useState('');
@@ -1800,7 +1798,10 @@ export default function DndTestPage() {
                     יום ראשון — נקודת הזינוק
                   </div>
                 ) : morningAccom ? (
-                  <div className="flex items-center gap-2.5 bg-muted/40 rounded-xl px-3 py-2.5 border border-border/40">
+                  <div
+                    className="flex items-center gap-2.5 bg-muted/40 rounded-xl px-3 py-2.5 border border-border/40 cursor-pointer hover:border-primary/30 transition-colors"
+                    onClick={() => setOpenedPoiId(morningAccom.poi.id)}
+                  >
                     <Building2 size={15} className="text-primary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{morningAccom.poi.name}</p>
@@ -1931,6 +1932,7 @@ export default function DndTestPage() {
                   onAdd={addAccommodation}
                   onCreateNew={createNewAccommodation}
                   onToggleSelected={toggleAccommodationSelected}
+                  onOpen={setOpenedPoiId}
                   addLabel="הוסף לינה"
                   maxNights={tripDays.length - selectedDayNum + 1}
                   showBookingMissionOption
@@ -1982,6 +1984,17 @@ export default function DndTestPage() {
             transport={transport}
             open={!!editTransportId}
             onOpenChange={open => { if (!open) { setEditTransportId(null); refreshDays(); } }}
+          />
+        ) : null;
+      })()}
+
+      {openedPoiId && (() => {
+        const poi = pois.find(p => p.id === openedPoiId);
+        return poi ? (
+          <POIDetailDialog
+            poi={poi}
+            open={!!openedPoiId}
+            onOpenChange={open => { if (!open) setOpenedPoiId(null); }}
           />
         ) : null;
       })()}

@@ -24,6 +24,7 @@ interface WebhookPayload {
     checkin_hour?: string;
     checkout_date?: string;
     checkout_hour?: string;
+    free_cancellation_until?: string | null;
   };
   eatery_details?: {
     establishment_name: string;
@@ -390,6 +391,7 @@ Deno.serve(async (req) => {
                 rooms: accom.rooms?.map(r => ({ room_type: r.room_type, occupancy: r.occupancy_details })),
                 checkin: { date: accom.checkin_date, hour: accom.checkin_hour },
                 checkout: { date: accom.checkout_date, hour: accom.checkout_hour },
+                free_cancellation_until: accom.free_cancellation_until ?? null,
                 price_per_night: cost && accom.checkin_date && accom.checkout_date
                   ? cost.amount / daysBetween(accom.checkin_date, accom.checkout_date)
                   : cost?.amount,

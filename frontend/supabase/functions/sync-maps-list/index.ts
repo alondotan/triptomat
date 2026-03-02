@@ -4,6 +4,7 @@ import { createSupabaseClient } from '../_shared/supabase.ts';
 import { validateWebhookToken } from '../_shared/auth.ts';
 import { TYPE_TO_CATEGORY, ALLOWED_TYPES_CSV, GEO_TYPES_CSV } from '../_shared/categories.ts';
 import type { SiteNode } from '../_shared/types.ts';
+import { buildSiteToCountryMap } from '../_shared/mapUtils.ts';
 
 const BROWSER_HEADERS = {
   "User-Agent":
@@ -191,10 +192,10 @@ serve(async (req) => {
     let nonMatchingRecs: AiRecommendation[] = [];
     let matchingHierarchy = aiOutput.sites_hierarchy;
     let nonMatchingHierarchy: SiteNode[] = [];
+    let siteToCountry: Record<string, string> = buildSiteToCountryMap(aiOutput.sites_hierarchy);
 
     // Only filter if the trip has countries defined
     if (tripCountries.length > 0 && aiOutput.sites_hierarchy.length > 0) {
-      const siteToCountry = buildSiteToCountryMap(aiOutput.sites_hierarchy);
 
       matchingRecs = [];
       nonMatchingRecs = [];
@@ -238,6 +239,7 @@ serve(async (req) => {
           sub_category: subCat,
           status: "candidate",
           location: {
+            country: siteToCountry[(rec.site || "").toLowerCase()] || null,
             city: rec.site || null,
             address: rec.location?.address || null,
             coordinates: rec.location?.coordinates || null,
@@ -701,22 +703,3 @@ function extractCountriesFromHierarchy(nodes: SiteNode[]): string[] {
   return countries;
 }
 
-/** Build a map from every site name (lowercased) → its parent country name */
-function buildSiteToCountryMap(hierarchy: SiteNode[]): Record<string, string> {
-  const map: Record<string, string> = {};
-  for (const node of hierarchy) {
-    if (node.site_type === "country") {
-      collectSitesUnderCountry(node, node.site, map);
-    }
-  }
-  return map;
-}
-
-function collectSitesUnderCountry(node: SiteNode, country: string, map: Record<string, string>) {
-  map[node.site.toLowerCase()] = country;
-  if (node.sub_sites) {
-    for (const sub of node.sub_sites) {
-      collectSitesUnderCountry(sub, country, map);
-    }
-  }
-}

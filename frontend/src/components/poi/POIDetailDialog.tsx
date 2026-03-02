@@ -56,6 +56,11 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const [checkoutHour, setCheckoutHour] = useState(poi.details.accommodation_details?.checkout?.hour || '');
   const [roomType, setRoomType] = useState(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
   const [occupancy, setOccupancy] = useState(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
+  const [freeCancellationUntil, setFreeCancellationUntil] = useState(
+    poi.details.accommodation_details?.free_cancellation_until
+      ? poi.details.accommodation_details.free_cancellation_until.slice(0, 16)
+      : ''
+  );
 
   // Booking fields (multiple time slots)
   const [bookings, setBookings] = useState<Array<{ date: string; hour: string; schedule_state: 'potential' | 'scheduled' }>>(
@@ -184,6 +189,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           checkin: (checkinDate || checkinHour) ? { date: checkinDate || undefined, hour: checkinHour || undefined } : poi.details.accommodation_details?.checkin,
           checkout: (checkoutDate || checkoutHour) ? { date: checkoutDate || undefined, hour: checkoutHour || undefined } : poi.details.accommodation_details?.checkout,
           rooms: roomType ? [{ room_type: roomType, occupancy: occupancy || undefined }] : poi.details.accommodation_details?.rooms,
+          free_cancellation_until: freeCancellationUntil ? `${freeCancellationUntil}:00` : null,
         } : poi.details.accommodation_details,
       },
     };
@@ -343,6 +349,10 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                   <Label>תפוסה</Label>
                   <Input value={occupancy} onChange={e => setOccupancy(e.target.value)} placeholder="2 adults" />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>ביטול חינם עד</Label>
+                <Input type="datetime-local" value={freeCancellationUntil} onChange={e => setFreeCancellationUntil(e.target.value)} />
               </div>
             </>
           )}

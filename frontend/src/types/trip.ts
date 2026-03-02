@@ -55,6 +55,7 @@ export interface AccommodationDetails {
   checkin?: { date?: string; hour?: string };
   checkout?: { date?: string; hour?: string };
   price_per_night?: number;
+  free_cancellation_until?: string | null;
 }
 
 export interface ActivityDetails {
