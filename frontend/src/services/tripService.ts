@@ -60,15 +60,27 @@ export async function deleteTrip(tripId: string): Promise<void> {
 }
 
 function mapTrip(row: Record<string, unknown>): Trip {
+  const startDate = (row.start_date as string) || undefined;
+  const endDate = (row.end_date as string) || undefined;
+  const numberOfDays = (row.number_of_days as number) || undefined;
+  let status = (row.status as Trip['status']) || 'research';
+
+  // Auto-correct status based on actual data for pre-existing trips
+  if (startDate && endDate && status !== 'detailed_planning' && status !== 'active' && status !== 'completed') {
+    status = 'detailed_planning';
+  } else if (!startDate && !endDate && numberOfDays && status === 'detailed_planning') {
+    status = 'planning';
+  }
+
   return {
     id: row.id as string,
     name: row.name as string,
     description: (row.description as string) || undefined,
     countries: (row.countries as string[]) || [],
-    startDate: (row.start_date as string) || undefined,
-    endDate: (row.end_date as string) || undefined,
-    numberOfDays: (row.number_of_days as number) || undefined,
-    status: (row.status as Trip['status']) || 'research',
+    startDate,
+    endDate,
+    numberOfDays,
+    status,
     currency: (row.currency as Trip['currency']) || 'USD',
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,

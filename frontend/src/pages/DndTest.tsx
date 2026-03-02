@@ -39,6 +39,12 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Building2, CalendarDays, Check, Clock, GripVertical, Moon, Pencil, Sun, Trash2, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { PlanningLevelPicker, type PlanningLevel } from '@/components/shared/PlanningLevelPicker';
+import { useToast } from '@/hooks/use-toast';
+import { transitionToDetailedPlanning } from '@/services/tripStatusTransition';
+import { useTripList } from '@/context/TripListContext';
 import { DaySection } from '@/components/DaySection';
 import { getSubCategoryEntry } from '@/lib/subCategoryConfig';
 
@@ -714,10 +720,12 @@ function ScheduleZone({ children, activePotentialDrag, isEmpty }: {
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function DndTestPage() {
-  const { activeTrip, tripSitesHierarchy } = useActiveTrip();
+  const { activeTrip, updateCurrentTrip, tripSitesHierarchy } = useActiveTrip();
+  const { updateTripInList } = useTripList();
   const { pois, addPOI, updatePOI } = usePOI();
   const { transportation, deleteTransportation } = useTransport();
   const { itineraryDays, setItineraryDays, addMission, refetchItinerary } = useItinerary();
+  const { toast } = useToast();
   const [selectedDayNum, setSelectedDayNum] = useState(1);
   const [addTransportOpen, setAddTransportOpen] = useState(false);
   const [transportFromName, setTransportFromName] = useState('');
@@ -727,6 +735,48 @@ export default function DndTestPage() {
   const [addingTimeBlock, setAddingTimeBlock] = useState(false);
   const [newTbLabel, setNewTbLabel] = useState('');
   const [newTbTime, setNewTbTime] = useState('');
+
+  // Research mode inline form state
+  const [researchLevel, setResearchLevel] = useState<PlanningLevel>('research');
+  const [researchDays, setResearchDays] = useState<number | ''>('');
+  const [researchStartDate, setResearchStartDate] = useState('');
+  const [researchEndDate, setResearchEndDate] = useState('');
+  const [researchSubmitting, setResearchSubmitting] = useState(false);
+
+  const handleResearchSubmit = async () => {
+    if (!activeTrip) return;
+    if (researchLevel === 'planning' && (!researchDays || Number(researchDays) < 1)) {
+      toast({ title: 'יש להזין מספר ימים', variant: 'destructive' });
+      return;
+    }
+    if (researchLevel === 'detailed_planning') {
+      if (!researchStartDate || !researchEndDate) {
+        toast({ title: 'יש להזין תאריך התחלה וסיום', variant: 'destructive' });
+        return;
+      }
+      if (researchEndDate < researchStartDate) {
+        toast({ title: 'תאריך סיום חייב להיות אחרי תאריך התחלה', variant: 'destructive' });
+        return;
+      }
+    }
+
+    setResearchSubmitting(true);
+    try {
+      if (researchLevel === 'planning') {
+        const updates = { status: 'planning' as const, numberOfDays: Number(researchDays) };
+        await updateCurrentTrip(updates);
+      } else if (researchLevel === 'detailed_planning') {
+        const days = Math.floor((new Date(researchEndDate).getTime() - new Date(researchStartDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const tripWithDays = { ...activeTrip, numberOfDays: days };
+        const updates = await transitionToDetailedPlanning(tripWithDays, researchStartDate);
+        updateTripInList({ id: activeTrip.id, ...updates } as typeof activeTrip & { id: string });
+      }
+    } catch {
+      toast({ title: 'שגיאה בעדכון', variant: 'destructive' });
+    } finally {
+      setResearchSubmitting(false);
+    }
+  };
 
   const tripDays = useTripDays();
 
@@ -1644,16 +1694,64 @@ export default function DndTestPage() {
         >
           {/* ── Day pills + Location strip (sticky, never scrolls) ── */}
           {activeTrip?.status === 'research' ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
-              <CalendarDays size={48} className="text-muted-foreground/50" />
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">מצב מחקר</h3>
-                <p className="text-sm text-muted-foreground max-w-md">
-                  כדי לתכנן ימי טיול, יש להגדיר קודם את משך הטיול או תאריכים מדויקים.
+            <div className="flex flex-col items-center justify-center py-8 gap-4 text-center max-w-md mx-auto">
+              <CalendarDays size={40} className="text-muted-foreground/50" />
+              <div className="space-y-1">
+                <h3 className="text-lg font-semibold">הגדרת ימי הטיול</h3>
+                <p className="text-sm text-muted-foreground">
+                  כדי לתכנן את לוח הזמנים, יש להגדיר את משך הטיול או תאריכים מדויקים.
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  ניתן להוסיף פעילויות ומקומות גם במצב מחקר, ולשבץ אותם ליומים אחר כך.
-                </p>
+              </div>
+              <div className="w-full space-y-4">
+                <PlanningLevelPicker value={researchLevel} onChange={setResearchLevel} />
+
+                {researchLevel === 'planning' && (
+                  <div className="flex items-center justify-center gap-3">
+                    <Label htmlFor="resDays" className="text-sm shrink-0">מספר ימים:</Label>
+                    <Input
+                      id="resDays"
+                      type="number"
+                      min={1}
+                      max={365}
+                      placeholder="7"
+                      value={researchDays}
+                      onChange={(e) => setResearchDays(e.target.value ? parseInt(e.target.value) : '')}
+                      className="h-9 w-24"
+                    />
+                    <Button size="sm" onClick={handleResearchSubmit} disabled={researchSubmitting || !researchDays}>
+                      אישור
+                    </Button>
+                  </div>
+                )}
+
+                {researchLevel === 'detailed_planning' && (
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="resStart" className="text-sm shrink-0">מתאריך:</Label>
+                      <Input
+                        id="resStart"
+                        type="date"
+                        value={researchStartDate}
+                        onChange={(e) => setResearchStartDate(e.target.value)}
+                        className="h-9 w-40"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="resEnd" className="text-sm shrink-0">עד:</Label>
+                      <Input
+                        id="resEnd"
+                        type="date"
+                        value={researchEndDate}
+                        min={researchStartDate}
+                        onChange={(e) => setResearchEndDate(e.target.value)}
+                        className="h-9 w-40"
+                      />
+                    </div>
+                    <Button size="sm" onClick={handleResearchSubmit} disabled={researchSubmitting || !researchStartDate || !researchEndDate}>
+                      אישור
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           ) : tripDays.length > 0 ? (

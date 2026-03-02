@@ -29,7 +29,7 @@ import { useState, useEffect } from 'react';
 import { useTripList } from '@/context/TripListContext';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { CreateTripForm } from '@/components/forms/CreateTripForm';
-import { TripStatusDialog } from '@/components/trip/TripStatusDialog';
+import { EditTripDialog } from '@/components/trip/EditTripDialog';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -82,13 +82,9 @@ export function AppHeader() {
   const location = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [newTripOpen, setNewTripOpen] = useState(false);
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
-  const [editName, setEditName] = useState('');
-  const [editStartDate, setEditStartDate] = useState('');
-  const [editEndDate, setEditEndDate] = useState('');
   const [prefsCurrency, setPrefsCurrency] = useState('');
   const [inboxUnread, setInboxUnread] = useState<number>(() => {
     try { return parseInt(localStorage.getItem('inbox_unread_count') || '0', 10); } catch { return 0; }
@@ -108,22 +104,8 @@ export function AppHeader() {
   };
 
   const openEditDialog = () => {
-    if (!activeTrip) return;
-    setEditName(activeTrip.name);
-    setEditStartDate(activeTrip.startDate || '');
-    setEditEndDate(activeTrip.endDate || '');
     setHamburgerOpen(false);
     setEditDialogOpen(true);
-  };
-
-  const openStatusDialog = () => {
-    setHamburgerOpen(false);
-    setStatusDialogOpen(true);
-  };
-
-  const handleSaveEdit = async () => {
-    await updateCurrentTrip({ name: editName, startDate: editStartDate, endDate: editEndDate });
-    setEditDialogOpen(false);
   };
 
   const openPrefs = () => {
@@ -217,9 +199,6 @@ export function AppHeader() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={openEditDialog}>
                   <Pencil size={14} className="mr-2" /> Edit Trip
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={openStatusDialog}>
-                  <Settings size={14} className="mr-2" /> מצב הטיול
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setNewTripOpen(true)}>
                   <Plus size={14} className="mr-2" /> New Trip
@@ -326,13 +305,6 @@ export function AppHeader() {
                 <Pencil size={16} /> Edit Trip
               </button>
               <button
-                onClick={openStatusDialog}
-                disabled={!activeTrip}
-                className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40"
-              >
-                <Settings size={16} /> מצב הטיול
-              </button>
-              <button
                 onClick={() => { setHamburgerOpen(false); setNewTripOpen(true); }}
                 className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
               >
@@ -399,48 +371,7 @@ export function AppHeader() {
       </AlertDialog>
 
       {/* Edit Trip Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Edit Trip</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Trip Name</label>
-              <input
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                value={editName}
-                onChange={e => setEditName(e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Start Date</label>
-                <input
-                  type="date"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={editStartDate}
-                  onChange={e => setEditStartDate(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium">End Date</label>
-                <input
-                  type="date"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={editEndDate}
-                  min={editStartDate}
-                  onChange={e => setEditEndDate(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 pt-1">
-              <Button variant="outline" size="sm" onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-              <Button size="sm" onClick={handleSaveEdit} disabled={!editName.trim()}>Save</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EditTripDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} />
 
       {/* User Preferences Dialog */}
       <Dialog open={prefsOpen} onOpenChange={setPrefsOpen}>
@@ -470,9 +401,6 @@ export function AppHeader() {
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Trip Status Dialog */}
-      <TripStatusDialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen} />
 
     </header>
     </>

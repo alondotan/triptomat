@@ -6,8 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useTripList } from '@/context/TripListContext';
 import { CountrySelector } from '@/components/trip/CountrySelector';
-import { Plus, Search, Calendar, CalendarDays } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PlanningLevelPicker, type PlanningLevel } from '@/components/shared/PlanningLevelPicker';
 import type { TripStatus } from '@/types/trip';
 
 interface CreateTripFormProps {
@@ -15,8 +16,6 @@ interface CreateTripFormProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
-
-type PlanningLevel = 'research' | 'planning' | 'detailed_planning';
 
 export function CreateTripForm({ trigger, open: openProp, onOpenChange }: CreateTripFormProps) {
   const { createNewTrip } = useTripList();
@@ -105,27 +104,6 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
     </Button>
   ) : null);
 
-  const planningOptions: { value: PlanningLevel; icon: React.ReactNode; title: string; desc: string }[] = [
-    {
-      value: 'research',
-      icon: <Search size={20} />,
-      title: 'מחקר',
-      desc: 'אוסף מידע על יעד, בלי תאריכים',
-    },
-    {
-      value: 'planning',
-      icon: <CalendarDays size={20} />,
-      title: 'תכנון',
-      desc: 'יודע כמה ימים, בלי תאריכים מדויקים',
-    },
-    {
-      value: 'detailed_planning',
-      icon: <Calendar size={20} />,
-      title: 'תכנון מפורט',
-      desc: 'יש תאריכים מדויקים',
-    },
-  ];
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {triggerEl && <DialogTrigger asChild>{triggerEl}</DialogTrigger>}
@@ -169,26 +147,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
           {/* Planning level selection */}
           <div className="space-y-2">
             <Label>באיזה שלב אתה?</Label>
-            <div className="grid grid-cols-3 gap-2">
-              {planningOptions.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setPlanningLevel(opt.value)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all text-center ${
-                    planningLevel === opt.value
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border hover:border-primary/40'
-                  }`}
-                >
-                  <span className={planningLevel === opt.value ? 'text-primary' : 'text-muted-foreground'}>
-                    {opt.icon}
-                  </span>
-                  <span className="text-xs font-medium">{opt.title}</span>
-                  <span className="text-[10px] text-muted-foreground leading-tight">{opt.desc}</span>
-                </button>
-              ))}
-            </div>
+            <PlanningLevelPicker value={planningLevel} onChange={setPlanningLevel} />
           </div>
 
           {/* Conditional fields based on planning level */}
