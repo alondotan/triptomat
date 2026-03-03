@@ -2246,8 +2246,8 @@ export default function DndTestPage() {
                             legMap={legMap}
                             onHighlightLeg={setHighlightedLegId}
                             transportCalcDurations={transportCalcDurations}
-                            selectedItemId={selectedItemId}
-                            onSelectItem={(id) => setSelectedItemId(prev => prev === id ? null : id)}
+                            selectedItemId={isMobile ? null : selectedItemId}
+                            onSelectItem={isMobile ? undefined : (id) => setSelectedItemId(prev => prev === id ? null : id)}
                           />
                         </div>
                         {/* Gap after each group */}
@@ -2360,17 +2360,12 @@ export default function DndTestPage() {
                   onModeChange={setDefaultMode}
                   onCalculate={() => calculateRoute(defaultMode)}
                   highlightedLegId={highlightedLegId}
-                  selectedStopId={selectedItemId}
+                  selectedStopId={isMobile ? null : selectedItemId}
                   onStopClick={(stopId) => {
-                    setSelectedItemId(prev => prev === stopId ? null : stopId);
                     if (isMobile) {
-                      setMobileTab('schedule');
-                      requestAnimationFrame(() => {
-                        setTimeout(() => {
-                          document.getElementById(`sched-item-${stopId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 100);
-                      });
+                      setOpenedPoiId(stopId);
                     } else {
+                      setSelectedItemId(prev => prev === stopId ? null : stopId);
                       document.getElementById(`sched-item-${stopId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                   }}
