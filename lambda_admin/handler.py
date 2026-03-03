@@ -78,6 +78,20 @@ SQS_QUEUE_URLS: list[str] = [
     q for q in [DOWNLOAD_QUEUE_URL, ANALYSIS_QUEUE_URL] if q
 ]
 
+# Derive DLQ URLs by appending '-dlq' to the queue name portion of the URL.
+# e.g. https://sqs.../123/triptomat-download-queue -> .../triptomat-download-queue-dlq
+def _derive_dlq_url(queue_url: str) -> str:
+    """Append '-dlq' to the queue name in an SQS URL."""
+    return queue_url + "-dlq" if queue_url else ""
+
+DOWNLOAD_DLQ_URL = _derive_dlq_url(DOWNLOAD_QUEUE_URL)
+ANALYSIS_DLQ_URL = _derive_dlq_url(ANALYSIS_QUEUE_URL)
+
+DLQ_MAP: dict[str, dict[str, str]] = {
+    "download": {"dlq_url": DOWNLOAD_DLQ_URL, "main_url": DOWNLOAD_QUEUE_URL},
+    "analysis": {"dlq_url": ANALYSIS_DLQ_URL, "main_url": ANALYSIS_QUEUE_URL},
+}
+
 # ---------------------------------------------------------------------------
 # AWS / Supabase clients (created at module level for Lambda reuse)
 # ---------------------------------------------------------------------------
@@ -200,6 +214,9 @@ def _route(event: dict) -> dict:
         ("POST", "/admin/cache/reprocess"): _handle_cache_reprocess,
         ("GET", "/admin/users"): _handle_users_list,
         ("GET", "/admin/cloudwatch/metrics"): _handle_cloudwatch_metrics,
+        ("GET", "/admin/dlq"): _handle_dlq_list,
+        ("POST", "/admin/dlq/redrive"): _handle_dlq_redrive,
+        ("DELETE", "/admin/dlq"): _handle_dlq_delete,
     }
 
     handler = routes.get((method, path))
@@ -813,3 +830,177 @@ def _handle_cloudwatch_metrics(event: dict) -> dict:
         "lambda": lambda_metrics,
         "sqs": sqs_metrics,
     })
+
+
+# ---- GET /admin/dlq -------------------------------------------------------
+def _handle_dlq_list(event: dict) -> dict:
+    """List messages from both SQS dead-letter queues (peek, don't consume)."""
+    logger.info("Listing DLQ messages")
+
+    queues = []
+    for queue_label, urls in DLQ_MAP.items():
+        dlq_url = urls["dlq_url"]
+        if not dlq_url:
+            continue
+
+        dlq_name = dlq_url.rstrip("/").split("/")[-1]
+
+        # Get approximate message count
+        try:
+            attrs_resp = sqs_client.get_queue_attributes(
+                QueueUrl=dlq_url,
+                AttributeNames=["ApproximateNumberOfMessages"],
+            )
+            approx_count = int(
+                attrs_resp.get("Attributes", {}).get("ApproximateNumberOfMessages", "0")
+            )
+        except ClientError as exc:
+            logger.error("Failed to get DLQ attributes for %s: %s", dlq_name, exc)
+            approx_count = -1
+
+        # Peek at messages (VisibilityTimeout=0 so they remain visible)
+        messages = []
+        try:
+            recv_resp = sqs_client.receive_message(
+                QueueUrl=dlq_url,
+                MaxNumberOfMessages=10,
+                VisibilityTimeout=0,
+                AttributeNames=["All"],
+            )
+            for msg in recv_resp.get("Messages", []):
+                attributes = msg.get("Attributes", {})
+                messages.append({
+                    "message_id": msg["MessageId"],
+                    "receipt_handle": msg["ReceiptHandle"],
+                    "body": msg.get("Body", ""),
+                    "attributes": attributes,
+                    "sent_timestamp": attributes.get("SentTimestamp", ""),
+                })
+        except ClientError as exc:
+            logger.error("Failed to receive DLQ messages from %s: %s", dlq_name, exc)
+
+        queues.append({
+            "name": dlq_name,
+            "url": dlq_url,
+            "queue": queue_label,
+            "approximate_count": approx_count,
+            "messages": messages,
+        })
+
+    return _response(200, {"queues": queues})
+
+
+# ---- POST /admin/dlq/redrive ----------------------------------------------
+def _handle_dlq_redrive(event: dict) -> dict:
+    """Resubmit a message from a DLQ back to its main queue."""
+    size_err = _check_body_size(event)
+    if size_err:
+        return size_err
+    body = _parse_json_body(event)
+
+    queue_label = body.get("queue", "")
+    message_id = body.get("message_id", "")
+    receipt_handle = body.get("receipt_handle", "")
+
+    if queue_label not in DLQ_MAP:
+        return _response(400, {"error": f"Invalid queue '{queue_label}'. Allowed: download, analysis"})
+    if not message_id:
+        return _response(400, {"error": "Missing 'message_id' in request body"})
+    if not receipt_handle:
+        return _response(400, {"error": "Missing 'receipt_handle' in request body"})
+
+    urls = DLQ_MAP[queue_label]
+    dlq_url = urls["dlq_url"]
+    main_url = urls["main_url"]
+
+    if not dlq_url or not main_url:
+        return _response(500, {"error": f"Queue URLs for '{queue_label}' are not configured"})
+
+    logger.info("Redriving message %s from %s DLQ to main queue", message_id, queue_label)
+
+    # Receive the specific message using the receipt handle to get its body
+    # The receipt_handle from the peek should still be valid (VisibilityTimeout=0 makes it re-available)
+    # We re-receive to get a fresh receipt handle for deletion
+    try:
+        recv_resp = sqs_client.receive_message(
+            QueueUrl=dlq_url,
+            MaxNumberOfMessages=10,
+            VisibilityTimeout=30,
+        )
+    except ClientError as exc:
+        logger.error("Failed to receive from DLQ: %s", exc)
+        return _response(500, {"error": f"Failed to receive from DLQ: {str(exc)}"})
+
+    # Find the target message
+    target_msg = None
+    for msg in recv_resp.get("Messages", []):
+        if msg["MessageId"] == message_id:
+            target_msg = msg
+            break
+
+    if not target_msg:
+        # Try using the original receipt handle directly — the message body was
+        # already available from the list call, so accept it from the client
+        # We'll try to delete with the provided receipt handle and send the body from the list
+        return _response(404, {"error": f"Message {message_id} not found in DLQ"})
+
+    # Send to main queue
+    try:
+        sqs_client.send_message(
+            QueueUrl=main_url,
+            MessageBody=target_msg["Body"],
+        )
+    except ClientError as exc:
+        logger.error("Failed to send message to main queue: %s", exc)
+        return _response(500, {"error": f"Failed to send to main queue: {str(exc)}"})
+
+    # Delete from DLQ
+    try:
+        sqs_client.delete_message(
+            QueueUrl=dlq_url,
+            ReceiptHandle=target_msg["ReceiptHandle"],
+        )
+    except ClientError as exc:
+        logger.error("Failed to delete message from DLQ: %s", exc)
+        # Message was already sent to main queue, so log but don't fail
+        return _response(200, {
+            "success": True,
+            "queue": queue_label,
+            "warning": "Message sent to main queue but failed to delete from DLQ",
+        })
+
+    return _response(200, {"success": True, "queue": queue_label})
+
+
+# ---- DELETE /admin/dlq -----------------------------------------------------
+def _handle_dlq_delete(event: dict) -> dict:
+    """Delete a specific message from a DLQ."""
+    size_err = _check_body_size(event)
+    if size_err:
+        return size_err
+    body = _parse_json_body(event)
+
+    queue_label = body.get("queue", "")
+    receipt_handle = body.get("receipt_handle", "")
+
+    if queue_label not in DLQ_MAP:
+        return _response(400, {"error": f"Invalid queue '{queue_label}'. Allowed: download, analysis"})
+    if not receipt_handle:
+        return _response(400, {"error": "Missing 'receipt_handle' in request body"})
+
+    dlq_url = DLQ_MAP[queue_label]["dlq_url"]
+    if not dlq_url:
+        return _response(500, {"error": f"DLQ URL for '{queue_label}' is not configured"})
+
+    logger.info("Deleting message from %s DLQ", queue_label)
+
+    try:
+        sqs_client.delete_message(
+            QueueUrl=dlq_url,
+            ReceiptHandle=receipt_handle,
+        )
+    except ClientError as exc:
+        logger.error("Failed to delete DLQ message: %s", exc)
+        return _response(500, {"error": f"Failed to delete message: {str(exc)}"})
+
+    return _response(200, {"deleted": True})

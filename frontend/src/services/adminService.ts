@@ -130,6 +130,41 @@ export interface SqsQueueMetrics {
   approximate_queue_depth?: number;
 }
 
+/** GET /admin/dlq — individual message */
+export interface DlqMessage {
+  message_id: string;
+  receipt_handle: string;
+  body: string;
+  attributes: Record<string, string>;
+  sent_timestamp: string;
+}
+
+/** GET /admin/dlq — per-queue info */
+export interface DlqQueue {
+  name: string;
+  url: string;
+  queue: string;
+  approximate_count: number;
+  messages: DlqMessage[];
+}
+
+/** GET /admin/dlq — response */
+export interface DlqResponse {
+  queues: DlqQueue[];
+}
+
+/** POST /admin/dlq/redrive — response */
+export interface DlqRedriveResponse {
+  success: boolean;
+  queue: string;
+  warning?: string;
+}
+
+/** DELETE /admin/dlq — response */
+export interface DlqDeleteResponse {
+  deleted: boolean;
+}
+
 /** GET /admin/cloudwatch/metrics — response */
 export interface CloudWatchMetricsResponse {
   period: string;
@@ -248,4 +283,32 @@ export function getCloudWatchMetrics(
   return adminFetch<CloudWatchMetricsResponse>(
     `/admin/cloudwatch/metrics${qs ? `?${qs}` : ''}`,
   );
+}
+
+/** Fetch messages from all dead-letter queues. */
+export function getDlqMessages(): Promise<DlqResponse> {
+  return adminFetch<DlqResponse>('/admin/dlq');
+}
+
+/** Redrive a message from a DLQ back to its main queue. */
+export function redriveDlqMessage(
+  queue: string,
+  messageId: string,
+  receiptHandle: string,
+): Promise<DlqRedriveResponse> {
+  return adminFetch<DlqRedriveResponse>('/admin/dlq/redrive', {
+    method: 'POST',
+    body: JSON.stringify({ queue, message_id: messageId, receipt_handle: receiptHandle }),
+  });
+}
+
+/** Delete a specific message from a DLQ. */
+export function deleteDlqMessage(
+  queue: string,
+  receiptHandle: string,
+): Promise<DlqDeleteResponse> {
+  return adminFetch<DlqDeleteResponse>('/admin/dlq', {
+    method: 'DELETE',
+    body: JSON.stringify({ queue, receipt_handle: receiptHandle }),
+  });
 }

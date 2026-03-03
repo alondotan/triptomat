@@ -20,6 +20,7 @@ export const adminKeys = {
   cache: (status?: string) => ['admin', 'cache', status ?? 'all'] as const,
   users: (search?: string) => ['admin', 'users', search ?? ''] as const,
   metrics: (period: string) => ['admin', 'metrics', period] as const,
+  dlq: ['admin', 'dlq'] as const,
 };
 
 // ---------------------------------------------------------------------------
@@ -120,6 +121,39 @@ export function useReprocessUrl() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'cache'] });
       queryClient.invalidateQueries({ queryKey: adminKeys.stats });
+    },
+  });
+}
+
+/** Dead-letter queue messages. Auto-refreshes every 15 s. */
+export function useDlqMessages() {
+  return useQuery({
+    queryKey: adminKeys.dlq,
+    queryFn: adminService.getDlqMessages,
+    refetchInterval: 15_000,
+  });
+}
+
+/** Redrive a DLQ message back to its main queue, then invalidate DLQ queries. */
+export function useRedriveDlqMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ queue, messageId, receiptHandle }: { queue: string; messageId: string; receiptHandle: string }) =>
+      adminService.redriveDlqMessage(queue, messageId, receiptHandle),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.dlq });
+    },
+  });
+}
+
+/** Delete a DLQ message, then invalidate DLQ queries. */
+export function useDeleteDlqMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ queue, receiptHandle }: { queue: string; receiptHandle: string }) =>
+      adminService.deleteDlqMessage(queue, receiptHandle),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: adminKeys.dlq });
     },
   });
 }
