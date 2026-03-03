@@ -238,34 +238,6 @@ function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeing
   );
 }
 
-// ─── Mobile compact draggable item (horizontal strip) ─────────────────────────
-
-function MobileDraggableItem({ item, isBeingDragged }: { item: Item; isBeingDragged: boolean }) {
-  const { attributes, listeners, setNodeRef } = useDraggable({ id: item.id });
-  const imgUrl = item.poi?.imageUrl;
-  return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      className={`flex flex-col items-center gap-1 bg-card border rounded-xl px-2 py-1.5
-        w-[72px] shrink-0 select-none touch-none transition-opacity
-        ${isBeingDragged ? 'opacity-30' : ''}`}
-    >
-      {imgUrl ? (
-        <img src={imgUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
-      ) : (
-        <div className="w-10 h-10 rounded-lg bg-muted/40 flex items-center justify-center">
-          <span className="material-symbols-outlined text-base text-muted-foreground">{item.emoji}</span>
-        </div>
-      )}
-      <span className="text-[10px] font-medium text-center leading-tight line-clamp-2 w-full">
-        {item.poi?.name || item.label}
-      </span>
-    </div>
-  );
-}
-
 // ─── Sortable scheduled item ───────────────────────────────────────────────────
 
 function SortableScheduledItem({
@@ -802,7 +774,7 @@ export default function DndTestPage() {
   // ── Mobile layout ──────────────────────────────────────────────────────────
   const isMobile = useIsMobile();
   const [mobileTab, setMobileTab] = useState<'schedule' | 'map'>('schedule');
-  const [potentialExpanded, setPotentialExpanded] = useState(true);
+  const [timelineOpen, setTimelineOpen] = useState(false);
 
   // Research mode inline form state
   const [researchLevel, setResearchLevel] = useState<PlanningLevel>('research');
@@ -1557,7 +1529,7 @@ export default function DndTestPage() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 400, tolerance: 10 } }),
   );
 
   // Persist scheduled/potential arrays back to itineraryDay.activities + context
@@ -1708,9 +1680,9 @@ export default function DndTestPage() {
   const handleDragStart = useCallback((e: DragStartEvent) => {
     setActiveId(e.active.id as string);
     setSelectedItemId(null);
-    setPotentialExpanded(false);
+    if (isMobile) setTimelineOpen(true);
     addLog(`🟡 start: "${e.active.id}"`);
-  }, []);
+  }, [isMobile]);
 
   const handleDragEnd = useCallback((e: DragEndEvent) => {
     const { active, over } = e;
@@ -2084,87 +2056,55 @@ export default function DndTestPage() {
           {/* ── Scrollable content area ─────────────────────── */}
           <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden flex flex-col">
 
-          {/* Mobile: potential items — expanded list (default) / collapsed strip (schedule mode) */}
+          {/* Mobile: potential list + timeline toggle (schedule tab only) */}
           {isMobile && mobileTab === 'schedule' && (
-            <div className={`md:hidden mb-2 ${potentialExpanded ? 'flex-1 min-h-0 overflow-y-auto' : 'shrink-0'}`}>
-              {potentialExpanded ? (
-                <>
-                  <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">
-                    פוטנציאל ({potential.length})
-                  </p>
-                  <PotentialZone isScheduledDragging={isScheduledDrag}>
-                    {potential.length === 0 && !isScheduledDrag ? (
-                      <p className="text-xs text-muted-foreground py-2 text-center">כל הפריטים בלו"ז</p>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {potential.map(item => (
-                          <DraggableItem
-                            key={item.id}
-                            item={item}
-                            isBeingDragged={activeId === item.id}
-                            onRemove={() => removeActivity(item.id)}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </PotentialZone>
-                  <DaySection
-                    title=""
-                    icon={null as any}
-                    hideHeader
-                    hideEmptyState
-                    entityType="activity"
-                    items={[]}
-                    onRemove={removeActivity}
-                    availableItems={availableActivities.map(p => ({
-                      id: p.id,
-                      label: p.name,
-                      sublabel: p.location?.city || '',
-                      city: p.location?.city,
-                      status: p.status,
-                    }))}
-                    onAdd={addActivity}
-                    onCreateNew={createNewActivity}
-                    addLabel="הוסף פעילות"
-                    locationContext={currentDayLocation}
-                    countries={activeTrip?.countries}
-                    extraHierarchy={tripSitesHierarchy}
-                    showBookingMissionOption
-                  />
-                  <button
-                    className="flex items-center justify-center gap-1.5 w-full mt-2 py-2 rounded-lg bg-primary/10 text-primary text-xs font-semibold"
-                    onClick={() => setPotentialExpanded(false)}
-                  >
-                    <CalendarDays size={14} />
-                    הצג לו&quot;ז
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">
-                    פוטנציאל ({potential.length})
-                  </p>
-                  <PotentialZone isScheduledDragging={isScheduledDrag}>
-                    {potential.length === 0 && !isScheduledDrag ? (
-                      <p className="text-xs text-muted-foreground py-2 text-center">כל הפריטים בלו"ז</p>
-                    ) : (
-                      <div className="flex gap-2 overflow-x-auto pb-1">
-                        {potential.map(item => (
-                          <MobileDraggableItem
-                            key={item.id}
-                            item={item}
-                            isBeingDragged={activeId === item.id}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </PotentialZone>
-                </>
-              )}
+            <div className="md:hidden shrink-0 mb-2">
+              <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">
+                פוטנציאל ({potential.length})
+              </p>
+              <PotentialZone isScheduledDragging={isScheduledDrag}>
+                {potential.length === 0 && !isScheduledDrag ? (
+                  <p className="text-xs text-muted-foreground py-2 text-center">כל הפריטים בלו"ז</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {potential.map(item => (
+                      <DraggableItem
+                        key={item.id}
+                        item={item}
+                        isBeingDragged={activeId === item.id}
+                        onRemove={() => removeActivity(item.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </PotentialZone>
+              <DaySection
+                title=""
+                icon={null as any}
+                hideHeader
+                hideEmptyState
+                entityType="activity"
+                items={[]}
+                onRemove={removeActivity}
+                availableItems={availableActivities.map(p => ({
+                  id: p.id,
+                  label: p.name,
+                  sublabel: p.location?.city || '',
+                  city: p.location?.city,
+                  status: p.status,
+                }))}
+                onAdd={addActivity}
+                onCreateNew={createNewActivity}
+                addLabel="הוסף פעילות"
+                locationContext={currentDayLocation}
+                countries={activeTrip?.countries}
+                extraHierarchy={tripSitesHierarchy}
+                showBookingMissionOption
+              />
             </div>
           )}
 
-          <div className={`grid grid-cols-1 md:grid-cols-[3fr_5fr_4fr] gap-3 md:h-full md:[grid-template-rows:minmax(0,1fr)] ${isMobile ? 'flex-1 min-h-0' : ''} ${isMobile && potentialExpanded ? 'hidden' : ''}`}>
+          <div className={`grid grid-cols-1 md:grid-cols-[3fr_5fr_4fr] gap-3 md:h-full md:[grid-template-rows:minmax(0,1fr)] ${isMobile ? 'flex-1 min-h-0' : ''}`}>
 
             {/* ── Column 1: Potential + Add activity (desktop only) ──────────── */}
             <div className="hidden md:block space-y-3 md:overflow-y-auto md:min-h-0">
@@ -2214,16 +2154,19 @@ export default function DndTestPage() {
             {/* ── Left column: Timeline (wake up → schedule → sleep) — scrolls independently on desktop */}
             <div className={`space-y-3 md:overflow-y-auto md:min-h-0 pb-4 ${isMobile && mobileTab !== 'schedule' ? 'hidden' : ''}`}>
 
-              {/* Mobile: button to go back to potential list */}
-              {isMobile && !potentialExpanded && (
+              {/* Mobile: timeline open/close toggle */}
+              {isMobile && (
                 <button
-                  className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-amber-500/10 text-amber-600 text-xs font-semibold md:hidden"
-                  onClick={() => setPotentialExpanded(true)}
+                  className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-primary/10 text-primary text-xs font-semibold md:hidden"
+                  onClick={() => setTimelineOpen(prev => !prev)}
                 >
-                  <ChevronUp size={14} />
-                  הצג מקומות
+                  {timelineOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  {timelineOpen ? 'סגור לו"ז' : 'הצג לו"ז'}
                 </button>
               )}
+
+              {/* Timeline content — collapsible on mobile */}
+              <div className={isMobile && !timelineOpen ? 'hidden' : ''}>
 
               {/* Where I wake up */}
               <div className="space-y-1.5">
@@ -2399,6 +2342,7 @@ export default function DndTestPage() {
                 />
               </div>
 
+              </div>{/* end collapsible timeline content */}
             </div>
             {/* end timeline column */}
 

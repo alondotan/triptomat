@@ -130,7 +130,7 @@ export function POICard({
           <img
             src={poi.imageUrl}
             alt=""
-            className={`w-20 self-stretch rounded-lg object-cover shrink-0 cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
+            className={`w-14 h-14 rounded-lg object-cover shrink-0 cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
             onClick={handleCardClick}
           />
         )}
