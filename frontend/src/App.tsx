@@ -7,6 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { TripProvider } from "./context/TripProviderComposed";
 import { AuthGuard } from "./components/AuthGuard";
+import { AdminGuard } from "./components/admin/AdminGuard";
+import { AdminLayout } from "./components/admin/AdminLayout";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import AuthPage from "./pages/Auth";
 
@@ -24,6 +26,13 @@ const ShareTargetPage = lazy(() => import("./pages/ShareTarget"));
 const ContactsPage = lazy(() => import("./pages/Contacts"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
+// Admin pages (lazy-loaded)
+const AdminOverviewPage = lazy(() => import("./pages/admin/Overview"));
+const AdminPipelinePage = lazy(() => import("./pages/admin/Pipeline"));
+const AdminS3ExplorerPage = lazy(() => import("./pages/admin/S3Explorer"));
+const AdminCacheManagerPage = lazy(() => import("./pages/admin/CacheManager"));
+const AdminUsersPage = lazy(() => import("./pages/admin/Users"));
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -36,6 +45,20 @@ const App = () => (
           <Suspense fallback={<div className="flex items-center justify-center h-screen"><Loader2 className="animate-spin h-8 w-8" /></div>}>
             <Routes>
               <Route path="/auth" element={<ErrorBoundary><AuthPage /></ErrorBoundary>} />
+              <Route path="/admin/*" element={
+                <AdminGuard>
+                  <AdminLayout>
+                    <Routes>
+                      <Route path="/" element={<ErrorBoundary><AdminOverviewPage /></ErrorBoundary>} />
+                      <Route path="/pipeline" element={<ErrorBoundary><AdminPipelinePage /></ErrorBoundary>} />
+                      <Route path="/s3" element={<ErrorBoundary><AdminS3ExplorerPage /></ErrorBoundary>} />
+                      <Route path="/cache" element={<ErrorBoundary><AdminCacheManagerPage /></ErrorBoundary>} />
+                      <Route path="/users" element={<ErrorBoundary><AdminUsersPage /></ErrorBoundary>} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </AdminLayout>
+                </AdminGuard>
+              } />
               <Route path="/*" element={
                 <AuthGuard>
                   <TripProvider>
