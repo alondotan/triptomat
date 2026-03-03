@@ -20,6 +20,7 @@ export const adminKeys = {
   cache: (status?: string) => ['admin', 'cache', status ?? 'all'] as const,
   users: (search?: string) => ['admin', 'users', search ?? ''] as const,
   metrics: (period: string) => ['admin', 'metrics', period] as const,
+  costs: (period: string) => ['admin', 'costs', period] as const,
 };
 
 // ---------------------------------------------------------------------------
@@ -80,6 +81,15 @@ export function useCloudWatchMetrics(period: string = '24h') {
     queryKey: adminKeys.metrics(period),
     queryFn: () => adminService.getCloudWatchMetrics(period),
     refetchInterval: 60_000, // refresh every 60 s
+  });
+}
+
+/** Cost estimation data for a given period. Refreshes every 5 min. */
+export function useCosts(period: string = '30d') {
+  return useQuery({
+    queryKey: adminKeys.costs(period),
+    queryFn: () => adminService.getCosts(period),
+    refetchInterval: 300_000, // refresh every 5 min
   });
 }
 

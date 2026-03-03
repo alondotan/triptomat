@@ -6,6 +6,7 @@ import {
   HardDrive,
   Database,
   Users,
+  DollarSign,
 } from 'lucide-react';
 
 interface NavItem {
@@ -20,6 +21,7 @@ const navItems: NavItem[] = [
   { path: '/admin/s3', label: 'S3 Explorer', icon: HardDrive },
   { path: '/admin/cache', label: 'Cache', icon: Database },
   { path: '/admin/users', label: 'Users', icon: Users },
+  { path: '/admin/costs', label: 'Cost Tracker', icon: DollarSign },
 ];
 
 export function AdminSidebar() {
