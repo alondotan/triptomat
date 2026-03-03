@@ -140,6 +140,36 @@ export interface CloudWatchMetricsResponse {
   sqs: Record<string, SqsQueueMetrics>;
 }
 
+/** GET /admin/funnel — individual funnel stage */
+export interface FunnelStage {
+  total: number;
+  [key: string]: number;
+}
+
+/** GET /admin/funnel — funnel data */
+export interface FunnelData {
+  urls_submitted: FunnelStage;
+  emails_received: FunnelStage;
+  recommendations_created: FunnelStage;
+  pois_created: { total: number; by_status: Record<string, number> };
+  transportation_created: { total: number };
+  itinerary_days: { total: number; with_activities: number; empty: number };
+}
+
+/** GET /admin/funnel — linkage data */
+export interface LinkageData {
+  pois_from_emails: number;
+  pois_from_recommendations: number;
+  avg_entities_per_email: number;
+  avg_entities_per_recommendation: number;
+}
+
+/** GET /admin/funnel — response */
+export interface FunnelResponse {
+  funnel: FunnelData;
+  linkage: LinkageData;
+}
+
 // ---------------------------------------------------------------------------
 // HTTP helper
 // ---------------------------------------------------------------------------
@@ -248,4 +278,9 @@ export function getCloudWatchMetrics(
   return adminFetch<CloudWatchMetricsResponse>(
     `/admin/cloudwatch/metrics${qs ? `?${qs}` : ''}`,
   );
+}
+
+/** Fetch pipeline funnel data (entity linkage and conversion). */
+export function getFunnel(): Promise<FunnelResponse> {
+  return adminFetch<FunnelResponse>('/admin/funnel');
 }

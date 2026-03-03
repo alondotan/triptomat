@@ -200,6 +200,7 @@ def _route(event: dict) -> dict:
         ("POST", "/admin/cache/reprocess"): _handle_cache_reprocess,
         ("GET", "/admin/users"): _handle_users_list,
         ("GET", "/admin/cloudwatch/metrics"): _handle_cloudwatch_metrics,
+        ("GET", "/admin/funnel"): _handle_funnel,
     }
 
     handler = routes.get((method, path))
@@ -812,4 +813,220 @@ def _handle_cloudwatch_metrics(event: dict) -> dict:
         "granularity_seconds": granularity,
         "lambda": lambda_metrics,
         "sqs": sqs_metrics,
+    })
+
+
+# ---- GET /admin/funnel ---------------------------------------------------
+def _handle_funnel(event: dict) -> dict:
+    """Return pipeline funnel data showing how data flows from input to entities."""
+    logger.info("Fetching pipeline funnel data")
+
+    funnel: dict[str, Any] = {}
+    linkage: dict[str, Any] = {}
+
+    # 1. Gateway input — DynamoDB cache entries (each = 1 URL submission)
+    try:
+        dynamo_stats = _get_dynamo_stats()
+        by_status = dynamo_stats.get("by_status", {})
+        funnel["urls_submitted"] = {
+            "total": dynamo_stats.get("total_items", 0),
+            "completed": by_status.get("completed", 0),
+            "processing": by_status.get("processing", 0),
+            "failed": by_status.get("failed", 0),
+        }
+    except Exception as exc:
+        logger.error("Funnel: failed to get DynamoDB stats: %s", exc)
+        funnel["urls_submitted"] = {"total": 0, "completed": 0, "processing": 0, "failed": 0}
+
+    if not supabase:
+        return _response(500, {"error": "Supabase not configured"})
+
+    # 2. Email input — source_emails
+    try:
+        emails_total_resp = supabase.table("source_emails").select("id", count="exact").execute()
+        emails_total = emails_total_resp.count if emails_total_resp.count is not None else 0
+
+        emails_linked_resp = supabase.table("source_emails").select(
+            "id", count="exact"
+        ).eq("status", "linked").execute()
+        emails_linked = emails_linked_resp.count if emails_linked_resp.count is not None else 0
+
+        emails_pending_resp = supabase.table("source_emails").select(
+            "id", count="exact"
+        ).eq("status", "pending").execute()
+        emails_pending = emails_pending_resp.count if emails_pending_resp.count is not None else 0
+
+        emails_cancelled_resp = supabase.table("source_emails").select(
+            "id", count="exact"
+        ).eq("status", "cancelled").execute()
+        emails_cancelled = emails_cancelled_resp.count if emails_cancelled_resp.count is not None else 0
+
+        funnel["emails_received"] = {
+            "total": emails_total,
+            "linked": emails_linked,
+            "pending": emails_pending,
+            "cancelled": emails_cancelled,
+        }
+    except Exception as exc:
+        logger.error("Funnel: failed to get email stats: %s", exc)
+        funnel["emails_received"] = {"total": 0, "linked": 0, "pending": 0, "cancelled": 0}
+
+    # 3. Recommendations created — source_recommendations
+    try:
+        recs_total_resp = supabase.table("source_recommendations").select("id", count="exact").execute()
+        recs_total = recs_total_resp.count if recs_total_resp.count is not None else 0
+
+        recs_linked_resp = supabase.table("source_recommendations").select(
+            "id", count="exact"
+        ).eq("status", "linked").execute()
+        recs_linked = recs_linked_resp.count if recs_linked_resp.count is not None else 0
+
+        recs_pending_resp = supabase.table("source_recommendations").select(
+            "id", count="exact"
+        ).eq("status", "pending").execute()
+        recs_pending = recs_pending_resp.count if recs_pending_resp.count is not None else 0
+
+        funnel["recommendations_created"] = {
+            "total": recs_total,
+            "linked": recs_linked,
+            "pending": recs_pending,
+        }
+    except Exception as exc:
+        logger.error("Funnel: failed to get recommendation stats: %s", exc)
+        funnel["recommendations_created"] = {"total": 0, "linked": 0, "pending": 0}
+
+    # 4. POIs created — points_of_interest by status
+    try:
+        pois_total_resp = supabase.table("points_of_interest").select("id", count="exact").execute()
+        pois_total = pois_total_resp.count if pois_total_resp.count is not None else 0
+
+        poi_statuses = ["candidate", "in_plan", "booked", "visited", "matched"]
+        by_status_pois: dict[str, int] = {}
+        for poi_status in poi_statuses:
+            resp = supabase.table("points_of_interest").select(
+                "id", count="exact"
+            ).eq("status", poi_status).execute()
+            by_status_pois[poi_status] = resp.count if resp.count is not None else 0
+
+        funnel["pois_created"] = {
+            "total": pois_total,
+            "by_status": by_status_pois,
+        }
+    except Exception as exc:
+        logger.error("Funnel: failed to get POI stats: %s", exc)
+        funnel["pois_created"] = {"total": 0, "by_status": {}}
+
+    # 5. Transportation created
+    try:
+        transport_resp = supabase.table("transportation").select("id", count="exact").execute()
+        transport_total = transport_resp.count if transport_resp.count is not None else 0
+        funnel["transportation_created"] = {"total": transport_total}
+    except Exception as exc:
+        logger.error("Funnel: failed to get transportation stats: %s", exc)
+        funnel["transportation_created"] = {"total": 0}
+
+    # 6. Itinerary days
+    try:
+        days_total_resp = supabase.table("itinerary_days").select("id", count="exact").execute()
+        days_total = days_total_resp.count if days_total_resp.count is not None else 0
+
+        # Fetch all days with activities to count which have activities
+        days_resp = supabase.table("itinerary_days").select("id,activities").execute()
+        days_data = days_resp.data or []
+        with_activities = 0
+        for day in days_data:
+            activities = day.get("activities")
+            if activities and isinstance(activities, list) and len(activities) > 0:
+                with_activities += 1
+
+        funnel["itinerary_days"] = {
+            "total": days_total,
+            "with_activities": with_activities,
+            "empty": days_total - with_activities,
+        }
+    except Exception as exc:
+        logger.error("Funnel: failed to get itinerary day stats: %s", exc)
+        funnel["itinerary_days"] = {"total": 0, "with_activities": 0, "empty": 0}
+
+    # 7. Linkage stats
+    try:
+        # Fetch all POIs with source_refs to count linkage
+        pois_refs_resp = supabase.table("points_of_interest").select("id,source_refs").execute()
+        pois_data = pois_refs_resp.data or []
+
+        pois_from_emails = 0
+        pois_from_recs = 0
+        for poi in pois_data:
+            refs = poi.get("source_refs")
+            if refs and isinstance(refs, dict):
+                email_ids = refs.get("email_ids")
+                if email_ids and isinstance(email_ids, list) and len(email_ids) > 0:
+                    pois_from_emails += 1
+                rec_ids = refs.get("recommendation_ids")
+                if rec_ids and isinstance(rec_ids, list) and len(rec_ids) > 0:
+                    pois_from_recs += 1
+
+        # Avg linked_entities per source_email
+        emails_with_linked_resp = supabase.table("source_emails").select("id,linked_entities").execute()
+        emails_data = emails_with_linked_resp.data or []
+        total_email_entities = 0
+        emails_with_entities = 0
+        for email in emails_data:
+            linked = email.get("linked_entities")
+            if linked and isinstance(linked, list):
+                count = len(linked)
+                if count > 0:
+                    total_email_entities += count
+                    emails_with_entities += 1
+            elif linked and isinstance(linked, dict):
+                # linked_entities might be a dict with arrays
+                count = sum(
+                    len(v) for v in linked.values() if isinstance(v, list)
+                )
+                if count > 0:
+                    total_email_entities += count
+                    emails_with_entities += 1
+
+        avg_per_email = round(total_email_entities / emails_with_entities, 1) if emails_with_entities > 0 else 0
+
+        # Avg linked_entities per source_recommendation
+        recs_with_linked_resp = supabase.table("source_recommendations").select("id,linked_entities").execute()
+        recs_data = recs_with_linked_resp.data or []
+        total_rec_entities = 0
+        recs_with_entities = 0
+        for rec in recs_data:
+            linked = rec.get("linked_entities")
+            if linked and isinstance(linked, list):
+                count = len(linked)
+                if count > 0:
+                    total_rec_entities += count
+                    recs_with_entities += 1
+            elif linked and isinstance(linked, dict):
+                count = sum(
+                    len(v) for v in linked.values() if isinstance(v, list)
+                )
+                if count > 0:
+                    total_rec_entities += count
+                    recs_with_entities += 1
+
+        avg_per_rec = round(total_rec_entities / recs_with_entities, 1) if recs_with_entities > 0 else 0
+
+        linkage = {
+            "pois_from_emails": pois_from_emails,
+            "pois_from_recommendations": pois_from_recs,
+            "avg_entities_per_email": avg_per_email,
+            "avg_entities_per_recommendation": avg_per_rec,
+        }
+    except Exception as exc:
+        logger.error("Funnel: failed to get linkage stats: %s", exc)
+        linkage = {
+            "pois_from_emails": 0,
+            "pois_from_recommendations": 0,
+            "avg_entities_per_email": 0,
+            "avg_entities_per_recommendation": 0,
+        }
+
+    return _response(200, {
+        "funnel": funnel,
+        "linkage": linkage,
     })

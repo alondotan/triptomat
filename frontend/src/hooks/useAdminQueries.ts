@@ -20,6 +20,7 @@ export const adminKeys = {
   cache: (status?: string) => ['admin', 'cache', status ?? 'all'] as const,
   users: (search?: string) => ['admin', 'users', search ?? ''] as const,
   metrics: (period: string) => ['admin', 'metrics', period] as const,
+  funnel: ['admin', 'funnel'] as const,
 };
 
 // ---------------------------------------------------------------------------
@@ -80,6 +81,15 @@ export function useCloudWatchMetrics(period: string = '24h') {
     queryKey: adminKeys.metrics(period),
     queryFn: () => adminService.getCloudWatchMetrics(period),
     refetchInterval: 60_000, // refresh every 60 s
+  });
+}
+
+/** Pipeline funnel data (entity linkage and conversion). Auto-refreshes every 60 s. */
+export function useFunnel() {
+  return useQuery({
+    queryKey: adminKeys.funnel,
+    queryFn: adminService.getFunnel,
+    refetchInterval: 60_000,
   });
 }
 
