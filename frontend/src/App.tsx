@@ -32,6 +32,7 @@ const AdminPipelinePage = lazy(() => import("./pages/admin/Pipeline"));
 const AdminS3ExplorerPage = lazy(() => import("./pages/admin/S3Explorer"));
 const AdminCacheManagerPage = lazy(() => import("./pages/admin/CacheManager"));
 const AdminUsersPage = lazy(() => import("./pages/admin/Users"));
+const AdminEmailAnalysisPage = lazy(() => import("./pages/admin/EmailAnalysis"));
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ const App = () => (
                       <Route path="/s3" element={<ErrorBoundary><AdminS3ExplorerPage /></ErrorBoundary>} />
                       <Route path="/cache" element={<ErrorBoundary><AdminCacheManagerPage /></ErrorBoundary>} />
                       <Route path="/users" element={<ErrorBoundary><AdminUsersPage /></ErrorBoundary>} />
+                      <Route path="/emails" element={<ErrorBoundary><AdminEmailAnalysisPage /></ErrorBoundary>} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </AdminLayout>

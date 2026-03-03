@@ -200,13 +200,19 @@ def _route(event: dict) -> dict:
         ("POST", "/admin/cache/reprocess"): _handle_cache_reprocess,
         ("GET", "/admin/users"): _handle_users_list,
         ("GET", "/admin/cloudwatch/metrics"): _handle_cloudwatch_metrics,
+        ("GET", "/admin/emails"): _handle_emails_list,
+        ("GET", "/admin/emails/stats"): _handle_emails_stats,
     }
 
     handler = routes.get((method, path))
-    if handler is None:
-        return _response(404, {"error": f"Not found: {method} {path}"})
+    if handler is not None:
+        return handler(event)
 
-    return handler(event)
+    # Dynamic path: GET /admin/emails/{email_id}/raw
+    if method == "GET" and path.startswith("/admin/emails/") and path.endswith("/raw"):
+        return _handle_email_raw(event, path)
+
+    return _response(404, {"error": f"Not found: {method} {path}"})
 
 
 # ---------------------------------------------------------------------------
@@ -812,4 +818,142 @@ def _handle_cloudwatch_metrics(event: dict) -> dict:
         "granularity_seconds": granularity,
         "lambda": lambda_metrics,
         "sqs": sqs_metrics,
+    })
+
+
+# ---- GET /admin/emails ---------------------------------------------------
+def _handle_emails_list(event: dict) -> dict:
+    """List source emails from Supabase, optionally filtered by status."""
+    if not supabase:
+        return _response(500, {"error": "Supabase is not configured"})
+
+    status_filter = _get_query_param(event, "status")
+    limit, err = _parse_int_param(event, "limit", 50)
+    if err:
+        return err
+
+    logger.info("Listing emails: status=%s limit=%d", status_filter, limit)
+
+    query = supabase.table("source_emails").select(
+        "id, trip_id, email_id, source_email_info, parsed_data, linked_entities, status, created_at"
+    ).order("created_at", desc=True).limit(limit)
+
+    if status_filter:
+        query = query.eq("status", status_filter)
+
+    resp = query.execute()
+    emails = resp.data or []
+
+    return _response(200, {
+        "emails": emails,
+        "count": len(emails),
+    })
+
+
+# ---- GET /admin/emails/{email_id}/raw ------------------------------------
+def _handle_email_raw(event: dict, path: str) -> dict:
+    """Return raw email text from S3 for a given email, truncated to 10KB."""
+    if not supabase:
+        return _response(500, {"error": "Supabase is not configured"})
+
+    # Extract email_id from path: /admin/emails/{email_id}/raw
+    email_id = path.removeprefix("/admin/emails/").removesuffix("/raw")
+    if not email_id:
+        return _response(400, {"error": "Missing email_id in path"})
+
+    logger.info("Fetching raw email: email_id=%s", email_id)
+
+    # Try to get the S3 key directly — the key is the email message ID (from SES)
+    s3_key = email_id
+
+    try:
+        head_resp = s3_client.head_object(Bucket=S3_BUCKET_EMAILS, Key=s3_key)
+        size_bytes = head_resp.get("ContentLength", 0)
+    except ClientError as exc:
+        if exc.response["Error"]["Code"] == "404":
+            return _response(404, {"error": f"Raw email not found in S3: {s3_key}"})
+        raise
+
+    # Download the object (truncated to 10KB for safety)
+    max_bytes = 10 * 1024
+    try:
+        get_kwargs: dict[str, Any] = {"Bucket": S3_BUCKET_EMAILS, "Key": s3_key}
+        if size_bytes > max_bytes:
+            get_kwargs["Range"] = f"bytes=0-{max_bytes - 1}"
+
+        get_resp = s3_client.get_object(**get_kwargs)
+        raw_bytes = get_resp["Body"].read()
+        raw_text = raw_bytes.decode("utf-8", errors="replace")
+    except ClientError as exc:
+        logger.error("Failed to read raw email from S3: %s", exc)
+        return _response(500, {"error": "Failed to read raw email from S3"})
+
+    return _response(200, {
+        "email_id": email_id,
+        "s3_key": s3_key,
+        "size_bytes": size_bytes,
+        "raw_text_preview": raw_text,
+    })
+
+
+# ---- GET /admin/emails/stats ---------------------------------------------
+def _handle_emails_stats(event: dict) -> dict:
+    """Aggregate statistics from the source_emails table."""
+    if not supabase:
+        return _response(500, {"error": "Supabase is not configured"})
+
+    logger.info("Fetching email stats")
+
+    # Fetch all emails with relevant fields
+    resp = supabase.table("source_emails").select(
+        "id, trip_id, status, linked_entities, created_at"
+    ).execute()
+    emails = resp.data or []
+
+    # -- By status --
+    by_status: dict[str, int] = {}
+    for email in emails:
+        status = email.get("status", "unknown")
+        by_status[status] = by_status.get(status, 0) + 1
+
+    # -- By trip --
+    by_trip_map: dict[str, int] = {}
+    for email in emails:
+        trip_id = email.get("trip_id") or "unassigned"
+        by_trip_map[trip_id] = by_trip_map.get(trip_id, 0) + 1
+    by_trip = [{"trip_id": tid, "count": cnt} for tid, cnt in sorted(by_trip_map.items(), key=lambda x: -x[1])]
+
+    # -- By day (last 30 days) --
+    now = datetime.now(timezone.utc)
+    thirty_days_ago = now - timedelta(days=30)
+    by_day_map: dict[str, int] = {}
+    for email in emails:
+        created = email.get("created_at")
+        if not created:
+            continue
+        # Parse ISO date (handle both datetime and date-only)
+        try:
+            dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
+        except (ValueError, AttributeError):
+            continue
+        if dt >= thirty_days_ago:
+            day_str = dt.strftime("%Y-%m-%d")
+            by_day_map[day_str] = by_day_map.get(day_str, 0) + 1
+    by_day = [{"date": d, "count": c} for d, c in sorted(by_day_map.items())]
+
+    # -- Average linked_entities count per email --
+    total_entities = 0
+    emails_with_entities = 0
+    for email in emails:
+        entities = email.get("linked_entities")
+        if isinstance(entities, list):
+            total_entities += len(entities)
+            emails_with_entities += 1
+    avg_entities = round(total_entities / emails_with_entities, 2) if emails_with_entities > 0 else 0
+
+    return _response(200, {
+        "by_status": by_status,
+        "by_trip": by_trip,
+        "by_day": by_day,
+        "avg_entities_per_email": avg_entities,
     })
