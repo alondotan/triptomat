@@ -20,7 +20,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
     strategy:
       matrix:
-        lambda: [gateway, downloader, worker, mail_handler]
+        lambda: [gateway, downloader, worker, mail_handler, admin]
       max-parallel: 4
     steps:
       - uses: actions/checkout@v4

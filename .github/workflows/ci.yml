@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        lambda: [gateway, downloader, worker, mail_handler]
+        lambda: [gateway, downloader, worker, mail_handler, admin]
     steps:
       - uses: actions/checkout@v4
       - run: docker build -f lambda_${{ matrix.lambda }}/Dockerfile .
