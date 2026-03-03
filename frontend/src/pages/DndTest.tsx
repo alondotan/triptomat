@@ -2141,15 +2141,9 @@ export default function DndTestPage() {
                 </>
               ) : (
                 <>
-                  <button
-                    className="flex items-center gap-1 w-full text-right mb-1"
-                    onClick={() => setPotentialExpanded(true)}
-                  >
-                    <p className="text-xs font-bold uppercase tracking-widest text-amber-600">
-                      פוטנציאל ({potential.length})
-                    </p>
-                    <ChevronDown size={14} className="text-amber-600" />
-                  </button>
+                  <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">
+                    פוטנציאל ({potential.length})
+                  </p>
                   <PotentialZone isScheduledDragging={isScheduledDrag}>
                     {potential.length === 0 && !isScheduledDrag ? (
                       <p className="text-xs text-muted-foreground py-2 text-center">כל הפריטים בלו"ז</p>
@@ -2219,6 +2213,17 @@ export default function DndTestPage() {
 
             {/* ── Left column: Timeline (wake up → schedule → sleep) — scrolls independently on desktop */}
             <div className={`space-y-3 md:overflow-y-auto md:min-h-0 pb-4 ${isMobile && mobileTab !== 'schedule' ? 'hidden' : ''}`}>
+
+              {/* Mobile: button to go back to potential list */}
+              {isMobile && !potentialExpanded && (
+                <button
+                  className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-amber-500/10 text-amber-600 text-xs font-semibold md:hidden"
+                  onClick={() => setPotentialExpanded(true)}
+                >
+                  <ChevronUp size={14} />
+                  הצג מקומות
+                </button>
+              )}
 
               {/* Where I wake up */}
               <div className="space-y-1.5">
