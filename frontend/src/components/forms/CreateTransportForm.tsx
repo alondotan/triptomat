@@ -35,6 +35,7 @@ const TRANSPORT_CATEGORIES = [
   { value: 'rideshare',           label: 'Rideshare' },
   { value: 'privateTransfer',     label: 'Private Transfer' },
   { value: 'car',                 label: 'Car' },
+  { value: 'walk',                label: 'Walking' },
   { value: 'bicycle',             label: 'Bicycle' },
   { value: 'motorcycle',          label: 'Motorcycle' },
   { value: 'scooter',             label: 'Scooter' },

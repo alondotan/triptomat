@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Clock, Heart, Trash2, CalendarDays } from 'lucide-react';
+import { Clock, Heart, Trash2, CalendarDays, Pencil } from 'lucide-react';
 import { SubCategoryIcon } from '../shared/SubCategoryIcon';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -40,6 +40,10 @@ interface POICardProps {
   poiDaysMap?: Record<string, number[]>;
   /** Level 2 only: when provided, shows "הוסף תחבורה" button at bottom */
   onAddTransport?: () => void;
+  /** Level 2: called when the card body is clicked (for map highlight). If provided, body click no longer opens the dialog. */
+  onSelect?: () => void;
+  /** Level 2: visual highlight ring */
+  isSelected?: boolean;
   className?: string;
 }
 
@@ -50,6 +54,8 @@ export function POICard({
   showSubCategory = true,
   poiDaysMap,
   onAddTransport,
+  onSelect,
+  isSelected,
   className = '',
 }: POICardProps) {
   const { updatePOI, deletePOI } = usePOI();
@@ -116,19 +122,21 @@ export function POICard({
     const currentDuration = poi.details.activity_details?.duration;
     const currentNotes = poi.details.notes?.user_summary;
 
+    const handleCardClick = onSelect ?? (() => setDialogOpen(true));
+
     return (
       <>
         {poi.imageUrl && (
           <img
             src={poi.imageUrl}
             alt=""
-            className="w-20 self-stretch rounded-lg object-cover shrink-0 cursor-pointer"
-            onClick={() => setDialogOpen(true)}
+            className={`w-20 self-stretch rounded-lg object-cover shrink-0 cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
+            onClick={handleCardClick}
           />
         )}
         <div
-          className={`flex flex-col gap-0.5 flex-1 min-w-0 cursor-pointer ${className}`}
-          onClick={() => setDialogOpen(true)}
+          className={`flex flex-col gap-0.5 flex-1 min-w-0 cursor-pointer ${isSelected ? 'text-primary' : ''} ${className}`}
+          onClick={handleCardClick}
         >
           {/* Name row */}
           <div className="flex items-center gap-2">
@@ -137,6 +145,15 @@ export function POICard({
               : <SubCategoryIcon type={poi.subCategory || ''} size={14} className="shrink-0" />
             )}
             <span className="text-sm font-medium truncate">{poi.name}</span>
+            {onSelect && (
+              <button
+                type="button"
+                className="shrink-0 p-0.5 text-muted-foreground/50 hover:text-primary transition-colors ml-auto"
+                onClick={(e) => { e.stopPropagation(); setDialogOpen(true); }}
+              >
+                <Pencil size={12} />
+              </button>
+            )}
           </div>
 
           {/* Duration */}
@@ -184,7 +201,7 @@ export function POICard({
               </div>
             ) : (
               <div
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer w-fit"
                 onClick={handleStartEditDuration}
               >
                 <Clock size={11} />
@@ -225,7 +242,7 @@ export function POICard({
               </div>
             ) : (
               <p
-                className="text-xs text-muted-foreground/70 italic truncate cursor-pointer hover:text-muted-foreground"
+                className="text-xs text-muted-foreground/70 italic truncate cursor-pointer hover:text-muted-foreground w-fit max-w-full"
                 onClick={handleStartEditNotes}
               >
                 {currentNotes || 'הוסף הערה...'}

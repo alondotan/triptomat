@@ -6,7 +6,7 @@ const transportCategories = [
   'bus', 'subway', 'tram',
   'ferry', 'cruise', 'cruiseShip',
   'taxi', 'carRental', 'rideshare', 'privateTransfer',
-  'car', 'bicycle', 'motorcycle', 'scooter',
+  'car', 'walk', 'bicycle', 'motorcycle', 'scooter',
   'boatTaxi', 'cableCar', 'funicular', 'rv',
   'otherTransportation',
 ] as const;

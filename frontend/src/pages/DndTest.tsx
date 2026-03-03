@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, Fragment } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
@@ -37,7 +37,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Building2, CalendarDays, Check, Clock, GripVertical, Moon, Pencil, Sun, Trash2, X } from 'lucide-react';
+import { Building2, CalendarDays, Check, ChevronDown, ChevronUp, Clock, GripVertical, Moon, Pencil, Sun, Trash2, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -47,6 +47,11 @@ import { transitionToDetailedPlanning } from '@/services/tripStatusTransition';
 import { useTripList } from '@/context/TripListContext';
 import { DaySection } from '@/components/DaySection';
 import { getSubCategoryEntry } from '@/lib/subCategoryConfig';
+import { useRouteCalculation } from '@/hooks/useRouteCalculation';
+import { RouteMapPanel } from '@/components/route/RouteMapPanel';
+import { TravelLegRow } from '@/components/route/TravelLegRow';
+import { TRANSPORT_CATEGORY_CONFIG, formatDuration, type RouteLeg, type LegOverride } from '@/services/routeService';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -233,11 +238,39 @@ function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeing
   );
 }
 
+// ─── Mobile compact draggable item (horizontal strip) ─────────────────────────
+
+function MobileDraggableItem({ item, isBeingDragged }: { item: Item; isBeingDragged: boolean }) {
+  const { attributes, listeners, setNodeRef } = useDraggable({ id: item.id });
+  const imgUrl = item.poi?.imageUrl;
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className={`flex flex-col items-center gap-1 bg-card border rounded-xl px-2 py-1.5
+        w-[72px] shrink-0 select-none touch-none transition-opacity
+        ${isBeingDragged ? 'opacity-30' : ''}`}
+    >
+      {imgUrl ? (
+        <img src={imgUrl} alt="" className="w-10 h-10 rounded-lg object-cover" />
+      ) : (
+        <div className="w-10 h-10 rounded-lg bg-muted/40 flex items-center justify-center">
+          <span className="material-symbols-outlined text-base text-muted-foreground">{item.emoji}</span>
+        </div>
+      )}
+      <span className="text-[10px] font-medium text-center leading-tight line-clamp-2 w-full">
+        {item.poi?.name || item.label}
+      </span>
+    </div>
+  );
+}
+
 // ─── Sortable scheduled item ───────────────────────────────────────────────────
 
 function SortableScheduledItem({
   item, isLocked, onToggleLock, onAddTransport, onDeleteTransport, onEditTransport,
-  onUpdateTimeBlock, onDeleteTimeBlock,
+  onUpdateTimeBlock, onDeleteTimeBlock, calcDurationMin, onSelect, isSelected,
 }: {
   item: Item;
   isLocked: boolean;
@@ -247,12 +280,15 @@ function SortableScheduledItem({
   onEditTransport?: () => void;
   onUpdateTimeBlock?: (label: string, time: string | undefined) => void;
   onDeleteTimeBlock?: () => void;
+  calcDurationMin?: number;
+  onSelect?: () => void;
+  isSelected?: boolean;
 }) {
+  const isTransport = !item.poi && item.id.startsWith('trans_');
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `sched-${item.id}`,
-    disabled: isLocked,
+    disabled: isLocked || isTransport,
   });
-  const isTransport = !item.poi && item.id.startsWith('trans_');
 
   // Inline edit state for time_block items
   const [isEditing, setIsEditing] = useState(false);
@@ -341,6 +377,7 @@ function SortableScheduledItem({
 
   return (
     <div
+      id={item.poi ? `sched-item-${item.id}` : undefined}
       ref={setNodeRef}
       style={{
         transform: transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
@@ -348,22 +385,24 @@ function SortableScheduledItem({
       }}
       className={`flex items-center gap-1.5 sm:gap-2.5 bg-card border rounded-lg px-1.5 sm:px-3 py-2 sm:py-2.5 transition-opacity ${
         isLocked ? 'opacity-70' : ''
-      } ${isDragging ? 'opacity-40' : ''}`}
+      } ${isDragging ? 'opacity-40' : ''} ${isSelected ? 'ring-2 ring-primary' : ''}`}
     >
-      <button
-        {...attributes}
-        {...(isLocked ? {} : listeners)}
-        disabled={isLocked}
-        className={`shrink-0 p-0.5 touch-none select-none transition-opacity ${
-          isLocked
-            ? 'opacity-20 cursor-not-allowed'
-            : 'cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground'
-        }`}
-      >
-        <GripVertical size={14} />
-      </button>
+      {!isTransport && (
+        <button
+          {...attributes}
+          {...(isLocked ? {} : listeners)}
+          disabled={isLocked}
+          className={`shrink-0 p-0.5 touch-none select-none transition-opacity ${
+            isLocked
+              ? 'opacity-20 cursor-not-allowed'
+              : 'cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground'
+          }`}
+        >
+          <GripVertical size={14} />
+        </button>
+      )}
       {item.poi ? (
-        <POICard poi={item.poi} level={2} editable onAddTransport={onAddTransport} />
+        <POICard poi={item.poi} level={2} editable onAddTransport={onAddTransport} onSelect={onSelect} isSelected={isSelected} />
       ) : (
         <>
           <span className="material-symbols-outlined text-base">{item.emoji}</span>
@@ -376,6 +415,9 @@ function SortableScheduledItem({
             </span>
             {item.sublabel && (
               <span className="text-xs text-muted-foreground truncate block">{item.sublabel}</span>
+            )}
+            {isTransport && calcDurationMin != null && calcDurationMin > 0 && (
+              <span className="text-xs text-muted-foreground/70 block">~{formatDuration(calcDurationMin)}</span>
             )}
           </div>
           {item.remark && (
@@ -480,7 +522,7 @@ function TimeBlockSectionHeader({ item, canDelete, onUpdate, onDelete }: {
 
 // ─── Group frame ───────────────────────────────────────────────────────────────
 
-function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onDeleteTransport, onEditTransport, onUpdateTimeBlock, onDeleteTimeBlock, canDelete, onRenameGroup, onDeleteGroup }: {
+function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onDeleteTransport, onEditTransport, onUpdateTimeBlock, onDeleteTimeBlock, canDelete, onRenameGroup, onDeleteGroup, legMap, onHighlightLeg, transportCalcDurations, selectedItemId, onSelectItem }: {
   group: Group;
   label: string;
   lockedIds: Set<string>;
@@ -493,6 +535,11 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
   canDelete?: boolean;
   onRenameGroup?: (label: string, time: string | undefined) => void;
   onDeleteGroup?: () => void;
+  legMap?: Map<string, RouteLeg>;
+  onHighlightLeg?: (fromStopId: string) => void;
+  transportCalcDurations?: Map<string, number>;
+  selectedItemId?: string | null;
+  onSelectItem?: (itemId: string) => void;
 }) {
   // Time block item at the start of the group acts as a section header
   const timeBlockItem = group.items.find(i => i.isTimeBlock);
@@ -580,28 +627,39 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
       )}
 
       <SortableContext
-        items={contentItems.map(i => `sched-${i.id}`)}
+        items={contentItems.filter(i => !i.id.startsWith('trans_')).map(i => `sched-${i.id}`)}
         strategy={verticalListSortingStrategy}
       >
         <div className={`space-y-1 ${contentItems.length > 0 ? 'mt-0.5' : ''}`}>
           {contentItems.length === 0 && isOver && (
             <p className="text-xs text-center py-2 text-primary/60">שחרר כאן</p>
           )}
-          {contentItems.map(item => {
+          {contentItems.map((item, i) => {
             // Extract transport id from "trans_<transportId>_<segmentId>"
             const transportId = item.id.startsWith('trans_')
               ? item.id.replace(/^trans_/, '').replace(/_[^_]+$/, '')
               : undefined;
+            // Find previous POI to check for a travel leg
+            const prevPoi = contentItems.slice(0, i).reverse().find(it => it.poi);
+            // Don't show TravelLegRow if a transport item already exists between the two POIs
+            const prevPoiIdx = prevPoi ? contentItems.indexOf(prevPoi) : -1;
+            const hasTransportBetween = prevPoiIdx >= 0 && contentItems.slice(prevPoiIdx + 1, i).some(it => it.id.startsWith('trans_'));
+            const leg = prevPoi && item.poi && !hasTransportBetween ? legMap?.get(prevPoi.id) : null;
             return (
-              <SortableScheduledItem
-                key={item.id}
-                item={item}
-                isLocked={lockedIds.has(item.id)}
-                onToggleLock={onToggleLock}
-                onAddTransport={item.poi ? () => onAddTransport?.(item.poi!.id) : undefined}
-                onDeleteTransport={transportId ? () => onDeleteTransport?.(transportId) : undefined}
-                onEditTransport={transportId ? () => onEditTransport?.(transportId) : undefined}
-              />
+              <Fragment key={item.id}>
+                {leg && <TravelLegRow leg={leg} onHighlight={() => onHighlightLeg?.(leg.fromStopId)} />}
+                <SortableScheduledItem
+                  item={item}
+                  isLocked={lockedIds.has(item.id)}
+                  onToggleLock={onToggleLock}
+                  onAddTransport={item.poi ? () => onAddTransport?.(item.poi!.id) : undefined}
+                  onDeleteTransport={transportId ? () => onDeleteTransport?.(transportId) : undefined}
+                  onEditTransport={transportId ? () => onEditTransport?.(transportId) : undefined}
+                  calcDurationMin={transportCalcDurations?.get(item.id)}
+                  onSelect={item.poi && onSelectItem ? () => onSelectItem(item.id) : undefined}
+                  isSelected={item.poi ? selectedItemId === item.id : false}
+                />
+              </Fragment>
             );
           })}
         </div>
@@ -735,6 +793,16 @@ export default function DndTestPage() {
   const [addingTimeBlock, setAddingTimeBlock] = useState(false);
   const [newTbLabel, setNewTbLabel] = useState('');
   const [newTbTime, setNewTbTime] = useState('');
+
+  // ── Route map state ─────────────────────────────────────────────────────────
+  const [defaultMode, setDefaultMode] = useState<'car' | 'walk'>('car');
+  const [highlightedLegId, setHighlightedLegId] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  // ── Mobile layout ──────────────────────────────────────────────────────────
+  const isMobile = useIsMobile();
+  const [mobileTab, setMobileTab] = useState<'schedule' | 'map'>('schedule');
+  const [potentialExpanded, setPotentialExpanded] = useState(false);
 
   // Research mode inline form state
   const [researchLevel, setResearchLevel] = useState<PlanningLevel>('research');
@@ -1035,6 +1103,156 @@ export default function DndTestPage() {
   }, [itineraryDays, pois, selectedDayNum]);
 
   const morningAccom = prevDayAccommodations.find(a => a.is_selected) ?? prevDayAccommodations[0];
+  const eveningAccom = dayAccommodations.find(a => a.is_selected) ?? dayAccommodations[0];
+
+  // ── Route calculation ───────────────────────────────────────────────────────
+
+  // Helper: extract coords from a POI if present
+  const accomCoords = (poi: PointOfInterest | undefined) =>
+    poi?.location?.coordinates?.lat != null && poi?.location?.coordinates?.lng != null
+      ? { lat: poi.location.coordinates.lat, lng: poi.location.coordinates.lng }
+      : null;
+
+  const morningCoords = accomCoords(morningAccom?.poi);
+  const eveningCoords = accomCoords(eveningAccom?.poi);
+
+  const routeStops = useMemo(() => {
+    const activityStops = scheduled
+      .filter(item => item.poi?.location?.coordinates?.lat != null && item.poi?.location?.coordinates?.lng != null)
+      .map(item => ({
+        id: item.id,
+        lat: item.poi!.location.coordinates!.lat,
+        lng: item.poi!.location.coordinates!.lng,
+        durationMin: item.poi!.details?.activity_details?.duration ?? 60,
+      }));
+
+    const stops = [...activityStops];
+
+    // Prepend morning accommodation as start point
+    if (morningCoords && morningAccom) {
+      stops.unshift({ id: `accom-morning-${morningAccom.poi.id}`, lat: morningCoords.lat, lng: morningCoords.lng, durationMin: 0 });
+    }
+    // Append evening accommodation as end point
+    if (eveningCoords && eveningAccom) {
+      stops.push({ id: `accom-evening-${eveningAccom.poi.id}`, lat: eveningCoords.lat, lng: eveningCoords.lng, durationMin: 0 });
+    }
+
+    return stops;
+  }, [scheduled, morningCoords, morningAccom, eveningCoords, eveningAccom]);
+
+  const stopNames = useMemo(() => {
+    const map: Record<string, string> = {};
+    scheduled.forEach(item => {
+      if (item.poi?.location?.coordinates?.lat != null) {
+        map[item.id] = item.poi.name;
+      }
+    });
+    if (morningAccom) map[`accom-morning-${morningAccom.poi.id}`] = morningAccom.poi.name;
+    if (eveningAccom) map[`accom-evening-${eveningAccom.poi.id}`] = eveningAccom.poi.name;
+    return map;
+  }, [scheduled, morningAccom, eveningAccom]);
+
+  // Build leg overrides from transport items between consecutive POI stops.
+  // Also track transport item ID → fromStopId so we can display OSRM-calculated durations.
+  const { legOverrides, transportToFromStop } = useMemo(() => {
+    const overrides = new Map<string, LegOverride>();
+    const transMap = new Map<string, string>(); // transport item id → fromStop id
+
+    // Indices of POI items in `scheduled` that have coordinates (i.e., appear in routeStops)
+    const poiIndices: number[] = [];
+    for (let i = 0; i < scheduled.length; i++) {
+      const item = scheduled[i];
+      if (item.poi?.location?.coordinates?.lat != null && item.poi?.location?.coordinates?.lng != null) {
+        poiIndices.push(i);
+      }
+    }
+
+    // For each pair of consecutive POI items, check for a transport item between them
+    for (let p = 0; p < poiIndices.length - 1; p++) {
+      const fromIdx = poiIndices[p];
+      const toIdx = poiIndices[p + 1];
+      const fromItem = scheduled[fromIdx];
+
+      for (let i = fromIdx + 1; i < toIdx; i++) {
+        const item = scheduled[i];
+        if (!item.id.startsWith('trans_')) continue;
+
+        // Find matching transport entity + segment
+        for (const t of transportation) {
+          for (const seg of t.segments) {
+            if (`trans_${t.id}_${seg.segment_id ?? '0'}` !== item.id) continue;
+
+            const config = TRANSPORT_CATEGORY_CONFIG[t.category] ?? { visualMode: 'other_transport' as const, osrmMode: null };
+            const hasTimes = !!(seg.departure_time && seg.arrival_time);
+            let durationMin: number | undefined;
+            if (hasTimes) {
+              const dep = parseISO(seg.departure_time);
+              const arr = parseISO(seg.arrival_time);
+              durationMin = (arr.getTime() - dep.getTime()) / 60000;
+            }
+
+            // If transport has known times → skip OSRM (use known duration).
+            // If no times → use OSRM with the transport's routing mode.
+            overrides.set(fromItem.id, {
+              visualMode: config.visualMode,
+              osrmMode: hasTimes ? null : config.osrmMode,
+              durationMin,
+              fromCoords: seg.from.coordinates,
+              toCoords: seg.to.coordinates,
+              label: `${transportEmoji(t.category)} ${seg.from.name} → ${seg.to.name}${seg.flight_or_vessel_number ? ` · ${seg.flight_or_vessel_number}` : ''}`,
+            });
+            transMap.set(item.id, fromItem.id);
+            break;
+          }
+          if (overrides.has(fromItem.id)) break;
+        }
+        break; // use the first transport found between these two POIs
+      }
+    }
+
+    return { legOverrides: overrides, transportToFromStop: transMap };
+  }, [scheduled, transportation]);
+
+  const { legs, stats: routeStats, isCalculating, isStale, error: routeError, calculate: calculateRoute, reset: resetRoute, setManualDuration } = useRouteCalculation(routeStops, legOverrides);
+
+  const legMap = useMemo(() => new Map(legs.map(l => [l.fromStopId, l])), [legs]);
+
+  // OSRM-calculated durations for transport items without known times
+  const transportCalcDurations = useMemo(() => {
+    const map = new Map<string, number>(); // transport item id → calculated duration min
+    for (const [transItemId, fromStopId] of transportToFromStop) {
+      const leg = legMap.get(fromStopId);
+      if (leg && !leg.isUnknown && leg.durationMin > 0) {
+        map.set(transItemId, leg.durationMin);
+      }
+    }
+    return map;
+  }, [transportToFromStop, legMap]);
+
+  // All day POIs with coordinates (scheduled + potential + accommodations) — for map markers
+  const dayPOIs = useMemo(() => {
+    const scheduledSet = new Set(scheduled.map(i => i.id));
+    const all = [...scheduled, ...potential];
+    const pois = all
+      .filter(item => item.poi?.location?.coordinates?.lat != null && item.poi?.location?.coordinates?.lng != null)
+      .map(item => ({
+        id: item.id,
+        lat: item.poi!.location.coordinates!.lat,
+        lng: item.poi!.location.coordinates!.lng,
+        name: item.poi!.name,
+        category: item.poi!.category,
+        isScheduled: scheduledSet.has(item.id),
+      }));
+
+    // Add accommodations
+    if (morningCoords && morningAccom) {
+      pois.push({ id: `accom-morning-${morningAccom.poi.id}`, lat: morningCoords.lat, lng: morningCoords.lng, name: morningAccom.poi.name, category: 'accommodation', isScheduled: true });
+    }
+    if (eveningCoords && eveningAccom) {
+      pois.push({ id: `accom-evening-${eveningAccom.poi.id}`, lat: eveningCoords.lat, lng: eveningCoords.lng, name: eveningAccom.poi.name, category: 'accommodation', isScheduled: true });
+    }
+    return pois;
+  }, [scheduled, potential, morningCoords, morningAccom, eveningCoords, eveningAccom]);
 
   // Actual location of the current day — for DaySection suggestions (not the edit buffer)
   const currentDayLocation = currentItDay?.locationContext ?? '';
@@ -1489,6 +1707,8 @@ export default function DndTestPage() {
 
   const handleDragStart = useCallback((e: DragStartEvent) => {
     setActiveId(e.active.id as string);
+    setSelectedItemId(null);
+    setPotentialExpanded(false);
     addLog(`🟡 start: "${e.active.id}"`);
   }, []);
 
@@ -1619,6 +1839,8 @@ export default function DndTestPage() {
       // → Reorder within schedule via closestCenter (sched-* target)
       if (overId.startsWith('sched-')) {
         const overItemId = overId.replace('sched-', '');
+        // Ignore drops on transport items — they're not valid reorder targets
+        if (overItemId.startsWith('trans_')) return;
         const oldIdx = scheduled.findIndex(i => i.id === itemId);
         const newIdx = scheduled.findIndex(i => i.id === overItemId);
         if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
@@ -1770,7 +1992,7 @@ export default function DndTestPage() {
                       shortLabel={td.shortLabel}
                       isSelected={selectedDayNum === td.dayNum}
                       hasContent={hasContent}
-                      onClick={() => setSelectedDayNum(td.dayNum)}
+                      onClick={() => { setSelectedDayNum(td.dayNum); setSelectedItemId(null); setHighlightedLegId(null); }}
                     />
                   );
                 })}
@@ -1835,12 +2057,104 @@ export default function DndTestPage() {
             </div>
           )}
 
-          {/* ── Scrollable content area ─────────────────────── */}
-          <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-[5fr_7fr] gap-4 md:h-full md:[grid-template-rows:minmax(0,1fr)]">
+          {/* ── Mobile tab switcher ──────────────────────── */}
+          <div className="flex md:hidden gap-1 mt-1.5">
+            <button
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                mobileTab === 'schedule'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+              onClick={() => setMobileTab('schedule')}
+            >
+              לו&quot;ז
+            </button>
+            <button
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                mobileTab === 'map'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+              onClick={() => setMobileTab('map')}
+            >
+              מפה
+            </button>
+          </div>
 
-            {/* ── Right column: Potential + Add activity ─────── */}
-            <div className="space-y-3 md:overflow-y-auto md:min-h-0">
+          {/* ── Scrollable content area ─────────────────────── */}
+          <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden flex flex-col">
+
+          {/* Mobile: potential items — collapsible strip / expanded list (schedule tab only) */}
+          {isMobile && mobileTab === 'schedule' && (
+            <div className={`md:hidden shrink-0 mb-2 ${potentialExpanded ? 'flex-1 min-h-0 overflow-y-auto' : ''}`}>
+              <button
+                className="flex items-center gap-1 w-full text-right mb-1"
+                onClick={() => setPotentialExpanded(prev => !prev)}
+              >
+                <p className="text-xs font-bold uppercase tracking-widest text-amber-600">
+                  פוטנציאל ({potential.length})
+                </p>
+                {potentialExpanded
+                  ? <ChevronUp size={14} className="text-amber-600" />
+                  : <ChevronDown size={14} className="text-amber-600" />
+                }
+              </button>
+              <PotentialZone isScheduledDragging={isScheduledDrag}>
+                {potential.length === 0 && !isScheduledDrag ? (
+                  <p className="text-xs text-muted-foreground py-2 text-center">כל הפריטים בלו"ז</p>
+                ) : potentialExpanded ? (
+                  <div className="space-y-1.5">
+                    {potential.map(item => (
+                      <DraggableItem
+                        key={item.id}
+                        item={item}
+                        isBeingDragged={activeId === item.id}
+                        onRemove={() => removeActivity(item.id)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {potential.map(item => (
+                      <MobileDraggableItem
+                        key={item.id}
+                        item={item}
+                        isBeingDragged={activeId === item.id}
+                      />
+                    ))}
+                  </div>
+                )}
+              </PotentialZone>
+              <DaySection
+                title=""
+                icon={null as any}
+                hideHeader
+                hideEmptyState
+                entityType="activity"
+                items={[]}
+                onRemove={removeActivity}
+                availableItems={availableActivities.map(p => ({
+                  id: p.id,
+                  label: p.name,
+                  sublabel: p.location?.city || '',
+                  city: p.location?.city,
+                  status: p.status,
+                }))}
+                onAdd={addActivity}
+                onCreateNew={createNewActivity}
+                addLabel="הוסף פעילות"
+                locationContext={currentDayLocation}
+                countries={activeTrip?.countries}
+                extraHierarchy={tripSitesHierarchy}
+                showBookingMissionOption
+              />
+            </div>
+          )}
+
+          <div className={`grid grid-cols-1 md:grid-cols-[3fr_5fr_4fr] gap-3 md:h-full md:[grid-template-rows:minmax(0,1fr)] ${isMobile ? 'flex-1 min-h-0' : ''} ${isMobile && potentialExpanded ? 'hidden' : ''}`}>
+
+            {/* ── Column 1: Potential + Add activity (desktop only) ──────────── */}
+            <div className="hidden md:block space-y-3 md:overflow-y-auto md:min-h-0">
               <p className="text-xs font-bold uppercase tracking-widest text-amber-600">
                 פוטנציאל ({potential.length})
               </p>
@@ -1885,7 +2199,7 @@ export default function DndTestPage() {
             </div>
 
             {/* ── Left column: Timeline (wake up → schedule → sleep) — scrolls independently on desktop */}
-            <div className="space-y-3 md:overflow-y-auto md:min-h-0 pb-4">
+            <div className={`space-y-3 md:overflow-y-auto md:min-h-0 pb-4 ${isMobile && mobileTab !== 'schedule' ? 'hidden' : ''}`}>
 
               {/* Where I wake up */}
               <div className="space-y-1.5">
@@ -1916,6 +2230,13 @@ export default function DndTestPage() {
                   </div>
                 )}
               </div>
+
+              {/* Travel leg: morning accom → first activity */}
+              {morningAccom && morningCoords && (() => {
+                const morningStopId = `accom-morning-${morningAccom.poi.id}`;
+                const leg = legMap.get(morningStopId);
+                return leg ? <TravelLegRow leg={leg} onHighlight={() => setHighlightedLegId(leg.fromStopId)} /> : null;
+              })()}
 
               {/* Scheduled itinerary */}
               <div className="space-y-1.5">
@@ -1957,6 +2278,11 @@ export default function DndTestPage() {
                               const content = group.items.filter(i => !i.isTimeBlock);
                               handleDeleteAutoGroup(content.map(i => i.id));
                             }}
+                            legMap={legMap}
+                            onHighlightLeg={setHighlightedLegId}
+                            transportCalcDurations={transportCalcDurations}
+                            selectedItemId={selectedItemId}
+                            onSelectItem={(id) => setSelectedItemId(prev => prev === id ? null : id)}
                           />
                         </div>
                         {/* Gap after each group */}
@@ -2002,6 +2328,13 @@ export default function DndTestPage() {
                 )}
               </div>
 
+              {/* Travel leg: last activity → evening accom */}
+              {eveningAccom && eveningCoords && (() => {
+                const lastPoiItem = [...scheduled].reverse().find(it => it.poi?.location?.coordinates?.lat != null);
+                const leg = lastPoiItem ? legMap.get(lastPoiItem.id) : null;
+                return leg ? <TravelLegRow leg={leg} onHighlight={() => setHighlightedLegId(leg.fromStopId)} /> : null;
+              })()}
+
               {/* Where I sleep */}
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
@@ -2043,10 +2376,45 @@ export default function DndTestPage() {
               </div>
 
             </div>
-            {/* end left column */}
+            {/* end timeline column */}
+
+            {/* ── Column 3: Route map ─────────── */}
+            {(!isMobile || mobileTab === 'map') && (
+              <div className={`${isMobile ? 'min-h-0 flex-1' : 'hidden md:block md:min-h-0'} border rounded-lg overflow-hidden`}>
+                <RouteMapPanel
+                  dayPOIs={dayPOIs}
+                  stops={routeStops}
+                  stopNames={stopNames}
+                  legs={legs}
+                  stats={routeStats}
+                  isCalculating={isCalculating}
+                  isStale={isStale}
+                  error={routeError}
+                  defaultMode={defaultMode}
+                  onModeChange={setDefaultMode}
+                  onCalculate={() => calculateRoute(defaultMode)}
+                  highlightedLegId={highlightedLegId}
+                  selectedStopId={selectedItemId}
+                  onStopClick={(stopId) => {
+                    setSelectedItemId(prev => prev === stopId ? null : stopId);
+                    if (isMobile) {
+                      setMobileTab('schedule');
+                      requestAnimationFrame(() => {
+                        setTimeout(() => {
+                          document.getElementById(`sched-item-${stopId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 100);
+                      });
+                    } else {
+                      document.getElementById(`sched-item-${stopId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  }}
+                  onReset={resetRoute}
+                />
+              </div>
+            )}
 
           </div>
-          {/* end two-column grid */}
+          {/* end three-column grid */}
           </div>
           {/* end scrollable content area */}
 

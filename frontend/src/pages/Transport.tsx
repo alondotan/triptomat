@@ -37,6 +37,7 @@ const categoryLabels: Record<string, string> = {
   rideshare:           'שיתוף נסיעות',
   privateTransfer:     'הסעה פרטית',
   car:                 'רכב פרטי',
+  walk:                'הליכה ברגל',
   bicycle:             'אופניים',
   motorcycle:          'אופנוע',
   scooter:             'קורקינט',
