@@ -203,28 +203,26 @@ function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeing
   return (
     <div
       ref={setNodeRef}
-      className={`flex items-center gap-2.5 bg-card border rounded-xl px-3 py-2.5 select-none transition-opacity ${
+      className={`flex items-start gap-2.5 bg-card border rounded-xl px-3 py-2.5 select-none transition-opacity ${
         isBeingDragged ? 'opacity-30' : 'hover:border-primary/40'
       }`}
     >
       <button
         {...attributes}
         {...listeners}
-        className="shrink-0 p-0.5 touch-none select-none cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground"
+        className="shrink-0 p-0.5 mt-1 touch-none select-none cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground"
       >
         <GripVertical size={14} />
       </button>
-      <div className="flex-1 min-w-0">
-        {item.poi ? (
-          <POICard poi={item.poi} level={2} editable />
-        ) : (
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined">{item.emoji}</span>
-            <span className="text-sm font-medium">{item.label}</span>
-            {item.remark && <span className="text-xs text-muted-foreground ml-1">{item.remark}</span>}
-          </div>
-        )}
-      </div>
+      {item.poi ? (
+        <POICard poi={item.poi} level={2} editable />
+      ) : (
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <span className="material-symbols-outlined">{item.emoji}</span>
+          <span className="text-sm font-medium">{item.label}</span>
+          {item.remark && <span className="text-xs text-muted-foreground ml-1">{item.remark}</span>}
+        </div>
+      )}
       {onRemove && (
         <button
           onClick={onRemove}
@@ -355,7 +353,7 @@ function SortableScheduledItem({
         transform: transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
         transition,
       }}
-      className={`flex items-center gap-1.5 sm:gap-2.5 bg-card border rounded-lg px-1.5 sm:px-3 py-2 sm:py-2.5 transition-opacity ${
+      className={`flex items-start gap-1.5 sm:gap-2.5 bg-card border rounded-lg px-1.5 sm:px-3 py-2 sm:py-2.5 transition-opacity ${
         isLocked ? 'opacity-70' : ''
       } ${isDragging ? 'opacity-40' : ''} ${isSelected ? 'ring-2 ring-primary' : ''}`}
     >
@@ -364,7 +362,7 @@ function SortableScheduledItem({
           {...attributes}
           {...(isLocked ? {} : listeners)}
           disabled={isLocked}
-          className={`shrink-0 p-0.5 touch-none select-none transition-opacity ${
+          className={`shrink-0 p-0.5 mt-1 touch-none select-none transition-opacity ${
             isLocked
               ? 'opacity-20 cursor-not-allowed'
               : 'cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground'

@@ -145,15 +145,6 @@ export function POICard({
               : <SubCategoryIcon type={poi.subCategory || ''} size={14} className="shrink-0" />
             )}
             <span className="text-sm font-medium truncate">{poi.name}</span>
-            {onSelect && (
-              <button
-                type="button"
-                className="shrink-0 p-0.5 text-muted-foreground/50 hover:text-primary transition-colors ml-auto"
-                onClick={(e) => { e.stopPropagation(); setDialogOpen(true); }}
-              >
-                <Pencil size={12} />
-              </button>
-            )}
           </div>
 
           {/* Duration */}
@@ -264,6 +255,16 @@ export function POICard({
             </div>
           )}
         </div>
+
+        {onSelect && (
+          <button
+            type="button"
+            className="shrink-0 p-1 mt-0.5 text-muted-foreground/50 hover:text-primary transition-colors self-start"
+            onClick={(e) => { e.stopPropagation(); setDialogOpen(true); }}
+          >
+            <Pencil size={12} />
+          </button>
+        )}
 
         {dialogOpen && (
           <POIDetailDialog poi={poi} open={dialogOpen} onOpenChange={setDialogOpen} />
