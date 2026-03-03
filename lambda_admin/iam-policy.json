@@ -1,0 +1,71 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DynamoDBCacheAccess",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:Scan",
+        "dynamodb:GetItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:PutItem"
+      ],
+      "Resource": "arn:aws:dynamodb:eu-central-1:664923616128:table/triptomat-cache"
+    },
+    {
+      "Sid": "S3MediaBucketAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::triptomat-media",
+        "arn:aws:s3:::triptomat-media/*"
+      ]
+    },
+    {
+      "Sid": "S3EmailsBucketAccess",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:GetObject",
+        "s3:DeleteObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::triptomat-raw-emails",
+        "arn:aws:s3:::triptomat-raw-emails/*"
+      ]
+    },
+    {
+      "Sid": "SQSSendMessage",
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage"
+      ],
+      "Resource": [
+        "arn:aws:sqs:eu-central-1:664923616128:triptomat-download-queue",
+        "arn:aws:sqs:eu-central-1:664923616128:triptomat-analysis-queue"
+      ]
+    },
+    {
+      "Sid": "CloudWatchMetrics",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:GetMetricData"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:eu-central-1:664923616128:log-group:/aws/lambda/triptomat-admin:*"
+    }
+  ]
+}
