@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,48 +15,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Database, Trash2, RefreshCw, Search } from 'lucide-react';
+import { Database, Trash2, RefreshCw, Search, Loader2, AlertTriangle } from 'lucide-react';
 import { formatDateTime } from '@/utils/adminUtils';
-
-// ── Types ──────────────────────────────────────────────────────
-
-type CacheStatus = 'processing' | 'completed' | 'failed';
-
-interface CacheEntry {
-  url: string;
-  jobId: string;
-  status: CacheStatus;
-  sourceType: string;
-  createdAt: string;
-}
-
-// ── Mock Data ──────────────────────────────────────────────────
-
-const mockCacheEntries: CacheEntry[] = [
-  { url: 'https://www.youtube.com/watch?v=abc123def456', jobId: 'job-a1b2c3', status: 'completed', sourceType: 'video', createdAt: '2026-03-03T10:30:00Z' },
-  { url: 'https://www.tripadvisor.com/Attraction_Review-g123-d456', jobId: 'job-d4e5f6', status: 'completed', sourceType: 'web', createdAt: '2026-03-03T09:15:00Z' },
-  { url: 'https://maps.google.com/maps?q=place_id:ChIJ...', jobId: 'job-g7h8i9', status: 'processing', sourceType: 'maps', createdAt: '2026-03-03T08:42:00Z' },
-  { url: 'https://www.youtube.com/watch?v=xyz789uvw012', jobId: 'job-j0k1l2', status: 'failed', sourceType: 'video', createdAt: '2026-03-02T22:30:00Z' },
-  { url: 'https://www.lonelyplanet.com/italy/rome/attractions', jobId: 'job-m3n4o5', status: 'completed', sourceType: 'web', createdAt: '2026-03-02T18:15:00Z' },
-  { url: 'mailto:trip-updates@example.com (subject: Amsterdam)', jobId: 'job-p6q7r8', status: 'completed', sourceType: 'email', createdAt: '2026-03-02T14:00:00Z' },
-  { url: 'https://www.youtube.com/watch?v=qrs345tuv678', jobId: 'job-s9t0u1', status: 'completed', sourceType: 'video', createdAt: '2026-03-01T20:45:00Z' },
-  { url: 'text://user-paste-2026-03-01-1930', jobId: 'job-v2w3x4', status: 'failed', sourceType: 'text', createdAt: '2026-03-01T19:30:00Z' },
-];
+import { useCacheEntries, useDeleteCacheEntries, useReprocessUrl } from '@/hooks/useAdminQueries';
+import { toast } from '@/hooks/use-toast';
+import type { CacheEntry, CacheDeleteResponse, ReprocessResponse } from '@/services/adminService';
 
 // ── Helpers ────────────────────────────────────────────────────
 
-function getStatusBadgeVariant(status: CacheStatus): 'default' | 'secondary' | 'destructive' {
+type CacheStatus = 'processing' | 'completed' | 'failed';
+
+function getStatusBadgeVariant(status: string): 'default' | 'secondary' | 'destructive' {
   switch (status) {
     case 'completed': return 'default';
     case 'processing': return 'secondary';
     case 'failed': return 'destructive';
+    default: return 'secondary';
   }
 }
 
 function truncateUrl(url: string, maxLength: number = 60): string {
   return url.length > maxLength ? url.substring(0, maxLength) + '...' : url;
 }
-
 
 // ── Component ──────────────────────────────────────────────────
 
@@ -69,33 +48,76 @@ export default function CacheManagerPage() {
   const [deleteTarget, setDeleteTarget] = useState<CacheEntry | null>(null);
   const [reprocessTarget, setReprocessTarget] = useState<CacheEntry | null>(null);
 
-  // TODO: Replace with real API call
-  const { data: entries } = useQuery<CacheEntry[]>({
-    queryKey: ['admin', 'cache-entries'],
-    queryFn: async () => mockCacheEntries,
-  });
+  const apiStatus = statusFilter === 'all' ? undefined : statusFilter;
+  const {
+    data: cacheData,
+    isLoading,
+    error,
+    refetch,
+  } = useCacheEntries(apiStatus, 100);
 
-  const filteredEntries = (entries ?? []).filter((entry) => {
-    if (statusFilter !== 'all' && entry.status !== statusFilter) return false;
+  const deleteMutation = useDeleteCacheEntries();
+  const reprocessMutation = useReprocessUrl();
+
+  // Client-side URL search within the fetched results
+  const filteredEntries = (cacheData?.items ?? []).filter((entry: CacheEntry) => {
     if (searchQuery && !entry.url.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
 
   const handleDelete = () => {
-    // TODO: Replace with real API call to delete cache entry
-    console.log('Deleting cache entry:', deleteTarget?.url);
+    if (!deleteTarget) return;
+    deleteMutation.mutate([deleteTarget.url], {
+      onSuccess: (result: CacheDeleteResponse) => {
+        toast({ title: 'Deleted', description: `Removed ${result.deleted} cache entry` });
+      },
+      onError: (err: Error) => {
+        toast({ title: 'Delete failed', description: err.message, variant: 'destructive' });
+      },
+    });
     setDeleteTarget(null);
   };
 
   const handleReprocess = () => {
-    // TODO: Replace with real API call to delete cache + re-submit URL
-    console.log('Reprocessing:', reprocessTarget?.url);
+    if (!reprocessTarget) return;
+    reprocessMutation.mutate(reprocessTarget.url, {
+      onSuccess: (result: ReprocessResponse) => {
+        toast({
+          title: 'Reprocessing',
+          description: `URL submitted to ${result.queue} queue (job: ${result.job_id.substring(0, 8)})`,
+        });
+      },
+      onError: (err: Error) => {
+        toast({ title: 'Reprocess failed', description: err.message, variant: 'destructive' });
+      },
+    });
     setReprocessTarget(null);
   };
 
-  const totalEntries = entries?.length ?? 0;
-  const completedCount = (entries ?? []).filter((e) => e.status === 'completed').length;
-  const failedCount = (entries ?? []).filter((e) => e.status === 'failed').length;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <AlertTriangle className="h-8 w-8 text-destructive" />
+        <p className="text-destructive">{error.message}</p>
+        <Button variant="outline" onClick={() => refetch()} className="gap-2">
+          <RefreshCw size={14} />
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  const totalEntries = cacheData?.count ?? 0;
+  const completedCount = (cacheData?.items ?? []).filter((e: CacheEntry) => e.status === 'completed').length;
+  const failedCount = (cacheData?.items ?? []).filter((e: CacheEntry) => e.status === 'failed').length;
 
   return (
     <>
@@ -121,11 +143,11 @@ export default function CacheManagerPage() {
                 <Input
                   placeholder="Search by URL..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                   className="pl-9"
                 />
               </div>
-              <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val as StatusFilter)}>
+              <Select value={statusFilter} onValueChange={(val: string) => setStatusFilter(val as StatusFilter)}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
@@ -158,13 +180,12 @@ export default function CacheManagerPage() {
                     <TableHead>URL</TableHead>
                     <TableHead>Job ID</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Source Type</TableHead>
                     <TableHead>Created At</TableHead>
                     <TableHead className="w-24">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredEntries.map((entry) => (
+                  {filteredEntries.map((entry: CacheEntry) => (
                     <TableRow key={entry.url}>
                       <TableCell
                         className="font-mono text-xs max-w-xs"
@@ -172,16 +193,17 @@ export default function CacheManagerPage() {
                       >
                         {truncateUrl(entry.url)}
                       </TableCell>
-                      <TableCell className="font-mono text-xs">{entry.jobId}</TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {entry.job_id ? entry.job_id.substring(0, 12) : '--'}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={getStatusBadgeVariant(entry.status)} className="text-xs">
                           {entry.status}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">{entry.sourceType}</Badge>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {entry.created_at ? formatDateTime(entry.created_at) : '--'}
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{formatDateTime(entry.createdAt)}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           <Button
@@ -189,6 +211,7 @@ export default function CacheManagerPage() {
                             size="icon"
                             className="h-7 w-7 text-primary"
                             onClick={() => setReprocessTarget(entry)}
+                            disabled={reprocessMutation.isPending}
                             title="Reprocess"
                           >
                             <RefreshCw size={14} />
@@ -198,6 +221,7 @@ export default function CacheManagerPage() {
                             size="icon"
                             className="h-7 w-7 text-destructive"
                             onClick={() => setDeleteTarget(entry)}
+                            disabled={deleteMutation.isPending}
                             title="Delete"
                           >
                             <Trash2 size={14} />
@@ -214,7 +238,7 @@ export default function CacheManagerPage() {
       </div>
 
       {/* Delete confirmation */}
-      <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <AlertDialog open={deleteTarget !== null} onOpenChange={(open: boolean) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Cache Entry?</AlertDialogTitle>
@@ -235,7 +259,7 @@ export default function CacheManagerPage() {
       </AlertDialog>
 
       {/* Reprocess confirmation */}
-      <AlertDialog open={reprocessTarget !== null} onOpenChange={(open) => { if (!open) setReprocessTarget(null); }}>
+      <AlertDialog open={reprocessTarget !== null} onOpenChange={(open: boolean) => { if (!open) setReprocessTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Reprocess URL?</AlertDialogTitle>

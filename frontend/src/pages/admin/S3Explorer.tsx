@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,67 +14,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { HardDrive, Trash2, FolderOpen } from 'lucide-react';
+import { HardDrive, Trash2, FolderOpen, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { formatDateTime, formatFileSize } from '@/utils/adminUtils';
-
-// ── Types ──────────────────────────────────────────────────────
-
-interface S3Object {
-  key: string;
-  size: number;
-  lastModified: string;
-  contentType: string;
-}
-
-interface BucketData {
-  bucketName: string;
-  objects: S3Object[];
-  totalFiles: number;
-  totalSize: number;
-}
-
-// ── Mock Data ──────────────────────────────────────────────────
-
-const mockMediaBucket: BucketData = {
-  bucketName: 'triptomat-media',
-  totalFiles: 156,
-  totalSize: 2_415_919_104,
-  objects: [
-    { key: 'uploads/vid-a1b2c3.mp4', size: 45_678_912, lastModified: '2026-03-03T09:15:00Z', contentType: 'video/mp4' },
-    { key: 'uploads/vid-d4e5f6.mp4', size: 89_234_567, lastModified: '2026-03-03T08:42:00Z', contentType: 'video/mp4' },
-    { key: 'uploads/img-g7h8i9.jpg', size: 2_345_678, lastModified: '2026-03-02T18:30:00Z', contentType: 'image/jpeg' },
-    { key: 'uploads/vid-j0k1l2.webm', size: 34_567_890, lastModified: '2026-03-02T14:22:00Z', contentType: 'video/webm' },
-    { key: 'uploads/thumb-m3n4o5.png', size: 456_789, lastModified: '2026-03-01T22:10:00Z', contentType: 'image/png' },
-  ],
-};
-
-const mockEmailBucket: BucketData = {
-  bucketName: 'triptomat-raw-emails',
-  totalFiles: 518,
-  totalSize: 312_456_789,
-  objects: [
-    { key: 'incoming/email-001.eml', size: 145_678, lastModified: '2026-03-03T10:30:00Z', contentType: 'message/rfc822' },
-    { key: 'incoming/email-002.eml', size: 234_567, lastModified: '2026-03-03T09:15:00Z', contentType: 'message/rfc822' },
-    { key: 'incoming/email-003.eml', size: 567_890, lastModified: '2026-03-02T20:45:00Z', contentType: 'message/rfc822' },
-    { key: 'incoming/email-004.eml', size: 89_012, lastModified: '2026-03-02T16:30:00Z', contentType: 'message/rfc822' },
-    { key: 'incoming/email-005.eml', size: 345_678, lastModified: '2026-03-01T11:20:00Z', contentType: 'message/rfc822' },
-  ],
-};
-
+import { useS3Objects, useDeleteS3Objects } from '@/hooks/useAdminQueries';
+import { toast } from '@/hooks/use-toast';
+import type { S3Object, S3ListResponse, S3DeleteResponse } from '@/services/adminService';
 
 // ── Bucket Table Component ─────────────────────────────────────
 
 interface BucketSectionProps {
-  bucket: BucketData;
+  bucketName: string;
+  data: S3ListResponse;
 }
 
-function BucketSection({ bucket }: BucketSectionProps) {
+function BucketSection({ bucketName, data }: BucketSectionProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
+  const deleteMutation = useDeleteS3Objects();
+
   const toggleSelect = (key: string) => {
-    setSelected((prev) => {
+    setSelected((prev: Set<string>) => {
       const next = new Set(prev);
       if (next.has(key)) {
         next.delete(key);
@@ -87,27 +47,48 @@ function BucketSection({ bucket }: BucketSectionProps) {
   };
 
   const toggleSelectAll = () => {
-    if (selected.size === bucket.objects.length) {
+    if (selected.size === data.objects.length) {
       setSelected(new Set());
     } else {
-      setSelected(new Set(bucket.objects.map((o) => o.key)));
+      setSelected(new Set(data.objects.map((o: S3Object) => o.key)));
     }
   };
 
   const handleDelete = () => {
-    // TODO: Replace with real API call to delete the object
-    console.log('Deleting:', deleteTarget);
+    if (!deleteTarget) return;
+    deleteMutation.mutate(
+      { bucket: bucketName, keys: [deleteTarget] },
+      {
+        onSuccess: (result: S3DeleteResponse) => {
+          toast({ title: 'Deleted', description: `Removed ${result.deleted} object(s)` });
+        },
+        onError: (err: Error) => {
+          toast({ title: 'Delete failed', description: err.message, variant: 'destructive' });
+        },
+      },
+    );
     setDeleteTarget(null);
   };
 
   const handleBulkDelete = () => {
-    // TODO: Replace with real API call to bulk delete
-    console.log('Bulk deleting:', Array.from(selected));
-    setSelected(new Set());
+    const keys = Array.from(selected);
+    deleteMutation.mutate(
+      { bucket: bucketName, keys },
+      {
+        onSuccess: (result: S3DeleteResponse) => {
+          toast({ title: 'Deleted', description: `Removed ${result.deleted} object(s)` });
+          setSelected(new Set());
+        },
+        onError: (err: Error) => {
+          toast({ title: 'Bulk delete failed', description: err.message, variant: 'destructive' });
+        },
+      },
+    );
     setBulkDeleteOpen(false);
   };
 
-  const allSelected = bucket.objects.length > 0 && selected.size === bucket.objects.length;
+  const totalSize = data.objects.reduce((sum: number, o: S3Object) => sum + o.size, 0);
+  const allSelected = data.objects.length > 0 && selected.size === data.objects.length;
 
   return (
     <Card>
@@ -115,20 +96,26 @@ function BucketSection({ bucket }: BucketSectionProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
             <FolderOpen size={18} />
-            {bucket.bucketName}
+            {bucketName}
           </CardTitle>
           <div className="flex items-center gap-3">
             <Badge variant="outline" className="text-xs">
-              {bucket.totalFiles} files
+              {data.count} files
             </Badge>
             <Badge variant="outline" className="text-xs">
-              {formatFileSize(bucket.totalSize)}
+              {formatFileSize(totalSize)}
             </Badge>
+            {data.is_truncated && (
+              <Badge variant="secondary" className="text-xs">
+                truncated
+              </Badge>
+            )}
             {selected.size > 0 && (
               <Button
                 variant="destructive"
                 size="sm"
                 onClick={() => setBulkDeleteOpen(true)}
+                disabled={deleteMutation.isPending}
                 className="gap-1"
               >
                 <Trash2 size={14} />
@@ -139,63 +126,66 @@ function BucketSection({ bucket }: BucketSectionProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10">
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={toggleSelectAll}
-                  aria-label="Select all"
-                />
-              </TableHead>
-              <TableHead>Filename</TableHead>
-              <TableHead>Size</TableHead>
-              <TableHead>Last Modified</TableHead>
-              <TableHead>Content Type</TableHead>
-              <TableHead className="w-10"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {bucket.objects.map((obj) => (
-              <TableRow key={obj.key}>
-                <TableCell>
+        {data.objects.length === 0 ? (
+          <p className="text-center py-8 text-muted-foreground">No objects in this bucket.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-10">
                   <Checkbox
-                    checked={selected.has(obj.key)}
-                    onCheckedChange={() => toggleSelect(obj.key)}
-                    aria-label={`Select ${obj.key}`}
+                    checked={allSelected}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all"
                   />
-                </TableCell>
-                <TableCell className="font-mono text-xs">{obj.key}</TableCell>
-                <TableCell className="text-muted-foreground">{formatFileSize(obj.size)}</TableCell>
-                <TableCell className="text-muted-foreground text-sm">{formatDateTime(obj.lastModified)}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary" className="text-xs">{obj.contentType}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-destructive"
-                    onClick={() => setDeleteTarget(obj.key)}
-                    title="Delete"
-                  >
-                    <Trash2 size={14} />
-                  </Button>
-                </TableCell>
+                </TableHead>
+                <TableHead>Filename</TableHead>
+                <TableHead>Size</TableHead>
+                <TableHead>Last Modified</TableHead>
+                <TableHead className="w-10"></TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {data.objects.map((obj: S3Object) => (
+                <TableRow key={obj.key}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selected.has(obj.key)}
+                      onCheckedChange={() => toggleSelect(obj.key)}
+                      aria-label={`Select ${obj.key}`}
+                    />
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">{obj.key}</TableCell>
+                  <TableCell className="text-muted-foreground">{formatFileSize(obj.size)}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {formatDateTime(obj.last_modified)}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive"
+                      onClick={() => setDeleteTarget(obj.key)}
+                      disabled={deleteMutation.isPending}
+                      title="Delete"
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
 
       {/* Single delete confirmation */}
-      <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <AlertDialog open={deleteTarget !== null} onOpenChange={(open: boolean) => { if (!open) setDeleteTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Object?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete <span className="font-mono text-xs">{deleteTarget}</span> from {bucket.bucketName}. This action cannot be undone.
+              This will permanently delete <span className="font-mono text-xs">{deleteTarget}</span> from {bucketName}. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -216,7 +206,7 @@ function BucketSection({ bucket }: BucketSectionProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {selected.size} Objects?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete {selected.size} selected objects from {bucket.bucketName}. This action cannot be undone.
+              This will permanently delete {selected.size} selected objects from {bucketName}. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -237,37 +227,72 @@ function BucketSection({ bucket }: BucketSectionProps) {
 // ── Page Component ─────────────────────────────────────────────
 
 export default function S3ExplorerPage() {
-  // TODO: Replace with real API call
-  const { data: mediaBucket } = useQuery<BucketData>({
-    queryKey: ['admin', 's3-media'],
-    queryFn: async () => mockMediaBucket,
-  });
+  const {
+    data: mediaData,
+    isLoading: mediaLoading,
+    error: mediaError,
+    refetch: refetchMedia,
+  } = useS3Objects('triptomat-media');
 
-  // TODO: Replace with real API call
-  const { data: emailBucket } = useQuery<BucketData>({
-    queryKey: ['admin', 's3-emails'],
-    queryFn: async () => mockEmailBucket,
-  });
+  const {
+    data: emailData,
+    isLoading: emailLoading,
+    error: emailError,
+    refetch: refetchEmail,
+  } = useS3Objects('triptomat-raw-emails');
 
-  const totalFiles = (mediaBucket?.totalFiles ?? 0) + (emailBucket?.totalFiles ?? 0);
-  const totalSize = (mediaBucket?.totalSize ?? 0) + (emailBucket?.totalSize ?? 0);
+  const isLoading = mediaLoading || emailLoading;
+  const error = mediaError || emailError;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <AlertTriangle className="h-8 w-8 text-destructive" />
+        <p className="text-destructive">{error.message}</p>
+        <Button
+          variant="outline"
+          onClick={() => {
+            refetchMedia();
+            refetchEmail();
+          }}
+          className="gap-2"
+        >
+          <RefreshCw size={14} />
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  const totalFiles = (mediaData?.count ?? 0) + (emailData?.count ?? 0);
+  const totalSize =
+    (mediaData?.objects ?? []).reduce((sum: number, o: S3Object) => sum + o.size, 0) +
+    (emailData?.objects ?? []).reduce((sum: number, o: S3Object) => sum + o.size, 0);
 
   return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-foreground">S3 Explorer</h2>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <HardDrive size={16} />
-              <span>{totalFiles} total files</span>
-              <span className="text-border">|</span>
-              <span>{formatFileSize(totalSize)} total</span>
-            </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-foreground">S3 Explorer</h2>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <HardDrive size={16} />
+            <span>{totalFiles} total files</span>
+            <span className="text-border">|</span>
+            <span>{formatFileSize(totalSize)} total</span>
           </div>
         </div>
-
-        {mediaBucket && <BucketSection bucket={mediaBucket} />}
-        {emailBucket && <BucketSection bucket={emailBucket} />}
       </div>
+
+      {mediaData && <BucketSection bucketName="triptomat-media" data={mediaData} />}
+      {emailData && <BucketSection bucketName="triptomat-raw-emails" data={emailData} />}
+    </div>
   );
 }

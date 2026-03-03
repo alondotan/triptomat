@@ -1,100 +1,116 @@
-import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Inbox, Activity, Cpu, AlertTriangle, Clock } from 'lucide-react';
-import { formatDateTime } from '@/utils/adminUtils';
-
-// ── Types ──────────────────────────────────────────────────────
-
-interface QueueStatus {
-  name: string;
-  depth: number;
-  dlqDepth: number;
-}
-
-type JobStatus = 'completed' | 'processing' | 'failed' | 'queued';
-
-interface PipelineJob {
-  jobId: string;
-  sourceType: string;
-  status: JobStatus;
-  duration: string;
-  createdAt: string;
-}
-
-interface LambdaStats {
-  functionName: string;
-  invocations: number;
-  errors: number;
-  avgDuration: string;
-}
-
-// ── Mock Data ──────────────────────────────────────────────────
-
-const mockQueues: QueueStatus[] = [
-  { name: 'triptomat-download-queue', depth: 3, dlqDepth: 0 },
-  { name: 'triptomat-analysis-queue', depth: 7, dlqDepth: 1 },
-];
-
-const mockJobs: PipelineJob[] = [
-  { jobId: 'job-a1b2c3', sourceType: 'video', status: 'completed', duration: '45s', createdAt: '2026-03-03T10:30:00Z' },
-  { jobId: 'job-d4e5f6', sourceType: 'web', status: 'processing', duration: '12s', createdAt: '2026-03-03T10:28:00Z' },
-  { jobId: 'job-g7h8i9', sourceType: 'video', status: 'completed', duration: '1m 23s', createdAt: '2026-03-03T10:15:00Z' },
-  { jobId: 'job-j0k1l2', sourceType: 'email', status: 'failed', duration: '5s', createdAt: '2026-03-03T10:12:00Z' },
-  { jobId: 'job-m3n4o5', sourceType: 'maps', status: 'completed', duration: '8s', createdAt: '2026-03-03T10:05:00Z' },
-  { jobId: 'job-p6q7r8', sourceType: 'text', status: 'queued', duration: '-', createdAt: '2026-03-03T10:02:00Z' },
-  { jobId: 'job-s9t0u1', sourceType: 'video', status: 'completed', duration: '52s', createdAt: '2026-03-03T09:55:00Z' },
-  { jobId: 'job-v2w3x4', sourceType: 'web', status: 'completed', duration: '15s', createdAt: '2026-03-03T09:48:00Z' },
-];
-
-const mockLambdaStats: LambdaStats[] = [
-  { functionName: 'triptomat-gateway', invocations: 1_245, errors: 2, avgDuration: '120ms' },
-  { functionName: 'triptomat-downloader', invocations: 312, errors: 5, avgDuration: '28s' },
-  { functionName: 'triptomat-worker', invocations: 467, errors: 8, avgDuration: '14s' },
-  { functionName: 'triptomat-mail-handler', invocations: 89, errors: 1, avgDuration: '3.2s' },
-];
+import { Inbox, Activity, Cpu, AlertTriangle, Clock, Loader2, RefreshCw } from 'lucide-react';
+import { useCloudWatchMetrics, useCacheEntries } from '@/hooks/useAdminQueries';
+import type { LambdaFunctionMetrics, SqsQueueMetrics, CacheEntry } from '@/services/adminService';
 
 // ── Helpers ────────────────────────────────────────────────────
 
-function getStatusBadgeVariant(status: JobStatus): 'default' | 'secondary' | 'destructive' | 'outline' {
+type CacheStatus = 'processing' | 'completed' | 'failed';
+
+function getStatusBadgeVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
     case 'completed': return 'default';
     case 'processing': return 'secondary';
     case 'failed': return 'destructive';
-    case 'queued': return 'outline';
+    default: return 'outline';
   }
 }
 
+function formatDuration(createdAt: string): string {
+  const created = new Date(createdAt);
+  const now = new Date();
+  const diffMs = now.getTime() - created.getTime();
+  if (diffMs < 60_000) return `${Math.round(diffMs / 1000)}s ago`;
+  if (diffMs < 3_600_000) return `${Math.round(diffMs / 60_000)}m ago`;
+  return `${Math.round(diffMs / 3_600_000)}h ago`;
+}
 
 // ── Component ──────────────────────────────────────────────────
 
 export default function PipelinePage() {
-  // TODO: Replace with real API call
-  const { data: queues } = useQuery<QueueStatus[]>({
-    queryKey: ['admin', 'queue-status'],
-    queryFn: async () => mockQueues,
-  });
+  const {
+    data: metrics,
+    isLoading: metricsLoading,
+    error: metricsError,
+    refetch: refetchMetrics,
+  } = useCloudWatchMetrics('24h');
 
-  // TODO: Replace with real API call
-  const { data: jobs } = useQuery<PipelineJob[]>({
-    queryKey: ['admin', 'pipeline-jobs'],
-    queryFn: async () => mockJobs,
-  });
+  const {
+    data: cacheData,
+    isLoading: cacheLoading,
+    error: cacheError,
+    refetch: refetchCache,
+  } = useCacheEntries(undefined, 20);
 
-  // TODO: Replace with real API call
-  const { data: lambdaStats } = useQuery<LambdaStats[]>({
-    queryKey: ['admin', 'lambda-stats'],
-    queryFn: async () => mockLambdaStats,
-  });
+  const isLoading = metricsLoading || cacheLoading;
+  const error = metricsError || cacheError;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <AlertTriangle className="h-8 w-8 text-destructive" />
+        <p className="text-destructive">{error.message}</p>
+        <Button
+          variant="outline"
+          onClick={() => {
+            refetchMetrics();
+            refetchCache();
+          }}
+          className="gap-2"
+        >
+          <RefreshCw size={14} />
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  // SQS queue data
+  const sqsEntries = metrics
+    ? (Object.entries(metrics.sqs) as [string, SqsQueueMetrics][]).map(([name, q]) => ({
+        name,
+        depth: q.approximate_queue_depth ?? 0,
+        sent: q.messages_sent ?? 0,
+        received: q.messages_received ?? 0,
+      }))
+    : [];
+
+  // Lambda stats
+  const lambdaStats = metrics
+    ? (Object.entries(metrics.lambda) as [string, LambdaFunctionMetrics][]).map(([name, m]) => ({
+        functionName: name,
+        invocations: m.invocations?.total ?? 0,
+        errors: m.errors?.total ?? 0,
+      }))
+    : [];
+
+  // Recent jobs from cache entries
+  const recentJobs: (CacheEntry & { displayStatus: CacheStatus })[] = (cacheData?.items ?? []).map((item: CacheEntry) => ({
+    ...item,
+    displayStatus: (['completed', 'processing', 'failed'].includes(item.status)
+      ? item.status
+      : 'processing') as CacheStatus,
+  }));
 
   return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-foreground">Pipeline</h2>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-foreground">Pipeline</h2>
 
-        {/* SQS Queue Status Cards */}
+      {/* SQS Queue Status Cards */}
+      {sqsEntries.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2">
-          {(queues ?? []).map((queue) => (
+          {sqsEntries.map((queue) => (
             <Card key={queue.name}>
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
@@ -105,14 +121,22 @@ export default function PipelinePage() {
                     <p className="text-sm text-muted-foreground truncate">{queue.name}</p>
                     <div className="flex items-center gap-4 mt-1">
                       <div>
-                        <p className="text-2xl font-bold text-foreground">{queue.depth}</p>
-                        <p className="text-xs text-muted-foreground">Messages</p>
+                        <p className="text-2xl font-bold text-foreground">
+                          {Math.round(queue.depth)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Queue Depth</p>
                       </div>
                       <div>
-                        <p className={`text-2xl font-bold ${queue.dlqDepth > 0 ? 'text-destructive' : 'text-foreground'}`}>
-                          {queue.dlqDepth}
+                        <p className="text-2xl font-bold text-foreground">
+                          {Math.round(queue.sent)}
                         </p>
-                        <p className="text-xs text-muted-foreground">DLQ</p>
+                        <p className="text-xs text-muted-foreground">Sent (24h)</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-foreground">
+                          {Math.round(queue.received)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Received (24h)</p>
                       </div>
                     </div>
                   </div>
@@ -121,61 +145,72 @@ export default function PipelinePage() {
             </Card>
           ))}
         </div>
+      )}
 
-        {/* Recent Jobs Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Activity size={18} />
-              Recent Jobs
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      {/* Recent Jobs Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Activity size={18} />
+            Recent Jobs
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {recentJobs.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">No recent jobs found.</p>
+          ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Job ID</TableHead>
-                  <TableHead>Source Type</TableHead>
+                  <TableHead>URL</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Created At</TableHead>
+                  <TableHead>Created</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(jobs ?? []).map((job) => (
-                  <TableRow key={job.jobId}>
-                    <TableCell className="font-mono text-xs">{job.jobId}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs">{job.sourceType}</Badge>
+                {recentJobs.map((job) => (
+                  <TableRow key={job.url}>
+                    <TableCell className="font-mono text-xs">
+                      {job.job_id ? job.job_id.substring(0, 12) : '--'}
+                    </TableCell>
+                    <TableCell
+                      className="font-mono text-xs max-w-xs truncate"
+                      title={job.url}
+                    >
+                      {job.url.length > 50 ? job.url.substring(0, 50) + '...' : job.url}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadgeVariant(job.status)} className="text-xs">
-                        {job.status}
+                      <Badge variant={getStatusBadgeVariant(job.displayStatus)} className="text-xs">
+                        {job.displayStatus}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="text-muted-foreground text-sm">
                       <span className="flex items-center gap-1">
                         <Clock size={13} />
-                        {job.duration}
+                        {job.created_at ? formatDuration(job.created_at) : '--'}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{formatDateTime(job.createdAt)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
+          )}
+        </CardContent>
+      </Card>
 
-        {/* Lambda Invocation Stats */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Cpu size={18} />
-              Lambda Invocation Stats (24h)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      {/* Lambda Invocation Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Cpu size={18} />
+            Lambda Invocation Stats (24h)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {lambdaStats.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">No Lambda metrics available.</p>
+          ) : (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -183,35 +218,42 @@ export default function PipelinePage() {
                   <TableHead>Invocations</TableHead>
                   <TableHead>Errors</TableHead>
                   <TableHead>Error Rate</TableHead>
-                  <TableHead>Avg Duration</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(lambdaStats ?? []).map((fn) => {
-                  const errorRate = fn.invocations > 0 ? ((fn.errors / fn.invocations) * 100).toFixed(2) : '0.00';
+                {lambdaStats.map((fn) => {
+                  const errorRate = fn.invocations > 0
+                    ? ((fn.errors / fn.invocations) * 100).toFixed(2)
+                    : '0.00';
                   const hasErrors = fn.errors > 0;
 
                   return (
                     <TableRow key={fn.functionName}>
                       <TableCell className="font-mono text-xs">{fn.functionName}</TableCell>
-                      <TableCell className="font-medium">{fn.invocations.toLocaleString()}</TableCell>
+                      <TableCell className="font-medium">
+                        {fn.invocations.toLocaleString()}
+                      </TableCell>
                       <TableCell>
-                        <span className={`flex items-center gap-1 ${hasErrors ? 'text-destructive' : 'text-muted-foreground'}`}>
+                        <span
+                          className={`flex items-center gap-1 ${hasErrors ? 'text-destructive' : 'text-muted-foreground'}`}
+                        >
                           {hasErrors && <AlertTriangle size={13} />}
                           {fn.errors}
                         </span>
                       </TableCell>
-                      <TableCell className={hasErrors ? 'text-destructive' : 'text-muted-foreground'}>
+                      <TableCell
+                        className={hasErrors ? 'text-destructive' : 'text-muted-foreground'}
+                      >
                         {errorRate}%
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{fn.avgDuration}</TableCell>
                     </TableRow>
                   );
                 })}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
