@@ -135,6 +135,13 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    proxy: {
+      '/admin': {
+        target: 'https://9hhwxodv7a.execute-api.eu-central-1.amazonaws.com',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
   plugins: [
     syncConfig(),

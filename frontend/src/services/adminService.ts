@@ -6,7 +6,9 @@
  *   VITE_ADMIN_API_TOKEN — Bearer token for admin authentication
  */
 
-const ADMIN_API_URL = import.meta.env.VITE_ADMIN_API_URL || '';
+// In dev mode, the Vite proxy handles /admin/* → API Gateway, so use relative paths.
+// In production, use the full API Gateway URL from env.
+const ADMIN_API_URL = import.meta.env.DEV ? '' : (import.meta.env.VITE_ADMIN_API_URL || '');
 const ADMIN_API_TOKEN = import.meta.env.VITE_ADMIN_API_TOKEN || '';
 
 // ---------------------------------------------------------------------------
