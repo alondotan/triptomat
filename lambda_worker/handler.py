@@ -7,6 +7,9 @@ Required env vars:
   MAP_GOOGLE_API_KEY  — Google Maps API key for geocoding
   WEBHOOK_URL         — Supabase recommendation webhook URL
   WEBHOOK_TOKEN       — Default webhook auth token (overridden per-request)
+
+Optional env vars:
+  OTEL_ENABLED        — "true" to enable OpenTelemetry tracing/metrics
 """
 
 import json
@@ -24,7 +27,35 @@ from core.prompts import build_main_prompt
 from core.scrapers import MapsService
 from core.schemas import AnalysisMessage
 from core.webhook import send_to_webhook
+from core.telemetry import (
+    init_telemetry, get_tracer, get_meter,
+    safe_span, record_counter, record_histogram, time_ms,
+    flush_telemetry, record_span_error,
+)
 
+# ── Telemetry setup ─────────────────────────────────────────────────────────
+init_telemetry("triptomat-worker")
+tracer = get_tracer(__name__)
+meter = get_meter(__name__)
+
+analyses_counter = meter.create_counter(
+    "triptomat.worker.analyses",
+    description="Total analysis jobs",
+)
+analysis_duration_hist = meter.create_histogram(
+    "triptomat.worker.analysis_duration_ms",
+    description="AI analysis duration in milliseconds",
+)
+geocoding_counter = meter.create_counter(
+    "triptomat.worker.geocoding_calls",
+    description="Total geocoding enrichment calls",
+)
+webhook_counter = meter.create_counter(
+    "triptomat.worker.webhook_deliveries",
+    description="Webhook delivery attempts",
+)
+
+# ── AWS clients & config ────────────────────────────────────────────────────
 s3 = boto3.client("s3")
 dynamodb = boto3.resource("dynamodb")
 
@@ -54,109 +85,161 @@ def _to_decimal(obj):
 
 def lambda_handler(event, context):
     """SQS-triggered handler. Runs AI analysis, geocoding, webhook, and caches result."""
-    for record in event["Records"]:
-        raw = json.loads(record["body"])
+    try:
+        for record in event["Records"]:
+            raw = json.loads(record["body"])
 
-        try:
-            msg = AnalysisMessage.model_validate(raw)
-        except ValidationError as e:
-            print(f"Invalid SQS message: {e}")
-            raise
+            try:
+                msg = AnalysisMessage.model_validate(raw)
+            except ValidationError as e:
+                print(f"Invalid SQS message: {e}")
+                raise
 
-        job_id = msg.job_id
-        url = msg.url
-        source_type = msg.source_type
-        source_metadata = msg.source_metadata
-        webhook_token = msg.webhook_token or ""
+            job_id = msg.job_id
+            url = msg.url
+            source_type = msg.source_type
+            source_metadata = msg.source_metadata
+            webhook_token = msg.webhook_token or ""
 
-        print(f"Analyzing job {job_id} ({source_type}): {url}")
+            with safe_span(tracer, "worker.handle_message", {
+                "worker.job_id": job_id,
+                "worker.source_type": source_type,
+            }) as root_span:
+                print(f"Analyzing job {job_id} ({source_type}): {url}")
 
-        try:
-            response_json = None
-            manual_lat, manual_lng = None, None
+                try:
+                    response_json = None
+                    manual_lat, manual_lng = None, None
 
-            if source_type == "video":
-                s3_key = msg.s3_key
-                video_path = f"/tmp/{job_id}.mp4"
-                s3.download_file(S3_BUCKET, s3_key, video_path)
+                    # ── AI Analysis ─────────────────────────────────────────
+                    with safe_span(tracer, "worker.ai_analysis", {
+                        "ai.source_type": source_type,
+                        "ai.model_name": "gemini",
+                    }) as ai_span:
+                        ai_start = time_ms()
 
-                response_text = gemini.analyze_video(video_path, main_prompt)
-                response_json = json.loads(response_text)
-                os.remove(video_path)
+                        if source_type == "video":
+                            s3_key = msg.s3_key
+                            video_path = f"/tmp/{job_id}.mp4"
+                            s3.download_file(S3_BUCKET, s3_key, video_path)
 
-            elif source_type == "maps":
-                final_url = msg.final_url or url
-                manual_lat = msg.manual_lat
-                manual_lng = msg.manual_lng
+                            response_text = gemini.analyze_video(video_path, main_prompt)
+                            response_json = json.loads(response_text)
+                            os.remove(video_path)
 
-                if manual_lat and manual_lng:
-                    actual_address = maps.get_address_from_coords(manual_lat, manual_lng)
-                    prompt = f"Identify this place. URL: {final_url}\nAddress: {actual_address}\n\n{main_prompt}"
-                else:
-                    prompt = f"Identify this place from the URL: {final_url}\n\n{main_prompt}"
+                        elif source_type == "maps":
+                            final_url = msg.final_url or url
+                            manual_lat = msg.manual_lat
+                            manual_lng = msg.manual_lng
 
-                response_text = gemini.analyze_text(prompt)
-                response_json = json.loads(response_text)
+                            if manual_lat and manual_lng:
+                                actual_address = maps.get_address_from_coords(manual_lat, manual_lng)
+                                prompt = f"Identify this place. URL: {final_url}\nAddress: {actual_address}\n\n{main_prompt}"
+                            else:
+                                prompt = f"Identify this place from the URL: {final_url}\n\n{main_prompt}"
 
-                if response_json.get("recommendations"):
-                    place_name = response_json["recommendations"][0].get("name", "Google Maps Location")
-                    source_metadata["title"] = place_name
-                    if manual_lat and manual_lng:
-                        source_metadata["image"] = maps.get_google_maps_image(manual_lat, manual_lng, place_name)
+                            response_text = gemini.analyze_text(prompt)
+                            response_json = json.loads(response_text)
 
-            elif source_type == "web":
-                text = msg.text or ""
-                if text:
-                    prompt = f"Analyze this text and extract locations:\n{text}\n\n{main_prompt}"
-                    response_text = gemini.analyze_text(prompt)
-                    response_json = json.loads(response_text)
+                            if response_json.get("recommendations"):
+                                place_name = response_json["recommendations"][0].get("name", "Google Maps Location")
+                                source_metadata["title"] = place_name
+                                if manual_lat and manual_lng:
+                                    source_metadata["image"] = maps.get_google_maps_image(manual_lat, manual_lng, place_name)
 
-            if response_json:
-                enriched_data = enrich_analysis_data(
-                    response_json, maps.get_location_details, manual_lat, manual_lng
-                )
+                        elif source_type == "web":
+                            text = msg.text or ""
+                            if text:
+                                prompt = f"Analyze this text and extract locations:\n{text}\n\n{main_prompt}"
+                                response_text = gemini.analyze_text(prompt)
+                                response_json = json.loads(response_text)
 
-                # If no source image yet, try to get one from the first recommendation's coordinates
-                if not source_metadata.get("image"):
-                    recs = enriched_data.get("recommendations", [])
-                    if recs:
-                        first = recs[0]
-                        coords = first.get("location", {}).get("coordinates", {})
-                        lat, lng = coords.get("lat"), coords.get("lng")
-                        name = first.get("name", "")
-                        if lat and lng and name:
-                            source_metadata["image"] = maps.get_google_maps_image(lat, lng, name)
+                        ai_duration = time_ms() - ai_start
+                        record_histogram(analysis_duration_hist, ai_duration, {"source_type": source_type})
 
-                send_to_webhook(enriched_data, url, source_metadata, webhook_token=webhook_token or None)
+                    if response_json:
+                        # ── Geocoding ────────────────────────────────────────
+                        with safe_span(tracer, "worker.geocoding") as geo_span:
+                            enriched_data = enrich_analysis_data(
+                                response_json, maps.get_location_details, manual_lat, manual_lng
+                            )
+                            location_count = len(enriched_data.get("recommendations", []))
+                            if geo_span:
+                                try:
+                                    geo_span.set_attribute("geocoding.location_count", location_count)
+                                except Exception:
+                                    pass
+                            record_counter(geocoding_counter)
 
-                # Cache result in DynamoDB
-                table.put_item(Item={
-                    "url": url,
-                    "job_id": job_id,
-                    "status": "completed",
-                    "result": _to_decimal(enriched_data),
-                    "source_metadata": source_metadata,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                })
-                print(f"Job {job_id}: completed and cached")
-            else:
-                table.put_item(Item={
-                    "url": url,
-                    "job_id": job_id,
-                    "status": "completed",
-                    "result": {},
-                    "source_metadata": source_metadata,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                })
-                print(f"Job {job_id}: no recommendations found")
+                        # If no source image yet, try to get one from the first recommendation's coordinates
+                        if not source_metadata.get("image"):
+                            recs = enriched_data.get("recommendations", [])
+                            if recs:
+                                first = recs[0]
+                                coords = first.get("location", {}).get("coordinates", {})
+                                lat, lng = coords.get("lat"), coords.get("lng")
+                                name = first.get("name", "")
+                                if lat and lng and name:
+                                    source_metadata["image"] = maps.get_google_maps_image(lat, lng, name)
 
-        except Exception as e:
-            print(f"Job {job_id} failed: {e}")
-            table.put_item(Item={
-                "url": url,
-                "job_id": job_id,
-                "status": "failed",
-                "error": str(e),
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            })
-            raise
+                        # ── Webhook ──────────────────────────────────────────
+                        webhook_url_masked = os.environ.get("WEBHOOK_URL", "")[:30] + "..."
+                        with safe_span(tracer, "worker.webhook_send", {
+                            "webhook.url_masked": webhook_url_masked,
+                        }) as wh_span:
+                            result = send_to_webhook(enriched_data, url, source_metadata, webhook_token=webhook_token or None)
+                            status_label = "success" if result else "failure"
+                            if wh_span:
+                                try:
+                                    wh_span.set_attribute("webhook.status", status_label)
+                                except Exception:
+                                    pass
+                            record_counter(webhook_counter, attributes={"status": status_label})
+
+                        # ── Cache write ──────────────────────────────────────
+                        with safe_span(tracer, "worker.cache_write", {
+                            "cache.url": url[:200],
+                            "cache.status": "completed",
+                        }):
+                            table.put_item(Item={
+                                "url": url,
+                                "job_id": job_id,
+                                "status": "completed",
+                                "result": _to_decimal(enriched_data),
+                                "source_metadata": source_metadata,
+                                "created_at": datetime.now(timezone.utc).isoformat(),
+                            })
+                        print(f"Job {job_id}: completed and cached")
+                        record_counter(analyses_counter, attributes={"source_type": source_type, "status": "success"})
+
+                    else:
+                        with safe_span(tracer, "worker.cache_write", {
+                            "cache.url": url[:200],
+                            "cache.status": "completed_empty",
+                        }):
+                            table.put_item(Item={
+                                "url": url,
+                                "job_id": job_id,
+                                "status": "completed",
+                                "result": {},
+                                "source_metadata": source_metadata,
+                                "created_at": datetime.now(timezone.utc).isoformat(),
+                            })
+                        print(f"Job {job_id}: no recommendations found")
+                        record_counter(analyses_counter, attributes={"source_type": source_type, "status": "empty"})
+
+                except Exception as e:
+                    print(f"Job {job_id} failed: {e}")
+                    record_counter(analyses_counter, attributes={"source_type": source_type, "status": "failure"})
+                    if root_span:
+                        record_span_error(root_span, e)
+                    table.put_item(Item={
+                        "url": url,
+                        "job_id": job_id,
+                        "status": "failed",
+                        "error": str(e),
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                    })
+                    raise
+    finally:
+        flush_telemetry()

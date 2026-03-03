@@ -5,6 +5,9 @@ Required env vars:
   SUPABASE_URL        — Supabase project URL (for user lookup)
   SUPABASE_SERVICE_KEY — Supabase service-role key
   OPENAI_API_KEY      — OpenAI API key for email analysis
+
+Optional env vars:
+  OTEL_ENABLED        — "true" to enable OpenTelemetry tracing/metrics
 """
 
 import json
@@ -21,7 +24,31 @@ from email.policy import default
 from email.utils import parseaddr
 
 from core.config import load_config
+from core.telemetry import (
+    init_telemetry, get_tracer, get_meter,
+    safe_span, record_counter, record_histogram, time_ms,
+    flush_telemetry, record_span_error,
+)
 
+# ── Telemetry setup ─────────────────────────────────────────────────────────
+init_telemetry("triptomat-mail-handler")
+tracer = get_tracer(__name__)
+meter = get_meter(__name__)
+
+emails_counter = meter.create_counter(
+    "triptomat.mail_handler.emails_processed",
+    description="Total emails processed",
+)
+parse_duration_hist = meter.create_histogram(
+    "triptomat.mail_handler.parse_duration_ms",
+    description="Email parsing duration in milliseconds",
+)
+ai_analysis_duration_hist = meter.create_histogram(
+    "triptomat.mail_handler.ai_analysis_duration_ms",
+    description="OpenAI analysis duration in milliseconds",
+)
+
+# ── AWS clients & config ────────────────────────────────────────────────────
 s3_client = boto3.client('s3')
 
 ALLOWED_TYPES, GEO_ONLY_TYPES = load_config()
@@ -31,59 +58,149 @@ SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
 
 
+def _mask_email(email: str) -> str:
+    """Mask email for safe inclusion in span attributes: 'a***@domain.com'."""
+    try:
+        local, domain = email.split("@", 1)
+        return f"{local[0]}***@{domain}" if local else f"***@{domain}"
+    except Exception:
+        return "***"
+
+
 def lambda_handler(event, context):
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'])
 
     try:
-        response = s3_client.get_object(Bucket=bucket, Key=key)
-        raw_email = response['Body'].read().decode('utf-8')
-        msg = message_from_string(raw_email, policy=default)
+        with safe_span(tracer, "mail_handler.handle_email", {
+            "mail.message_id": key[:100],
+            "s3.bucket": bucket,
+            "s3.key": key[:200],
+        }) as root_span:
+            try:
+                # ── Read raw email from S3 ──────────────────────────────────
+                with safe_span(tracer, "mail_handler.s3_read", {
+                    "s3.bucket": bucket,
+                    "s3.key": key[:200],
+                }) as s3_span:
+                    response = s3_client.get_object(Bucket=bucket, Key=key)
+                    raw_email = response['Body'].read().decode('utf-8')
+                    size_bytes = len(raw_email.encode('utf-8'))
+                    if s3_span:
+                        try:
+                            s3_span.set_attribute("s3.size_bytes", size_bytes)
+                        except Exception:
+                            pass
 
-        html_content = ""
-        if msg.is_multipart():
-            for part in msg.walk():
-                if part.get_content_type() == "text/html":
-                    html_content = part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8')
-                    break
-        else:
-            html_content = msg.get_payload(decode=True).decode(msg.get_content_charset() or 'utf-8')
+                # ── Parse email ─────────────────────────────────────────────
+                with safe_span(tracer, "mail_handler.email_parse") as parse_span:
+                    parse_start = time_ms()
+                    msg = message_from_string(raw_email, policy=default)
 
-        plain_text = _get_plain_text(msg)
-        fwd_headers = _extract_forwarded_headers(plain_text)
-        _, user_email = parseaddr(msg['from'])
+                    html_content = ""
+                    has_html = False
+                    has_plain = False
+                    if msg.is_multipart():
+                        for part in msg.walk():
+                            if part.get_content_type() == "text/html":
+                                html_content = part.get_payload(decode=True).decode(part.get_content_charset() or 'utf-8')
+                                has_html = True
+                                break
+                    else:
+                        html_content = msg.get_payload(decode=True).decode(msg.get_content_charset() or 'utf-8')
+                        if msg.get_content_type() == "text/html":
+                            has_html = True
 
-        token = get_webhook_token_for_email(user_email)
-        if not token:
-            print(f"No webhook token found for {user_email} — skipping")
-            return {'statusCode': 200, 'body': json.dumps('No user found, skipped')}
+                    plain_text = _get_plain_text(msg)
+                    has_plain = bool(plain_text)
+                    fwd_headers = _extract_forwarded_headers(plain_text)
+                    _, user_email = parseaddr(msg['from'])
 
-        clean_html = clean_html_for_ai(html_content)
-        travel_data = call_openai(clean_html, ALLOWED_TYPES, GEO_ONLY_TYPES)
+                    subject = msg.get('subject', '') or ''
+                    parse_duration = time_ms() - parse_start
+                    record_histogram(parse_duration_hist, parse_duration)
 
-        if travel_data:
-            travel_data["source_email_info"] = {
-                "subject": fwd_headers.get("subject", msg['subject']),
-                "sender": fwd_headers.get("from", msg['from']),
-                "date_sent": fwd_headers.get("date", msg['date']),
-            }
-            travel_data["user_email"] = user_email
+                    if parse_span:
+                        try:
+                            parse_span.set_attribute("email.has_html", has_html)
+                            parse_span.set_attribute("email.has_plain", has_plain)
+                            parse_span.set_attribute("email.subject", subject[:80])
+                        except Exception:
+                            pass
 
-            payload = travel_data
-            payload["input_type"] = "email"
-            payload["recommendation_id"] = str(uuid.uuid4())
-            payload["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
-            payload["source_url"] = f"s3://{bucket}/{key}"
+                # ── User lookup ─────────────────────────────────────────────
+                with safe_span(tracer, "mail_handler.user_lookup", {
+                    "user.email_masked": _mask_email(user_email),
+                }) as lookup_span:
+                    token = get_webhook_token_for_email(user_email)
+                    found = token is not None
+                    if lookup_span:
+                        try:
+                            lookup_span.set_attribute("user.found", found)
+                        except Exception:
+                            pass
 
-            print(json.dumps(payload, indent=2, ensure_ascii=False))
-            if WEBHOOK_URL:
-                send_to_webhook(payload, WEBHOOK_URL, token)
+                if not token:
+                    print(f"No webhook token found for {user_email} — skipping")
+                    record_counter(emails_counter, attributes={"status": "skipped"})
+                    return {'statusCode': 200, 'body': json.dumps('No user found, skipped')}
 
-        return {'statusCode': 200, 'body': json.dumps('Processed and Sent')}
+                # ── AI analysis ─────────────────────────────────────────────
+                clean_html = clean_html_for_ai(html_content)
 
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        raise e
+                with safe_span(tracer, "mail_handler.openai_analysis", {
+                    "ai.model_name": "gpt-4o-mini",
+                }) as ai_span:
+                    ai_start = time_ms()
+                    travel_data = call_openai(clean_html, ALLOWED_TYPES, GEO_ONLY_TYPES)
+                    ai_duration = time_ms() - ai_start
+                    record_histogram(ai_analysis_duration_hist, ai_duration)
+
+                if travel_data:
+                    travel_data["source_email_info"] = {
+                        "subject": fwd_headers.get("subject", msg['subject']),
+                        "sender": fwd_headers.get("from", msg['from']),
+                        "date_sent": fwd_headers.get("date", msg['date']),
+                    }
+                    travel_data["user_email"] = user_email
+
+                    payload = travel_data
+                    payload["input_type"] = "email"
+                    payload["recommendation_id"] = str(uuid.uuid4())
+                    payload["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+                    payload["source_url"] = f"s3://{bucket}/{key}"
+
+                    print(json.dumps(payload, indent=2, ensure_ascii=False))
+
+                    # ── Webhook send ────────────────────────────────────────
+                    if WEBHOOK_URL:
+                        with safe_span(tracer, "mail_handler.webhook_send") as wh_span:
+                            try:
+                                send_to_webhook(payload, WEBHOOK_URL, token)
+                                if wh_span:
+                                    try:
+                                        wh_span.set_attribute("webhook.status", "success")
+                                    except Exception:
+                                        pass
+                            except Exception as wh_exc:
+                                if wh_span:
+                                    try:
+                                        wh_span.set_attribute("webhook.status", "failure")
+                                    except Exception:
+                                        pass
+                                print(f"Webhook delivery failed: {wh_exc}")
+
+                record_counter(emails_counter, attributes={"status": "success"})
+                return {'statusCode': 200, 'body': json.dumps('Processed and Sent')}
+
+            except Exception as e:
+                print(f"Error: {str(e)}")
+                record_counter(emails_counter, attributes={"status": "failure"})
+                if root_span:
+                    record_span_error(root_span, e)
+                raise e
+    finally:
+        flush_telemetry()
 
 
 def _get_plain_text(msg):
@@ -168,7 +285,7 @@ def call_openai(html_text, allowed_types, geo_types):
             - Set `false` if payment is deferred (e.g., hotel with "pay at hotel", "pay on arrival", "free cancellation", "payment due at check-in", Booking.com-style reservations without prepayment).
             - Default: `true` for transportation (flights/trains/ferries usually require upfront payment), `false` for accommodation and eateries.
             12. Free Cancellation Deadline (`free_cancellation_until` in accommodation_details):
-            - If the email mentions a free-cancellation cutoff (e.g., "free cancellation until March 5", "cancel by 18:00 on Apr 2 for no charge", "מבוטל בחינם עד..."), set `free_cancellation_until` to that datetime in ISO 8601 format (YYYY-MM-DDTHH:mm:ss).
+            - If the email mentions a free-cancellation cutoff (e.g., "free cancellation until March 5", "cancel by 18:00 on Apr 2 for no charge", "cancel by..."), set `free_cancellation_until` to that datetime in ISO 8601 format (YYYY-MM-DDTHH:mm:ss).
             - If no time is mentioned, use T00:00:00.
             - If no free-cancellation deadline exists, set to null.
             12. The sites_hierarchy (Nested Structure):
