@@ -24,6 +24,7 @@ export const adminKeys = {
   emails: (status?: string) => ['admin', 'emails', status ?? 'all'] as const,
   emailRaw: (emailId: string) => ['admin', 'emails', emailId, 'raw'] as const,
   emailStats: ['admin', 'emails', 'stats'] as const,
+  costs: (period: string) => ['admin', 'costs', period] as const,
 };
 
 // ---------------------------------------------------------------------------
@@ -110,6 +111,15 @@ export function useEmailStats() {
     queryKey: adminKeys.emailStats,
     queryFn: adminService.getEmailStats,
     refetchInterval: 60_000,
+  });
+}
+
+/** Cost estimation data for a given period. Refreshes every 5 min. */
+export function useCosts(period: string = '30d') {
+  return useQuery({
+    queryKey: adminKeys.costs(period),
+    queryFn: () => adminService.getCosts(period),
+    refetchInterval: 300_000, // refresh every 5 min
   });
 }
 

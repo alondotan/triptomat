@@ -218,6 +218,37 @@ export interface EmailStats {
   avg_entities_per_email: number;
 }
 
+/** GET /admin/costs — usage counts */
+export interface CostUsage {
+  video_analyses: number;
+  text_analyses: number;
+  maps_analyses: number;
+  web_analyses: number;
+  email_analyses: number;
+  lambda_invocations: Record<string, number>;
+  s3_storage_gb: number;
+}
+
+/** GET /admin/costs — estimated costs breakdown */
+export interface EstimatedCosts {
+  gemini: { video: number; text_maps_web: number };
+  openai: { email: number };
+  google_maps: { geocoding: number; static_maps: number };
+  aws_lambda: number;
+  aws_s3: number;
+  aws_dynamodb: number;
+  total: number;
+}
+
+/** GET /admin/costs — response */
+export interface CostResponse {
+  period: string;
+  start_date: string;
+  end_date: string;
+  usage: CostUsage;
+  estimated_costs: EstimatedCosts;
+}
+
 // ---------------------------------------------------------------------------
 // HTTP helper
 // ---------------------------------------------------------------------------
@@ -378,4 +409,12 @@ export function getEmailRaw(
 /** Fetch aggregate email statistics. */
 export function getEmailStats(): Promise<EmailStats> {
   return adminFetch<EmailStats>('/admin/emails/stats');
+}
+
+/** Fetch cost estimation data for a given period. */
+export function getCosts(period?: string): Promise<CostResponse> {
+  const params = new URLSearchParams();
+  if (period) params.set('period', period);
+  const qs = params.toString();
+  return adminFetch<CostResponse>(`/admin/costs${qs ? `?${qs}` : ''}`);
 }

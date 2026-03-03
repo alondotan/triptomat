@@ -34,6 +34,7 @@ const AdminCacheManagerPage = lazy(() => import("./pages/admin/CacheManager"));
 const AdminUsersPage = lazy(() => import("./pages/admin/Users"));
 const AdminDeadLetterQueuesPage = lazy(() => import("./pages/admin/DeadLetterQueues"));
 const AdminEmailAnalysisPage = lazy(() => import("./pages/admin/EmailAnalysis"));
+const AdminCostTrackerPage = lazy(() => import("./pages/admin/CostTracker"));
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ const App = () => (
                       <Route path="/users" element={<ErrorBoundary><AdminUsersPage /></ErrorBoundary>} />
                       <Route path="/dlq" element={<ErrorBoundary><AdminDeadLetterQueuesPage /></ErrorBoundary>} />
                       <Route path="/emails" element={<ErrorBoundary><AdminEmailAnalysisPage /></ErrorBoundary>} />
+                      <Route path="/costs" element={<ErrorBoundary><AdminCostTrackerPage /></ErrorBoundary>} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </AdminLayout>

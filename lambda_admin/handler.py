@@ -219,6 +219,7 @@ def _route(event: dict) -> dict:
         ("DELETE", "/admin/dlq"): _handle_dlq_delete,
         ("GET", "/admin/emails"): _handle_emails_list,
         ("GET", "/admin/emails/stats"): _handle_emails_stats,
+        ("GET", "/admin/costs"): _handle_costs,
     }
 
     handler = routes.get((method, path))
@@ -1144,4 +1145,229 @@ def _handle_emails_stats(event: dict) -> dict:
         "by_trip": by_trip,
         "by_day": by_day,
         "avg_entities_per_email": avg_entities,
+    })
+
+
+# ---- GET /admin/costs ----------------------------------------------------
+
+# Rough per-call cost estimates (USD)
+_COST_GEMINI_VIDEO = 0.003       # Gemini 2.5-flash (video analysis)
+_COST_GEMINI_OTHER = 0.001       # Gemini 2.0-flash (text/maps/web)
+_COST_OPENAI_EMAIL = 0.002       # GPT-4o-mini (email parsing)
+_COST_GEOCODING_CALL = 0.005     # Google Maps Geocoding API
+_COST_STATIC_MAP_CALL = 0.002    # Google Maps Static Maps API
+_COST_LAMBDA_INVOCATION = 0.0000002  # AWS Lambda per-invocation
+_COST_S3_PER_GB_MONTH = 0.023    # S3 standard storage per GB/month
+_COST_DYNAMO_READ = 0.00025      # DynamoDB on-demand read
+_COST_DYNAMO_WRITE = 0.00125     # DynamoDB on-demand write
+_GEOCODING_CALLS_PER_ANALYSIS = 2
+_STATIC_MAP_CALLS_PER_ANALYSIS = 1
+
+
+def _infer_source_type(url: str) -> str:
+    """Infer the source type of a cache entry from its URL."""
+    if url.startswith("https://maps.app") or "google.com/maps" in url or "goo.gl/maps" in url:
+        return "maps"
+    if url.startswith("text://"):
+        return "text"
+    if is_video_url(url):
+        return "video"
+    return "web"
+
+
+def _handle_costs(event: dict) -> dict:
+    """Return cost estimation data for a given period."""
+    period_str = _get_query_param(event, "period", "30d") or "30d"
+    period_map = {
+        "7d": 7,
+        "30d": 30,
+        "90d": 90,
+    }
+
+    if period_str not in period_map:
+        return _response(400, {
+            "error": f"Invalid period '{period_str}'. Allowed: {', '.join(period_map.keys())}"
+        })
+
+    days = period_map[period_str]
+    end_time = datetime.now(timezone.utc)
+    start_time = end_time - timedelta(days=days)
+    start_iso = start_time.isoformat()
+
+    logger.info("Fetching cost data: period=%s start=%s", period_str, start_iso)
+
+    # 1. DynamoDB cache entries — count by inferred source_type
+    video_analyses = 0
+    text_analyses = 0
+    maps_analyses = 0
+    web_analyses = 0
+
+    try:
+        scan_kwargs: dict[str, Any] = {
+            "ProjectionExpression": "#u, #ca",
+            "ExpressionAttributeNames": {"#u": "url", "#ca": "created_at"},
+            "FilterExpression": "#ca >= :start",
+            "ExpressionAttributeValues": {":start": start_iso},
+        }
+        while True:
+            resp = table.scan(**scan_kwargs)
+            for item in resp.get("Items", []):
+                url = item.get("url", "")
+                source = _infer_source_type(url)
+                if source == "video":
+                    video_analyses += 1
+                elif source == "text":
+                    text_analyses += 1
+                elif source == "maps":
+                    maps_analyses += 1
+                else:
+                    web_analyses += 1
+            if "LastEvaluatedKey" not in resp:
+                break
+            scan_kwargs["ExclusiveStartKey"] = resp["LastEvaluatedKey"]
+    except Exception as exc:
+        logger.error("Failed to scan DynamoDB for cost data: %s", exc)
+
+    # 2. S3 raw emails — count objects with LastModified in the period
+    email_analyses = 0
+    try:
+        continuation_token = None
+        while True:
+            kwargs: dict[str, Any] = {"Bucket": S3_BUCKET_EMAILS, "MaxKeys": 1000}
+            if continuation_token:
+                kwargs["ContinuationToken"] = continuation_token
+            resp = s3_client.list_objects_v2(**kwargs)
+            for obj in resp.get("Contents", []):
+                last_modified = obj.get("LastModified")
+                if last_modified and last_modified >= start_time:
+                    email_analyses += 1
+            if not resp.get("IsTruncated"):
+                break
+            continuation_token = resp.get("NextContinuationToken")
+    except Exception as exc:
+        logger.error("Failed to count S3 emails for cost data: %s", exc)
+
+    # 3. CloudWatch metrics — Lambda invocation counts
+    lambda_invocations: dict[str, int] = {}
+    try:
+        metric_queries = []
+        for idx, func_name in enumerate(LAMBDA_FUNCTIONS):
+            safe_name = re.sub(r"[^a-z0-9]", "_", func_name.lower())
+            metric_queries.append({
+                "Id": f"inv_{safe_name}_{idx}",
+                "MetricStat": {
+                    "Metric": {
+                        "Namespace": "AWS/Lambda",
+                        "MetricName": "Invocations",
+                        "Dimensions": [{"Name": "FunctionName", "Value": func_name}],
+                    },
+                    "Period": days * 86400,  # single data point for the whole period
+                    "Stat": "Sum",
+                },
+            })
+
+        if metric_queries:
+            cw_resp = cloudwatch.get_metric_data(
+                MetricDataQueries=metric_queries,
+                StartTime=start_time,
+                EndTime=end_time,
+            )
+            for result in cw_resp.get("MetricDataResults", []):
+                query_id = result["Id"]
+                total = sum(result.get("Values", []))
+                for func_name in LAMBDA_FUNCTIONS:
+                    safe_fn = re.sub(r"[^a-z0-9]", "_", func_name.lower())
+                    if f"inv_{safe_fn}_" in query_id:
+                        short_name = func_name.replace("triptomat-", "")
+                        lambda_invocations[short_name] = int(total)
+                        break
+    except Exception as exc:
+        logger.error("Failed to fetch CloudWatch metrics for cost data: %s", exc)
+        for func_name in LAMBDA_FUNCTIONS:
+            short_name = func_name.replace("triptomat-", "")
+            lambda_invocations.setdefault(short_name, 0)
+
+    # 4. S3 storage size (across all allowed buckets)
+    total_s3_bytes = 0
+    try:
+        for bucket in ALLOWED_BUCKETS:
+            cont_token = None
+            while True:
+                kw: dict[str, Any] = {"Bucket": bucket, "MaxKeys": 1000}
+                if cont_token:
+                    kw["ContinuationToken"] = cont_token
+                resp = s3_client.list_objects_v2(**kw)
+                for obj in resp.get("Contents", []):
+                    total_s3_bytes += obj.get("Size", 0)
+                if not resp.get("IsTruncated"):
+                    break
+                cont_token = resp.get("NextContinuationToken")
+    except Exception as exc:
+        logger.error("Failed to calculate S3 storage for cost data: %s", exc)
+
+    s3_storage_gb = round(total_s3_bytes / (1024 ** 3), 6)
+
+    # 5. Cost estimation
+    total_analyses = video_analyses + text_analyses + maps_analyses + web_analyses
+
+    gemini_video_cost = round(video_analyses * _COST_GEMINI_VIDEO, 4)
+    gemini_other_cost = round(
+        (text_analyses + maps_analyses + web_analyses) * _COST_GEMINI_OTHER, 4
+    )
+    openai_email_cost = round(email_analyses * _COST_OPENAI_EMAIL, 4)
+    geocoding_cost = round(
+        total_analyses * _GEOCODING_CALLS_PER_ANALYSIS * _COST_GEOCODING_CALL, 4
+    )
+    static_maps_cost = round(
+        total_analyses * _STATIC_MAP_CALLS_PER_ANALYSIS * _COST_STATIC_MAP_CALL, 4
+    )
+
+    total_lambda_invocations = sum(lambda_invocations.values())
+    lambda_cost = round(total_lambda_invocations * _COST_LAMBDA_INVOCATION, 6)
+    s3_cost = round(s3_storage_gb * _COST_S3_PER_GB_MONTH, 6)
+
+    # DynamoDB cost: estimate reads = total_analyses * 2 (scan + get), writes = total_analyses
+    dynamo_reads = total_analyses * 2 + email_analyses
+    dynamo_writes = total_analyses + email_analyses
+    dynamo_cost = round(
+        dynamo_reads * _COST_DYNAMO_READ + dynamo_writes * _COST_DYNAMO_WRITE, 4
+    )
+
+    total_cost = round(
+        gemini_video_cost + gemini_other_cost + openai_email_cost
+        + geocoding_cost + static_maps_cost
+        + lambda_cost + s3_cost + dynamo_cost,
+        4,
+    )
+
+    return _response(200, {
+        "period": period_str,
+        "start_date": start_time.strftime("%Y-%m-%d"),
+        "end_date": end_time.strftime("%Y-%m-%d"),
+        "usage": {
+            "video_analyses": video_analyses,
+            "text_analyses": text_analyses,
+            "maps_analyses": maps_analyses,
+            "web_analyses": web_analyses,
+            "email_analyses": email_analyses,
+            "lambda_invocations": lambda_invocations,
+            "s3_storage_gb": s3_storage_gb,
+        },
+        "estimated_costs": {
+            "gemini": {
+                "video": gemini_video_cost,
+                "text_maps_web": gemini_other_cost,
+            },
+            "openai": {
+                "email": openai_email_cost,
+            },
+            "google_maps": {
+                "geocoding": geocoding_cost,
+                "static_maps": static_maps_cost,
+            },
+            "aws_lambda": lambda_cost,
+            "aws_s3": s3_cost,
+            "aws_dynamodb": dynamo_cost,
+            "total": total_cost,
+        },
     })

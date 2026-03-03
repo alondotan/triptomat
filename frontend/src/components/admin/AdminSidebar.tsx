@@ -8,6 +8,7 @@ import {
   Users,
   AlertTriangle,
   Mail,
+  DollarSign,
 } from 'lucide-react';
 
 interface NavItem {
@@ -24,6 +25,7 @@ const navItems: NavItem[] = [
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/dlq', label: 'Dead Letters', icon: AlertTriangle },
   { path: '/admin/emails', label: 'Email Analysis', icon: Mail },
+  { path: '/admin/costs', label: 'Cost Tracker', icon: DollarSign },
 ];
 
 export function AdminSidebar() {
