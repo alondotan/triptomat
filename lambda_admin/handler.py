@@ -179,10 +179,17 @@ def _validate_bucket(bucket: str) -> str | None:
 # ---------------------------------------------------------------------------
 # Route table
 # ---------------------------------------------------------------------------
+def _extract_method_path(event: dict) -> tuple[str, str]:
+    """Extract HTTP method and path, supporting both API Gateway v1 and v2 formats."""
+    http_ctx = event.get("requestContext", {}).get("http", {})
+    method = (http_ctx.get("method") or event.get("httpMethod") or "").upper()
+    path = event.get("rawPath") or event.get("path") or ""
+    return method, path
+
+
 def _route(event: dict) -> dict:
     """Dispatch the request to the appropriate handler based on method + path."""
-    method = (event.get("httpMethod") or "").upper()
-    path = event.get("path") or ""
+    method, path = _extract_method_path(event)
 
     routes: dict[tuple[str, str], Any] = {
         ("GET", "/admin/stats"): _handle_stats,
@@ -210,8 +217,7 @@ def lambda_handler(event: dict, context: Any) -> dict:
     global _cors_origin
     _cors_origin = _resolve_cors_origin(event)
 
-    method = (event.get("httpMethod") or "").upper()
-    path = event.get("path") or ""
+    method, path = _extract_method_path(event)
     logger.info("Admin request: %s %s", method, path)
 
     # CORS preflight
@@ -326,16 +332,19 @@ def _get_supabase_stats() -> dict:
     if not supabase:
         return {"error": "Supabase not configured"}
 
-    # Count users (profiles table)
-    users_resp = supabase.table("profiles").select("id", count="exact").execute()
-    users_count = users_resp.count if users_resp.count is not None else 0
+    # Count users via Supabase admin API
+    try:
+        users_resp = supabase.auth.admin.list_users()
+        users_count = len(users_resp) if users_resp else 0
+    except Exception:
+        users_count = 0
 
     # Count trips
     trips_resp = supabase.table("trips").select("id", count="exact").execute()
     trips_count = trips_resp.count if trips_resp.count is not None else 0
 
     # Count POIs
-    pois_resp = supabase.table("pois").select("id", count="exact").execute()
+    pois_resp = supabase.table("points_of_interest").select("id", count="exact").execute()
     pois_count = pois_resp.count if pois_resp.count is not None else 0
 
     return {
@@ -596,22 +605,28 @@ def _handle_users_list(event: dict) -> dict:
 
     logger.info("Listing users: limit=%d offset=%d search=%s", limit, offset, search)
 
-    # Query profiles with trip and POI counts
-    query = supabase.table("profiles").select(
-        "id, email, created_at, last_sign_in_at"
-    )
+    # List users via Supabase admin API (auth.users)
+    try:
+        all_users = supabase.auth.admin.list_users()
+    except Exception as exc:
+        logger.error("Failed to list users: %s", str(exc))
+        return _response(500, {"error": "Failed to fetch users"})
 
+    # Filter by search if provided
     if search:
-        query = query.ilike("email", f"%{search}%")
+        search_lower = search.lower()
+        all_users = [u for u in all_users if u.email and search_lower in u.email.lower()]
 
-    query = query.range(offset, offset + limit - 1).order("created_at", desc=True)
-    profiles_resp = query.execute()
-    profiles = profiles_resp.data or []
+    # Sort by created_at descending
+    all_users.sort(key=lambda u: u.created_at or "", reverse=True)
+
+    # Apply pagination
+    paginated = all_users[offset:offset + limit]
 
     # Enrich with trip and POI counts for each user
     users = []
-    for profile in profiles:
-        user_id = profile["id"]
+    for user in paginated:
+        user_id = user.id
 
         # Count trips for this user
         trips_resp = supabase.table("trips").select(
@@ -619,17 +634,21 @@ def _handle_users_list(event: dict) -> dict:
         ).eq("user_id", user_id).execute()
         trips_count = trips_resp.count if trips_resp.count is not None else 0
 
-        # Count POIs for this user (via trips)
-        pois_resp = supabase.table("pois").select(
-            "id", count="exact"
-        ).eq("user_id", user_id).execute()
-        pois_count = pois_resp.count if pois_resp.count is not None else 0
+        # Count POIs for this user (via trip_id)
+        trip_ids_resp = supabase.table("trips").select("id").eq("user_id", user_id).execute()
+        trip_ids = [t["id"] for t in (trip_ids_resp.data or [])]
+        pois_count = 0
+        if trip_ids:
+            pois_resp = supabase.table("points_of_interest").select(
+                "id", count="exact"
+            ).in_("trip_id", trip_ids).execute()
+            pois_count = pois_resp.count if pois_resp.count is not None else 0
 
         users.append({
             "id": user_id,
-            "email": profile.get("email"),
-            "created_at": profile.get("created_at"),
-            "last_sign_in_at": profile.get("last_sign_in_at"),
+            "email": user.email,
+            "created_at": str(user.created_at) if user.created_at else None,
+            "last_sign_in_at": str(user.last_sign_in_at) if user.last_sign_in_at else None,
             "trips_count": trips_count,
             "pois_count": pois_count,
         })
@@ -637,6 +656,7 @@ def _handle_users_list(event: dict) -> dict:
     return _response(200, {
         "users": users,
         "count": len(users),
+        "total": len(all_users),
         "limit": limit,
         "offset": offset,
     })

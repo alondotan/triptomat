@@ -225,18 +225,23 @@ ok "Analysis queue: ${SQS_ANALYSIS_QUEUE_URL}"
 
 log "Step 6: Creating Lambda function '${FUNCTION_NAME}'"
 
-# Build environment variables JSON — values with placeholders that must be filled in
-ENV_VARS="Variables={
-ADMIN_API_TOKEN=${ADMIN_TOKEN},
-DYNAMODB_TABLE=triptomat-cache,
-S3_BUCKET_MEDIA=triptomat-media,
-S3_BUCKET_EMAILS=triptomat-raw-emails,
-SQS_DOWNLOAD_QUEUE_URL=${SQS_DOWNLOAD_QUEUE_URL},
-SQS_ANALYSIS_QUEUE_URL=${SQS_ANALYSIS_QUEUE_URL},
-SUPABASE_URL=https://aqpzhflzsqkjceeeufyf.supabase.co,
-SUPABASE_SERVICE_KEY=PLACEHOLDER_SET_VIA_CONSOLE,
-ALLOWED_ORIGINS=https://frontend-three-omega-84.vercel.app,https://aqpzhflzsqkjceeeufyf.supabase.co,http://localhost:5173
-}"
+# Build environment variables as JSON (using JSON format to handle commas in values)
+ENV_VARS_JSON=$(cat <<ENVEOF
+{
+  "Variables": {
+    "ADMIN_API_TOKEN": "${ADMIN_TOKEN}",
+    "DYNAMODB_TABLE": "triptomat-cache",
+    "S3_BUCKET_MEDIA": "triptomat-media",
+    "S3_BUCKET_EMAILS": "triptomat-raw-emails",
+    "SQS_DOWNLOAD_QUEUE_URL": "${SQS_DOWNLOAD_QUEUE_URL}",
+    "SQS_ANALYSIS_QUEUE_URL": "${SQS_ANALYSIS_QUEUE_URL}",
+    "SUPABASE_URL": "https://aqpzhflzsqkjceeeufyf.supabase.co",
+    "SUPABASE_SERVICE_KEY": "PLACEHOLDER_SET_VIA_CONSOLE",
+    "ALLOWED_ORIGINS": "https://frontend-three-omega-84.vercel.app,https://aqpzhflzsqkjceeeufyf.supabase.co,http://localhost:5173"
+  }
+}
+ENVEOF
+)
 
 if aws lambda get-function --function-name "$FUNCTION_NAME" \
     --profile "$PROFILE" --region "$REGION" &>/dev/null; then
@@ -255,7 +260,7 @@ else
         --role "$ROLE_ARN" \
         --timeout 30 \
         --memory-size 512 \
-        --environment "$ENV_VARS" \
+        --environment "$ENV_VARS_JSON" \
         --profile "$PROFILE" --region "$REGION" > /dev/null
     ok "Lambda function '${FUNCTION_NAME}' created"
 
