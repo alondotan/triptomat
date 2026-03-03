@@ -25,6 +25,7 @@ export const adminKeys = {
   emailRaw: (emailId: string) => ['admin', 'emails', emailId, 'raw'] as const,
   emailStats: ['admin', 'emails', 'stats'] as const,
   costs: (period: string) => ['admin', 'costs', period] as const,
+  funnel: ['admin', 'funnel'] as const,
 };
 
 // ---------------------------------------------------------------------------
@@ -120,6 +121,15 @@ export function useCosts(period: string = '30d') {
     queryKey: adminKeys.costs(period),
     queryFn: () => adminService.getCosts(period),
     refetchInterval: 300_000, // refresh every 5 min
+  });
+}
+
+/** Pipeline funnel data (entity linkage and conversion). Auto-refreshes every 60 s. */
+export function useFunnel() {
+  return useQuery({
+    queryKey: adminKeys.funnel,
+    queryFn: adminService.getFunnel,
+    refetchInterval: 60_000,
   });
 }
 

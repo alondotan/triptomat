@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   Mail,
   DollarSign,
+  Filter,
 } from 'lucide-react';
 
 interface NavItem {
@@ -26,6 +27,7 @@ const navItems: NavItem[] = [
   { path: '/admin/dlq', label: 'Dead Letters', icon: AlertTriangle },
   { path: '/admin/emails', label: 'Email Analysis', icon: Mail },
   { path: '/admin/costs', label: 'Cost Tracker', icon: DollarSign },
+  { path: '/admin/funnel', label: 'Pipeline Funnel', icon: Filter },
 ];
 
 export function AdminSidebar() {

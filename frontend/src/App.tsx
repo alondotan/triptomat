@@ -35,6 +35,7 @@ const AdminUsersPage = lazy(() => import("./pages/admin/Users"));
 const AdminDeadLetterQueuesPage = lazy(() => import("./pages/admin/DeadLetterQueues"));
 const AdminEmailAnalysisPage = lazy(() => import("./pages/admin/EmailAnalysis"));
 const AdminCostTrackerPage = lazy(() => import("./pages/admin/CostTracker"));
+const AdminFunnelPage = lazy(() => import("./pages/admin/Funnel"));
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
                       <Route path="/dlq" element={<ErrorBoundary><AdminDeadLetterQueuesPage /></ErrorBoundary>} />
                       <Route path="/emails" element={<ErrorBoundary><AdminEmailAnalysisPage /></ErrorBoundary>} />
                       <Route path="/costs" element={<ErrorBoundary><AdminCostTrackerPage /></ErrorBoundary>} />
+                      <Route path="/funnel" element={<ErrorBoundary><AdminFunnelPage /></ErrorBoundary>} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </AdminLayout>
