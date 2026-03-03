@@ -1,3 +1,9 @@
 yt-dlp==2026.2.21
 boto3==1.42.59
 pydantic==2.12.5
+opentelemetry-api==1.29.0
+opentelemetry-sdk==1.29.0
+opentelemetry-exporter-otlp-proto-http==1.29.0
+opentelemetry-instrumentation==0.50b0
+opentelemetry-instrumentation-botocore==0.50b0
+opentelemetry-instrumentation-aws-lambda==0.50b0
