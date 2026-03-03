@@ -177,6 +177,47 @@ export interface CloudWatchMetricsResponse {
   sqs: Record<string, SqsQueueMetrics>;
 }
 
+/** Source email info sub-object */
+export interface SourceEmailInfo {
+  subject: string;
+  sender: string;
+  date_sent: string;
+}
+
+/** GET /admin/emails — individual email */
+export interface AdminSourceEmail {
+  id: string;
+  trip_id: string;
+  email_id: string;
+  source_email_info: SourceEmailInfo;
+  parsed_data: Record<string, unknown>;
+  linked_entities: Array<{ entity_type: string; entity_id: string; description: string }>;
+  status: string;
+  created_at: string;
+}
+
+/** GET /admin/emails — response */
+export interface EmailsResponse {
+  emails: AdminSourceEmail[];
+  count: number;
+}
+
+/** GET /admin/emails/{email_id}/raw — response */
+export interface EmailRawResponse {
+  email_id: string;
+  s3_key: string;
+  size_bytes: number;
+  raw_text_preview: string;
+}
+
+/** GET /admin/emails/stats — response */
+export interface EmailStats {
+  by_status: Record<string, number>;
+  by_trip: Array<{ trip_id: string; count: number }>;
+  by_day: Array<{ date: string; count: number }>;
+  avg_entities_per_email: number;
+}
+
 // ---------------------------------------------------------------------------
 // HTTP helper
 // ---------------------------------------------------------------------------
@@ -313,4 +354,28 @@ export function deleteDlqMessage(
     method: 'DELETE',
     body: JSON.stringify({ queue, receipt_handle: receiptHandle }),
   });
+}
+
+/** List source emails, optionally filtered by status. */
+export function getEmails(
+  status?: string,
+  limit?: number,
+): Promise<EmailsResponse> {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  if (limit !== undefined) params.set('limit', String(limit));
+  const qs = params.toString();
+  return adminFetch<EmailsResponse>(`/admin/emails${qs ? `?${qs}` : ''}`);
+}
+
+/** Fetch raw email text from S3 for a given email_id. */
+export function getEmailRaw(
+  emailId: string,
+): Promise<EmailRawResponse> {
+  return adminFetch<EmailRawResponse>(`/admin/emails/${encodeURIComponent(emailId)}/raw`);
+}
+
+/** Fetch aggregate email statistics. */
+export function getEmailStats(): Promise<EmailStats> {
+  return adminFetch<EmailStats>('/admin/emails/stats');
 }

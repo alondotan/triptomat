@@ -21,6 +21,9 @@ export const adminKeys = {
   users: (search?: string) => ['admin', 'users', search ?? ''] as const,
   metrics: (period: string) => ['admin', 'metrics', period] as const,
   dlq: ['admin', 'dlq'] as const,
+  emails: (status?: string) => ['admin', 'emails', status ?? 'all'] as const,
+  emailRaw: (emailId: string) => ['admin', 'emails', emailId, 'raw'] as const,
+  emailStats: ['admin', 'emails', 'stats'] as const,
 };
 
 // ---------------------------------------------------------------------------
@@ -81,6 +84,32 @@ export function useCloudWatchMetrics(period: string = '24h') {
     queryKey: adminKeys.metrics(period),
     queryFn: () => adminService.getCloudWatchMetrics(period),
     refetchInterval: 60_000, // refresh every 60 s
+  });
+}
+
+/** Source emails list, optionally filtered by status. */
+export function useEmails(status?: string, limit?: number) {
+  return useQuery({
+    queryKey: adminKeys.emails(status),
+    queryFn: () => adminService.getEmails(status, limit),
+  });
+}
+
+/** Raw email text from S3. Only fetches when emailId is provided. */
+export function useEmailRaw(emailId: string | null) {
+  return useQuery({
+    queryKey: adminKeys.emailRaw(emailId ?? ''),
+    queryFn: () => adminService.getEmailRaw(emailId!),
+    enabled: !!emailId,
+  });
+}
+
+/** Aggregate email statistics. Auto-refreshes every 60 s. */
+export function useEmailStats() {
+  return useQuery({
+    queryKey: adminKeys.emailStats,
+    queryFn: adminService.getEmailStats,
+    refetchInterval: 60_000,
   });
 }
 

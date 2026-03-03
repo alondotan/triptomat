@@ -7,6 +7,7 @@ import {
   Database,
   Users,
   AlertTriangle,
+  Mail,
 } from 'lucide-react';
 
 interface NavItem {
@@ -22,6 +23,7 @@ const navItems: NavItem[] = [
   { path: '/admin/cache', label: 'Cache', icon: Database },
   { path: '/admin/users', label: 'Users', icon: Users },
   { path: '/admin/dlq', label: 'Dead Letters', icon: AlertTriangle },
+  { path: '/admin/emails', label: 'Email Analysis', icon: Mail },
 ];
 
 export function AdminSidebar() {
