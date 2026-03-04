@@ -7,6 +7,8 @@ Required env vars:
   MAP_GOOGLE_API_KEY  — Google Maps API key for geocoding
   WEBHOOK_URL         — Supabase recommendation webhook URL
   WEBHOOK_TOKEN       — Default webhook auth token (overridden per-request)
+  SUPABASE_URL        — Supabase project URL (for reconciliation)
+  SUPABASE_SERVICE_KEY — Supabase service role key (for reconciliation)
 
 Optional env vars:
   OTEL_ENABLED        — "true" to enable OpenTelemetry tracing/metrics
@@ -26,6 +28,7 @@ from core.geocoding import enrich_analysis_data, extract_coords_from_url
 from core.prompts import build_main_prompt
 from core.scrapers import MapsService
 from core.schemas import AnalysisMessage
+from core.reconciliation import reconcile
 from core.webhook import send_to_webhook
 from core.telemetry import (
     init_telemetry, get_tracer, get_meter,
@@ -171,16 +174,33 @@ def lambda_handler(event, context):
                                     pass
                             record_counter(geocoding_counter)
 
-                        # If no source image yet, try to get one from the first recommendation's coordinates
+                        # Fetch image for each recommendation
+                        for rec in enriched_data.get("recommendations", []):
+                            coords = rec.get("location", {}).get("coordinates", {})
+                            lat, lng = coords.get("lat"), coords.get("lng")
+                            name = rec.get("name", "")
+                            if lat and lng and name:
+                                image_url = maps.get_google_maps_image(lat, lng, name)
+                                if not image_url:
+                                    site = rec.get("site", "")
+                                    search_query = f"{name}, {site}" if site else name
+                                    image_url = maps.search_google_image(search_query)
+                                if image_url:
+                                    rec["image_url"] = image_url
+
+                        # Set source image from first recommendation if still empty
                         if not source_metadata.get("image"):
                             recs = enriched_data.get("recommendations", [])
-                            if recs:
-                                first = recs[0]
-                                coords = first.get("location", {}).get("coordinates", {})
-                                lat, lng = coords.get("lat"), coords.get("lng")
-                                name = first.get("name", "")
-                                if lat and lng and name:
-                                    source_metadata["image"] = maps.get_google_maps_image(lat, lng, name)
+                            for rec in recs:
+                                if rec.get("image_url"):
+                                    source_metadata["image"] = rec["image_url"]
+                                    break
+
+                        # ── Reconciliation ──────────────────────────────────
+                        with safe_span(tracer, "worker.reconciliation"):
+                            enriched_data = reconcile(
+                                enriched_data, webhook_token, GOOGLE_API_KEY,
+                            )
 
                         # ── Webhook ──────────────────────────────────────────
                         webhook_url_masked = os.environ.get("WEBHOOK_URL", "")[:30] + "..."

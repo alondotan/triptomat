@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useCallback, u
 import { PointOfInterest } from '@/types/trip';
 import { fetchPOIs, createOrMergePOI, updatePOI as updatePOIService, deletePOI as deletePOIService, mergeTwoPOIs } from '@/services/poiService';
 import { repairItineraryReferences } from '@/services/tripService';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveTrip } from './ActiveTripContext';
 
@@ -61,21 +62,19 @@ export function POIProvider({ children }: { children: ReactNode }) {
     const tripId = activeTrip?.id;
     if (!tripId) return;
 
-    let channel: ReturnType<typeof import('@/integrations/supabase/client')['supabase']['channel']> | null = null;
-
-    import('@/integrations/supabase/client').then(({ supabase }) => {
-      channel = supabase
-        .channel(`poi-realtime-${tripId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'points_of_interest', filter: `trip_id=eq.${tripId}` }, () => {
-          fetchPOIs(tripId).then(pois => dispatch({ type: 'SET_POIS', payload: pois }));
-        })
-        .subscribe();
-    });
+    const channel = supabase
+      .channel(`poi-realtime-${tripId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'points_of_interest', filter: `trip_id=eq.${tripId}` }, () => {
+        fetchPOIs(tripId).then(pois => dispatch({ type: 'SET_POIS', payload: pois }));
+      })
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.error('POI realtime subscription error');
+        }
+      });
 
     return () => {
-      import('@/integrations/supabase/client').then(({ supabase }) => {
-        if (channel) supabase.removeChannel(channel);
-      });
+      supabase.removeChannel(channel);
     };
   }, [activeTrip?.id]);
 

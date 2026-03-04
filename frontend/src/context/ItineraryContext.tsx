@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useCallback, u
 import { ItineraryDay, Mission } from '@/types/trip';
 import { fetchItineraryDays } from '@/services/itineraryService';
 import { fetchMissions, createMission as createMissionService, updateMission as updateMissionService, deleteMission as deleteMissionService } from '@/services/missionService';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveTrip } from './ActiveTripContext';
 
@@ -74,21 +75,19 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
     const tripId = activeTrip?.id;
     if (!tripId) return;
 
-    let channel: ReturnType<typeof import('@/integrations/supabase/client')['supabase']['channel']> | null = null;
-
-    import('@/integrations/supabase/client').then(({ supabase }) => {
-      channel = supabase
-        .channel(`itinerary-realtime-${tripId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'itinerary_days', filter: `trip_id=eq.${tripId}` }, () => {
-          fetchItineraryDays(tripId).then(days => dispatch({ type: 'SET_ITINERARY_DAYS', payload: days }));
-        })
-        .subscribe();
-    });
+    const channel = supabase
+      .channel(`itinerary-realtime-${tripId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'itinerary_days', filter: `trip_id=eq.${tripId}` }, () => {
+        fetchItineraryDays(tripId).then(days => dispatch({ type: 'SET_ITINERARY_DAYS', payload: days }));
+      })
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.error('Itinerary realtime subscription error');
+        }
+      });
 
     return () => {
-      import('@/integrations/supabase/client').then(({ supabase }) => {
-        if (channel) supabase.removeChannel(channel);
-      });
+      supabase.removeChannel(channel);
     };
   }, [activeTrip?.id]);
 

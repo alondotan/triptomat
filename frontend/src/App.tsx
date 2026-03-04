@@ -14,6 +14,7 @@ import AuthPage from "./pages/Auth";
 
 const ItineraryPage = lazy(() => import("./pages/Itinerary"));
 const POIsPage = lazy(() => import("./pages/POIs"));
+const POIGroupPage = lazy(() => import("./pages/POIGroup"));
 const TransportPage = lazy(() => import("./pages/Transport"));
 const RecommendationsPage = lazy(() => import("./pages/Recommendations"));
 const MapPage = lazy(() => import("./pages/Map"));
@@ -74,6 +75,7 @@ const App = () => (
                       <Route path="/" element={<ErrorBoundary><DndTestPage /></ErrorBoundary>} />
                       <Route path="/itinerary" element={<ErrorBoundary><ItineraryPage /></ErrorBoundary>} />
                       <Route path="/pois" element={<ErrorBoundary><POIsPage /></ErrorBoundary>} />
+                      <Route path="/pois/group" element={<ErrorBoundary><POIGroupPage /></ErrorBoundary>} />
                       <Route path="/transport" element={<ErrorBoundary><TransportPage /></ErrorBoundary>} />
                       <Route path="/recommendations" element={<ErrorBoundary><RecommendationsPage /></ErrorBoundary>} />
                       <Route path="/map" element={<ErrorBoundary><MapPage /></ErrorBoundary>} />

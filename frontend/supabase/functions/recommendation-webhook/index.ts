@@ -219,8 +219,9 @@ Deno.serve(async (req)=>{
               };
               // Set image if the existing POI doesn't have one
               console.log(`[image] matched POI ${matchedPoi.id}, existing image_url: ${(matchedPoi as any).image_url}, source_image: ${payload.source_image?.substring(0, 60)}`);
-              if (!(matchedPoi as any).image_url && payload.source_image) {
-                updateFields.image_url = payload.source_image;
+              const itemImage = item.image_url || payload.source_image;
+              if (!(matchedPoi as any).image_url && itemImage) {
+                updateFields.image_url = itemImage;
                 console.log(`[image] Setting image_url on POI ${matchedPoi.id}`);
               }
               const { error: updateErr } = await supabase.from('points_of_interest').update(updateFields).eq('id', matchedPoi.id);
@@ -260,7 +261,7 @@ Deno.serve(async (req)=>{
                   paragraph: item.paragraph,
                   source_url: payload.source_url
                 },
-                image_url: payload.source_image || null
+                image_url: item.image_url || payload.source_image || null
               }
             ]).select('id').single();
             if (poiInsertErr) console.error(`[debug] POI insert error:`, poiInsertErr);

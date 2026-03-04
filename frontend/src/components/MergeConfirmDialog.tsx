@@ -55,6 +55,18 @@ function POISummary({ poi }: { poi: PointOfInterest }) {
       {poi.details.cost?.amount != null && poi.details.cost.amount > 0 && (
         <div>עלות: {poi.details.cost.amount} {poi.details.cost.currency || ''}</div>
       )}
+      {poi.details.accommodation_details?.checkin?.date && (
+        <div className="text-xs text-muted-foreground">
+          כניסה: {poi.details.accommodation_details.checkin.date}
+          {poi.details.accommodation_details.checkin.hour && ` ${poi.details.accommodation_details.checkin.hour}`}
+        </div>
+      )}
+      {poi.details.accommodation_details?.checkout?.date && (
+        <div className="text-xs text-muted-foreground">
+          יציאה: {poi.details.accommodation_details.checkout.date}
+          {poi.details.accommodation_details.checkout.hour && ` ${poi.details.accommodation_details.checkout.hour}`}
+        </div>
+      )}
       {poi.details.order_number && (
         <div className="text-xs">הזמנה: {poi.details.order_number}</div>
       )}

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useReducer, useEffect, useCallback, u
 import { Transportation } from '@/types/trip';
 import { fetchTransportation, createTransportation as createTransportationService, updateTransportation as updateTransportationService, deleteTransportation as deleteTransportationService, mergeTwoTransportations } from '@/services/transportService';
 import { repairItineraryReferences } from '@/services/tripService';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveTrip } from './ActiveTripContext';
 
@@ -61,21 +62,19 @@ export function TransportProvider({ children }: { children: ReactNode }) {
     const tripId = activeTrip?.id;
     if (!tripId) return;
 
-    let channel: ReturnType<typeof import('@/integrations/supabase/client')['supabase']['channel']> | null = null;
-
-    import('@/integrations/supabase/client').then(({ supabase }) => {
-      channel = supabase
-        .channel(`transport-realtime-${tripId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'transportation', filter: `trip_id=eq.${tripId}` }, () => {
-          fetchTransportation(tripId).then(t => dispatch({ type: 'SET_TRANSPORTATION', payload: t }));
-        })
-        .subscribe();
-    });
+    const channel = supabase
+      .channel(`transport-realtime-${tripId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transportation', filter: `trip_id=eq.${tripId}` }, () => {
+        fetchTransportation(tripId).then(t => dispatch({ type: 'SET_TRANSPORTATION', payload: t }));
+      })
+      .subscribe((status) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.error('Transport realtime subscription error');
+        }
+      });
 
     return () => {
-      import('@/integrations/supabase/client').then(({ supabase }) => {
-        if (channel) supabase.removeChannel(channel);
-      });
+      supabase.removeChannel(channel);
     };
   }, [activeTrip?.id]);
 

@@ -129,3 +129,31 @@ class MapsService:
             print(f"Error with Places API (New): {e}")
 
         return ""
+
+    def search_google_image(self, query):
+        """Searches Google Images via Custom Search API and returns the first result URL."""
+        import os
+
+        cse_id = os.environ.get("GOOGLE_CSE_ID", "")
+        if not cse_id:
+            print("GOOGLE_CSE_ID not set, skipping image search")
+            return ""
+
+        url = "https://www.googleapis.com/customsearch/v1"
+        params = {
+            "key": self.api_key,
+            "cx": cse_id,
+            "q": query,
+            "searchType": "image",
+            "num": 1,
+        }
+
+        try:
+            response = requests.get(url, params=params, timeout=10).json()
+            items = response.get("items", [])
+            if items:
+                return items[0].get("link", "")
+        except Exception as e:
+            print(f"Google Image Search error: {e}")
+
+        return ""

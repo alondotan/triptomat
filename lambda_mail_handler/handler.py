@@ -5,6 +5,7 @@ Required env vars:
   SUPABASE_URL        — Supabase project URL (for user lookup)
   SUPABASE_SERVICE_KEY — Supabase service-role key
   OPENAI_API_KEY      — OpenAI API key for email analysis
+  GOOGLE_API_KEY      — Google Gemini API key (for reconciliation)
 
 Optional env vars:
   OTEL_ENABLED        — "true" to enable OpenTelemetry tracing/metrics
@@ -24,6 +25,7 @@ from email.policy import default
 from email.utils import parseaddr
 
 from core.config import load_config
+from core.reconciliation import reconcile
 from core.telemetry import (
     init_telemetry, get_tracer, get_meter,
     safe_span, record_counter, record_histogram, time_ms,
@@ -169,6 +171,13 @@ def lambda_handler(event, context):
                     payload["recommendation_id"] = str(uuid.uuid4())
                     payload["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
                     payload["source_url"] = f"s3://{bucket}/{key}"
+
+                    # ── Reconciliation ──────────────────────────────────────
+                    with safe_span(tracer, "mail_handler.reconciliation"):
+                        payload = reconcile(
+                            payload, token,
+                            os.environ.get("GOOGLE_API_KEY", ""),
+                        )
 
                     print(json.dumps(payload, indent=2, ensure_ascii=False))
 

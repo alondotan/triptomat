@@ -1,15 +1,9 @@
 import { useState } from 'react';
-import { Clock, Heart, Trash2, CalendarDays, Pencil } from 'lucide-react';
+import { Clock, Heart, Pencil } from 'lucide-react';
 import { SubCategoryIcon } from '../shared/SubCategoryIcon';
-import { Badge } from '../ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
 import { POIDetailDialog } from './POIDetailDialog';
-import { BookingActions } from '../BookingActions';
 import { getSubCategoryEntry } from '@/lib/subCategoryConfig';
 import { usePOI } from '@/context/POIContext';
-import { useActiveTrip } from '@/context/ActiveTripContext';
-import { useFinance } from '@/context/FinanceContext';
 import type { PointOfInterest, POIStatus } from '@/types/trip';
 
 function formatDuration(minutes: number): string {
@@ -32,12 +26,8 @@ const statusLabels: Record<string, string> = {
 interface POICardProps {
   poi: PointOfInterest;
   level: 1 | 2 | 3;
-  /** Level 2: enables inline editing of notes/duration. Level 3: shows delete button */
+  /** Level 2: enables inline editing of notes/duration */
   editable?: boolean;
-  /** Level 3 only: hide subCategory badge (e.g. when it's already shown as a group header) */
-  showSubCategory?: boolean;
-  /** Level 3 only: days the POI is assigned to */
-  poiDaysMap?: Record<string, number[]>;
   /** Level 2 only: when provided, shows "הוסף תחבורה" button at bottom */
   onAddTransport?: () => void;
   /** Level 2: called when the card body is clicked (for map highlight). If provided, body click no longer opens the dialog. */
@@ -51,16 +41,12 @@ export function POICard({
   poi,
   level,
   editable = false,
-  showSubCategory = true,
-  poiDaysMap,
   onAddTransport,
   onSelect,
   isSelected,
   className = '',
 }: POICardProps) {
-  const { updatePOI, deletePOI } = usePOI();
-  const { activeTrip, sourceEmailMap } = useActiveTrip();
-  const { formatDualCurrency } = useFinance();
+  const { updatePOI } = usePOI();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Level 2 inline edit state
@@ -273,7 +259,7 @@ export function POICard({
     );
   }
 
-  // ─── Level 3: full card (POIs page) ───────────────────────────────────────
+  // ─── Level 3: compact tile (POIs page — horizontal scroll) ──────────────
   const handleToggleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(poi.status)) return;
@@ -283,118 +269,50 @@ export function POICard({
 
   return (
     <>
-      <Card
-        className={`cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${poi.isCancelled ? 'opacity-50' : ''} ${className}`}
+      <div
+        className={`cursor-pointer group ${poi.isCancelled ? 'opacity-50' : ''} ${className}`}
         onClick={() => setDialogOpen(true)}
       >
-        {poi.imageUrl && (
-          <div className="w-full h-32 overflow-hidden rounded-t-lg">
+        {/* Square image with heart overlay */}
+        <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
+          {poi.imageUrl ? (
             <img src={poi.imageUrl} alt={poi.name} className="w-full h-full object-cover" />
-          </div>
-        )}
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleToggleLike}
-                className={`shrink-0 transition-colors ${
-                  poi.status === 'interested' || poi.status === 'planned' || poi.status === 'scheduled' ? 'text-red-500' :
-                  poi.status === 'booked' || poi.status === 'visited' || poi.status === 'skipped' ? 'text-muted-foreground/30 cursor-default' :
-                  'text-muted-foreground/40 hover:text-red-400'
-                }`}
-                title={['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(poi.status) ? statusLabels[poi.status] : poi.status === 'interested' ? 'הסר עניין' : 'מעניין אותי'}
-              >
-                <Heart
-                  size={16}
-                  fill={poi.status !== 'suggested' ? 'currentColor' : 'none'}
-                />
-              </button>
-              <CardTitle className="text-base">{poi.name}</CardTitle>
-            </div>
-            <div className="flex items-center gap-1">
-              <Badge variant={poi.status === 'booked' ? 'default' : 'secondary'} className="text-xs">
-                {statusLabels[poi.status] || poi.status}
-              </Badge>
-              {poi.isCancelled && <Badge variant="destructive">בוטל</Badge>}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          {showSubCategory && poi.subCategory && (
-            <Badge variant="outline" className="text-xs flex items-center gap-1">
-              <SubCategoryIcon type={poi.subCategory} size={12} />
-              {poi.subCategory}
-            </Badge>
-          )}
-
-          {(poi.location.city || poi.location.country || poi.location.address) && (
-            <p className="text-muted-foreground">
-              <span className="material-symbols-outlined text-base align-middle ml-1">
-                {iconName || 'location_on'}
-              </span>
-              {[poi.location.address, poi.location.city, poi.location.country].filter(Boolean).join(', ')}
-            </p>
-          )}
-
-          {poi.details.cost && poi.details.cost.amount > 0 && (
-            <p className="font-semibold text-primary">
-              {formatDualCurrency(
-                poi.details.cost.amount,
-                poi.details.cost.currency || activeTrip?.currency || 'USD',
-              )}
-            </p>
-          )}
-
-          {poi.details.accommodation_details && (
-            <div className="text-xs text-muted-foreground space-y-0.5">
-              {poi.details.accommodation_details.checkin?.date && (
-                <p>
-                  Check-in: {poi.details.accommodation_details.checkin.date}{' '}
-                  {poi.details.accommodation_details.checkin.hour || ''}
-                </p>
-              )}
-              {poi.details.accommodation_details.checkout?.date && (
-                <p>
-                  Check-out: {poi.details.accommodation_details.checkout.date}{' '}
-                  {poi.details.accommodation_details.checkout.hour || ''}
-                </p>
-              )}
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <SubCategoryIcon type={poi.subCategory || ''} size={32} className="text-muted-foreground/40" />
             </div>
           )}
-
-          {poi.details.notes?.user_summary && (
-            <p className="text-xs text-muted-foreground italic">{poi.details.notes.user_summary}</p>
-          )}
-
-          {poiDaysMap && poiDaysMap[poi.id] && poiDaysMap[poi.id].length > 0 && (
-            <div className="flex items-center gap-1 flex-wrap">
-              <CalendarDays size={12} className="text-muted-foreground" />
-              {poiDaysMap[poi.id].map(d => (
-                <Badge key={d} variant="outline" className="text-[10px] px-1.5 py-0">
-                  יום {d}
-                </Badge>
-              ))}
-            </div>
-          )}
-
-          <div className="pt-2 flex justify-between items-center">
-            <BookingActions
-              orderNumber={poi.details.order_number}
-              emailLinks={poi.sourceRefs.email_ids.map(id => ({ id, ...sourceEmailMap[id] }))}
+          {/* Heart button overlay */}
+          <button
+            onClick={handleToggleLike}
+            className={`absolute top-1.5 right-1.5 p-1 rounded-full bg-black/30 backdrop-blur-sm transition-colors ${
+              poi.status === 'interested' || poi.status === 'planned' || poi.status === 'scheduled' ? 'text-red-500' :
+              poi.status === 'booked' || poi.status === 'visited' || poi.status === 'skipped' ? 'text-white/40 cursor-default' :
+              'text-white/70 hover:text-red-400'
+            }`}
+            title={['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(poi.status) ? statusLabels[poi.status] : poi.status === 'interested' ? 'הסר עניין' : 'מעניין אותי'}
+          >
+            <Heart
+              size={14}
+              fill={poi.status !== 'suggested' ? 'currentColor' : 'none'}
             />
-            {editable && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive h-7"
-                onClick={e => { e.stopPropagation(); deletePOI(poi.id); }}
-              >
-                <Trash2 size={14} className="mr-1" /> מחק
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          </button>
+        </div>
+
+        {/* Details below image */}
+        <div className="mt-1.5 space-y-0.5">
+          <p className="text-sm font-medium truncate">{poi.name}</p>
+          {poi.location.city && (
+            <p className="text-xs text-muted-foreground truncate">{poi.location.city}</p>
+          )}
+          {poi.subCategory && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
+              <SubCategoryIcon type={poi.subCategory} size={11} />
+              <span className="truncate">{poi.subCategory}</span>
+            </div>
+          )}
+        </div>
+      </div>
 
       {dialogOpen && (
         <POIDetailDialog poi={poi} open={dialogOpen} onOpenChange={setDialogOpen} />

@@ -9,8 +9,10 @@ import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Building2, CalendarDays, BedDouble, Trash2, ArrowRight, Search, Clock } from 'lucide-react';
+import { Building2, CalendarDays, BedDouble, Trash2, ArrowRight, Search, Clock, Merge } from 'lucide-react';
 import { BookingActions } from '@/components/BookingActions';
+import { Checkbox } from '@/components/ui/checkbox';
+import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
 import type { PointOfInterest } from '@/types/trip';
 
 const statusLabels: Record<string, string> = {
@@ -25,10 +27,32 @@ const statusLabels: Record<string, string> = {
 
 const AccommodationPage = () => {
   const { activeTrip, sourceEmailMap } = useActiveTrip();
-  const { pois, deletePOI } = usePOI();
+  const { pois, deletePOI, mergePOIs } = usePOI();
   const { formatDualCurrency } = useFinance();
   const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Merge mode
+  const [mergeMode, setMergeMode] = useState(false);
+  const [selectedForMerge, setSelectedForMerge] = useState<Set<string>>(new Set());
+  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
+
+  const toggleMergeSelection = (id: string) => {
+    setSelectedForMerge(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) { next.delete(id); } else { if (next.size >= 2) return prev; next.add(id); }
+      return next;
+    });
+  };
+
+  const selectedMergeAccomm = useMemo(() => {
+    if (selectedForMerge.size !== 2) return null;
+    const ids = Array.from(selectedForMerge);
+    const a = pois.find(p => p.id === ids[0]);
+    const b = pois.find(p => p.id === ids[1]);
+    if (!a || !b) return null;
+    return [a, b] as [PointOfInterest, PointOfInterest];
+  }, [selectedForMerge, pois]);
 
   const accommodations = useMemo(() => {
     if (!activeTrip) return [];
@@ -66,7 +90,18 @@ const AccommodationPage = () => {
             <h2 className="text-2xl font-bold">Accommodation</h2>
             <p className="text-muted-foreground">{accommodations.length} stays</p>
           </div>
-          <CreatePOIForm />
+          <div className="flex items-center gap-2">
+            <Button
+              variant={mergeMode ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => { setMergeMode(prev => !prev); setSelectedForMerge(new Set()); }}
+              className="gap-1"
+            >
+              <Merge size={14} />
+              {mergeMode ? 'בטל מיזוג' : 'מזג'}
+            </Button>
+            {!mergeMode && <CreatePOIForm />}
+          </div>
         </div>
 
         <div className="relative">
@@ -98,10 +133,18 @@ const AccommodationPage = () => {
               })();
 
               return (
+                <div key={poi.id} className="relative">
+                  {mergeMode && (
+                    <div className="absolute top-3 left-3 z-10" onClick={e => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selectedForMerge.has(poi.id)}
+                        onCheckedChange={() => toggleMergeSelection(poi.id)}
+                      />
+                    </div>
+                  )}
                 <Card
-                  key={poi.id}
-                  className={`cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${poi.isCancelled ? 'opacity-50' : ''}`}
-                  onClick={() => setSelectedPOI(poi)}
+                  className={`cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${poi.isCancelled ? 'opacity-50' : ''} ${mergeMode && selectedForMerge.has(poi.id) ? 'ring-2 ring-primary' : ''}`}
+                  onClick={() => mergeMode ? toggleMergeSelection(poi.id) : setSelectedPOI(poi)}
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
@@ -193,28 +236,57 @@ const AccommodationPage = () => {
                       <p className="text-xs text-muted-foreground italic">{poi.details.notes.user_summary}</p>
                     )}
 
-                    <div className="pt-1 flex justify-between items-center">
-                      <BookingActions
-                        orderNumber={poi.details.order_number}
-                        emailLinks={poi.sourceRefs.email_ids.map(id => ({ id, ...sourceEmailMap[id] }))}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive h-7"
-                        onClick={(e) => { e.stopPropagation(); deletePOI(poi.id); }}
-                      >
-                        <Trash2 size={14} className="mr-1" /> מחק
-                      </Button>
-                    </div>
+                    {!mergeMode && (
+                      <div className="pt-1 flex justify-between items-center">
+                        <BookingActions
+                          orderNumber={poi.details.order_number}
+                          emailLinks={poi.sourceRefs.email_ids.map(id => ({ id, ...sourceEmailMap[id] }))}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive h-7"
+                          onClick={(e) => { e.stopPropagation(); deletePOI(poi.id); }}
+                        >
+                          <Trash2 size={14} className="mr-1" /> מחק
+                        </Button>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
+                </div>
               );
             })}
           </div>
         )}
 
-        {selectedPOI && (
+        {mergeMode && selectedForMerge.size === 2 && (
+          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
+            <Button onClick={() => setMergeDialogOpen(true)} className="gap-1.5 shadow-lg">
+              <Merge size={16} /> מזג מלונות נבחרים
+            </Button>
+          </div>
+        )}
+
+        {mergeDialogOpen && selectedMergeAccomm && (
+          <MergeConfirmDialog
+            open={mergeDialogOpen}
+            onOpenChange={(open) => {
+              setMergeDialogOpen(open);
+              if (!open) { setSelectedForMerge(new Set()); setMergeMode(false); }
+            }}
+            items={selectedMergeAccomm}
+            entityType="poi"
+            onConfirm={async (primaryId, secondaryId) => {
+              await mergePOIs(primaryId, secondaryId);
+              setMergeDialogOpen(false);
+              setSelectedForMerge(new Set());
+              setMergeMode(false);
+            }}
+          />
+        )}
+
+        {selectedPOI && !mergeMode && (
           <POIDetailDialog
             poi={selectedPOI}
             open={!!selectedPOI}
