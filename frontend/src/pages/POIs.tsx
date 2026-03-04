@@ -1,13 +1,13 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
-import { useItinerary } from '@/context/ItineraryContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/badge';
 import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
-import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, Filter, LayoutGrid, ChevronDown, ChevronRight, Search, Merge } from 'lucide-react';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { MapPin, Filter, LayoutGrid, Search, Merge, ChevronLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -30,9 +30,9 @@ const statusLabels: Record<string, string> = {
 type GroupBy = 'category' | 'location' | 'status';
 
 const POIsPage = () => {
+  const navigate = useNavigate();
   const { activeTrip, tripSitesHierarchy } = useActiveTrip();
   const { pois, mergePOIs } = usePOI();
-  const { itineraryDays } = useItinerary();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [categoryFilters, setCategoryFilters] = useState<Set<POICategory | 'all'>>(new Set(['all']));
   const [groupBy, setGroupBy] = useState<GroupBy>('category');
@@ -67,23 +67,6 @@ const POIsPage = () => {
     return [a, b] as [PointOfInterest, PointOfInterest];
   }, [selectedForMerge, pois]);
 
-  // Build a map: poiId -> list of day numbers it's assigned to
-  const poiDaysMap = useMemo(() => {
-    const map: Record<string, number[]> = {};
-    for (const day of itineraryDays) {
-      const poiIds: string[] = [];
-      for (const opt of day.accommodationOptions || []) poiIds.push(opt.poi_id);
-      for (const act of day.activities || []) if (act.type === 'poi') poiIds.push(act.id);
-      for (const id of poiIds) {
-        if (!map[id]) map[id] = [];
-        map[id].push(day.dayNumber);
-      }
-    }
-    // Sort day numbers
-    for (const id of Object.keys(map)) map[id].sort((a, b) => a - b);
-    return map;
-  }, [itineraryDays]);
-
   const toggleStatusFilter = (s: POIStatus | 'all') => {
     setStatusFilters(prev => {
       const next = new Set(prev);
@@ -104,26 +87,6 @@ const POIsPage = () => {
     });
   };
 
-  const [expandedSubGroups, setExpandedSubGroups] = useState<Set<string>>(new Set());
-
-  // Reset expanded state when groupBy changes (group keys change)
-  useEffect(() => { setExpandedGroups(new Set()); setExpandedSubGroups(new Set()); }, [groupBy]);
-
-  const toggleGroup = (key: string) => {
-    setExpandedGroups(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key); else next.add(key);
-      return next;
-    });
-  };
-
-  const toggleSubGroup = (key: string) => {
-    setExpandedSubGroups(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key); else next.add(key);
-      return next;
-    });
-  };
 
   const countries = activeTrip?.countries || [];
   const { sites } = useCountrySites(countries, tripSitesHierarchy as SiteNode[]);
@@ -162,7 +125,8 @@ const POIsPage = () => {
   }, [nonAccommodationPois, statusFilters, categoryFilters, searchQuery, activeTrip]);
 
   const grouped = useMemo(() => {
-    const groups: Record<string, PointOfInterest[]> = {};
+    // First pass: group by primary key
+    const primaryGroups: Record<string, PointOfInterest[]> = {};
 
     for (const poi of filteredPois) {
       let key: string;
@@ -174,23 +138,66 @@ const POIsPage = () => {
       } else {
         key = poi.status;
       }
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(poi);
+      if (!primaryGroups[key]) primaryGroups[key] = [];
+      primaryGroups[key].push(poi);
+    }
+
+    // Second pass: split sub-groups with >6 items into separate rows
+    const result: [string, PointOfInterest[]][] = [];
+    const SUB_GROUP_THRESHOLD = 6;
+
+    for (const [key, pois] of Object.entries(primaryGroups)) {
+      if (groupBy === 'category' || groupBy === 'location') {
+        // Build sub-groups
+        const subMap: Record<string, PointOfInterest[]> = {};
+        for (const poi of pois) {
+          const sub = groupBy === 'category'
+            ? (poi.subCategory || '—')
+            : (poi.location.city || poi.location.country || '—');
+          if (!subMap[sub]) subMap[sub] = [];
+          subMap[sub].push(poi);
+        }
+
+        const largeSubs = Object.entries(subMap).filter(([, items]) => items.length > SUB_GROUP_THRESHOLD);
+
+        if (largeSubs.length > 0) {
+          // Collect remaining items (sub-groups with <= threshold)
+          const remaining: PointOfInterest[] = [];
+          for (const [sub, items] of Object.entries(subMap)) {
+            if (items.length > SUB_GROUP_THRESHOLD) {
+              result.push([`${key}::${sub}`, items]);
+            } else {
+              remaining.push(...items);
+            }
+          }
+          if (remaining.length > 0) {
+            result.push([`${key}::כללי`, remaining]);
+          }
+        } else {
+          result.push([key, pois]);
+        }
+      } else {
+        result.push([key, pois]);
+      }
     }
 
     // Sort keys
-    const sortedEntries = Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
-    return sortedEntries;
+    result.sort(([a], [b]) => a.localeCompare(b));
+    return result;
   }, [filteredPois, groupBy, cityRegionMap]);
 
   const getGroupLabel = (key: string): string => {
-    if (groupBy === 'category') return getCategoryLabel(key);
-    if (groupBy === 'status') return statusLabels[key] || key;
-    return key; // location - already readable
+    // Handle split sub-group keys like "category::subName"
+    const [primary, sub] = key.split('::');
+    const baseLabel = groupBy === 'category' ? getCategoryLabel(primary)
+      : groupBy === 'status' ? (statusLabels[primary] || primary)
+      : primary;
+    return sub ? `${baseLabel} | ${sub}` : baseLabel;
   };
 
   const getGroupIcon = (key: string): React.ReactNode => {
-    if (groupBy === 'category') { const Icon = getCategoryIcon(key); return <Icon size={16} />; }
+    const primary = key.split('::')[0];
+    if (groupBy === 'category') { const Icon = getCategoryIcon(primary); return <Icon size={16} />; }
     if (groupBy === 'location') return <MapPin size={16} />;
     return null;
   };
@@ -341,108 +348,39 @@ const POIsPage = () => {
           )}
         </div>
 
-        {grouped.map(([key, pois]) => {
-          const isExpanded = expandedGroups.has(key);
-
-          // Build sub-groups: by subCategory for category mode, by city for location mode
-          const subGroups: [string, PointOfInterest[]][] = (groupBy === 'category' || groupBy === 'location')
-            ? (() => {
-                const map: Record<string, PointOfInterest[]> = {};
-                for (const poi of pois) {
-                  const sub = groupBy === 'category'
-                    ? (poi.subCategory || '—')
-                    : (poi.location.city || poi.location.country || '—');
-                  if (!map[sub]) map[sub] = [];
-                  map[sub].push(poi);
-                }
-                return Object.entries(map).sort(([a], [b]) => a.localeCompare(b));
-              })()
-            : [];
-
-
-          return (
-          <div key={key}>
+        {grouped.map(([key, pois]) => (
+          <div key={key} className="space-y-2">
             <button
-              onClick={() => toggleGroup(key)}
-              className="w-full text-left mb-3 flex items-center gap-2 hover:text-primary transition-colors group"
+              onClick={() => navigate(`/pois/group?groupBy=${groupBy}&key=${encodeURIComponent(key)}`)}
+              className="flex items-center gap-2 hover:text-primary transition-colors group/header"
             >
-              {isExpanded
-                ? <ChevronDown size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
-                : <ChevronRight size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
-              }
               {getGroupIcon(key)}
               <span className="text-lg font-semibold">{getGroupLabel(key)}</span>
               <Badge variant="secondary" className="text-xs ml-1">{pois.length}</Badge>
+              <ChevronLeft size={16} className="text-muted-foreground group-hover/header:text-primary transition-colors" />
             </button>
-            {isExpanded && (
-              (groupBy === 'category' || groupBy === 'location') ? (
-                <div className="space-y-1 mb-4 ml-5">
-                  {subGroups.map(([subKey, subPois]) => {
-                    const subGroupKey = `${key}::${subKey}`;
-                    const isSubExpanded = expandedSubGroups.has(subGroupKey);
-                    return (
-                      <div key={subKey}>
-                        <button
-                          onClick={() => toggleSubGroup(subGroupKey)}
-                          className="w-full text-left mb-2 flex items-center gap-2 hover:text-primary transition-colors group"
-                        >
-                          {isSubExpanded
-                            ? <ChevronDown size={13} className="text-muted-foreground group-hover:text-primary transition-colors" />
-                            : <ChevronRight size={13} className="text-muted-foreground group-hover:text-primary transition-colors" />
-                          }
-                          {groupBy === 'category'
-                            ? <SubCategoryIcon type={subKey} size={13} />
-                            : <MapPin size={13} className="text-muted-foreground shrink-0" />
-                          }
-                          <span className="text-sm font-medium">{subKey}</span>
-                          <Badge variant="outline" className="text-[10px] ml-1">{subPois.length}</Badge>
-                        </button>
-                        {isSubExpanded && (
-                          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 mb-3 ml-4">
-                            {subPois.map(p => (
-                              <div key={p.id} className="relative">
-                                {mergeMode && (
-                                  <div className="absolute top-3 left-3 z-10" onClick={e => e.stopPropagation()}>
-                                    <Checkbox
-                                      checked={selectedForMerge.has(p.id)}
-                                      onCheckedChange={() => toggleMergeSelection(p)}
-                                    />
-                                  </div>
-                                )}
-                                <div className={mergeMode && selectedForMerge.has(p.id) ? 'ring-2 ring-primary rounded-lg' : ''}>
-                                  <POICard poi={p} level={3} editable={!mergeMode} showSubCategory={false} poiDaysMap={poiDaysMap} />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+            <ScrollArea className="w-full">
+              <div className="flex gap-3 pb-3">
+                {pois.map(p => (
+                  <div key={p.id} className="w-36 shrink-0 relative">
+                    {mergeMode && (
+                      <div className="absolute top-1.5 left-1.5 z-10" onClick={e => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedForMerge.has(p.id)}
+                          onCheckedChange={() => toggleMergeSelection(p)}
+                        />
                       </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 mb-2">
-                  {pois.map(p => (
-                    <div key={p.id} className="relative">
-                      {mergeMode && (
-                        <div className="absolute top-3 left-3 z-10" onClick={e => e.stopPropagation()}>
-                          <Checkbox
-                            checked={selectedForMerge.has(p.id)}
-                            onCheckedChange={() => toggleMergeSelection(p)}
-                          />
-                        </div>
-                      )}
-                      <div className={mergeMode && selectedForMerge.has(p.id) ? 'ring-2 ring-primary rounded-lg' : ''}>
-                        <POICard poi={p} level={3} editable={!mergeMode} showSubCategory poiDaysMap={poiDaysMap} />
-                      </div>
+                    )}
+                    <div className={mergeMode && selectedForMerge.has(p.id) ? 'ring-2 ring-primary rounded-lg' : ''}>
+                      <POICard poi={p} level={3} />
                     </div>
-                  ))}
-                </div>
-              )
-            )}
+                  </div>
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
           </div>
-          );
-        })}
+        ))}
 
         {filteredPois.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
