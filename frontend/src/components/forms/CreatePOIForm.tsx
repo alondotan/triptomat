@@ -128,7 +128,7 @@ export function CreatePOIForm() {
             </div>
             <div className="space-y-2">
               <Label>Sub-category</Label>
-              <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} placeholder="בחר תת-קטגוריה..." />
+              <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} placeholder="בחר תת-קטגוריה..." allowManual={category !== 'accommodation'} />
             </div>
           </div>
 

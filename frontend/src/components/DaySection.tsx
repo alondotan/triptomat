@@ -459,7 +459,7 @@ function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookin
       {entityType === 'accommodation' && (
         <div className="space-y-1">
           <Label className="text-xs">סוג</Label>
-          <SubCategorySelector categoryFilter="accommodation" value={subCategory} onChange={setSubCategory} placeholder="בחר סוג..." />
+          <SubCategorySelector categoryFilter="accommodation" value={subCategory} onChange={setSubCategory} placeholder="בחר סוג..." allowManual={false} />
         </div>
       )}
       <div className="space-y-1">

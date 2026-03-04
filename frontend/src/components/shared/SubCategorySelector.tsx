@@ -17,9 +17,11 @@ interface SubCategorySelectorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  /** Whether to show the manual text input toggle (default: true) */
+  allowManual?: boolean;
 }
 
-export function SubCategorySelector({ categoryFilter, value, onChange, placeholder = 'בחר סוג...' }: SubCategorySelectorProps) {
+export function SubCategorySelector({ categoryFilter, value, onChange, placeholder = 'בחר סוג...', allowManual = true }: SubCategorySelectorProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [manual, setManual] = useState(false);
@@ -44,7 +46,7 @@ export function SubCategorySelector({ categoryFilter, value, onChange, placehold
   const currentEntry = entries.find(e => e.type.toLowerCase() === value.toLowerCase());
   const CurrentIcon = currentEntry ? getLucideIcon(currentEntry.icon) : null;
 
-  if (manual) {
+  if (allowManual && manual) {
     return (
       <div className="flex gap-1">
         <Input
@@ -109,9 +111,11 @@ export function SubCategorySelector({ categoryFilter, value, onChange, placehold
           </div>
         </PopoverContent>
       </Popover>
-      <Button type="button" variant="ghost" size="icon" className="shrink-0 h-10 w-10" onClick={() => setManual(true)} title="הזנה ידנית">
-        <Pencil size={14} />
-      </Button>
+      {allowManual && (
+        <Button type="button" variant="ghost" size="icon" className="shrink-0 h-10 w-10" onClick={() => setManual(true)} title="הזנה ידנית">
+          <Pencil size={14} />
+        </Button>
+      )}
     </div>
   );
 }
