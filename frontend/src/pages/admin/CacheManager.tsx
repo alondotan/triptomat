@@ -186,49 +186,63 @@ export default function CacheManagerPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredEntries.map((entry: CacheEntry) => (
-                    <TableRow key={entry.url}>
-                      <TableCell
-                        className="font-mono text-xs max-w-xs"
-                        title={entry.url}
-                      >
-                        {truncateUrl(entry.url)}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {entry.job_id ? entry.job_id.substring(0, 12) : '--'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(entry.status)} className="text-xs">
-                          {entry.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {entry.created_at ? formatDateTime(entry.created_at) : '--'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-primary"
-                            onClick={() => setReprocessTarget(entry)}
-                            disabled={reprocessMutation.isPending}
-                            title="Reprocess"
-                          >
-                            <RefreshCw size={14} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-destructive"
-                            onClick={() => setDeleteTarget(entry)}
-                            disabled={deleteMutation.isPending}
-                            title="Delete"
-                          >
-                            <Trash2 size={14} />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                    <React.Fragment key={entry.url}>
+                      <TableRow>
+                        <TableCell
+                          className="font-mono text-xs max-w-xs"
+                          title={entry.url}
+                        >
+                          <a href={entry.url} target="_blank" rel="noopener noreferrer" className="hover:underline text-primary">
+                            {truncateUrl(entry.url)}
+                          </a>
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          {entry.job_id ? entry.job_id.substring(0, 12) : '--'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusBadgeVariant(entry.status)} className="text-xs">
+                            {entry.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {entry.created_at ? formatDateTime(entry.created_at) : '--'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-primary"
+                              onClick={() => setReprocessTarget(entry)}
+                              disabled={reprocessMutation.isPending}
+                              title="Reprocess"
+                            >
+                              <RefreshCw size={14} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-destructive"
+                              onClick={() => setDeleteTarget(entry)}
+                              disabled={deleteMutation.isPending}
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      {entry.status === 'failed' && entry.error && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="pt-0 pb-3">
+                            <div className="flex items-start gap-2 bg-destructive/5 border border-destructive/20 rounded-md px-3 py-2 text-xs">
+                              <AlertTriangle size={14} className="text-destructive shrink-0 mt-0.5" />
+                              <span className="text-destructive/90 break-all">{entry.error}</span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
                   ))}
                 </TableBody>
               </Table>
