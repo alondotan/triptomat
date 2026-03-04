@@ -287,7 +287,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
       </div>
       <div className="space-y-2">
         <Label>תת-קטגוריה</Label>
-        <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} placeholder="בחר תת-קטגוריה..." allowManual={category !== 'accommodation'} />
+        <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} placeholder="בחר תת-קטגוריה..." />
       </div>
     </div>
   );
@@ -463,8 +463,8 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     </div>
   );
 
-  // --- Desktop Accommodation Layout ---
-  if (isAccommodation && !isMobile) {
+  // --- Desktop Layout (all POI types) ---
+  if (!isMobile) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-6xl p-0 [&>button:last-child]:hidden" onOpenAutoFocus={e => e.preventDefault()}>
@@ -492,13 +492,9 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           <div className="grid grid-cols-3 gap-0 px-6 pb-6">
             {/* Left column — visual panel + location */}
             <div className="pe-5 space-y-4">
-              {poi.imageUrl ? (
+              {poi.imageUrl && (
                 <div className="w-full aspect-[4/3] overflow-hidden rounded-xl">
                   <img src={poi.imageUrl} alt={poi.name} className="w-full h-full object-cover" />
-                </div>
-              ) : (
-                <div className="w-full aspect-[4/3] rounded-xl bg-secondary/40 flex items-center justify-center">
-                  <span className="text-muted-foreground/40 text-4xl">🏨</span>
                 </div>
               )}
               {hasCoordinates && (
@@ -508,10 +504,11 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
               {quotesSection}
             </div>
 
-            {/* Middle column — details & accommodation */}
+            {/* Middle column — details & category-specific fields */}
             <div className="space-y-4 px-5 border-x">
               {detailsSection}
-              {accommodationFields}
+              {isAccommodation && accommodationFields}
+              {scheduleSection}
             </div>
 
             {/* Right column — cost & notes */}
@@ -525,7 +522,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     );
   }
 
-  // --- Mobile Accommodation / All other POI types ---
+  // --- Mobile Layout (all POI types) ---
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" onOpenAutoFocus={e => e.preventDefault()}>
@@ -545,8 +542,8 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           {detailsSection}
           {locationSection}
 
-          {/* Mini map after location on mobile accommodation */}
-          {isAccommodation && hasCoordinates && (
+          {/* Mini map after location */}
+          {hasCoordinates && (
             <AccommodationMiniMap coordinates={poi.location.coordinates} className="w-full h-40" />
           )}
 
