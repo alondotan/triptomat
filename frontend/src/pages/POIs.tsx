@@ -37,6 +37,7 @@ const POIsPage = () => {
   const [categoryFilters, setCategoryFilters] = useState<Set<POICategory | 'all'>>(new Set(['all']));
   const [groupBy, setGroupBy] = useState<GroupBy>('category');
   const [searchQuery, setSearchQuery] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Merge mode
@@ -250,71 +251,94 @@ const POIsPage = () => {
         </div>
 
         {/* Filter & Group Controls */}
-        <div className="flex flex-wrap gap-3 items-center">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Filter size={14} className="text-muted-foreground" />
-            <div className="flex gap-1 flex-wrap">
-              <Badge
-                variant={statusFilters.has('all') ? 'default' : 'outline'}
-                className="cursor-pointer text-xs"
-                onClick={() => toggleStatusFilter('all')}
-              >
-                הכל ({statusCounts.all || 0})
-              </Badge>
-              {(['suggested', 'interested', 'planned', 'scheduled', 'booked', 'visited', 'skipped'] as POIStatus[]).map(s => (
-                statusCounts[s] ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setFiltersOpen(prev => !prev)}
+              className="gap-1.5 text-xs"
+            >
+              <Filter size={14} />
+              סינון
+              {(!statusFilters.has('all') || !categoryFilters.has('all')) && (
+                <span className="bg-primary text-primary-foreground rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                  {(statusFilters.has('all') ? 0 : statusFilters.size) + (categoryFilters.has('all') ? 0 : categoryFilters.size)}
+                </span>
+              )}
+              {filtersOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </Button>
+
+            <div className="flex items-center gap-2 mr-auto">
+              <LayoutGrid size={14} className="text-muted-foreground" />
+              <Select value={groupBy} onValueChange={v => setGroupBy(v as GroupBy)}>
+                <SelectTrigger className="h-8 w-[140px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="category">לפי קטגוריה</SelectItem>
+                  <SelectItem value="location">לפי מיקום</SelectItem>
+                  <SelectItem value="status">לפי סטטוס</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {filtersOpen && (
+            <div className="flex flex-wrap gap-3 items-center border rounded-lg p-3 bg-muted/30">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground font-medium">סטטוס:</span>
+                <div className="flex gap-1 flex-wrap">
                   <Badge
-                    key={s}
-                    variant={statusFilters.has(s) ? 'default' : 'outline'}
+                    variant={statusFilters.has('all') ? 'default' : 'outline'}
                     className="cursor-pointer text-xs"
-                    onClick={() => toggleStatusFilter(s)}
+                    onClick={() => toggleStatusFilter('all')}
                   >
-                    {statusLabels[s]} ({statusCounts[s]})
+                    הכל ({statusCounts.all || 0})
                   </Badge>
-                ) : null
-              ))}
-            </div>
-          </div>
+                  {(['suggested', 'interested', 'planned', 'scheduled', 'booked', 'visited', 'skipped'] as POIStatus[]).map(s => (
+                    statusCounts[s] ? (
+                      <Badge
+                        key={s}
+                        variant={statusFilters.has(s) ? 'default' : 'outline'}
+                        className="cursor-pointer text-xs"
+                        onClick={() => toggleStatusFilter(s)}
+                      >
+                        {statusLabels[s]} ({statusCounts[s]})
+                      </Badge>
+                    ) : null
+                  ))}
+                </div>
+              </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1 flex-wrap">
-              <Badge
-                variant={categoryFilters.has('all') ? 'default' : 'outline'}
-                className="cursor-pointer text-xs"
-                onClick={() => toggleCategoryFilter('all')}
-              >
-                הכל
-              </Badge>
-              {getPOICategories().filter(c => c !== 'accommodation').map(c => {
-                const Icon = getCategoryIcon(c);
-                return categoryCounts[c] ? (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground font-medium">קטגוריה:</span>
+                <div className="flex gap-1 flex-wrap">
                   <Badge
-                    key={c}
-                    variant={categoryFilters.has(c as POICategory) ? 'default' : 'outline'}
-                    className="cursor-pointer text-xs gap-1"
-                    onClick={() => toggleCategoryFilter(c as POICategory)}
+                    variant={categoryFilters.has('all') ? 'default' : 'outline'}
+                    className="cursor-pointer text-xs"
+                    onClick={() => toggleCategoryFilter('all')}
                   >
-                    <Icon size={16} />
-                    {getCategoryLabel(c)} ({categoryCounts[c]})
+                    הכל
                   </Badge>
-                ) : null;
-              })}
+                  {getPOICategories().filter(c => c !== 'accommodation').map(c => {
+                    const Icon = getCategoryIcon(c);
+                    return categoryCounts[c] ? (
+                      <Badge
+                        key={c}
+                        variant={categoryFilters.has(c as POICategory) ? 'default' : 'outline'}
+                        className="cursor-pointer text-xs gap-1"
+                        onClick={() => toggleCategoryFilter(c as POICategory)}
+                      >
+                        <Icon size={16} />
+                        {getCategoryLabel(c)} ({categoryCounts[c]})
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2 mr-auto">
-            <LayoutGrid size={14} className="text-muted-foreground" />
-            <Select value={groupBy} onValueChange={v => setGroupBy(v as GroupBy)}>
-              <SelectTrigger className="h-8 w-[140px] text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="category">לפי קטגוריה</SelectItem>
-                <SelectItem value="location">לפי מיקום</SelectItem>
-                <SelectItem value="status">לפי סטטוס</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          )}
         </div>
 
         {grouped.map(([key, pois]) => {
