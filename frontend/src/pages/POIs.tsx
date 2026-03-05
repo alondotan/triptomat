@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { MapPin, Filter, LayoutGrid, Search, Merge, ChevronLeft } from 'lucide-react';
+import { MapPin, Filter, LayoutGrid, Search, Merge, ChevronLeft, ChevronDown, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,6 @@ const POIsPage = () => {
   const [groupBy, setGroupBy] = useState<GroupBy>('category');
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Merge mode
   const [mergeMode, setMergeMode] = useState(false);
