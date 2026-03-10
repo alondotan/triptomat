@@ -324,9 +324,9 @@ serve(async (req) => {
         trip_id: list.trip_id,
         timestamp: new Date().toISOString(),
         source_url: list.url,
-        source_title: list.name,
+        source_title: listName || list.name,
         source_image: null,
-        analysis: { sites_hierarchy: matchingHierarchy, recommendations: [] },
+        analysis: { sites_hierarchy: matchingHierarchy, recommendations: [], map_list_id: list_id },
         status: "linked",
         linked_entities: [],
       }]);
@@ -342,9 +342,9 @@ serve(async (req) => {
         trip_id: null,
         timestamp: new Date().toISOString(),
         source_url: list.url,
-        source_title: `${list.name || "Maps List"} (unmatched countries)`,
+        source_title: `${listName || list.name || "Maps List"} (unmatched countries)`,
         source_image: null,
-        analysis: { sites_hierarchy: nonMatchingHierarchy, recommendations: nonMatchingRecs },
+        analysis: { sites_hierarchy: nonMatchingHierarchy, recommendations: nonMatchingRecs, map_list_id: list_id },
         status: "pending",
         linked_entities: [],
       }]);

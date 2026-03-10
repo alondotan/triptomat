@@ -143,6 +143,33 @@ const POIsPage = () => {
       primaryGroups[key].push(poi);
     }
 
+    // For location grouping: merge small groups (≤3 items) up to country level
+    const MERGE_UP_THRESHOLD = 3;
+    if (groupBy === 'location') {
+      // Build region → country map from sites
+      const regionCountryMap: Record<string, string> = {};
+      for (const s of sites) {
+        if (s.path.length >= 2) {
+          regionCountryMap[s.path[1]] = s.path[0];
+        }
+      }
+
+      const keysToMerge: string[] = [];
+      for (const [key, items] of Object.entries(primaryGroups)) {
+        const country = regionCountryMap[key];
+        if (items.length <= MERGE_UP_THRESHOLD && country && country !== key) {
+          keysToMerge.push(key);
+        }
+      }
+
+      for (const key of keysToMerge) {
+        const country = regionCountryMap[key];
+        if (!primaryGroups[country]) primaryGroups[country] = [];
+        primaryGroups[country].push(...primaryGroups[key]);
+        delete primaryGroups[key];
+      }
+    }
+
     // Second pass: split sub-groups with >6 items into separate rows
     const result: [string, PointOfInterest[]][] = [];
     const SUB_GROUP_THRESHOLD = 6;
@@ -201,7 +228,7 @@ const POIsPage = () => {
     }
 
     return result;
-  }, [filteredPois, groupBy, cityRegionMap, sortBy]);
+  }, [filteredPois, groupBy, cityRegionMap, sites, sortBy]);
 
   const getGroupLabel = (key: string): string => {
     // Handle split sub-group keys like "category::subName"

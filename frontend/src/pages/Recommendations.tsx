@@ -7,7 +7,7 @@ import { AppLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExternalLink, ThumbsUp, ThumbsDown, Star, Trash2, ChevronDown, ChevronUp, Users, Loader2, AlertTriangle } from 'lucide-react';
+import { ExternalLink, ThumbsUp, ThumbsDown, Star, Trash2, ChevronDown, ChevronUp, Users, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
 import type { PointOfInterest } from '@/types/trip';
@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { UrlSubmit } from '@/components/UrlSubmit';
 import { TextSubmit } from '@/components/TextSubmit';
-import { MapListManager } from '@/components/MapListManager';
+import { supabase } from '@/integrations/supabase/client';
 
 const Recommendations = () => {
   const { activeTrip } = useActiveTrip();
@@ -29,6 +29,33 @@ const Recommendations = () => {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedPoi, setSelectedPoi] = useState<PointOfInterest | null>(null);
+  const [syncing, setSyncing] = useState<Record<string, boolean>>({});
+
+  const handleRefreshMapList = async (rec: SourceRecommendation) => {
+    const listId = rec.analysis.map_list_id;
+    if (!listId) return;
+    setSyncing(prev => ({ ...prev, [rec.id]: true }));
+    try {
+      const { data: tokenData } = await supabase.from('webhook_tokens').select('token').single();
+      if (!tokenData?.token) throw new Error('No webhook token');
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sync-maps-list`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ list_id: listId, token: tokenData.token }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Sync failed');
+      toast({
+        title: `Synced "${rec.sourceTitle}"`,
+        description: data.new_places > 0
+          ? `${data.new_places} new places found.`
+          : 'No new places found.',
+      });
+    } catch (e: any) {
+      toast({ title: 'Sync failed', description: e.message, variant: 'destructive' });
+    }
+    setSyncing(prev => ({ ...prev, [rec.id]: false }));
+  };
 
   const handleDelete = async (id: string) => {
     try {
@@ -98,7 +125,6 @@ const Recommendations = () => {
 
         <UrlSubmit />
         <TextSubmit />
-        <MapListManager />
 
         {recommendations.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
@@ -219,6 +245,11 @@ const Recommendations = () => {
                       isExpanded
                         ? <ChevronUp size={16} className="text-muted-foreground" />
                         : <ChevronDown size={16} className="text-muted-foreground" />
+                    )}
+                    {rec.analysis.map_list_id && (
+                      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleRefreshMapList(rec); }} disabled={syncing[rec.id]}>
+                        <RefreshCw className={`h-4 w-4 ${syncing[rec.id] ? 'animate-spin' : ''}`} />
+                      </Button>
                     )}
                     <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleDelete(rec.id); }}>
                       <Trash2 className="h-4 w-4 text-destructive" />
