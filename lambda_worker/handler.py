@@ -126,7 +126,19 @@ def lambda_handler(event, context):
                             video_path = f"/tmp/{job_id}.mp4"
                             s3.download_file(S3_BUCKET, s3_key, video_path)
 
-                            response_text = gemini.analyze_video(video_path, main_prompt)
+                            description = source_metadata.get("description", "")
+                            if description:
+                                video_prompt = (
+                                    f"Analyze BOTH the video AND this post description/caption:\n"
+                                    f"---\n{description}\n---\n\n"
+                                    f"The video may show specific places, while the description may list names, "
+                                    f"addresses, or details not visible in the video. "
+                                    f"Extract recommendations from BOTH sources.\n\n{main_prompt}"
+                                )
+                            else:
+                                video_prompt = main_prompt
+
+                            response_text = gemini.analyze_video(video_path, video_prompt)
                             response_json = json.loads(response_text)
                             os.remove(video_path)
 

@@ -92,11 +92,12 @@ def lambda_handler(event, context):
                         base_opts["cookiefile"] = cookies_path
 
                     # Extract metadata via yt-dlp
-                    source_metadata = {"title": "", "image": ""}
+                    source_metadata = {"title": "", "image": "", "description": ""}
                     with yt_dlp.YoutubeDL(base_opts) as ydl:
                         info = ydl.extract_info(url, download=False)
                         source_metadata["title"] = info.get("title", "")
                         source_metadata["image"] = info.get("thumbnail", "")
+                        source_metadata["description"] = info.get("description", "")
 
                     # Download video to /tmp
                     video_path = f"/tmp/{job_id}.mp4"
