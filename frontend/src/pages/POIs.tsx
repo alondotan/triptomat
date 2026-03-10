@@ -162,10 +162,12 @@ const POIsPage = () => {
         }
       }
 
+      // Merge small regions into "country::כללי"
       for (const key of keysToMerge) {
         const country = regionCountryMap[key];
-        if (!primaryGroups[country]) primaryGroups[country] = [];
-        primaryGroups[country].push(...primaryGroups[key]);
+        const mergedKey = `${country}::כללי`;
+        if (!primaryGroups[mergedKey]) primaryGroups[mergedKey] = [];
+        primaryGroups[mergedKey].push(...primaryGroups[key]);
         delete primaryGroups[key];
       }
     }
@@ -175,7 +177,7 @@ const POIsPage = () => {
     const SUB_GROUP_THRESHOLD = 6;
 
     for (const [key, pois] of Object.entries(primaryGroups)) {
-      if (groupBy === 'category' || groupBy === 'location') {
+      if ((groupBy === 'category' || groupBy === 'location') && !key.includes('::')) {
         // Build sub-groups
         const subMap: Record<string, PointOfInterest[]> = {};
         for (const poi of pois) {
