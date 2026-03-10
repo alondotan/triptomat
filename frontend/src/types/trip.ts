@@ -38,6 +38,7 @@ export interface POILocation {
 export interface SourceRefs {
   email_ids: string[];
   recommendation_ids: string[];
+  map_list_ids?: string[];
 }
 
 export interface POICost {

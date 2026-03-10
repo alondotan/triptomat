@@ -244,7 +244,7 @@ serve(async (req) => {
             address: rec.location?.address || null,
             coordinates: rec.location?.coordinates || null,
           },
-          source_refs: { email_ids: [], recommendation_ids: [], map_list_id: list_id },
+          source_refs: { email_ids: [], recommendation_ids: [], map_list_ids: [list_id] },
           details: {
             from_map_list: true,
             source_url: list.url,

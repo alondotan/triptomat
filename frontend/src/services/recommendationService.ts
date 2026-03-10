@@ -1,6 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import type { SourceRecommendation, SiteHierarchyNode } from '@/types/webhook';
+import type { SourceRefs } from '@/types/trip';
+import { isSourceRefsEmpty } from '@/services/helpers';
 import { getTypeToCategoryMap, getGeoTypes, getTipTypes } from '@/lib/subCategoryConfig';
 
 function buildSiteToCountryMap(hierarchy: SiteHierarchyNode[]): Record<string, string> {
@@ -184,6 +186,114 @@ export async function linkRecommendationToTrip(
 }
 
 export async function deleteRecommendation(id: string): Promise<void> {
+  // Fetch the recommendation to get linked_entities
+  const { data: rec, error: fetchError } = await supabase
+    .from('source_recommendations')
+    .select('linked_entities')
+    .eq('id', id)
+    .single();
+
+  if (fetchError) throw fetchError;
+
+  const linkedEntities = (rec?.linked_entities as Array<{
+    entity_type: string;
+    entity_id: string;
+    matched_existing?: boolean;
+  }>) || [];
+
+  // Process each linked entity: remove this recommendation from source_refs,
+  // and delete the entity if it has no remaining sources
+  const poiEntities = linkedEntities.filter(e => e.entity_type === 'poi');
+  const transportEntities = linkedEntities.filter(e => e.entity_type === 'transportation');
+  const newContactEntities = linkedEntities.filter(e => e.entity_type === 'contact' && !e.matched_existing);
+
+  // Handle POIs
+  if (poiEntities.length > 0) {
+    const poiIds = poiEntities.map(e => e.entity_id);
+    const { data: pois } = await supabase
+      .from('points_of_interest')
+      .select('id, source_refs')
+      .in('id', poiIds);
+
+    if (pois) {
+      const toDelete: string[] = [];
+      const toUpdate: Array<{ id: string; source_refs: SourceRefs }> = [];
+
+      for (const poi of pois) {
+        const refs = (poi.source_refs as unknown as SourceRefs) || {} as SourceRefs;
+        const updated: SourceRefs = {
+          email_ids: refs.email_ids || [],
+          recommendation_ids: (refs.recommendation_ids || []).filter(rid => rid !== id),
+          map_list_ids: refs.map_list_ids || [],
+        };
+
+        if (isSourceRefsEmpty(updated)) {
+          toDelete.push(poi.id);
+        } else {
+          toUpdate.push({ id: poi.id, source_refs: updated });
+        }
+      }
+
+      await Promise.all([
+        toDelete.length > 0
+          ? supabase.from('points_of_interest').delete().in('id', toDelete)
+          : Promise.resolve(),
+        ...toUpdate.map(u =>
+          supabase.from('points_of_interest').update({
+            source_refs: u.source_refs as unknown as Json,
+          }).eq('id', u.id)
+        ),
+      ]);
+    }
+  }
+
+  // Handle transportation
+  if (transportEntities.length > 0) {
+    const transportIds = transportEntities.map(e => e.entity_id);
+    const { data: transports } = await supabase
+      .from('transportation')
+      .select('id, source_refs')
+      .in('id', transportIds);
+
+    if (transports) {
+      const toDelete: string[] = [];
+      const toUpdate: Array<{ id: string; source_refs: SourceRefs }> = [];
+
+      for (const t of transports) {
+        const refs = (t.source_refs as unknown as SourceRefs) || {} as SourceRefs;
+        const updated: SourceRefs = {
+          email_ids: refs.email_ids || [],
+          recommendation_ids: (refs.recommendation_ids || []).filter(rid => rid !== id),
+          map_list_ids: refs.map_list_ids || [],
+        };
+
+        if (isSourceRefsEmpty(updated)) {
+          toDelete.push(t.id);
+        } else {
+          toUpdate.push({ id: t.id, source_refs: updated });
+        }
+      }
+
+      await Promise.all([
+        toDelete.length > 0
+          ? supabase.from('transportation').delete().in('id', toDelete)
+          : Promise.resolve(),
+        ...toUpdate.map(u =>
+          supabase.from('transportation').update({
+            source_refs: u.source_refs as unknown as Json,
+          }).eq('id', u.id)
+        ),
+      ]);
+    }
+  }
+
+  // Delete contacts that were created new (not matched to existing)
+  if (newContactEntities.length > 0) {
+    const contactIds = newContactEntities.map(e => e.entity_id);
+    await supabase.from('contacts').delete().in('id', contactIds);
+  }
+
+  // Finally, delete the recommendation itself
   const { error } = await supabase.from('source_recommendations').delete().eq('id', id);
   if (error) throw error;
 }

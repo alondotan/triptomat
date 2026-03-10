@@ -52,6 +52,7 @@ export async function createOrMergePOI(
     const updates: Partial<PointOfInterest> = {
       location: mergedLocation,
       details: mergedDetails,
+      sourceRefs: mergeSourceRefs(existingPoi.sourceRefs, poi.sourceRefs),
     };
 
     // Keep sub_category if new one is provided

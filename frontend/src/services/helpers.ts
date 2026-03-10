@@ -28,10 +28,22 @@ export function fuzzyMatch(a: string, b: string): boolean {
 }
 
 export function mergeSourceRefs(a: SourceRefs, b: SourceRefs): SourceRefs {
-  return {
+  const merged: SourceRefs = {
     email_ids: [...new Set([...(a.email_ids || []), ...(b.email_ids || [])])],
     recommendation_ids: [...new Set([...(a.recommendation_ids || []), ...(b.recommendation_ids || [])])],
   };
+  const mapListIds = [...new Set([...(a.map_list_ids || []), ...(b.map_list_ids || [])])];
+  if (mapListIds.length > 0) merged.map_list_ids = mapListIds;
+  return merged;
+}
+
+/** Returns true if sourceRefs has no remaining sources of any kind. */
+export function isSourceRefsEmpty(refs: SourceRefs): boolean {
+  return (
+    (!refs.email_ids || refs.email_ids.length === 0) &&
+    (!refs.recommendation_ids || refs.recommendation_ids.length === 0) &&
+    (!refs.map_list_ids || refs.map_list_ids.length === 0)
+  );
 }
 
 export const STATUS_PRIORITY: Record<string, number> = {
