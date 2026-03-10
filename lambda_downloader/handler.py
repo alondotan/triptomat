@@ -46,6 +46,20 @@ sqs = boto3.client("sqs")
 
 S3_BUCKET = os.environ.get("S3_BUCKET", "triptomat-media")
 ANALYSIS_QUEUE_URL = os.environ.get("ANALYSIS_QUEUE_URL", "")
+COOKIES_S3_KEY = os.environ.get("COOKIES_S3_KEY", "config/cookies.txt")
+
+
+def _get_cookies_path():
+    """Downloads cookies file from S3 to /tmp if available."""
+    cookies_path = "/tmp/cookies.txt"
+    if os.path.exists(cookies_path):
+        return cookies_path
+    try:
+        s3.download_file(S3_BUCKET, COOKIES_S3_KEY, cookies_path)
+        print(f"Downloaded cookies from s3://{S3_BUCKET}/{COOKIES_S3_KEY}")
+        return cookies_path
+    except Exception:
+        return None
 
 
 def lambda_handler(event, context):
@@ -71,9 +85,15 @@ def lambda_handler(event, context):
                 try:
                     print(f"Downloading video for job {job_id}: {url}")
 
+                    # Load cookies if available
+                    cookies_path = _get_cookies_path()
+                    base_opts = {"quiet": True}
+                    if cookies_path:
+                        base_opts["cookiefile"] = cookies_path
+
                     # Extract metadata via yt-dlp
                     source_metadata = {"title": "", "image": ""}
-                    with yt_dlp.YoutubeDL({"quiet": True}) as ydl:
+                    with yt_dlp.YoutubeDL(base_opts) as ydl:
                         info = ydl.extract_info(url, download=False)
                         source_metadata["title"] = info.get("title", "")
                         source_metadata["image"] = info.get("thumbnail", "")
@@ -81,9 +101,9 @@ def lambda_handler(event, context):
                     # Download video to /tmp
                     video_path = f"/tmp/{job_id}.mp4"
                     ydl_opts = {
+                        **base_opts,
                         "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]",
                         "outtmpl": video_path,
-                        "quiet": True,
                     }
 
                     with safe_span(tracer, "downloader.video_download", {

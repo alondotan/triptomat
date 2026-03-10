@@ -1,365 +1,2986 @@
 {
   "master_list": [
-  {"type": "continent", "icon": "public", "category": "Geography", "is_geo_location": true},
-  {"type": "country", "icon": "flag", "category": "Geography", "is_geo_location": true},
-  {"type":"square","icon":"crop_square","category":"Geography","is_geo_location":true},
-{"type":"plaza","icon":"crop_square","category":"Geography","is_geo_location":true},
-{"type":"street","icon":"signpost","category":"Geography","is_geo_location":true},
-{"type":"avenue","icon":"signpost","category":"Geography","is_geo_location":true},
-{"type":"boulevard","icon":"signpost","category":"Geography","is_geo_location":true},
-{"type":"alley","icon":"turn_right","category":"Geography","is_geo_location":true},
-{"type":"lane","icon":"turn_slight_right","category":"Geography","is_geo_location":true},
-{"type":"promenade","icon":"directions_walk","category":"Geography","is_geo_location":true},
-{"type":"waterfront","icon":"waves","category":"Geography","is_geo_location":true},
-{"type":"esplanade","icon":"directions_walk","category":"Geography","is_geo_location":true},
-{"type":"roundabout","icon":"roundabout_right","category":"Geography","is_geo_location":true},
-{"type":"intersection","icon":"alt_route","category":"Geography","is_geo_location":true},
-{"type":"bridge","icon":"bridge","category":"Geography","is_geo_location":true},
-{"type":"tunnel","icon":"tunnel","category":"Geography","is_geo_location":true},
-{"type":"overpass","icon":"north","category":"Geography","is_geo_location":true},
-{"type":"underpass","icon":"south","category":"Geography","is_geo_location":true},
-{"type":"stairs","icon":"stairs","category":"Geography","is_geo_location":true},
-{"type":"path","icon":"trail","category":"Geography","is_geo_location":true},
-{"type":"walkway","icon":"directions_walk","category":"Geography","is_geo_location":true},
-{"type":"pier","icon":"directions_boat","category":"Geography","is_geo_location":true},
-{"type":"quay","icon":"anchor","category":"Geography","is_geo_location":true},
-{"type":"embankment","icon":"waves","category":"Geography","is_geo_location":true},
-
-
-{"type":"river","icon":"water","category":"Activities","is_geo_location":true},
-{"type":"delta","icon":"waves","category":"Activities","is_geo_location":true},
-{"type":"fjord","icon":"landscape","category":"Activities","is_geo_location":true},
-{"type":"plateau","icon":"terrain","category":"Activities","is_geo_location":true},
-{"type":"desert","icon":"wb_sunny","category":"Activities","is_geo_location":true},
-{"type":"glacier","icon":"ac_unit","category":"Activities","is_geo_location":true},
-{"type":"reef","icon":"waves","category":"Activities","is_geo_location":true},
-{"type":"peninsula","icon":"explore","category":"Activities","is_geo_location":true},
-{"type":"harbor","icon":"anchor","category":"Activities","is_geo_location":true},
-{"type":"oldTown","icon":"account_balance","category":"Activities","is_geo_location":true},
-{"type": "monastery", "icon": "church", "category": "Activities", "is_geo_location": true},
-{"type": "county", "icon": "map", "category": "Activities", "is_geo_location": true},
-{"type": "republic", "icon": "public", "category": "Activities", "is_geo_location": true},
-{"type": "oblast", "icon": "domain", "category": "Activities", "is_geo_location": true},
-{"type": "borough", "icon": "location_city", "category": "Activities", "is_geo_location": true},
-{"type": "federal_entity", "icon": "account_balance", "category": "Activities", "is_geo_location": true},
-{"type": "autonomous_community", "icon": "groups", "category": "Activities", "is_geo_location": true},
-{"type": "canton", "icon": "map", "category": "Activities", "is_geo_location": true},
-{"type": "voivodeship", "icon": "terrain", "category": "Activities", "is_geo_location": true},
-{"type": "capital_city", "icon": "location_city", "category": "Activities", "is_geo_location": true},
-{"type": "entity", "icon": "category", "category": "Activities", "is_geo_location": true},
-{"type": "federal_city", "icon": "apartment", "category": "Activities", "is_geo_location": true},
-
-  {"type": "state", "icon": "map", "category": "Activities", "is_geo_location": true},
-  {"type": "province", "icon": "architecture", "category": "Activities", "is_geo_location": true},
-  {"type": "territory", "icon": "terrain", "category": "Activities", "is_geo_location": true},
-  {"type": "region", "icon": "explore", "category": "Activities", "is_geo_location": true},
-  {"type": "archipelago", "icon": "waves", "category": "Activities", "is_geo_location": true},
-  {"type": "island_group", "icon": "water", "category": "Activities", "is_geo_location": true},
-  {"type": "island", "icon": "landscape", "category": "Activities", "is_geo_location": true},
-  {"type": "mountain_range", "icon": "terrain", "category": "Activities", "is_geo_location": true},
-  {"type": "valley", "icon": "layers", "category": "Activities", "is_geo_location": true},
-  {"type": "canyon", "icon": "landscape", "category": "Activities", "is_geo_location": true},
-  {"type": "volcano", "icon": "whatshot", "category": "Activities", "is_geo_location": true},
-  {"type": "waterfall", "icon": "waterfall_chart", "category": "Activities", "is_geo_location": true},
-  {"type": "lagoon", "icon": "water", "category": "Activities", "is_geo_location": true},
-  {"type": "bay", "icon": "water", "category": "Activities", "is_geo_location": true},
-  {"type": "lake", "icon": "water", "category": "Activities", "is_geo_location": true},
-  {"type": "coastline", "icon": "beach_access", "category": "Activities", "is_geo_location": true},
-  {"type": "national_park", "icon": "park", "category": "Activities", "is_geo_location": true},
-  {"type": "nature_reserve", "icon": "nature", "category": "Activities", "is_geo_location": true},
-  {"type": "metropolitan_area", "icon": "location_city", "category": "Activities", "is_geo_location": true},
-  {"type": "municipality", "icon": "account_balance", "category": "Activities", "is_geo_location": true},
-  {"type": "city", "icon": "location_city", "category": "Activities", "is_geo_location": true},
-  {"type": "town", "icon": "home", "category": "Activities", "is_geo_location": true},
-  {"type": "village", "icon": "holiday_village", "category": "Activities", "is_geo_location": true},
-  {"type": "suburb", "icon": "home_work", "category": "Activities", "is_geo_location": true},
-  {"type": "district", "icon": "grid_view", "category": "Activities", "is_geo_location": true},
-  {"type": "neighborhood", "icon": "reorder", "category": "Activities", "is_geo_location": true},
-  {"type": "pedestrian_zone", "icon": "directions_walk", "category": "Activities", "is_geo_location": true},
-  {"type": "transit_hub", "icon": "hub", "category": "Activities", "is_geo_location": true},
-  {"type": "resort_complex", "icon": "apartment", "category": "Activities", "is_geo_location": true},
-  {"type": "itinerary_route", "icon": "moving", "category": "Activities", "is_geo_location": true},
-  {"type": "border_crossing", "icon": "door_front", "category": "Activities", "is_geo_location": true},
-  {"type": "area", "icon": "place", "category": "Activities", "is_geo_location": true},
-  {"type": "point_of_interest", "icon": "location_on", "category": "Activities", "is_geo_location": true},
-  {"type": "historicDistrict", "icon": "location_city", "category": "Activities", "is_geo_location": true},
-{"type": "department", "icon": "business_center", "category": "Activities", "is_geo_location": true},
-{"type": "reserve", "icon": "nature_people", "category": "Activities", "is_geo_location": true},
-{"type": "township", "icon": "location_city", "category": "Activities", "is_geo_location": true},
-{"type": "forest", "icon": "park", "category": "Activities", "is_geo_location": true},
-{"type": "governorate", "icon": "gavel", "category": "Activities", "is_geo_location": true},
-{"type": "republic", "icon": "public", "category": "Activities", "is_geo_location": true},
-{"type": "metropolis", "icon": "location_city", "category": "Activities", "is_geo_location": true},
-{"type": "prefecture", "icon": "map", "category": "Activities", "is_geo_location": true},
-{"type": "atoll", "icon": "waves", "category": "Activities", "is_geo_location": true} ,
-  {"type": "market", "icon": "shop", "category": "Activities", "is_geo_location": false},
-  {"type": "park", "icon": "park", "category": "Activities", "is_geo_location": false},
-  {"type": "landmark", "icon": "landscape", "category": "Activities", "is_geo_location": false},
-  {"type": "natural", "icon": "eco", "category": "Activities", "is_geo_location": false},
-  {"type": "historical", "icon": "history", "category": "Activities", "is_geo_location": false},
-  {"type": "cultural", "icon": "palette", "category": "Activities", "is_geo_location": false},
-  {"type": "amusement", "icon": "emoji_objects", "category": "Activities", "is_geo_location": false},
-  {"type": "beach", "icon": "beach_access", "category": "Activities", "is_geo_location": false},
-  {"type": "mountain", "icon": "landscape", "category": "Activities", "is_geo_location": false},
-  {"type": "wildlife", "icon": "pets", "category": "Activities", "is_geo_location": false},
-  {"type": "adventure", "icon": "directions_bike", "category": "Activities", "is_geo_location": false},
-  {"type": "religious", "icon": "star", "category": "Activities", "is_geo_location": false},
-  {"type": "architectural", "icon": "architecture", "category": "Activities", "is_geo_location": false},
-  {"type": "underwater", "icon": "scuba_diving", "category": "Activities", "is_geo_location": false},
-  {"type": "nationalPark", "icon": "nature", "category": "Activities", "is_geo_location": false},
-  {"type": "scenic", "icon": "panorama", "category": "Activities", "is_geo_location": false},
-  {"type": "museum", "icon": "museum", "category": "Activities", "is_geo_location": false},
-  {"type": "shopping", "icon": "shopping_basket", "category": "Activities", "is_geo_location": false},
-  {"type": "zoo", "icon": "pets", "category": "Activities", "is_geo_location": false},
-  {"type": "themePark", "icon": "directions_car", "category": "Activities", "is_geo_location": false},
-  {"type": "botanicalGarden", "icon": "nature_people", "category": "Activities", "is_geo_location": false},
-  {"type": "sports", "icon": "sports_basketball", "category": "Activities", "is_geo_location": false},
-  {"type": "music", "icon": "music_note", "category": "Activities", "is_geo_location": false},
-  {"type": "art", "icon": "brush", "category": "Activities", "is_geo_location": false},
-  {"type": "nightlife", "icon": "nights_stay", "category": "Activities", "is_geo_location": false},
-  {"type": "spa", "icon": "spa", "category": "Activities", "is_geo_location": false},
-  {"type": "casino", "icon": "casino", "category": "Activities", "is_geo_location": false},
-  {"type": "viewpoint", "icon": "visibility", "category": "Activities", "is_geo_location": false},
-  {"type": "hikingTrail", "icon": "terrain", "category": "Activities", "is_geo_location": false},
-  {"type": "extremeSports", "icon": "kayaking", "category": "Activities", "is_geo_location": false},
-  {"type": "hiddenGem", "icon": "auto_awesome", "category": "Activities", "is_geo_location": false},
-  {"type": "beachClub", "icon": "umbrella", "category": "Activities", "is_geo_location": false},
-  {"type": "stargazing", "icon": "auto_awesome", "category": "Activities", "is_geo_location": false},
-  {"type": "streetArt", "icon": "format_paint", "category": "Activities", "is_geo_location": false},
-  {"type": "photographySpot", "icon": "photo_camera", "category": "Activities", "is_geo_location": false},
-  {"type": "temple", "icon": "temple_hindu", "category": "Activities", "is_geo_location": false},
-  {"type": "boatTour", "icon": "directions_boat", "category": "Activities", "is_geo_location": false},
-  {"type": "playground", "icon": "child_care", "category": "Activities", "is_geo_location": false},
-  {"type": "walkingTour", "icon": "directions_walk", "category": "Activities", "is_geo_location": false},
-  {"type": "shoppingMall", "icon": "local_mall", "category": "Activities", "is_geo_location": false},
-  {"type": "historicSite", "icon": "history_edu", "category": "Activities", "is_geo_location": false},
-  {"type": "waterPark", "icon": "pool", "category": "Activities", "is_geo_location": false},
-  {"type": "skiResort", "icon": "ac_unit", "category": "Activities", "is_geo_location": false},
-  {"type": "vineyard", "icon": "wine_bar", "category": "Activities", "is_geo_location": false},
-  {"type": "brewery", "icon": "local_drink", "category": "Activities", "is_geo_location": false},
-  {"type": "movieTheater", "icon": "theaters", "category": "Activities", "is_geo_location": false},
-  {"type": "concertHall", "icon": "music_note", "category": "Activities", "is_geo_location": false},
-  {"type": "botanicalPark", "icon": "nature", "category": "Activities", "is_geo_location": false},
-  {"type": "fishingSpot", "icon": "local_parking", "category": "Activities", "is_geo_location": false},
-  {"type": "birdSanctuary", "icon": "flight", "category": "Activities", "is_geo_location": false},
-  {"type": "zipLine", "icon": "flight_takeoff", "category": "Activities", "is_geo_location": false},
-  {"type": "hotSpring", "icon": "hot_tub", "category": "Activities", "is_geo_location": false},
-  {"type": "canyon", "icon": "landscape", "category": "Activities", "is_geo_location": false},
-  {"type": "volcano", "icon": "whatshot", "category": "Activities", "is_geo_location": false},
-  {"type": "observatory", "icon": "visibility", "category": "Activities", "is_geo_location": false},
-  {"type": "lighthouse", "icon": "navigation", "category": "Activities", "is_geo_location": false},
-  {"type": "artGallery", "icon": "art_track", "category": "Activities", "is_geo_location": false},
-  {"type": "aquarium", "icon": "water", "category": "Activities", "is_geo_location": false},
-  {"type": "cave", "icon": "alt_route", "category": "Activities", "is_geo_location": false},
-{"type":"snorkeling","icon":"scuba_diving","category":"Activities","is_geo_location":false},
-{"type":"diving","icon":"scuba_diving","category":"Activities","is_geo_location":false},
-{"type":"surfing","icon":"surfing","category":"Activities","is_geo_location":false},
-{"type":"kayakingActivity","icon":"kayaking","category":"Activities","is_geo_location":false},
-{"type":"rafting","icon":"water","category":"Activities","is_geo_location":false},
-{"type":"climbing","icon":"terrain","category":"Activities","is_geo_location":false},
-{"type":"trekking","icon":"hiking","category":"Activities","is_geo_location":false},
-{"type":"jeepTour","icon":"directions_car","category":"Activities","is_geo_location":false},
-{"type":"safari","icon":"pets","category":"Activities","is_geo_location":false},
-{"type":"foodTour","icon":"restaurant","category":"Activities","is_geo_location":false},
-{"type":"streetMarketTour","icon":"storefront","category":"Activities","is_geo_location":false},
-{"type":"cookingClass","icon":"restaurant_menu","category":"Activities","is_geo_location":false},
-{"type":"wineTasting","icon":"wine_bar","category":"Activities","is_geo_location":false},
-{"type":"breweryTour","icon":"local_drink","category":"Activities","is_geo_location":false},
-{"type":"kidsAttraction","icon":"child_friendly","category":"Activities","is_geo_location":false},
-
-
-  {"type": "festival", "icon": "festival", "category": "Events", "is_geo_location": false},
-  {"type": "musicFestival", "icon": "music_note", "category": "Events", "is_geo_location": false},
-  {"type": "carnival", "icon": "music_note", "category": "Events", "is_geo_location": false},
-  {"type": "culturalParade", "icon": "music_note", "category": "Events", "is_geo_location": false},
-  {"type": "foodFestival", "icon": "music_note", "category": "Events", "is_geo_location": false},
-  {"type": "artExhibition", "icon": "music_note", "category": "Events", "is_geo_location": false},
-  {"type": "fireworks", "icon": "music_note", "category": "Events", "is_geo_location": false},
-  {"type": "sportingEvent", "icon": "music_note", "category": "Events", "is_geo_location": false},
-{"type":"localFestival","icon":"festival","category":"Events","is_geo_location":false},
-{"type":"religiousFestival","icon":"temple_hindu","category":"Events","is_geo_location":false},
-{"type":"streetParade","icon":"celebration","category":"Events","is_geo_location":false},
-{"type":"sportsMatch","icon":"sports_soccer","category":"Events","is_geo_location":false},
-{"type":"marathon","icon":"directions_run","category":"Events","is_geo_location":false},
-{"type":"concert","icon":"music_note","category":"Events","is_geo_location":false},
-{"type":"theaterShow","icon":"theaters","category":"Events","is_geo_location":false},
-{"type":"foodFair","icon":"restaurant","category":"Events","is_geo_location":false},
-
-
-  {"type": "hotel", "icon": "hotel", "category": "Accommodations", "is_geo_location": false},
-  {"type": "glamping", "icon": "festival", "category": "Accommodations", "is_geo_location": false},
-  {"type": "hostel", "icon": "king_bed", "category": "Accommodations", "is_geo_location": false},
-  {"type": "villa", "icon": "gite", "category": "Accommodations", "is_geo_location": false},
-  {"type": "resort", "icon": "beach_access", "category": "Accommodations", "is_geo_location": false},
-  {"type": "apartment", "icon": "apartment", "category": "Accommodations", "is_geo_location": false},
-  {"type": "guesthouse", "icon": "home", "category": "Accommodations", "is_geo_location": false},
-  {"type": "bedAndBreakfast", "icon": "free_breakfast", "category": "Accommodations", "is_geo_location": false},
-  {"type": "motel", "icon": "hotel", "category": "Accommodations", "is_geo_location": false},
-  {"type": "lodge", "icon": "cabin", "category": "Accommodations", "is_geo_location": false},
-  {"type": "ecoLodge", "icon": "eco", "category": "Accommodations", "is_geo_location": false},
-  {"type": "boutiqueHotel", "icon": "stars", "category": "Accommodations", "is_geo_location": false},
-  {"type": "capsuleHotel", "icon": "view_compact", "category": "Accommodations", "is_geo_location": false},
-  {"type": "ryokan", "icon": "hotel_class", "category": "Accommodations", "is_geo_location": false},
-  {"type": "homestay", "icon": "family_restroom", "category": "Accommodations", "is_geo_location": false},
-  {"type": "farmStay", "icon": "agriculture", "category": "Accommodations", "is_geo_location": false},
-  {"type": "cottage", "icon": "cottage", "category": "Accommodations", "is_geo_location": false},
-  {"type": "chalet", "icon": "holiday_village", "category": "Accommodations", "is_geo_location": false},
-  {"type": "bungalow", "icon": "house", "category": "Accommodations", "is_geo_location": false},
-  {"type": "treehouse", "icon": "park", "category": "Accommodations", "is_geo_location": false},
-  {"type": "houseboat", "icon": "directions_boat", "category": "Accommodations", "is_geo_location": false},
-  {"type": "campground", "icon": "festival", "category": "Accommodations", "is_geo_location": false},
-  {"type": "campingTent", "icon": "festival", "category": "Accommodations", "is_geo_location": false},
-  {"type": "rvPark", "icon": "rv_hookup", "category": "Accommodations", "is_geo_location": false},
-  {"type": "servicedApartment", "icon": "apartment", "category": "Accommodations", "is_geo_location": false},
-  {"type": "longStayHotel", "icon": "calendar_month", "category": "Accommodations", "is_geo_location": false},
-  {"type": "luxuryHotel", "icon": "diamond", "category": "Accommodations", "is_geo_location": false},
-  {"type": "budgetHotel", "icon": "savings", "category": "Accommodations", "is_geo_location": false},
-
-  {"type": "restaurant", "icon": "restaurant", "category": "Eateries", "is_geo_location": false},
-  {"type": "cafe", "icon": "local_cafe", "category": "Eateries", "is_geo_location": false},
-  {"type": "bakery", "icon": "local_dining", "category": "Eateries", "is_geo_location": false},
-  {"type": "deli", "icon": "local_dining", "category": "Eateries", "is_geo_location": false},
-  {"type": "bistro", "icon": "restaurant", "category": "Eateries", "is_geo_location": false},
-  {"type": "diner", "icon": "restaurant", "category": "Eateries", "is_geo_location": false},
-  {"type": "foodTruck", "icon": "emoji_food_beverage", "category": "Eateries", "is_geo_location": false},
-  {"type": "foodCourt", "icon": "local_dining", "category": "Eateries", "is_geo_location": false},
-  {"type": "buffet", "icon": "restaurant", "category": "Eateries", "is_geo_location": false},
-  {"type": "iceCreamParlor", "icon": "icecream", "category": "Eateries", "is_geo_location": false},
-  {"type": "juiceBar", "icon": "emoji_food_beverage", "category": "Eateries", "is_geo_location": false},
-  {"type": "pub", "icon": "local_bar", "category": "Eateries", "is_geo_location": false},
-  {"type": "bar", "icon": "local_bar", "category": "Eateries", "is_geo_location": false},
-  {"type": "tavern", "icon": "local_bar", "category": "Eateries", "is_geo_location": false},
-  {"type": "wineBar", "icon": "wine_bar", "category": "Eateries", "is_geo_location": false},
-  {"type": "brewpub", "icon": "local_drink", "category": "Eateries", "is_geo_location": false},
-  {"type": "sushiBar", "icon": "emoji_food_beverage", "category": "Eateries", "is_geo_location": false},
-  {"type": "teahouse", "icon": "local_cafe", "category": "Eateries", "is_geo_location": false},
-  {"type": "steakhouse", "icon": "restaurant", "category": "Eateries", "is_geo_location": false},
-  {"type": "tapasBar", "icon": "restaurant", "category": "Eateries", "is_geo_location": false},
-  {"type": "doughnutShop", "icon": "local_dining", "category": "Eateries", "is_geo_location": false},
-  {"type": "dessertBar", "icon": "local_cafe", "category": "Eateries", "is_geo_location": false},
-  {"type": "streetFood", "icon": "fastfood", "category": "Eateries", "is_geo_location": false},
-  {"type": "rooftopBar", "icon": "nightlife", "category": "Eateries", "is_geo_location": false},
-  {"type": "brunchSpot", "icon": "egg_alt", "category": "Eateries", "is_geo_location": false},
-  {"type": "speakeasy", "icon": "local_bar", "category": "Eateries", "is_geo_location": false},
-{"type":"fineDining","icon":"stars","category":"Eateries","is_geo_location":false},
-{"type":"localCuisine","icon":"restaurant_menu","category":"Eateries","is_geo_location":false},
-{"type":"veganRestaurant","icon":"eco","category":"Eateries","is_geo_location":false},
-{"type":"vegetarianRestaurant","icon":"spa","category":"Eateries","is_geo_location":false},
-{"type":"seafoodRestaurant","icon":"set_meal","category":"Eateries","is_geo_location":false},
-{"type":"familyRestaurant","icon":"family_restroom","category":"Eateries","is_geo_location":false},
-
-
-  {"type": "car", "icon": "directions_car", "category": "Transportation", "is_geo_location": false},
-  {"type": "bus", "icon": "directions_bus", "category": "Transportation", "is_geo_location": false},
-  {"type": "train", "icon": "train", "category": "Transportation", "is_geo_location": false},
-  {"type": "subway", "icon": "subway", "category": "Transportation", "is_geo_location": false},
-  {"type": "bicycle", "icon": "directions_bike", "category": "Transportation", "is_geo_location": false},
-  {"type": "motorcycle", "icon": "directions_bike", "category": "Transportation", "is_geo_location": false},
-  {"type": "taxi", "icon": "taxi_alert", "category": "Transportation", "is_geo_location": false},
-  {"type": "ferry", "icon": "directions_boat", "category": "Transportation", "is_geo_location": false},
-  {"type": "airplane", "icon": "airplanemode_active", "category": "Transportation", "is_geo_location": false},
-  {"type": "scooter", "icon": "directions_bike", "category": "Transportation", "is_geo_location": false},
-  {"type": "cruise", "icon": "directions_boat", "category": "Transportation", "is_geo_location": false},
-  {"type": "tram", "icon": "train", "category": "Transportation", "is_geo_location": false},
-  {"type": "cruiseShip", "icon": "directions_boat", "category": "Transportation", "is_geo_location": false},
-  {"type": "carRental", "icon": "car_rental", "category": "Transportation", "is_geo_location": false},
-{"type":"domesticFlight","icon":"flight","category":"Transportation","is_geo_location":false},
-{"type":"internationalFlight","icon":"flight_takeoff","category":"Transportation","is_geo_location":false},
-{"type":"nightTrain","icon":"hotel","category":"Transportation","is_geo_location":false},
-{"type":"highSpeedTrain","icon":"train","category":"Transportation","is_geo_location":false},
-{"type":"cableCar","icon":"tram","category":"Transportation","is_geo_location":false},
-{"type":"funicular","icon":"tram","category":"Transportation","is_geo_location":false},
-{"type":"boatTaxi","icon":"directions_boat","category":"Transportation","is_geo_location":false},
-{"type":"rideshare","icon":"local_taxi","category":"Transportation","is_geo_location":false},
-{"type":"privateTransfer","icon":"airport_shuttle","category":"Transportation","is_geo_location":false},
-  {"type": "rv", "icon": "rv_hookup", "category": "Transportation", "is_geo_location": false},
-{"type":"busStop","icon":"directions_bus","category":"Transportation","is_geo_location":true},
-{"type":"busStation","icon":"directions_bus_filled","category":"Transportation","is_geo_location":true},
-{"type":"trainStation","icon":"train","category":"Transportation","is_geo_location":true},
-{"type":"railwayStation","icon":"train","category":"Transportation","is_geo_location":true},
-{"type":"subwayStation","icon":"subway","category":"Transportation","is_geo_location":true},
-{"type":"metroStation","icon":"subway","category":"Transportation","is_geo_location":true},
-{"type":"tramStop","icon":"tram","category":"Transportation","is_geo_location":true},
-{"type":"tramStation","icon":"tram","category":"Transportation","is_geo_location":true},
-{"type":"lightRailStation","icon":"train","category":"Transportation","is_geo_location":true},
-{"type":"ferryTerminal","icon":"directions_boat","category":"Transportation","is_geo_location":true},
-{"type":"harborTerminal","icon":"anchor","category":"Transportation","is_geo_location":true},
-{"type":"port","icon":"anchor","category":"Transportation","is_geo_location":true},
-{"type":"airport","icon":"flight","category":"Transportation","is_geo_location":true},
-{"type":"airportTerminal","icon":"flight_takeoff","category":"Transportation","is_geo_location":true},
-{"type":"heliport","icon":"flight","category":"Transportation","is_geo_location":true},
-{"type":"cableCarStation","icon":"tram","category":"Transportation","is_geo_location":true},
-{"type":"funicularStation","icon":"tram","category":"Transportation","is_geo_location":true},
-{"type":"parkAndRide","icon":"local_parking","category":"Transportation","is_geo_location":true},
-{"type":"taxiStand","icon":"local_taxi","category":"Transportation","is_geo_location":true},
-{"type":"rideSharePickup","icon":"location_on","category":"Transportation","is_geo_location":true},
-{"type":"transportHub","icon":"hub","category":"Transportation","is_geo_location":true},
-{"type":"intermodalTerminal","icon":"hub","category":"Transportation","is_geo_location":true},
-
-
-  {"type": "atm", "icon": "atm", "category": "Services", "is_geo_location": false},
-  {"type": "travelAgency", "icon": "travel_explore", "category": "Services", "is_geo_location": false},
-  {"type": "laundry", "icon": "local_laundry_service", "category": "Services", "is_geo_location": false},
-  {"type": "simCard", "icon": "sim_card", "category": "Services", "is_geo_location": false},
-  {"type": "hospital", "icon": "local_hospital", "category": "Services", "is_geo_location": false},
-  {"type": "pharmacy", "icon": "local_pharmacy", "category": "Services", "is_geo_location": false},
-  {"type": "currencyExchange", "icon": "currency_exchange", "category": "Services", "is_geo_location": false},
-  {"type": "luggageStorage", "icon": "luggage", "category": "Services", "is_geo_location": false},
-  {"type": "touristInfo", "icon": "info", "category": "Services", "is_geo_location": false},
-  {"type": "supermarket", "icon": "shopping_cart", "category": "Services", "is_geo_location": false},
-{"type":"tourGuide","icon":"record_voice_over","category":"Services","is_geo_location":false},
-{"type":"driverService","icon":"badge","category":"Services","is_geo_location":false},
-{"type":"bikeRental","icon":"directions_bike","category":"Services","is_geo_location":false},
-{"type":"scooterRental","icon":"two_wheeler","category":"Services","is_geo_location":false},
-{"type":"equipmentRental","icon":"construction","category":"Services","is_geo_location":false},
-{"type":"locker","icon":"lock","category":"Services","is_geo_location":false},
-{"type":"showerFacility","icon":"shower","category":"Services","is_geo_location":false},
-{"type":"wifiHotspot","icon":"wifi","category":"Services","is_geo_location":false},
-{"type":"coworkingSpace","icon":"work","category":"Services","is_geo_location":false},
-{"type":"embassy","icon":"account_balance","category":"Services","is_geo_location":false},
-
-
-  {"type": "bestTimeVisit", "icon": "event_available", "category": "Tips", "is_geo_location": false},
-  {"type": "safetyTip", "icon": "gpp_maybe", "category": "Tips", "is_geo_location": false},
-  {"type": "packingTip", "icon": "inventory_2", "category": "Tips", "is_geo_location": false},
-  {"type": "appRecommendation", "icon": "install_mobile", "category": "Tips", "is_geo_location": false},
-  {"type": "budgetTip", "icon": "payments", "category": "Tips", "is_geo_location": false},
-{"type":"transportTip","icon":"commute","category":"Tips","is_geo_location":false},
-{"type":"scamWarning","icon":"report_problem","category":"Tips","is_geo_location":false},
-{"type":"weatherTip","icon":"wb_cloudy","category":"Tips","is_geo_location":false},
-{"type":"healthTip","icon":"health_and_safety","category":"Tips","is_geo_location":false},
-{"type":"visaTips","icon":"health_and_safety","category":"Tips","is_geo_location":false},
-{"type":"moneyTip","icon":"payments","category":"Tips","is_geo_location":false},
-{"type":"localEtiquetteTip","icon":"handshake","category":"Tips","is_geo_location":false},
-{"type":"connectivityTip","icon":"wifi","category":"Tips","is_geo_location":false},
-{"type":"familyTravelTip","icon":"family_restroom","category":"Tips","is_geo_location":false},
-
-{"type": "tourGuideContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
-{"type": "hostContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
-{"type": "driverContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
-{"type": "agencyContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
-{"type": "rentalContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
-{"type": "restaurantContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
-{"type": "otherContact", "icon": "person", "category": "Contacts", "is_geo_location": false},
-
-  {"type": "otherActivity", "icon": "more_horiz", "category": "Activities", "is_geo_location": false},
-  {"type": "otherGeography", "icon": "more_horiz", "category": "Geography", "is_geo_location": true},
-  {"type": "otherAccommodation", "icon": "more_horiz", "category": "Accommodations", "is_geo_location": false},
-  {"type": "otherEatery", "icon": "more_horiz", "category": "Eateries", "is_geo_location": false},
-  {"type": "otherTransportation", "icon": "more_horiz", "category": "Transportation", "is_geo_location": false},
-  {"type": "otherService", "icon": "more_horiz", "category": "Services", "is_geo_location": false},
-  {"type": "otherTip", "icon": "more_horiz", "category": "Tips", "is_geo_location": false}
+    {
+      "type": "continent",
+      "icon": "public",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Continent"
+    },
+    {
+      "type": "country",
+      "icon": "flag",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Country"
+    },
+    {
+      "type": "square",
+      "icon": "crop_square",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Square"
+    },
+    {
+      "type": "plaza",
+      "icon": "crop_square",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Plaza"
+    },
+    {
+      "type": "street",
+      "icon": "signpost",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Street"
+    },
+    {
+      "type": "avenue",
+      "icon": "signpost",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Avenue"
+    },
+    {
+      "type": "boulevard",
+      "icon": "signpost",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Boulevard"
+    },
+    {
+      "type": "alley",
+      "icon": "turn_right",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Alley"
+    },
+    {
+      "type": "lane",
+      "icon": "turn_slight_right",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Lane"
+    },
+    {
+      "type": "promenade",
+      "icon": "directions_walk",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Promenade"
+    },
+    {
+      "type": "waterfront",
+      "icon": "waves",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Waterfront"
+    },
+    {
+      "type": "esplanade",
+      "icon": "directions_walk",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Esplanade"
+    },
+    {
+      "type": "roundabout",
+      "icon": "roundabout_right",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Roundabout"
+    },
+    {
+      "type": "intersection",
+      "icon": "alt_route",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Intersection"
+    },
+    {
+      "type": "bridge",
+      "icon": "castle",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Bridge"
+    },
+    {
+      "type": "tunnel",
+      "icon": "subway",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Tunnel"
+    },
+    {
+      "type": "overpass",
+      "icon": "north",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Overpass"
+    },
+    {
+      "type": "underpass",
+      "icon": "south",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Underpass"
+    },
+    {
+      "type": "stairs",
+      "icon": "stairs",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Stairs"
+    },
+    {
+      "type": "path",
+      "icon": "hiking",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Path"
+    },
+    {
+      "type": "walkway",
+      "icon": "directions_walk",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Walkway"
+    },
+    {
+      "type": "pier",
+      "icon": "directions_boat",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Pier"
+    },
+    {
+      "type": "quay",
+      "icon": "anchor",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Quay"
+    },
+    {
+      "type": "embankment",
+      "icon": "waves",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Embankment"
+    },
+    {
+      "type": "county",
+      "icon": "map",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "County"
+    },
+    {
+      "type": "republic",
+      "icon": "public",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Republic"
+    },
+    {
+      "type": "oblast",
+      "icon": "domain",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Oblast"
+    },
+    {
+      "type": "borough",
+      "icon": "location_city",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Borough"
+    },
+    {
+      "type": "federal_entity",
+      "icon": "account_balance",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Federal Entity"
+    },
+    {
+      "type": "autonomous_community",
+      "icon": "groups",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Autonomous Community"
+    },
+    {
+      "type": "canton",
+      "icon": "map",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Canton"
+    },
+    {
+      "type": "voivodeship",
+      "icon": "terrain",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Voivodeship"
+    },
+    {
+      "type": "capital_city",
+      "icon": "location_city",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Capital City"
+    },
+    {
+      "type": "entity",
+      "icon": "category",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Entity"
+    },
+    {
+      "type": "federal_city",
+      "icon": "apartment",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Federal City"
+    },
+    {
+      "type": "state",
+      "icon": "map",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "State"
+    },
+    {
+      "type": "province",
+      "icon": "architecture",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Province"
+    },
+    {
+      "type": "territory",
+      "icon": "terrain",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Territory"
+    },
+    {
+      "type": "region",
+      "icon": "explore",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Region"
+    },
+    {
+      "type": "tourism_region",
+      "icon": "travel",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Tourism Region"
+    },
+    {
+      "type": "metropolitan_area",
+      "icon": "location_city",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Metropolitan Area"
+    },
+    {
+      "type": "municipality",
+      "icon": "account_balance",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Municipality"
+    },
+    {
+      "type": "city",
+      "icon": "location_city",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "City"
+    },
+    {
+      "type": "town",
+      "icon": "home",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Town"
+    },
+    {
+      "type": "village",
+      "icon": "holiday_village",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Village"
+    },
+    {
+      "type": "suburb",
+      "icon": "home_work",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Suburb"
+    },
+    {
+      "type": "district",
+      "icon": "grid_view",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "District"
+    },
+    {
+      "type": "neighborhood",
+      "icon": "reorder",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Neighborhood"
+    },
+    {
+      "type": "pedestrian_zone",
+      "icon": "directions_walk",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Pedestrian Zone"
+    },
+    {
+      "type": "historic_district",
+      "icon": "location_city",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Historic District"
+    },
+    {
+      "type": "department",
+      "icon": "business_center",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Department"
+    },
+    {
+      "type": "township",
+      "icon": "location_city",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Township"
+    },
+    {
+      "type": "governorate",
+      "icon": "gavel",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Governorate"
+    },
+    {
+      "type": "metropolis",
+      "icon": "location_city",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Metropolis"
+    },
+    {
+      "type": "prefecture",
+      "icon": "map",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Prefecture"
+    },
+    {
+      "type": "area",
+      "icon": "place",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Area"
+    },
+    {
+      "type": "atoll",
+      "icon": "waves",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Atoll"
+    },
+    {
+      "type": "other_geography",
+      "icon": "more_horiz",
+      "category": "Geography",
+      "is_geo_location": true,
+      "name": "Other Geography"
+    },
+    {
+      "type": "river",
+      "icon": "water",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "River"
+    },
+    {
+      "type": "delta",
+      "icon": "waves",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Delta"
+    },
+    {
+      "type": "fjord",
+      "icon": "landscape",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Fjord"
+    },
+    {
+      "type": "plateau",
+      "icon": "terrain",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Plateau"
+    },
+    {
+      "type": "desert",
+      "icon": "wb_sunny",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Desert"
+    },
+    {
+      "type": "glacier",
+      "icon": "ac_unit",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Glacier"
+    },
+    {
+      "type": "reef",
+      "icon": "waves",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Reef"
+    },
+    {
+      "type": "peninsula",
+      "icon": "explore",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Peninsula"
+    },
+    {
+      "type": "harbor",
+      "icon": "anchor",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Harbor"
+    },
+    {
+      "type": "old_town",
+      "icon": "account_balance",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Old Town"
+    },
+    {
+      "type": "monastery",
+      "icon": "church",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Monastery"
+    },
+    {
+      "type": "mountain_range",
+      "icon": "terrain",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Mountain Range"
+    },
+    {
+      "type": "valley",
+      "icon": "layers",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Valley"
+    },
+    {
+      "type": "canyon",
+      "icon": "landscape",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Canyon"
+    },
+    {
+      "type": "volcano",
+      "icon": "whatshot",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Volcano"
+    },
+    {
+      "type": "waterfall",
+      "icon": "waterfall_chart",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Waterfall"
+    },
+    {
+      "type": "lagoon",
+      "icon": "water",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Lagoon"
+    },
+    {
+      "type": "bay",
+      "icon": "water",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Bay"
+    },
+    {
+      "type": "lake",
+      "icon": "water",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Lake"
+    },
+    {
+      "type": "coastline",
+      "icon": "beach_access",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Coastline"
+    },
+    {
+      "type": "national_park_area",
+      "icon": "park",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "National Park Area"
+    },
+    {
+      "type": "nature_reserve_area",
+      "icon": "nature",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Nature Reserve Area"
+    },
+    {
+      "type": "transit_hub_area",
+      "icon": "hub",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Transit Hub Area"
+    },
+    {
+      "type": "resort_complex",
+      "icon": "apartment",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Resort Complex"
+    },
+    {
+      "type": "itinerary_route",
+      "icon": "moving",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Itinerary Route"
+    },
+    {
+      "type": "border_crossing",
+      "icon": "door_front",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Border Crossing"
+    },
+    {
+      "type": "point_of_interest",
+      "icon": "location_on",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Point Of Interest"
+    },
+    {
+      "type": "reserve_area",
+      "icon": "nature_people",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Reserve Area"
+    },
+    {
+      "type": "forest_area",
+      "icon": "park",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Forest Area"
+    },
+    {
+      "type": "cave_area",
+      "icon": "alt_route",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Cave Area"
+    },
+    {
+      "type": "market",
+      "icon": "storefront",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Market"
+    },
+    {
+      "type": "park",
+      "icon": "park",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Park"
+    },
+    {
+      "type": "landmark",
+      "icon": "landscape",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Landmark"
+    },
+    {
+      "type": "natural",
+      "icon": "eco",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Natural"
+    },
+    {
+      "type": "historical",
+      "icon": "history",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Historical"
+    },
+    {
+      "type": "cultural",
+      "icon": "palette",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Cultural"
+    },
+    {
+      "type": "amusement",
+      "icon": "emoji_objects",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Amusement"
+    },
+    {
+      "type": "beach",
+      "icon": "beach_access",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Beach"
+    },
+    {
+      "type": "mountain",
+      "icon": "landscape",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Mountain"
+    },
+    {
+      "type": "wildlife",
+      "icon": "pets",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Wildlife"
+    },
+    {
+      "type": "adventure",
+      "icon": "directions_bike",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Adventure"
+    },
+    {
+      "type": "religious",
+      "icon": "star",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Religious"
+    },
+    {
+      "type": "architectural",
+      "icon": "architecture",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Architectural"
+    },
+    {
+      "type": "underwater",
+      "icon": "scuba_diving",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Underwater"
+    },
+    {
+      "type": "national_park",
+      "icon": "nature",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "National Park"
+    },
+    {
+      "type": "scenic",
+      "icon": "panorama",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Scenic"
+    },
+    {
+      "type": "museum",
+      "icon": "museum",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Museum"
+    },
+    {
+      "type": "shopping",
+      "icon": "shopping_basket",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Shopping"
+    },
+    {
+      "type": "zoo",
+      "icon": "pets",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Zoo"
+    },
+    {
+      "type": "theme_park",
+      "icon": "roller_skating",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Theme Park"
+    },
+    {
+      "type": "botanical_garden",
+      "icon": "nature_people",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Botanical Garden"
+    },
+    {
+      "type": "sports",
+      "icon": "sports_basketball",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Sports"
+    },
+    {
+      "type": "music",
+      "icon": "music_note",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Music"
+    },
+    {
+      "type": "art",
+      "icon": "brush",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Art"
+    },
+    {
+      "type": "nightlife",
+      "icon": "nights_stay",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Nightlife"
+    },
+    {
+      "type": "spa",
+      "icon": "spa",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Spa"
+    },
+    {
+      "type": "casino",
+      "icon": "casino",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Casino"
+    },
+    {
+      "type": "viewpoint",
+      "icon": "visibility",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Viewpoint"
+    },
+    {
+      "type": "hiking_trail",
+      "icon": "terrain",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Hiking Trail"
+    },
+    {
+      "type": "extreme_sports",
+      "icon": "kayaking",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Extreme Sports"
+    },
+    {
+      "type": "hidden_gem",
+      "icon": "auto_awesome",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Hidden Gem"
+    },
+    {
+      "type": "beach_club",
+      "icon": "umbrella",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Beach Club"
+    },
+    {
+      "type": "stargazing",
+      "icon": "auto_awesome",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Stargazing"
+    },
+    {
+      "type": "street_art",
+      "icon": "format_paint",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Street Art"
+    },
+    {
+      "type": "photography_spot",
+      "icon": "photo_camera",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Photography Spot"
+    },
+    {
+      "type": "temple",
+      "icon": "temple_hindu",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Temple"
+    },
+    {
+      "type": "boat_tour",
+      "icon": "directions_boat",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Boat Tour"
+    },
+    {
+      "type": "playground",
+      "icon": "child_care",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Playground"
+    },
+    {
+      "type": "walking_tour",
+      "icon": "directions_walk",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Walking Tour"
+    },
+    {
+      "type": "shopping_mall",
+      "icon": "local_mall",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Shopping Mall"
+    },
+    {
+      "type": "historic_site",
+      "icon": "history_edu",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Historic Site"
+    },
+    {
+      "type": "water_park",
+      "icon": "pool",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Water Park"
+    },
+    {
+      "type": "ski_resort",
+      "icon": "ac_unit",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Ski Resort"
+    },
+    {
+      "type": "vineyard",
+      "icon": "wine_bar",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Vineyard"
+    },
+    {
+      "type": "brewery",
+      "icon": "local_drink",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Brewery"
+    },
+    {
+      "type": "movie_theater",
+      "icon": "theaters",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Movie Theater"
+    },
+    {
+      "type": "concert_hall",
+      "icon": "music_note",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Concert Hall"
+    },
+    {
+      "type": "botanical_park",
+      "icon": "nature",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Botanical Park"
+    },
+    {
+      "type": "fishing_spot",
+      "icon": "local_parking",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Fishing Spot"
+    },
+    {
+      "type": "bird_sanctuary",
+      "icon": "flight",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Bird Sanctuary"
+    },
+    {
+      "type": "zip_line",
+      "icon": "flight_takeoff",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Zip Line"
+    },
+    {
+      "type": "hot_spring",
+      "icon": "hot_tub",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Hot Spring"
+    },
+    {
+      "type": "canyon_activity",
+      "icon": "landscape",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Canyon Activity"
+    },
+    {
+      "type": "volcano_activity",
+      "icon": "whatshot",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Volcano Activity"
+    },
+    {
+      "type": "observatory",
+      "icon": "visibility",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Observatory"
+    },
+    {
+      "type": "lighthouse",
+      "icon": "navigation",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Lighthouse"
+    },
+    {
+      "type": "art_gallery",
+      "icon": "art_track",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Art Gallery"
+    },
+    {
+      "type": "aquarium",
+      "icon": "water",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Aquarium"
+    },
+    {
+      "type": "cave",
+      "icon": "alt_route",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Cave"
+    },
+    {
+      "type": "snorkeling",
+      "icon": "scuba_diving",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Snorkeling"
+    },
+    {
+      "type": "diving_activity",
+      "icon": "scuba_diving",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Diving Activity"
+    },
+    {
+      "type": "surfing",
+      "icon": "surfing",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Surfing"
+    },
+    {
+      "type": "kayaking_activity",
+      "icon": "kayaking",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Kayaking Activity"
+    },
+    {
+      "type": "rafting",
+      "icon": "water",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Rafting"
+    },
+    {
+      "type": "climbing",
+      "icon": "terrain",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Climbing"
+    },
+    {
+      "type": "trekking",
+      "icon": "hiking",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Trekking"
+    },
+    {
+      "type": "jeep_tour",
+      "icon": "directions_car",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Jeep Tour"
+    },
+    {
+      "type": "safari",
+      "icon": "pets",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Safari"
+    },
+    {
+      "type": "food_tour",
+      "icon": "restaurant",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Food Tour"
+    },
+    {
+      "type": "street_market_tour",
+      "icon": "storefront",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Street Market Tour"
+    },
+    {
+      "type": "cooking_class",
+      "icon": "restaurant_menu",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Cooking Class"
+    },
+    {
+      "type": "wine_tasting",
+      "icon": "wine_bar",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Wine Tasting"
+    },
+    {
+      "type": "brewery_tour",
+      "icon": "local_drink",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Brewery Tour"
+    },
+    {
+      "type": "kids_attraction",
+      "icon": "child_friendly",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Kids Attraction"
+    },
+    {
+      "type": "castle",
+      "icon": "castle",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Castle"
+    },
+    {
+      "type": "fortress",
+      "icon": "fort",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Fortress"
+    },
+    {
+      "type": "palace",
+      "icon": "villa",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Palace"
+    },
+    {
+      "type": "ruins",
+      "icon": "architecture",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Ruins"
+    },
+    {
+      "type": "archaeological_site",
+      "icon": "travel_explore",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Archaeological Site"
+    },
+    {
+      "type": "memorial",
+      "icon": "account_balance",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Memorial"
+    },
+    {
+      "type": "statue",
+      "icon": "park",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Statue"
+    },
+    {
+      "type": "monument",
+      "icon": "architecture",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Monument"
+    },
+    {
+      "type": "fountain",
+      "icon": "water_drop",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Fountain"
+    },
+    {
+      "type": "garden",
+      "icon": "yard",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Garden"
+    },
+    {
+      "type": "arboretum",
+      "icon": "forest",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Arboretum"
+    },
+    {
+      "type": "heritage_site",
+      "icon": "history_edu",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Heritage Site"
+    },
+    {
+      "type": "unesco_site",
+      "icon": "public",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Unesco Site"
+    },
+    {
+      "type": "sunset_spot",
+      "icon": "wb_twilight",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Sunset Spot"
+    },
+    {
+      "type": "sunrise_spot",
+      "icon": "wb_sunny",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Sunrise Spot"
+    },
+    {
+      "type": "panoramic_view",
+      "icon": "panorama",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Panoramic View"
+    },
+    {
+      "type": "romantic_spot",
+      "icon": "favorite",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Romantic Spot"
+    },
+    {
+      "type": "instagram_spot",
+      "icon": "camera_alt",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Instagram Spot"
+    },
+    {
+      "type": "picnic_area",
+      "icon": "outdoor_grill",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Picnic Area"
+    },
+    {
+      "type": "campfire_site",
+      "icon": "local_fire_department",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Campfire Site"
+    },
+    {
+      "type": "peninsula",
+      "icon": "explore",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Peninsula"
+    },
+    {
+      "type": "cape",
+      "icon": "explore",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Cape"
+    },
+    {
+      "type": "strait",
+      "icon": "waves",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Strait"
+    },
+    {
+      "type": "basin",
+      "icon": "waves",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Basin"
+    },
+    {
+      "type": "cliff",
+      "icon": "landscape",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Cliff"
+    },
+    {
+      "type": "ridge",
+      "icon": "terrain",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Ridge"
+    },
+    {
+      "type": "wetland",
+      "icon": "water_drop",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Wetland"
+    },
+    {
+      "type": "marsh",
+      "icon": "water_drop",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Marsh"
+    },
+    {
+      "type": "savanna",
+      "icon": "grass",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Savanna"
+    },
+    {
+      "type": "steppe",
+      "icon": "grass",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Steppe"
+    },
+    {
+      "type": "tundra",
+      "icon": "ac_unit",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Tundra"
+    },
+    {
+      "type": "oasis",
+      "icon": "local_florist",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Oasis"
+    },
+    {
+      "type": "gorge",
+      "icon": "landscape",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Gorge"
+    },
+    {
+      "type": "sand_dune",
+      "icon": "waves",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Sand Dune"
+    },
+    {
+      "type": "hot_desert_spring",
+      "icon": "hot_tub",
+      "category": "Activities",
+      "is_geo_location": true,
+      "name": "Hot Desert Spring"
+    },
+    {
+      "type": "street_food_lane",
+      "icon": "fastfood",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Street Food Lane"
+    },
+    {
+      "type": "craft_market",
+      "icon": "storefront",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Craft Market"
+    },
+    {
+      "type": "local_farm_visit",
+      "icon": "agriculture",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Local Farm Visit"
+    },
+    {
+      "type": "cooking_workshop",
+      "icon": "restaurant_menu",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Cooking Workshop"
+    },
+    {
+      "type": "photo_tour",
+      "icon": "photo_camera",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Photo Tour"
+    },
+    {
+      "type": "wine_route",
+      "icon": "wine_bar",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Wine Route"
+    },
+    {
+      "type": "cycling_route",
+      "icon": "directions_bike",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Cycling Route"
+    },
+    {
+      "type": "pilgrimage_route",
+      "icon": "temple_hindu",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Pilgrimage Route"
+    },
+    {
+      "type": "other_activity",
+      "icon": "more_horiz",
+      "category": "Activities",
+      "is_geo_location": false,
+      "name": "Other Activity"
+    },
+    {
+      "type": "festival",
+      "icon": "festival",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Festival"
+    },
+    {
+      "type": "music_festival",
+      "icon": "music_note",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Music Festival"
+    },
+    {
+      "type": "carnival",
+      "icon": "celebration",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Carnival"
+    },
+    {
+      "type": "cultural_parade",
+      "icon": "celebration",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Cultural Parade"
+    },
+    {
+      "type": "food_festival",
+      "icon": "restaurant",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Food Festival"
+    },
+    {
+      "type": "art_exhibition",
+      "icon": "brush",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Art Exhibition"
+    },
+    {
+      "type": "fireworks",
+      "icon": "celebration",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Fireworks"
+    },
+    {
+      "type": "sporting_event",
+      "icon": "sports_soccer",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Sporting Event"
+    },
+    {
+      "type": "local_festival",
+      "icon": "festival",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Local Festival"
+    },
+    {
+      "type": "religious_festival",
+      "icon": "temple_hindu",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Religious Festival"
+    },
+    {
+      "type": "street_parade",
+      "icon": "celebration",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Street Parade"
+    },
+    {
+      "type": "sports_match",
+      "icon": "sports_soccer",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Sports Match"
+    },
+    {
+      "type": "marathon",
+      "icon": "directions_run",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Marathon"
+    },
+    {
+      "type": "concert",
+      "icon": "music_note",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Concert"
+    },
+    {
+      "type": "theater_show",
+      "icon": "theaters",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Theater Show"
+    },
+    {
+      "type": "food_fair",
+      "icon": "restaurant",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Food Fair"
+    },
+    {
+      "type": "film_festival",
+      "icon": "movie",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Film Festival"
+    },
+    {
+      "type": "fashion_show",
+      "icon": "checkroom",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Fashion Show"
+    },
+    {
+      "type": "food_truck_fair",
+      "icon": "emoji_food_beverage",
+      "category": "Events",
+      "is_geo_location": false,
+      "name": "Food Truck Fair"
+    },
+    {
+      "type": "hotel",
+      "icon": "hotel",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Hotel"
+    },
+    {
+      "type": "glamping",
+      "icon": "festival",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Glamping"
+    },
+    {
+      "type": "hostel",
+      "icon": "king_bed",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Hostel"
+    },
+    {
+      "type": "villa",
+      "icon": "gite",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Villa"
+    },
+    {
+      "type": "resort",
+      "icon": "beach_access",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Resort"
+    },
+    {
+      "type": "apartment_stay",
+      "icon": "apartment",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Apartment Stay"
+    },
+    {
+      "type": "guesthouse",
+      "icon": "home",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Guesthouse"
+    },
+    {
+      "type": "bed_and_breakfast",
+      "icon": "free_breakfast",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Bed And Breakfast"
+    },
+    {
+      "type": "motel",
+      "icon": "hotel",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Motel"
+    },
+    {
+      "type": "lodge",
+      "icon": "cabin",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Lodge"
+    },
+    {
+      "type": "eco_lodge",
+      "icon": "eco",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Eco Lodge"
+    },
+    {
+      "type": "boutique_hotel",
+      "icon": "stars",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Boutique Hotel"
+    },
+    {
+      "type": "capsule_hotel",
+      "icon": "view_compact",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Capsule Hotel"
+    },
+    {
+      "type": "ryokan",
+      "icon": "hotel_class",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Ryokan"
+    },
+    {
+      "type": "homestay",
+      "icon": "family_restroom",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Homestay"
+    },
+    {
+      "type": "farm_stay",
+      "icon": "agriculture",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Farm Stay"
+    },
+    {
+      "type": "cottage",
+      "icon": "cottage",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Cottage"
+    },
+    {
+      "type": "chalet",
+      "icon": "holiday_village",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Chalet"
+    },
+    {
+      "type": "bungalow",
+      "icon": "house",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Bungalow"
+    },
+    {
+      "type": "treehouse",
+      "icon": "park",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Treehouse"
+    },
+    {
+      "type": "houseboat",
+      "icon": "directions_boat",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Houseboat"
+    },
+    {
+      "type": "campground",
+      "icon": "festival",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Campground"
+    },
+    {
+      "type": "camping_tent",
+      "icon": "festival",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Camping Tent"
+    },
+    {
+      "type": "rv_park",
+      "icon": "rv_hookup",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Rv Park"
+    },
+    {
+      "type": "serviced_apartment",
+      "icon": "apartment",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Serviced Apartment"
+    },
+    {
+      "type": "long_stay_hotel",
+      "icon": "calendar_month",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Long Stay Hotel"
+    },
+    {
+      "type": "luxury_hotel",
+      "icon": "diamond",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Luxury Hotel"
+    },
+    {
+      "type": "budget_hotel",
+      "icon": "savings",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Budget Hotel"
+    },
+    {
+      "type": "other_accommodation",
+      "icon": "more_horiz",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Other Accommodation"
+    },
+    {
+      "type": "mountain_hut",
+      "icon": "cabin",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Mountain Hut"
+    },
+    {
+      "type": "desert_camp",
+      "icon": "camping",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Desert Camp"
+    },
+    {
+      "type": "surf_hostel",
+      "icon": "surfing",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Surf Hostel"
+    },
+    {
+      "type": "diving_resort",
+      "icon": "scuba_diving",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Diving Resort"
+    },
+    {
+      "type": "ski_lodge",
+      "icon": "ac_unit",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Ski Lodge"
+    },
+    {
+      "type": "wellness_resort",
+      "icon": "spa",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Wellness Resort"
+    },
+    {
+      "type": "business_hotel",
+      "icon": "business_center",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Business Hotel"
+    },
+    {
+      "type": "airport_hotel",
+      "icon": "flight",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "Airport Hotel"
+    },
+    {
+      "type": "city_aparthotel",
+      "icon": "apartment",
+      "category": "Accommodations",
+      "is_geo_location": false,
+      "name": "City Aparthotel"
+    },
+    {
+      "type": "restaurant",
+      "icon": "restaurant",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Restaurant"
+    },
+    {
+      "type": "cafe",
+      "icon": "local_cafe",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Cafe"
+    },
+    {
+      "type": "bakery",
+      "icon": "local_dining",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Bakery"
+    },
+    {
+      "type": "deli",
+      "icon": "local_dining",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Deli"
+    },
+    {
+      "type": "bistro",
+      "icon": "restaurant",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Bistro"
+    },
+    {
+      "type": "diner",
+      "icon": "restaurant",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Diner"
+    },
+    {
+      "type": "food_truck",
+      "icon": "emoji_food_beverage",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Food Truck"
+    },
+    {
+      "type": "food_court",
+      "icon": "local_dining",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Food Court"
+    },
+    {
+      "type": "buffet",
+      "icon": "restaurant",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Buffet"
+    },
+    {
+      "type": "ice_cream_parlor",
+      "icon": "icecream",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Ice Cream Parlor"
+    },
+    {
+      "type": "juice_bar",
+      "icon": "emoji_food_beverage",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Juice Bar"
+    },
+    {
+      "type": "pub",
+      "icon": "local_bar",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Pub"
+    },
+    {
+      "type": "bar",
+      "icon": "local_bar",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Bar"
+    },
+    {
+      "type": "tavern",
+      "icon": "local_bar",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Tavern"
+    },
+    {
+      "type": "wine_bar_eatery",
+      "icon": "wine_bar",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Wine Bar Eatery"
+    },
+    {
+      "type": "brewpub",
+      "icon": "local_drink",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Brewpub"
+    },
+    {
+      "type": "sushi_bar",
+      "icon": "emoji_food_beverage",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Sushi Bar"
+    },
+    {
+      "type": "teahouse",
+      "icon": "local_cafe",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Teahouse"
+    },
+    {
+      "type": "steakhouse",
+      "icon": "restaurant",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Steakhouse"
+    },
+    {
+      "type": "tapas_bar",
+      "icon": "restaurant",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Tapas Bar"
+    },
+    {
+      "type": "doughnut_shop",
+      "icon": "local_dining",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Doughnut Shop"
+    },
+    {
+      "type": "dessert_bar",
+      "icon": "local_cafe",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Dessert Bar"
+    },
+    {
+      "type": "street_food",
+      "icon": "fastfood",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Street Food"
+    },
+    {
+      "type": "rooftop_bar",
+      "icon": "nightlife",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Rooftop Bar"
+    },
+    {
+      "type": "brunch_spot",
+      "icon": "egg_alt",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Brunch Spot"
+    },
+    {
+      "type": "speakeasy",
+      "icon": "local_bar",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Speakeasy"
+    },
+    {
+      "type": "fine_dining",
+      "icon": "stars",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Fine Dining"
+    },
+    {
+      "type": "local_cuisine",
+      "icon": "restaurant_menu",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Local Cuisine"
+    },
+    {
+      "type": "vegan_restaurant",
+      "icon": "eco",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Vegan Restaurant"
+    },
+    {
+      "type": "vegetarian_restaurant",
+      "icon": "spa",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Vegetarian Restaurant"
+    },
+    {
+      "type": "seafood_restaurant",
+      "icon": "set_meal",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Seafood Restaurant"
+    },
+    {
+      "type": "family_restaurant",
+      "icon": "family_restroom",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Family Restaurant"
+    },
+    {
+      "type": "other_eatery",
+      "icon": "more_horiz",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Other Eatery"
+    },
+    {
+      "type": "ramen_shop",
+      "icon": "ramen_dining",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Ramen Shop"
+    },
+    {
+      "type": "burger_joint",
+      "icon": "lunch_dining",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Burger Joint"
+    },
+    {
+      "type": "pizza_place",
+      "icon": "local_pizza",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Pizza Place"
+    },
+    {
+      "type": "patisserie",
+      "icon": "cake",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Patisserie"
+    },
+    {
+      "type": "gelato_shop",
+      "icon": "icecream",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Gelato Shop"
+    },
+    {
+      "type": "cocktail_bar",
+      "icon": "local_bar",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Cocktail Bar"
+    },
+    {
+      "type": "food_hall",
+      "icon": "restaurant",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Food Hall"
+    },
+    {
+      "type": "local_bakery_cafe",
+      "icon": "local_cafe",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Local Bakery Cafe"
+    },
+    {
+      "type": "gelato_stand",
+      "icon": "icecream",
+      "category": "Eateries",
+      "is_geo_location": false,
+      "name": "Gelato Stand"
+    },
+    {
+      "type": "car",
+      "icon": "directions_car",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Car"
+    },
+    {
+      "type": "bus",
+      "icon": "directions_bus",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Bus"
+    },
+    {
+      "type": "train",
+      "icon": "train",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Train"
+    },
+    {
+      "type": "subway",
+      "icon": "subway",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Subway"
+    },
+    {
+      "type": "bicycle",
+      "icon": "directions_bike",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Bicycle"
+    },
+    {
+      "type": "motorcycle",
+      "icon": "two_wheeler",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Motorcycle"
+    },
+    {
+      "type": "taxi",
+      "icon": "taxi_alert",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Taxi"
+    },
+    {
+      "type": "ferry",
+      "icon": "directions_boat",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Ferry"
+    },
+    {
+      "type": "airplane",
+      "icon": "airplanemode_active",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Airplane"
+    },
+    {
+      "type": "scooter",
+      "icon": "electric_scooter",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Scooter"
+    },
+    {
+      "type": "cruise",
+      "icon": "directions_boat",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Cruise"
+    },
+    {
+      "type": "tram",
+      "icon": "tram",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Tram"
+    },
+    {
+      "type": "cruise_ship",
+      "icon": "directions_boat",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Cruise Ship"
+    },
+    {
+      "type": "car_rental",
+      "icon": "car_rental",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Car Rental"
+    },
+    {
+      "type": "domestic_flight",
+      "icon": "flight",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Domestic Flight"
+    },
+    {
+      "type": "international_flight",
+      "icon": "flight_takeoff",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "International Flight"
+    },
+    {
+      "type": "night_train",
+      "icon": "hotel",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Night Train"
+    },
+    {
+      "type": "high_speed_train",
+      "icon": "train",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "High Speed Train"
+    },
+    {
+      "type": "cable_car",
+      "icon": "tram",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Cable Car"
+    },
+    {
+      "type": "funicular",
+      "icon": "tram",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Funicular"
+    },
+    {
+      "type": "boat_taxi_transport",
+      "icon": "directions_boat",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Boat Taxi Transport"
+    },
+    {
+      "type": "rideshare",
+      "icon": "local_taxi",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Rideshare"
+    },
+    {
+      "type": "private_transfer",
+      "icon": "airport_shuttle",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Private Transfer"
+    },
+    {
+      "type": "rv",
+      "icon": "rv_hookup",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Rv"
+    },
+    {
+      "type": "bus_stop",
+      "icon": "directions_bus",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Bus Stop"
+    },
+    {
+      "type": "bus_station",
+      "icon": "directions_bus_filled",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Bus Station"
+    },
+    {
+      "type": "train_station",
+      "icon": "train",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Train Station"
+    },
+    {
+      "type": "railway_station",
+      "icon": "train",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Railway Station"
+    },
+    {
+      "type": "subway_station",
+      "icon": "subway",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Subway Station"
+    },
+    {
+      "type": "metro_station",
+      "icon": "subway",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Metro Station"
+    },
+    {
+      "type": "tram_stop",
+      "icon": "tram",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Tram Stop"
+    },
+    {
+      "type": "tram_station",
+      "icon": "tram",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Tram Station"
+    },
+    {
+      "type": "light_rail_station",
+      "icon": "train",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Light Rail Station"
+    },
+    {
+      "type": "ferry_terminal",
+      "icon": "directions_boat",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Ferry Terminal"
+    },
+    {
+      "type": "harbor_terminal",
+      "icon": "anchor",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Harbor Terminal"
+    },
+    {
+      "type": "port",
+      "icon": "anchor",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Port"
+    },
+    {
+      "type": "airport",
+      "icon": "flight",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Airport"
+    },
+    {
+      "type": "airport_terminal",
+      "icon": "flight_takeoff",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Airport Terminal"
+    },
+    {
+      "type": "heliport",
+      "icon": "flight",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Heliport"
+    },
+    {
+      "type": "cable_car_station",
+      "icon": "tram",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Cable Car Station"
+    },
+    {
+      "type": "funicular_station",
+      "icon": "tram",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Funicular Station"
+    },
+    {
+      "type": "park_and_ride",
+      "icon": "local_parking",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Park And Ride"
+    },
+    {
+      "type": "taxi_stand",
+      "icon": "local_taxi",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Taxi Stand"
+    },
+    {
+      "type": "ride_share_pickup",
+      "icon": "location_on",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Ride Share Pickup"
+    },
+    {
+      "type": "transport_hub",
+      "icon": "hub",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Transport Hub"
+    },
+    {
+      "type": "intermodal_terminal",
+      "icon": "hub",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Intermodal Terminal"
+    },
+    {
+      "type": "other_transportation",
+      "icon": "more_horiz",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Other Transportation"
+    },
+    {
+      "type": "border_terminal",
+      "icon": "flag_circle",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Border Terminal"
+    },
+    {
+      "type": "toll_station",
+      "icon": "paid",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Toll Station"
+    },
+    {
+      "type": "highway_rest_area",
+      "icon": "local_gas_station",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Highway Rest Area"
+    },
+    {
+      "type": "gas_station",
+      "icon": "local_gas_station",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Gas Station"
+    },
+    {
+      "type": "parking_garage",
+      "icon": "local_parking",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Parking Garage"
+    },
+    {
+      "type": "ev_charging_station",
+      "icon": "ev_station",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Ev Charging Station"
+    },
+    {
+      "type": "bike_station",
+      "icon": "pedal_bike",
+      "category": "Transportation",
+      "is_geo_location": true,
+      "name": "Bike Station"
+    },
+    {
+      "type": "shuttle_bus",
+      "icon": "directions_bus",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Shuttle Bus"
+    },
+    {
+      "type": "airport_shuttle_bus",
+      "icon": "airport_shuttle",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Airport Shuttle Bus"
+    },
+    {
+      "type": "harbor_shuttle_boat",
+      "icon": "directions_boat",
+      "category": "Transportation",
+      "is_geo_location": false,
+      "name": "Harbor Shuttle Boat"
+    },
+    {
+      "type": "atm",
+      "icon": "atm",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Atm"
+    },
+    {
+      "type": "travel_agency",
+      "icon": "travel_explore",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Travel Agency"
+    },
+    {
+      "type": "laundry",
+      "icon": "local_laundry_service",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Laundry"
+    },
+    {
+      "type": "sim_card",
+      "icon": "sim_card",
+      "category": "Services",
+      "is_geo_location": false,
+      "name": "Sim Card"
+    },
+    {
+      "type": "hospital",
+      "icon": "local_hospital",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Hospital"
+    },
+    {
+      "type": "pharmacy",
+      "icon": "local_pharmacy",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Pharmacy"
+    },
+    {
+      "type": "currency_exchange",
+      "icon": "currency_exchange",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Currency Exchange"
+    },
+    {
+      "type": "luggage_storage",
+      "icon": "luggage",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Luggage Storage"
+    },
+    {
+      "type": "tourist_info",
+      "icon": "info",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Tourist Info"
+    },
+    {
+      "type": "supermarket",
+      "icon": "shopping_cart",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Supermarket"
+    },
+    {
+      "type": "tour_guide",
+      "icon": "record_voice_over",
+      "category": "Services",
+      "is_geo_location": false,
+      "name": "Tour Guide"
+    },
+    {
+      "type": "driver_service",
+      "icon": "badge",
+      "category": "Services",
+      "is_geo_location": false,
+      "name": "Driver Service"
+    },
+    {
+      "type": "bike_rental",
+      "icon": "directions_bike",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Bike Rental"
+    },
+    {
+      "type": "scooter_rental",
+      "icon": "two_wheeler",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Scooter Rental"
+    },
+    {
+      "type": "equipment_rental",
+      "icon": "construction",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Equipment Rental"
+    },
+    {
+      "type": "locker",
+      "icon": "lock",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Locker"
+    },
+    {
+      "type": "shower_facility",
+      "icon": "shower",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Shower Facility"
+    },
+    {
+      "type": "wifi_hotspot",
+      "icon": "wifi",
+      "category": "Services",
+      "is_geo_location": false,
+      "name": "Wifi Hotspot"
+    },
+    {
+      "type": "coworking_space",
+      "icon": "work",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Coworking Space"
+    },
+    {
+      "type": "embassy",
+      "icon": "account_balance",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Embassy"
+    },
+    {
+      "type": "other_service",
+      "icon": "more_horiz",
+      "category": "Services",
+      "is_geo_location": false,
+      "name": "Other Service"
+    },
+    {
+      "type": "post_office",
+      "icon": "local_post_office",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Post Office"
+    },
+    {
+      "type": "police_station",
+      "icon": "local_police",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Police Station"
+    },
+    {
+      "type": "fire_station",
+      "icon": "local_fire_department",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Fire Station"
+    },
+    {
+      "type": "clinic",
+      "icon": "local_hospital",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Clinic"
+    },
+    {
+      "type": "dentist",
+      "icon": "medical_services",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Dentist"
+    },
+    {
+      "type": "vet",
+      "icon": "pets",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Vet"
+    },
+    {
+      "type": "bank",
+      "icon": "account_balance",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Bank"
+    },
+    {
+      "type": "money_transfer",
+      "icon": "sync_alt",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Money Transfer"
+    },
+    {
+      "type": "convenience_store",
+      "icon": "local_convenience_store",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Convenience Store"
+    },
+    {
+      "type": "local_sim_shop",
+      "icon": "storefront",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Local Sim Shop"
+    },
+    {
+      "type": "luggage_repair",
+      "icon": "home_repair_service",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Luggage Repair"
+    },
+    {
+      "type": "camera_repair",
+      "icon": "build",
+      "category": "Services",
+      "is_geo_location": true,
+      "name": "Camera Repair"
+    },
+    {
+      "type": "best_time_visit",
+      "icon": "event_available",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Best Time Visit"
+    },
+    {
+      "type": "safety_tip",
+      "icon": "gpp_maybe",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Safety Tip"
+    },
+    {
+      "type": "packing_tip",
+      "icon": "inventory_2",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Packing Tip"
+    },
+    {
+      "type": "app_recommendation",
+      "icon": "install_mobile",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "App Recommendation"
+    },
+    {
+      "type": "budget_tip",
+      "icon": "payments",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Budget Tip"
+    },
+    {
+      "type": "transport_tip",
+      "icon": "commute",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Transport Tip"
+    },
+    {
+      "type": "scam_warning",
+      "icon": "report_problem",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Scam Warning"
+    },
+    {
+      "type": "weather_tip",
+      "icon": "wb_cloudy",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Weather Tip"
+    },
+    {
+      "type": "health_tip",
+      "icon": "health_and_safety",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Health Tip"
+    },
+    {
+      "type": "visa_tips",
+      "icon": "health_and_safety",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Visa Tips"
+    },
+    {
+      "type": "money_tip",
+      "icon": "payments",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Money Tip"
+    },
+    {
+      "type": "local_etiquette_tip",
+      "icon": "handshake",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Local Etiquette Tip"
+    },
+    {
+      "type": "connectivity_tip",
+      "icon": "wifi",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Connectivity Tip"
+    },
+    {
+      "type": "family_travel_tip",
+      "icon": "family_restroom",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Family Travel Tip"
+    },
+    {
+      "type": "emergency_number_tip",
+      "icon": "phone_in_talk",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Emergency Number Tip"
+    },
+    {
+      "type": "other_tip",
+      "icon": "more_horiz",
+      "category": "Tips",
+      "is_geo_location": false,
+      "name": "Other Tip"
+    },
+    {
+      "type": "tour_guide_contact",
+      "icon": "person",
+      "category": "Contacts",
+      "is_geo_location": false,
+      "name": "Tour Guide Contact"
+    },
+    {
+      "type": "host_contact",
+      "icon": "person",
+      "category": "Contacts",
+      "is_geo_location": false,
+      "name": "Host Contact"
+    },
+    {
+      "type": "driver_contact",
+      "icon": "person",
+      "category": "Contacts",
+      "is_geo_location": false,
+      "name": "Driver Contact"
+    },
+    {
+      "type": "agency_contact",
+      "icon": "person",
+      "category": "Contacts",
+      "is_geo_location": false,
+      "name": "Agency Contact"
+    },
+    {
+      "type": "rental_contact",
+      "icon": "person",
+      "category": "Contacts",
+      "is_geo_location": false,
+      "name": "Rental Contact"
+    },
+    {
+      "type": "restaurant_contact",
+      "icon": "person",
+      "category": "Contacts",
+      "is_geo_location": false,
+      "name": "Restaurant Contact"
+    },
+    {
+      "type": "other_contact",
+      "icon": "person",
+      "category": "Contacts",
+      "is_geo_location": false,
+      "name": "Other Contact"
+    }
   ],
-
   "categories": {
-    "Activities":     { "db_name": "attraction",     "icon": "zap",       "color": "text-blue-500",    "label_he": "אטרקציות" },
-    "Events":         { "db_name": "attraction",     "icon": "calendar",  "color": "text-purple-500",  "label_he": "אירועים" },
-    "Accommodations": { "db_name": "accommodation",  "icon": "bed",       "color": "text-indigo-500",  "label_he": "לינה" },
-    "Eateries":       { "db_name": "eatery",         "icon": "utensils",  "color": "text-orange-500",  "label_he": "אוכל" },
-    "Transportation": { "db_name": "transportation", "icon": "plane",     "color": "text-cyan-500",    "label_he": "תחבורה" },
-    "Services":       { "db_name": "service",        "icon": "wrench",    "color": "text-slate-500",   "label_he": "שירותים" },
-    "Contacts":       { "db_name": "contact",        "icon": "users",     "color": "text-teal-500",    "label_he": "אנשי קשר" },
-    "Tips":           { "db_name": null,              "icon": "lightbulb", "color": "text-yellow-500",  "label_he": "טיפים" },
-    "Geography":      { "db_name": null,              "icon": "map",       "color": "text-emerald-500", "label_he": "גיאוגרפיה" }
+    "Activities": {
+      "db_name": "attraction",
+      "icon": "zap",
+      "color": "text-blue-500",
+      "label_he": "אטרקציות"
+    },
+    "Events": {
+      "db_name": "attraction",
+      "icon": "calendar",
+      "color": "text-purple-500",
+      "label_he": "אירועים"
+    },
+    "Accommodations": {
+      "db_name": "accommodation",
+      "icon": "bed",
+      "color": "text-indigo-500",
+      "label_he": "לינה"
+    },
+    "Eateries": {
+      "db_name": "eatery",
+      "icon": "utensils",
+      "color": "text-orange-500",
+      "label_he": "אוכל"
+    },
+    "Transportation": {
+      "db_name": "transportation",
+      "icon": "plane",
+      "color": "text-cyan-500",
+      "label_he": "תחבורה"
+    },
+    "Services": {
+      "db_name": "service",
+      "icon": "wrench",
+      "color": "text-slate-500",
+      "label_he": "שירותים"
+    },
+    "Contacts": {
+      "db_name": "contact",
+      "icon": "users",
+      "color": "text-teal-500",
+      "label_he": "אנשי קשר"
+    },
+    "Tips": {
+      "db_name": null,
+      "icon": "lightbulb",
+      "color": "text-yellow-500",
+      "label_he": "טיפים"
+    },
+    "Geography": {
+      "db_name": null,
+      "icon": "map",
+      "color": "text-emerald-500",
+      "label_he": "גיאוגרפיה"
+    }
   }
 }
