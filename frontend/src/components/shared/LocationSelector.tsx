@@ -114,6 +114,8 @@ export function LocationSelector({ countries, value, onChange, placeholder = 'ב
               />
             )}
           </div>
+          {/* Always-visible manual entry at bottom */}
+          <ManualEntryFooter onSelect={handleSelect} />
         </PopoverContent>
       </Popover>
     </div>
@@ -228,6 +230,54 @@ interface TreeNodeProps {
   onSelect: (label: string) => void;
 }
 
+function ManualEntryFooter({ onSelect }: { onSelect: (label: string) => void }) {
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newName.trim();
+    if (trimmed) {
+      onSelect(trimmed);
+      setNewName('');
+      setAdding(false);
+    }
+  };
+
+  if (!adding) {
+    return (
+      <div className="border-t p-2">
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="flex items-center gap-1.5 w-full text-right py-1.5 px-2 rounded-md transition-colors text-sm hover:bg-accent text-muted-foreground"
+        >
+          <Plus size={14} />
+          <span>הוסף מיקום ידנית</span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-t p-2">
+      <form onSubmit={handleSubmit} className="flex items-center gap-1">
+        <Input
+          value={newName}
+          onChange={e => setNewName(e.target.value)}
+          placeholder="שם מיקום..."
+          className="h-8 text-sm flex-1"
+          autoFocus
+          onKeyDown={e => { if (e.key === 'Escape') { setAdding(false); setNewName(''); } }}
+        />
+        <Button type="submit" size="sm" className="h-8 text-xs px-3" disabled={!newName.trim()}>
+          בחר
+        </Button>
+      </form>
+    </div>
+  );
+}
+
 function TreeNode({ node, depth, value, onSelect }: TreeNodeProps) {
   const hasChildren = node.sub_sites && node.sub_sites.length > 0;
   const isCountry = node.site_type === 'country';
@@ -292,12 +342,12 @@ function TreeNode({ node, depth, value, onSelect }: TreeNodeProps) {
             <span className="text-[10px] text-muted-foreground mr-auto shrink-0">{typeLabel}</span>
           )}
         </button>
-        {/* Add child button - visible on hover */}
-        {expanded && (
+        {/* Add child button */}
+        {expanded && !adding && (
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setAdding(true); }}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted-foreground/20 ml-1 shrink-0"
+            className="p-1 rounded hover:bg-muted-foreground/20 ml-1 shrink-0"
             title="הוסף מיקום"
           >
             <Plus size={12} className="text-muted-foreground" />
