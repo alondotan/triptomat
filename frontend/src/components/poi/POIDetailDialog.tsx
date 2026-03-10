@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { ExternalLink, Plus, Quote, Save, X } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { SubCategorySelector } from '@/components/shared/SubCategorySelector';
+import { LocationSelector } from '@/components/shared/LocationSelector';
 import type { PointOfInterest, POICategory, POIStatus, POIBooking } from '@/types/trip';
 import { getPOICategories, getCategoryLabel } from '@/lib/subCategoryConfig';
 import { syncActivityBookingsToDays } from '@/services/itineraryService';
@@ -48,7 +49,7 @@ interface RecommendationQuote {
 
 export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProps) {
   const { updatePOI } = usePOI();
-  const { activeTrip } = useActiveTrip();
+  const { activeTrip, tripSitesHierarchy } = useActiveTrip();
   const { isResearch, isPlanning } = useTripMode();
 
   // Editable fields
@@ -295,15 +296,15 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const locationSection = (
     <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Location</span>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <Label>עיר</Label>
-          <Input value={city} onChange={e => setCity(e.target.value)} />
-        </div>
-        <div className="space-y-2">
-          <Label>מדינה</Label>
-          <Input value={country} onChange={e => setCountry(e.target.value)} />
-        </div>
+      <div className="space-y-2">
+        <Label>מיקום</Label>
+        <LocationSelector
+          countries={activeTrip?.countries || (country ? [country] : [])}
+          value={city}
+          onChange={setCity}
+          placeholder="בחר מיקום..."
+          extraHierarchy={tripSitesHierarchy}
+        />
       </div>
       <div className="space-y-2">
         <Label>כתובת</Label>

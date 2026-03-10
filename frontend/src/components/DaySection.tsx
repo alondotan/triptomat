@@ -463,7 +463,7 @@ function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookin
         </div>
       )}
       <div className="space-y-1">
-        <Label className="text-xs">עיר</Label>
+        <Label className="text-xs">מיקום</Label>
         <LocationSelector countries={countries || []} value={city} onChange={setCity} placeholder="בחר מיקום..." extraHierarchy={tripSitesHierarchy} />
       </div>
       {showBookingMissionOption && (
