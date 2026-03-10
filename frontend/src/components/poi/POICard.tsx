@@ -260,6 +260,8 @@ export function POICard({
   }
 
   // ─── Level 3: compact tile (POIs page — horizontal scroll) ──────────────
+  const isNew = Date.now() - new Date(poi.createdAt).getTime() < 90 * 60 * 1000;
+
   const handleToggleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(poi.status)) return;
@@ -281,6 +283,12 @@ export function POICard({
             <div className="w-full h-full flex items-center justify-center">
               <SubCategoryIcon type={poi.subCategory || ''} size={32} className="text-muted-foreground/40" />
             </div>
+          )}
+          {/* New badge */}
+          {isNew && (
+            <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 text-[10px] font-bold bg-green-500 text-white rounded-full leading-none z-10">
+              חדש
+            </span>
           )}
           {/* Heart button overlay */}
           <button

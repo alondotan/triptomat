@@ -39,7 +39,7 @@ jobs:
           IMAGE_URI=${{ env.ECR_REGISTRY }}/${IMAGE_NAME}:latest
 
           docker build --provenance=false \
-            -f lambda_${{ matrix.lambda }}/Dockerfile \
+            -f lambdas/${{ matrix.lambda }}/Dockerfile \
             -t ${IMAGE_URI} .
 
           docker push ${IMAGE_URI}

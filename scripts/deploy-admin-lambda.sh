@@ -34,8 +34,8 @@ fail() { echo "    [FAIL] $1" >&2; exit 1; }
 
 log "Pre-flight checks"
 
-if [ ! -f "lambda_admin/Dockerfile" ]; then
-    fail "lambda_admin/Dockerfile not found. Run from the project root."
+if [ ! -f "lambdas/admin/Dockerfile" ]; then
+    fail "lambdas/admin/Dockerfile not found. Run from the project root."
 fi
 
 if ! aws lambda get-function --function-name "$FUNCTION_NAME" \
@@ -53,7 +53,7 @@ log "Step 1: Building Docker image"
 
 docker build --provenance=false \
     -t "${FUNCTION_NAME}" \
-    -f lambda_admin/Dockerfile .
+    -f lambdas/admin/Dockerfile .
 ok "Docker image built"
 
 docker tag "${FUNCTION_NAME}:latest" "${IMAGE_URI}"

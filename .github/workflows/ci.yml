@@ -71,5 +71,5 @@ jobs:
         lambda: [gateway, downloader, worker, mail_handler, admin]
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -f lambda_${{ matrix.lambda }}/Dockerfile .
+      - run: docker build -f lambdas/${{ matrix.lambda }}/Dockerfile .
         name: Build ${{ matrix.lambda }}

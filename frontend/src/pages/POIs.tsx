@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { MapPin, Filter, LayoutGrid, Search, Merge, ChevronLeft, ChevronDown, ChevronRight } from 'lucide-react';
+import { MapPin, Filter, LayoutGrid, Search, Merge, ChevronLeft, ChevronDown, ChevronRight, ArrowUpDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,7 @@ const statusLabels: Record<string, string> = {
 };
 
 type GroupBy = 'category' | 'location' | 'status';
+type SortBy = 'name' | 'updated_at' | 'created_at';
 
 const POIsPage = () => {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ const POIsPage = () => {
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [categoryFilters, setCategoryFilters] = useState<Set<POICategory | 'all'>>(new Set(['all']));
   const [groupBy, setGroupBy] = useState<GroupBy>('category');
+  const [sortBy, setSortBy] = useState<SortBy>('name');
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -182,8 +184,24 @@ const POIsPage = () => {
 
     // Sort keys
     result.sort(([a], [b]) => a.localeCompare(b));
+
+    // Sort items within each group
+    if (sortBy === 'updated_at') {
+      for (const [, items] of result) {
+        items.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      }
+    } else if (sortBy === 'created_at') {
+      for (const [, items] of result) {
+        items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      }
+    } else {
+      for (const [, items] of result) {
+        items.sort((a, b) => a.name.localeCompare(b.name));
+      }
+    }
+
     return result;
-  }, [filteredPois, groupBy, cityRegionMap]);
+  }, [filteredPois, groupBy, cityRegionMap, sortBy]);
 
   const getGroupLabel = (key: string): string => {
     // Handle split sub-group keys like "category::subName"
@@ -275,18 +293,33 @@ const POIsPage = () => {
               {filtersOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </Button>
 
-            <div className="flex items-center gap-2 mr-auto">
-              <LayoutGrid size={14} className="text-muted-foreground" />
-              <Select value={groupBy} onValueChange={v => setGroupBy(v as GroupBy)}>
-                <SelectTrigger className="h-8 w-[140px] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="category">לפי קטגוריה</SelectItem>
-                  <SelectItem value="location">לפי מיקום</SelectItem>
-                  <SelectItem value="status">לפי סטטוס</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-3 mr-auto">
+              <div className="flex items-center gap-1">
+                <LayoutGrid size={14} className="text-muted-foreground" />
+                <Select value={groupBy} onValueChange={v => setGroupBy(v as GroupBy)}>
+                  <SelectTrigger className="h-8 w-[140px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="category">לפי קטגוריה</SelectItem>
+                    <SelectItem value="location">לפי מיקום</SelectItem>
+                    <SelectItem value="status">לפי סטטוס</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-1">
+                <ArrowUpDown size={14} className="text-muted-foreground" />
+                <Select value={sortBy} onValueChange={v => setSortBy(v as SortBy)}>
+                  <SelectTrigger className="h-8 w-[130px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">לפי שם</SelectItem>
+                    <SelectItem value="updated_at">לפי עדכון</SelectItem>
+                    <SelectItem value="created_at">לפי יצירה</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 

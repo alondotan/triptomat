@@ -21,7 +21,7 @@ FUNCTION_NAME="triptomat-admin"
 ECR_REPO="triptomat-admin"
 ROLE_NAME="triptomat-admin-role"
 API_ID="9hhwxodv7a"
-POLICY_FILE="lambda_admin/iam-policy.json"
+POLICY_FILE="lambdas/admin/iam-policy.json"
 
 ECR_REGISTRY="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
 IMAGE_URI="${ECR_REGISTRY}/${ECR_REPO}:latest"
@@ -186,7 +186,7 @@ log "Step 4: Building Docker image"
 
 docker build --provenance=false \
     -t "${FUNCTION_NAME}" \
-    -f lambda_admin/Dockerfile .
+    -f lambdas/admin/Dockerfile .
 ok "Docker image built"
 
 docker tag "${FUNCTION_NAME}:latest" "${IMAGE_URI}"

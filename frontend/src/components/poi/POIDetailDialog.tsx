@@ -467,9 +467,9 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   if (!isMobile) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-6xl p-0 [&>button:last-child]:hidden" onOpenAutoFocus={e => e.preventDefault()}>
+        <DialogContent className="max-w-6xl max-h-[90vh] p-0 flex flex-col [&>button:last-child]:hidden" onOpenAutoFocus={e => e.preventDefault()}>
           {/* Header bar */}
-          <div className="flex items-center justify-between px-6 pt-5 pb-3">
+          <div className="flex items-center justify-between px-6 pt-5 pb-3 shrink-0">
             <div className="flex items-center gap-3 min-w-0">
               <DialogHeader className="p-0">
                 <DialogTitle className="text-xl font-semibold truncate">{poi.name}</DialogTitle>
@@ -489,7 +489,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           </div>
 
           {/* Three-column body */}
-          <div className="grid grid-cols-3 gap-0 px-6 pb-6">
+          <div className="grid grid-cols-3 gap-0 px-6 pb-6 overflow-y-auto min-h-0">
             {/* Left column — visual panel + location */}
             <div className="pe-5 space-y-4">
               {poi.imageUrl && (
