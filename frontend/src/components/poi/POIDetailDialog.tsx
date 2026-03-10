@@ -9,7 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ExternalLink, Plus, Quote, Save, X } from 'lucide-react';
+import { ExternalLink, Plus, Quote, Save, Trash2, X } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Switch } from '@/components/ui/switch';
 import { SubCategorySelector } from '@/components/shared/SubCategorySelector';
 import { LocationSelector } from '@/components/shared/LocationSelector';
@@ -48,7 +49,8 @@ interface RecommendationQuote {
 }
 
 export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProps) {
-  const { updatePOI } = usePOI();
+  const { updatePOI, deletePOI } = usePOI();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { activeTrip, tripSitesHierarchy } = useActiveTrip();
   const { isResearch, isPlanning } = useTripMode();
 
@@ -230,6 +232,39 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
       await syncActivityBookingsToDays(poi.tripId, poi.id, savedBookings);
     }
 
+    onOpenChange(false);
+  };
+
+  const handleCancel = () => {
+    // Reset all fields to original poi values
+    setName(poi.name);
+    setCategory(poi.category);
+    setSubCategory(poi.subCategory || '');
+    setIsBooked(poi.status === 'booked');
+    setCity(poi.location.city || '');
+    setCountry(poi.location.country || '');
+    setAddress(poi.location.address || '');
+    setCostAmount(poi.details.cost?.amount?.toString() || '');
+    setCostCurrency(poi.details.cost?.currency || activeTrip?.currency || 'ILS');
+    setIsPaid(poi.isPaid);
+    setNotes(poi.details.notes?.user_summary || '');
+    setCheckinDate(poi.details.accommodation_details?.checkin?.date || '');
+    setCheckinHour(poi.details.accommodation_details?.checkin?.hour || '');
+    setCheckoutDate(poi.details.accommodation_details?.checkout?.date || '');
+    setCheckoutHour(poi.details.accommodation_details?.checkout?.hour || '');
+    setRoomType(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
+    setOccupancy(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
+    setBookings((poi.details.bookings || []).map(b => ({
+      date: b.reservation_date || '',
+      hour: b.reservation_hour || '',
+    })));
+    setOrderNumber(poi.details.order_number || '');
+    setDuration(poi.details.activity_details?.duration?.toString() || '');
+    onOpenChange(false);
+  };
+
+  const handleDelete = async () => {
+    await deletePOI(poi.id);
     onOpenChange(false);
   };
 
@@ -480,11 +515,28 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
               </Badge>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="gap-1.5 text-destructive hover:text-destructive">
+                    <Trash2 size={14} /> מחק
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>למחוק את {poi.name}?</AlertDialogTitle>
+                    <AlertDialogDescription>פעולה זו לא ניתנת לביטול.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>ביטול</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">מחק</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <Button variant="outline" size="sm" onClick={handleCancel}>
+                ביטול
+              </Button>
               <Button onClick={handleSave} size="sm" className="gap-1.5">
                 <Save size={14} /> שמור
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => onOpenChange(false)}>
-                <X size={16} />
               </Button>
             </div>
           </div>
@@ -553,9 +605,31 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           {scheduleSection}
           {notesSection}
 
-          <Button onClick={handleSave} className="w-full gap-1.5">
-            <Save size={16} /> שמור שינויים
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleSave} className="flex-1 gap-1.5">
+              <Save size={16} /> שמור
+            </Button>
+            <Button variant="outline" onClick={handleCancel} className="flex-1">
+              ביטול
+            </Button>
+          </div>
+          <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" className="w-full gap-1.5 text-destructive hover:text-destructive">
+                <Trash2 size={16} /> מחק
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>למחוק את {poi.name}?</AlertDialogTitle>
+                <AlertDialogDescription>פעולה זו לא ניתנת לביטול.</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>ביטול</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">מחק</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </DialogContent>
     </Dialog>

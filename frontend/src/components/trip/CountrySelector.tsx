@@ -30,6 +30,8 @@ export function CountrySelector({ value, onChange, placeholder = 'Select countri
     } else {
       onChange([...value, country]);
     }
+    setOpen(false);
+    setSearch('');
   };
 
   const removeCountry = (country: string) => {
