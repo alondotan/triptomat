@@ -302,9 +302,9 @@ def call_openai(html_text, allowed_types, geo_types):
             - The first level must be the country or countries that in the mail.
             - Each node must be an object: {{"site": "Name", "site_type": "Type", "sub_sites": []}}.
             - Use "sub_sites" only if child locations exist.
-            - Types must be strictly from: {geo_types}.
-            - The hierarchy MUST follow a logical path: Country -> State/Region -> City -> Neighborhood/POI.
-            - The sites_hierarchy should only contain the sites of the recommendations.
+            - site_type must be strictly from: {geo_types}.
+            - The hierarchy MUST follow a COMPLETE logical geographic path. Always include intermediate levels even if not directly mentioned. For example: Japan -> Chubu Region (region) -> Nagano Prefecture (prefecture) -> Matsumoto (city), NOT Japan -> Matsumoto directly.
+            - Common intermediate levels: regions/states/prefectures between country and city, districts/areas between city and neighborhood. Never skip a geographic level if one exists.
             - All values in the sites_hierarchy must be the english names.
 
             ### JSON Schema Structure:

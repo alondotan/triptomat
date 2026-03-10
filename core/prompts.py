@@ -53,12 +53,12 @@ Your output must be a RFC8259 compliant JSON object with the following structure
 1. Category must be strictly from: {", ".join(allowed_types)}.
 2. The sites_hierarchy (Nested Structure):
  2.1 Construct a nested geographical tree under the key "sites_hierarchy".
- 2.2 The first level must be the country or countries that in the mail.
+ 2.2 The first level must be the country or countries that in the data.
  2.3 Each node must be an object: {{"site": "Name", "site_type": "Type", "sub_sites": []}}.
  2.4 Use "sub_sites" only if child locations exist.
- 2.5 The sites_hierarchy must represent a geographical hierarchy and must be strictly from: {geo_types}
- 2.6 The hierarchy MUST follow a logical path:  Country -> State/Region -> City -> Neighborhood/POI.
- 2.7 The sites_hierarchy should only contain the sites of the recommendations.
+ 2.5 The sites_hierarchy must represent a geographical hierarchy and site_type must be strictly from: {geo_types}
+ 2.6 The hierarchy MUST follow a COMPLETE logical geographic path. Always include intermediate levels even if they are not directly mentioned in the data. For example: Japan -> Chubu Region (region) -> Nagano Prefecture (prefecture) -> Matsumoto (city), NOT Japan -> Matsumoto directly.
+ 2.7 Common intermediate levels to include: regions/states/prefectures between country and city, districts/areas between city and neighborhood. Never skip a geographic level if one exists in real geography.
  2.8 All values in the sites_hierarchy must be the english names.
 
 3. Location Handling:

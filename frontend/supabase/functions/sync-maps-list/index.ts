@@ -57,6 +57,54 @@ interface AiOutput {
   recommendations: AiRecommendation[];
 }
 
+// ─── Sync hierarchy into trip_locations ───────────────────────────────────────
+
+async function syncSitesHierarchyToTripLocations(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  tripId: string,
+  hierarchy: SiteNode[],
+) {
+  const { data: existing } = await supabase
+    .from('trip_locations')
+    .select('id, name, parent_id')
+    .eq('trip_id', tripId);
+
+  const nameToId = new Map<string, string>();
+  for (const loc of (existing || [])) {
+    nameToId.set((loc.name as string).toLowerCase(), loc.id as string);
+  }
+
+  async function walkAndInsert(nodes: SiteNode[], parentId: string | null) {
+    for (const node of nodes) {
+      const key = node.site.toLowerCase();
+      let nodeId = nameToId.get(key);
+      if (!nodeId) {
+        const { data: inserted } = await supabase
+          .from('trip_locations')
+          .insert({
+            trip_id: tripId,
+            parent_id: parentId,
+            name: node.site,
+            site_type: node.site_type,
+            source: 'webhook',
+          })
+          .select('id')
+          .maybeSingle();
+        if (inserted) {
+          nodeId = inserted.id as string;
+          nameToId.set(key, nodeId);
+        }
+      }
+      if (nodeId && node.sub_sites?.length) {
+        await walkAndInsert(node.sub_sites, nodeId);
+      }
+    }
+  }
+
+  await walkAndInsert(hierarchy, null);
+  console.log(`[sync] Synced ${nameToId.size} locations to trip_locations for trip ${tripId}`);
+}
+
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 serve(async (req) => {
@@ -282,6 +330,9 @@ serve(async (req) => {
         status: "linked",
         linked_entities: [],
       }]);
+
+      // Sync hierarchy into trip_locations table
+      await syncSitesHierarchyToTripLocations(supabase, list.trip_id, matchingHierarchy);
     }
 
     // ── Step 9: non-matching countries → pending source_recommendation ──
@@ -543,9 +594,9 @@ Your output must be a RFC8259 compliant JSON object with the following structure
  2.2 The first level must be the country or countries that are in the data.
  2.3 Each node must be an object: {"site": "Name", "site_type": "Type", "sub_sites": []}.
  2.4 Use "sub_sites" only if child locations exist.
- 2.5 The sites_hierarchy must represent a geographical hierarchy and must be strictly from: ${GEO_TYPES_CSV}
- 2.6 The hierarchy MUST follow a logical path: Country -> State/Region -> City -> Neighborhood/POI.
- 2.7 The sites_hierarchy should only contain the sites of the recommendations.
+ 2.5 The sites_hierarchy must represent a geographical hierarchy and site_type must be strictly from: ${GEO_TYPES_CSV}
+ 2.6 The hierarchy MUST follow a COMPLETE logical geographic path. Always include intermediate levels even if they are not directly mentioned in the data. For example: Japan -> Chubu Region (region) -> Nagano Prefecture (prefecture) -> Matsumoto (city), NOT Japan -> Matsumoto directly.
+ 2.7 Common intermediate levels to include: regions/states/prefectures between country and city, districts/areas between city and neighborhood. Never skip a geographic level if one exists in real geography.
  2.8 All values in the sites_hierarchy must be the english names.
 
 3. Location Handling:
