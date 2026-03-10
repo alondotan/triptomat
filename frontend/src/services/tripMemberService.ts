@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 // Cast to any until trip_members is added to auto-generated types
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
 
 export interface TripMember {
@@ -24,6 +25,7 @@ export async function fetchTripMembers(tripId: string): Promise<TripMember[]> {
   const currentUserId = user?.id;
   const currentEmail = user?.email;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data || []).map((row: any) => ({
     id: row.id,
     tripId: row.trip_id,
@@ -36,6 +38,7 @@ export async function fetchTripMembers(tripId: string): Promise<TripMember[]> {
 
 export async function addTripMember(tripId: string, email: string): Promise<TripMember> {
   const { data: userData, error: lookupError } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .rpc('get_user_id_by_email' as any, { lookup_email: email });
 
   if (lookupError || !userData) {

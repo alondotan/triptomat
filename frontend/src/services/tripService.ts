@@ -21,6 +21,7 @@ export async function fetchTrips(): Promise<Trip[]> {
 
   // Try to enrich with role from trip_members (post-migration)
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: memberData, error: memberError } = await (supabase as any)
       .from('trip_members')
       .select('trip_id, role')

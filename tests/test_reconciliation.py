@@ -294,8 +294,8 @@ class TestSupabaseClient:
         assert get_user_id_from_token("tok", "url", "key") is None
 
     @patch("core.supabase_client._supabase_get", return_value=[
-        {"id": "t1", "name": "Trip NL", "countries": ["Netherlands"],
-         "start_date": "2026-04-01", "end_date": "2026-04-10", "status": "planning"},
+        {"trip_id": "t1", "trips": {"id": "t1", "name": "Trip NL", "countries": ["Netherlands"],
+         "start_date": "2026-04-01", "end_date": "2026-04-10", "status": "planning"}},
     ])
     def test_get_active_trips(self, _mock):
         trips = get_active_trips("u123", "url", "key")

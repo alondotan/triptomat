@@ -207,6 +207,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
       .subscribe();
 
     return () => { supabaseClient.removeChannel(channel); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTrip?.id, loadLocations]);
 
   const value = useMemo(() => ({

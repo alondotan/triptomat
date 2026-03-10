@@ -45,6 +45,7 @@ export function ShareTripDialog({ open, onOpenChange }: ShareTripDialogProps) {
       setMembers(prev => [...prev, member]);
       setEmail('');
       toast({ title: 'Member added', description: `${email.trim()} can now access this trip.` });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast({ title: 'Error', description: e.message || 'Failed to add member.', variant: 'destructive' });
     } finally {
@@ -57,6 +58,7 @@ export function ShareTripDialog({ open, onOpenChange }: ShareTripDialogProps) {
       await removeTripMember(member.id);
       setMembers(prev => prev.filter(m => m.id !== member.id));
       toast({ title: 'Member removed', description: `${member.email || 'User'} has been removed.` });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       toast({ title: 'Error', description: e.message || 'Failed to remove member.', variant: 'destructive' });
     }
