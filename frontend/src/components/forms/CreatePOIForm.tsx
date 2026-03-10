@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Pencil } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import { CitySelector } from '@/components/trip/CitySelector';
+import { LocationSelector } from '@/components/shared/LocationSelector';
 import { SubCategorySelector } from '@/components/shared/SubCategorySelector';
 import { useToast } from '@/hooks/use-toast';
 import { createPOISchema } from '@/schemas/poi.schema';
@@ -95,7 +95,7 @@ export function CreatePOIForm() {
     setOpen(false);
   };
 
-  // Countries to pass to CitySelector: use selected country if from trip, otherwise trip countries
+  // Countries to pass to LocationSelector: use selected country if from trip, otherwise trip countries
   const citySelectorCountries = country && tripCountries.includes(country) ? [country] : tripCountries;
 
   return (
@@ -163,12 +163,12 @@ export function CreatePOIForm() {
               )}
             </div>
             <div className="space-y-2">
-              <Label>City</Label>
-              <CitySelector
+              <Label>מיקום</Label>
+              <LocationSelector
                 countries={citySelectorCountries}
                 value={city}
                 onChange={setCity}
-                placeholder="בחר עיר..."
+                placeholder="בחר מיקום..."
                 extraHierarchy={tripSitesHierarchy}
               />
             </div>

@@ -29,7 +29,7 @@ from core.prompts import build_main_prompt
 from core.scrapers import MapsService
 from core.schemas import AnalysisMessage
 from core.reconciliation import reconcile
-from core.webhook import send_to_webhook
+from core.webhook import send_to_webhook, send_failure_to_webhook
 from core.telemetry import (
     init_telemetry, get_tracer, get_meter,
     safe_span, record_counter, record_histogram, time_ms,
@@ -126,7 +126,19 @@ def lambda_handler(event, context):
                             video_path = f"/tmp/{job_id}.mp4"
                             s3.download_file(S3_BUCKET, s3_key, video_path)
 
-                            response_text = gemini.analyze_video(video_path, main_prompt)
+                            description = source_metadata.get("description", "")
+                            if description:
+                                video_prompt = (
+                                    f"Analyze BOTH the video AND this post description/caption:\n"
+                                    f"---\n{description}\n---\n\n"
+                                    f"The video may show specific places, while the description may list names, "
+                                    f"addresses, or details not visible in the video. "
+                                    f"Extract recommendations from BOTH sources.\n\n{main_prompt}"
+                                )
+                            else:
+                                video_prompt = main_prompt
+
+                            response_text = gemini.analyze_video(video_path, video_prompt)
                             response_json = json.loads(response_text)
                             os.remove(video_path)
 
@@ -207,7 +219,7 @@ def lambda_handler(event, context):
                         with safe_span(tracer, "worker.webhook_send", {
                             "webhook.url_masked": webhook_url_masked,
                         }) as wh_span:
-                            result = send_to_webhook(enriched_data, url, source_metadata, webhook_token=webhook_token or None)
+                            result = send_to_webhook(enriched_data, url, source_metadata, webhook_token=webhook_token or None, job_id=job_id)
                             status_label = "success" if result else "failure"
                             if wh_span:
                                 try:
@@ -260,6 +272,8 @@ def lambda_handler(event, context):
                         "error": str(e),
                         "created_at": datetime.now(timezone.utc).isoformat(),
                     })
+                    # Notify frontend of failure via webhook
+                    send_failure_to_webhook(url, source_metadata, e, webhook_token=webhook_token or None, job_id=job_id)
                     raise
     finally:
         flush_telemetry()

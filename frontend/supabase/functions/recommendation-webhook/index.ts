@@ -45,9 +45,49 @@ Deno.serve(async (req)=>{
     }
     const payload = await req.json();
     console.log('Received recommendation payload, userId:', userId);
-    // Idempotency check
-    const { data: existing } = await supabase.from('source_recommendations').select('id').eq('recommendation_id', payload.recommendation_id).maybeSingle();
-    if (existing) {
+
+    // Check for existing row (frontend placeholder or duplicate)
+    const { data: existing } = await supabase.from('source_recommendations').select('id, status').eq('recommendation_id', payload.recommendation_id).maybeSingle();
+
+    // ── Failure webhook: update processing row to failed ──
+    if (payload.status === 'failed') {
+      if (existing) {
+        await supabase.from('source_recommendations').update({
+          status: 'failed',
+          error: payload.error || 'Unknown error',
+          source_title: payload.source_title || undefined,
+          source_image: payload.source_image || undefined,
+        }).eq('id', existing.id);
+        return new Response(JSON.stringify({
+          success: true,
+          action: 'marked_failed',
+          recommendation_id: payload.recommendation_id,
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      // No existing row — insert a failed row for visibility
+      await supabase.from('source_recommendations').insert([{
+        recommendation_id: payload.recommendation_id,
+        source_url: payload.source_url,
+        source_title: payload.source_title || null,
+        source_image: payload.source_image || null,
+        status: 'failed',
+        error: payload.error || 'Unknown error',
+        analysis: {},
+        linked_entities: [],
+      }]);
+      return new Response(JSON.stringify({
+        success: true,
+        action: 'inserted_failed',
+        recommendation_id: payload.recommendation_id,
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // ── Idempotency: skip if a non-processing row already exists ──
+    if (existing && existing.status !== 'processing') {
       return new Response(JSON.stringify({
         success: true,
         action: 'duplicate_skipped',
@@ -59,6 +99,11 @@ Deno.serve(async (req)=>{
         }
       });
     }
+
+    // If existing row is 'processing' (frontend placeholder), we'll update it below
+    const isUpsert = existing?.status === 'processing';
+    const existingId = existing?.id;
+
     // Try to match a trip by country (scoped to user if token provided)
     let matchedTripId = null;
     const countrySites = (payload.analysis.sites_hierarchy || []).filter((s)=>s.site_type === 'country').map((s)=>({
@@ -79,11 +124,13 @@ Deno.serve(async (req)=>{
         }
       }
     }
-    console.log(`Matched trip: ${matchedTripId || 'none'}, source_image: ${payload.source_image ? 'YES' : 'NO'} [v2]`);
-    // Insert source_recommendation
-    const { data: rec, error: insertError } = await supabase.from('source_recommendations').insert([
-      {
-        recommendation_id: payload.recommendation_id,
+    console.log(`Matched trip: ${matchedTripId || 'none'}, source_image: ${payload.source_image ? 'YES' : 'NO'}, upsert: ${isUpsert} [v3]`);
+
+    // Insert or update source_recommendation
+    let sourceRecId: string;
+    if (isUpsert && existingId) {
+      // Update the processing placeholder with real data
+      const { error: updateError } = await supabase.from('source_recommendations').update({
         trip_id: matchedTripId,
         timestamp: payload.timestamp,
         source_url: payload.source_url,
@@ -91,11 +138,27 @@ Deno.serve(async (req)=>{
         source_image: payload.source_image || null,
         analysis: payload.analysis,
         status: matchedTripId ? 'linked' : 'pending',
-        linked_entities: []
-      }
-    ]).select('id').single();
-    if (insertError) throw insertError;
-    const sourceRecId = rec.id;
+        linked_entities: [],
+      }).eq('id', existingId);
+      if (updateError) throw updateError;
+      sourceRecId = existingId;
+    } else {
+      const { data: rec, error: insertError } = await supabase.from('source_recommendations').insert([
+        {
+          recommendation_id: payload.recommendation_id,
+          trip_id: matchedTripId,
+          timestamp: payload.timestamp,
+          source_url: payload.source_url,
+          source_title: payload.source_title || null,
+          source_image: payload.source_image || null,
+          analysis: payload.analysis,
+          status: matchedTripId ? 'linked' : 'pending',
+          linked_entities: []
+        }
+      ]).select('id').single();
+      if (insertError) throw insertError;
+      sourceRecId = rec.id;
+    }
     // If matched to a trip, process extracted items with fuzzy entity matching
     const linkedEntities = [];
     if (matchedTripId) {

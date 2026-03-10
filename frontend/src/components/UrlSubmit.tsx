@@ -89,8 +89,23 @@ export function UrlSubmit() {
         setStatus('success');
         setMessage('Already analyzed — results available in Recommendations.');
       } else if (res.status === 202) {
+        // Insert a placeholder row so Recommendations page shows it immediately
+        const jobId = data.job_id;
+        const meta = data.source_metadata || {};
+        if (jobId && tripId) {
+          await supabase.from('source_recommendations').insert([{
+            recommendation_id: jobId,
+            trip_id: tripId,
+            source_url: trimmed,
+            source_title: meta.title || null,
+            source_image: meta.image || null,
+            status: 'processing',
+            analysis: {},
+            linked_entities: [],
+          }]);
+        }
         setStatus('success');
-        setMessage('Submitted! Analysis in progress, check Recommendations in a moment.');
+        setMessage('Submitted! Analysis in progress.');
       } else {
         setStatus('error');
         setMessage(data.error || 'Something went wrong.');

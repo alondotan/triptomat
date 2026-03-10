@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { FileText, Loader2, CheckCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
@@ -9,6 +10,8 @@ const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 export function TextSubmit() {
+  const { activeTrip } = useActiveTrip();
+  const tripId = activeTrip?.id;
   const [text, setText] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState('');
@@ -41,8 +44,21 @@ export function TextSubmit() {
       const data = await res.json();
 
       if (res.status === 202) {
+        // Insert placeholder row for progressive loading
+        const jobId = data.job_id;
+        const meta = data.source_metadata || {};
+        if (jobId && tripId) {
+          await supabase.from('source_recommendations').insert([{
+            recommendation_id: jobId,
+            trip_id: tripId,
+            source_title: meta.title || null,
+            status: 'processing',
+            analysis: {},
+            linked_entities: [],
+          }]);
+        }
         setStatus('success');
-        setMessage('Submitted! Analysis in progress, check back in a moment.');
+        setMessage('Submitted! Analysis in progress.');
         setText('');
         setExpanded(false);
       } else {

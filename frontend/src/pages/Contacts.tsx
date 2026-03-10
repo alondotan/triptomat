@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Trash2, Phone, Mail, Globe, Search, Smartphone, Pencil } from 'lucide-react';
+import { Users, Plus, Trash2, Phone, Mail, Globe, Search, Smartphone, Pencil, MapPin } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -33,7 +33,7 @@ const supportsContactPicker = typeof window !== 'undefined'
 
 function ContactForm({ contact, onSubmit, onCancel }: {
   contact?: Contact;
-  onSubmit: (data: { name: string; role: ContactRole; phone?: string; email?: string; website?: string; notes?: string }) => void;
+  onSubmit: (data: { name: string; role: ContactRole; phone?: string; email?: string; website?: string; address?: string; notes?: string }) => void;
   onCancel: () => void;
 }) {
   const [name, setName] = useState(contact?.name || '');
@@ -41,6 +41,7 @@ function ContactForm({ contact, onSubmit, onCancel }: {
   const [phone, setPhone] = useState(contact?.phone || '');
   const [email, setEmail] = useState(contact?.email || '');
   const [website, setWebsite] = useState(contact?.website || '');
+  const [address, setAddress] = useState(contact?.address || '');
   const [notes, setNotes] = useState(contact?.notes || '');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -52,6 +53,7 @@ function ContactForm({ contact, onSubmit, onCancel }: {
       phone: phone || undefined,
       email: email || undefined,
       website: website || undefined,
+      address: address || undefined,
       notes: notes || undefined,
     });
   };
@@ -86,6 +88,10 @@ function ContactForm({ contact, onSubmit, onCancel }: {
         <Input value={website} onChange={e => setWebsite(e.target.value)} type="url" placeholder="https://" />
       </div>
       <div className="space-y-2">
+        <Label>Address</Label>
+        <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="Physical address" />
+      </div>
+      <div className="space-y-2">
         <Label>Notes</Label>
         <Textarea value={notes} onChange={e => setNotes(e.target.value)} />
       </div>
@@ -105,13 +111,13 @@ const ContactsPage = () => {
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [search, setSearch] = useState('');
 
-  const handleCreate = async (data: { name: string; role: ContactRole; phone?: string; email?: string; website?: string; notes?: string }) => {
+  const handleCreate = async (data: { name: string; role: ContactRole; phone?: string; email?: string; website?: string; address?: string; notes?: string }) => {
     if (!activeTrip) return;
     await addContact({ tripId: activeTrip.id, ...data });
     setCreateOpen(false);
   };
 
-  const handleUpdate = async (data: { name: string; role: ContactRole; phone?: string; email?: string; website?: string; notes?: string }) => {
+  const handleUpdate = async (data: { name: string; role: ContactRole; phone?: string; email?: string; website?: string; address?: string; notes?: string }) => {
     if (!editingContact) return;
     await updateContact(editingContact.id, data);
     setEditingContact(null);
@@ -148,6 +154,7 @@ const ContactsPage = () => {
       || (ROLE_LABELS[c.role] || c.role).toLowerCase().includes(q)
       || c.phone?.toLowerCase().includes(q)
       || c.email?.toLowerCase().includes(q)
+      || c.address?.toLowerCase().includes(q)
       || c.notes?.toLowerCase().includes(q);
   });
 
@@ -224,6 +231,11 @@ const ContactsPage = () => {
                         <a href={c.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-primary hover:underline">
                           <Globe size={14} className="shrink-0" /> <span className="truncate">{(() => { try { return new URL(c.website).hostname; } catch { return c.website; } })()}</span>
                         </a>
+                      )}
+                      {c.address && (
+                        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <MapPin size={14} className="shrink-0" /> <span className="truncate">{c.address}</span>
+                        </p>
                       )}
                       {c.notes && <p className="text-xs text-muted-foreground italic">{c.notes}</p>}
                     </div>

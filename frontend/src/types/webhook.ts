@@ -74,6 +74,7 @@ export interface SourceRecommendation {
       phone?: string;
       email?: string;
       website?: string;
+      address?: string;
       paragraph?: string;
       site?: string;
     }>;
@@ -84,7 +85,8 @@ export interface SourceRecommendation {
     description?: string;
     matched_existing?: boolean;
   }>;
-  status: 'pending' | 'linked';
+  status: 'pending' | 'linked' | 'processing' | 'failed';
+  error?: string;
   createdAt: string;
   updatedAt: string;
 }

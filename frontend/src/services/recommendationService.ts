@@ -168,6 +168,7 @@ export async function linkRecommendationToTrip(
         phone: contact.phone || null,
         email: contact.email || null,
         website: contact.website || null,
+        address: contact.address || null,
         notes: contact.paragraph || null,
       }]).select('id').single();
 
@@ -318,6 +319,7 @@ function mapRecommendation(row: Record<string, unknown>): SourceRecommendation {
     analysis: (row.analysis as SourceRecommendation['analysis']) || {},
     linkedEntities: (row.linked_entities as SourceRecommendation['linkedEntities']) || [],
     status: (row.status as SourceRecommendation['status']) || 'pending',
+    error: (row.error as string) || undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };

@@ -256,6 +256,7 @@ export interface Contact {
   phone?: string;
   email?: string;
   website?: string;
+  address?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;

@@ -29,7 +29,7 @@ from core.prompts import build_main_prompt
 from core.scrapers import MapsService
 from core.schemas import AnalysisMessage
 from core.reconciliation import reconcile
-from core.webhook import send_to_webhook
+from core.webhook import send_to_webhook, send_failure_to_webhook
 from core.telemetry import (
     init_telemetry, get_tracer, get_meter,
     safe_span, record_counter, record_histogram, time_ms,
@@ -219,7 +219,7 @@ def lambda_handler(event, context):
                         with safe_span(tracer, "worker.webhook_send", {
                             "webhook.url_masked": webhook_url_masked,
                         }) as wh_span:
-                            result = send_to_webhook(enriched_data, url, source_metadata, webhook_token=webhook_token or None)
+                            result = send_to_webhook(enriched_data, url, source_metadata, webhook_token=webhook_token or None, job_id=job_id)
                             status_label = "success" if result else "failure"
                             if wh_span:
                                 try:
@@ -272,6 +272,8 @@ def lambda_handler(event, context):
                         "error": str(e),
                         "created_at": datetime.now(timezone.utc).isoformat(),
                     })
+                    # Notify frontend of failure via webhook
+                    send_failure_to_webhook(url, source_metadata, e, webhook_token=webhook_token or None, job_id=job_id)
                     raise
     finally:
         flush_telemetry()

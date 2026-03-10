@@ -183,6 +183,7 @@ def lambda_handler(event, context):
                     return _response(202, {
                         "status": "processing",
                         "job_id": job_id,
+                        "source_metadata": {"title": title, "image": ""},
                         "message": "Text submitted for analysis"
                     })
 
@@ -222,6 +223,7 @@ def lambda_handler(event, context):
 
                 if is_video_url(url):
                     source_type = "video"
+                    source_metadata = get_web_metadata(url)
                     with safe_span(tracer, "gateway.sqs_dispatch", {
                         "sqs.queue_name": "download",
                         "gateway.source_type": source_type,
@@ -302,6 +304,7 @@ def lambda_handler(event, context):
                 return _response(202, {
                     "status": "processing",
                     "job_id": job_id,
+                    "source_metadata": source_metadata,
                     "message": "Job submitted"
                 })
 

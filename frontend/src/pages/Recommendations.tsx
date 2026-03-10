@@ -7,8 +7,10 @@ import { AppLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExternalLink, ThumbsUp, ThumbsDown, Star, Trash2, ChevronDown, ChevronUp, Users } from 'lucide-react';
+import { ExternalLink, ThumbsUp, ThumbsDown, Star, Trash2, ChevronDown, ChevronUp, Users, Loader2, AlertTriangle } from 'lucide-react';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
+import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
+import type { PointOfInterest } from '@/types/trip';
 import { SourceRecommendation } from '@/types/webhook';
 import { fetchTripRecommendations, deleteRecommendation } from '@/services/recommendationService';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +28,7 @@ const Recommendations = () => {
   const [recommendations, setRecommendations] = useState<SourceRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [selectedPoi, setSelectedPoi] = useState<PointOfInterest | null>(null);
 
   const handleDelete = async (id: string) => {
     try {
@@ -104,6 +107,76 @@ const Recommendations = () => {
         )}
 
         {recommendations.map(rec => {
+          // ── Processing state ──
+          if (rec.status === 'processing') {
+            return (
+              <Card key={rec.id} className="overflow-hidden opacity-80">
+                {rec.sourceImage && (
+                  <div className="w-full h-40 overflow-hidden">
+                    <img
+                      src={rec.sourceImage}
+                      alt={rec.sourceTitle || ''}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  </div>
+                )}
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Loader2 size={16} className="text-primary animate-spin" />
+                      {rec.sourceTitle || 'Analyzing...'}
+                    </CardTitle>
+                    <Badge variant="outline" className="text-orange-600 border-orange-300">processing</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="text-sm space-y-2">
+                  {rec.sourceUrl && (
+                    <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer"
+                      className="text-primary hover:underline flex items-center gap-1 text-xs">
+                      <ExternalLink size={12} /> {rec.sourceUrl}
+                    </a>
+                  )}
+                  <p className="text-xs text-muted-foreground">Analysis in progress...</p>
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // ── Failed state ──
+          if (rec.status === 'failed') {
+            return (
+              <Card key={rec.id} className="overflow-hidden border-destructive/30">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <AlertTriangle size={16} className="text-destructive" />
+                      {rec.sourceTitle || 'Failed'}
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="destructive">failed</Badge>
+                      <Button size="sm" variant="ghost" onClick={() => handleDelete(rec.id)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="text-sm space-y-2">
+                  {rec.sourceUrl && (
+                    <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer"
+                      className="text-primary hover:underline flex items-center gap-1 text-xs">
+                      <ExternalLink size={12} /> {rec.sourceUrl}
+                    </a>
+                  )}
+                  {rec.error && (
+                    <p className="text-xs text-destructive bg-destructive/10 p-2 rounded">{rec.error}</p>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // ── Normal state (pending / linked) ──
           const isExpanded = expandedId === rec.id;
           const linkedPoiIds = rec.linkedEntities
             .filter(e => e.entity_type === 'poi')
@@ -238,7 +311,11 @@ const Recommendations = () => {
                     <p className="text-xs font-medium text-muted-foreground mb-2">אובייקטים שנוצרו:</p>
                     <div className="space-y-1.5">
                       {linkedPois.map(poi => (
-                        <div key={poi.id} className="flex items-center gap-2 p-2 rounded bg-primary/5 border border-primary/10">
+                        <button
+                          key={poi.id}
+                          className="flex items-center gap-2 p-2 rounded bg-primary/5 border border-primary/10 w-full text-left hover:bg-primary/10 transition-colors"
+                          onClick={() => setSelectedPoi(poi)}
+                        >
                           <SubCategoryIcon type={poi.subCategory || poi.category} size={14} />
                           <div className="flex-1 min-w-0">
                             <span className="font-medium">{poi.name}</span>
@@ -247,7 +324,7 @@ const Recommendations = () => {
                             )}
                           </div>
                           <Badge variant="outline" className="text-xs shrink-0">{poi.status}</Badge>
-                        </div>
+                        </button>
                       ))}
                       {linkedTransport.map(t => (
                         <div key={t.id} className="flex items-center gap-2 p-2 rounded bg-primary/5 border border-primary/10">
@@ -283,6 +360,15 @@ const Recommendations = () => {
             </Card>
           );
         })}
+
+        {/* POI Detail Dialog */}
+        {selectedPoi && (
+          <POIDetailDialog
+            poi={selectedPoi}
+            open={!!selectedPoi}
+            onOpenChange={(open) => { if (!open) setSelectedPoi(null); }}
+          />
+        )}
       </div>
     </AppLayout>
   );

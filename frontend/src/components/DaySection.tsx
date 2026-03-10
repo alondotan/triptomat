@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, X, Star, Moon, Heart, ArrowRight, CalendarDays } from 'lucide-react';
-import { CitySelector } from '@/components/trip/CitySelector';
+import { LocationSelector } from '@/components/shared/LocationSelector';
 import { SubCategorySelector } from '@/components/shared/SubCategorySelector';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { useCountrySites, type SiteNode } from '@/hooks/useCountrySites';
@@ -464,7 +464,7 @@ function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookin
       )}
       <div className="space-y-1">
         <Label className="text-xs">עיר</Label>
-        <CitySelector countries={countries || []} value={city} onChange={setCity} placeholder="בחר עיר..." extraHierarchy={tripSitesHierarchy} />
+        <LocationSelector countries={countries || []} value={city} onChange={setCity} placeholder="בחר מיקום..." extraHierarchy={tripSitesHierarchy} />
       </div>
       {showBookingMissionOption && (
         <div className="flex items-center gap-2 mt-1">

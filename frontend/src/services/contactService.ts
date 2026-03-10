@@ -21,6 +21,7 @@ export async function createContact(c: Omit<Contact, 'id' | 'createdAt' | 'updat
       phone: c.phone || null,
       email: c.email || null,
       website: c.website || null,
+      address: c.address || null,
       notes: c.notes || null,
     }])
     .select()
@@ -36,6 +37,7 @@ export async function updateContact(id: string, updates: Partial<Contact>): Prom
   if (updates.phone !== undefined) updateData.phone = updates.phone;
   if (updates.email !== undefined) updateData.email = updates.email;
   if (updates.website !== undefined) updateData.website = updates.website;
+  if (updates.address !== undefined) updateData.address = updates.address;
   if (updates.notes !== undefined) updateData.notes = updates.notes;
   const { error } = await supabase.from('contacts').update(updateData).eq('id', id);
   if (error) throw error;
@@ -55,6 +57,7 @@ function mapContact(row: Record<string, unknown>): Contact {
     phone: (row.phone as string) || undefined,
     email: (row.email as string) || undefined,
     website: (row.website as string) || undefined,
+    address: (row.address as string) || undefined,
     notes: (row.notes as string) || undefined,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
