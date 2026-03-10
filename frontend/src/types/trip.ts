@@ -21,6 +21,7 @@ export interface Trip {
   numberOfDays?: number;
   status: TripStatus;
   currency: Currency;
+  myRole?: 'owner' | 'editor';
   createdAt: string;
   updatedAt: string;
 }

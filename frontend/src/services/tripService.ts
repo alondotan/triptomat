@@ -7,13 +7,37 @@ import { seedTripLocations } from './tripLocationService';
 // TRIPS
 // ============================================================
 export async function fetchTrips(): Promise<Trip[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  // Always fetch trips directly first (works pre- and post-migration)
   const { data, error } = await supabase
     .from('trips')
     .select('*')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data || []).map(mapTrip);
+  const trips = (data || []).map(row => mapTrip(row));
+
+  // Try to enrich with role from trip_members (post-migration)
+  try {
+    const { data: memberData, error: memberError } = await (supabase as any)
+      .from('trip_members')
+      .select('trip_id, role')
+      .eq('user_id', user.id);
+
+    if (!memberError && memberData) {
+      const roleMap = new Map<string, string>();
+      for (const row of memberData) roleMap.set(row.trip_id, row.role);
+      for (const trip of trips) {
+        trip.myRole = (roleMap.get(trip.id) as Trip['myRole']) || 'owner';
+      }
+    }
+  } catch {
+    // trip_members doesn't exist yet — all trips default to 'owner'
+  }
+
+  return trips;
 }
 
 export async function createTrip(trip: Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>): Promise<Trip> {
@@ -71,7 +95,7 @@ export async function deleteTrip(tripId: string): Promise<void> {
   if (error) throw error;
 }
 
-function mapTrip(row: Record<string, unknown>): Trip {
+function mapTrip(row: Record<string, unknown>, role?: string): Trip {
   const startDate = (row.start_date as string) || undefined;
   const endDate = (row.end_date as string) || undefined;
   const numberOfDays = (row.number_of_days as number) || undefined;
@@ -94,6 +118,7 @@ function mapTrip(row: Record<string, unknown>): Trip {
     numberOfDays,
     status,
     currency: (row.currency as Trip['currency']) || 'USD',
+    myRole: (role as Trip['myRole']) || 'owner',
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };

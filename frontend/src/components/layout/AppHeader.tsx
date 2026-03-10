@@ -22,6 +22,7 @@ import {
   Settings,
   Check,
   Network,
+  Share2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -32,6 +33,7 @@ import { useActiveTrip } from '@/context/ActiveTripContext';
 import { CreateTripForm } from '@/components/forms/CreateTripForm';
 import { EditTripDialog } from '@/components/trip/EditTripDialog';
 import { LocationTreeDialog } from '@/components/trip/LocationTreeDialog';
+import { ShareTripDialog } from '@/components/trip/ShareTripDialog';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -92,8 +94,9 @@ export function AppHeader() {
     try { return parseInt(localStorage.getItem('inbox_unread_count') || '0', 10); } catch { return 0; }
   });
   const { trips } = useTripList();
-  const { activeTrip, setActiveTrip, deleteCurrentTrip, updateCurrentTrip, tripLocationTree } = useActiveTrip();
+  const { activeTrip, setActiveTrip, deleteCurrentTrip, updateCurrentTrip, tripLocationTree, myRole } = useActiveTrip();
   const [locationTreeOpen, setLocationTreeOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -194,7 +197,12 @@ export function AppHeader() {
                     className={cn(trip.id === activeTrip?.id && 'bg-accent')}
                   >
                     <div className="flex flex-col">
-                      <span>{trip.name}</span>
+                      <span className="flex items-center gap-1.5">
+                        {trip.name}
+                        {trip.myRole === 'editor' && (
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 font-normal">shared</Badge>
+                        )}
+                      </span>
                       <span className="text-xs text-muted-foreground">{trip.countries.join(', ')}</span>
                     </div>
                   </DropdownMenuItem>
@@ -206,15 +214,20 @@ export function AppHeader() {
                 <DropdownMenuItem onClick={() => setLocationTreeOpen(true)}>
                   <Network size={14} className="mr-2" /> Location Tree
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShareOpen(true)}>
+                  <Share2 size={14} className="mr-2" /> Share Trip
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setNewTripOpen(true)}>
                   <Plus size={14} className="mr-2" /> New Trip
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={() => setDeleteDialogOpen(true)}
-                >
-                  <Trash2 size={14} className="mr-2" /> Delete Trip
-                </DropdownMenuItem>
+                {myRole === 'owner' && (
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => setDeleteDialogOpen(true)}
+                  >
+                    <Trash2 size={14} className="mr-2" /> Delete Trip
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
@@ -279,7 +292,7 @@ export function AppHeader() {
             {/* Trip list */}
             {trips.length > 0 && (
               <div className="py-3">
-                <p className="px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">My Trips</p>
+                <p className="px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Trips</p>
                 {trips.map(trip => (
                   <button
                     key={trip.id}
@@ -287,7 +300,12 @@ export function AppHeader() {
                     className="w-full flex items-center justify-between px-6 py-2.5 text-sm hover:bg-muted transition-colors"
                   >
                     <div className="text-left">
-                      <p className="font-medium">{trip.name}</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-medium">{trip.name}</p>
+                        {trip.myRole === 'editor' && (
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 font-normal">shared</Badge>
+                        )}
+                      </div>
                       {trip.countries.length > 0 && (
                         <p className="text-xs text-muted-foreground">{trip.countries.join(', ')}</p>
                       )}
@@ -318,18 +336,27 @@ export function AppHeader() {
                 <Network size={16} /> Location Tree
               </button>
               <button
+                onClick={() => { setHamburgerOpen(false); setShareOpen(true); }}
+                disabled={!activeTrip}
+                className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40"
+              >
+                <Share2 size={16} /> Share Trip
+              </button>
+              <button
                 onClick={() => { setHamburgerOpen(false); setNewTripOpen(true); }}
                 className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
               >
                 <Plus size={16} /> New Trip
               </button>
-              <button
-                onClick={() => { setHamburgerOpen(false); setDeleteDialogOpen(true); }}
-                disabled={!activeTrip}
-                className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-destructive hover:bg-muted transition-colors disabled:opacity-40"
-              >
-                <Trash2 size={16} /> Delete Trip
-              </button>
+              {myRole === 'owner' && (
+                <button
+                  onClick={() => { setHamburgerOpen(false); setDeleteDialogOpen(true); }}
+                  disabled={!activeTrip}
+                  className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-destructive hover:bg-muted transition-colors disabled:opacity-40"
+                >
+                  <Trash2 size={16} /> Delete Trip
+                </button>
+              )}
             </div>
 
             <div className="mx-6 border-t border-border" />
@@ -388,6 +415,9 @@ export function AppHeader() {
 
       {/* Location Tree Dialog */}
       <LocationTreeDialog open={locationTreeOpen} onOpenChange={setLocationTreeOpen} hierarchy={tripLocationTree} />
+
+      {/* Share Trip Dialog */}
+      <ShareTripDialog open={shareOpen} onOpenChange={setShareOpen} />
 
       {/* User Preferences Dialog */}
       <Dialog open={prefsOpen} onOpenChange={setPrefsOpen}>

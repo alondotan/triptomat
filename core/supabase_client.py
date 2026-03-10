@@ -48,14 +48,19 @@ def get_user_id_from_token(
 def get_active_trips(
     user_id: str, supabase_url: str, supabase_key: str
 ) -> list[dict]:
-    """Fetch non-completed trips for a user, newest first."""
+    """Fetch non-completed trips for a user via trip_members, newest first."""
+    # Query trip_members joined with trips (inner join via !inner)
     result = _supabase_get(
         supabase_url, supabase_key,
-        f"/rest/v1/trips?user_id=eq.{user_id}&status=neq.completed"
-        f"&select=id,name,countries,start_date,end_date,status"
-        f"&order=start_date.desc&limit=5"
+        f"/rest/v1/trip_members?user_id=eq.{user_id}"
+        f"&select=trip_id,trips!inner(id,name,countries,start_date,end_date,status)"
+        f"&trips.status=neq.completed"
+        f"&order=trips.start_date.desc&limit=5"
     )
-    return result if isinstance(result, list) else []
+    if not isinstance(result, list):
+        return []
+    # Flatten: each row is {trip_id, trips: {id, name, ...}} -> extract the trips object
+    return [row["trips"] for row in result if row.get("trips")]
 
 
 def get_trip_entities(

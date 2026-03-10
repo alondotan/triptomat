@@ -3,6 +3,7 @@ import { Trip } from '@/types/trip';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { updateTrip, deleteTrip } from '@/services/tripService';
 import { ExchangeRates, fetchExchangeRates } from '@/services/exchangeRateService';
+
 import { fetchTripLocations, buildLocationTree, addTripLocation, findInFlatList, type TripLocation } from '@/services/tripLocationService';
 import type { SiteNode } from '@/hooks/useCountrySites';
 import { useToast } from '@/hooks/use-toast';
@@ -15,12 +16,14 @@ interface ActiveTripState {
   tripLocationTree: SiteNode[];
   sourceEmailMap: Record<string, { permalink?: string; subject?: string }>;
   refreshKey: number;
+  myRole: 'owner' | 'editor' | null;
 }
 
 type ActiveTripAction =
   | { type: 'SET_EXCHANGE_RATES'; payload: ExchangeRates | null }
   | { type: 'SET_TRIP_LOCATIONS'; payload: { flat: TripLocation[]; tree: SiteNode[] } }
   | { type: 'SET_SOURCE_EMAIL_MAP'; payload: Record<string, { permalink?: string; subject?: string }> }
+  | { type: 'SET_MY_ROLE'; payload: 'owner' | 'editor' | null }
   | { type: 'INCREMENT_REFRESH_KEY' }
   | { type: 'RESET_TRIP_DATA' };
 
@@ -32,10 +35,12 @@ function activeTripReducer(state: ActiveTripState, action: ActiveTripAction): Ac
       return { ...state, tripLocations: action.payload.flat, tripLocationTree: action.payload.tree };
     case 'SET_SOURCE_EMAIL_MAP':
       return { ...state, sourceEmailMap: action.payload };
+    case 'SET_MY_ROLE':
+      return { ...state, myRole: action.payload };
     case 'INCREMENT_REFRESH_KEY':
       return { ...state, refreshKey: state.refreshKey + 1 };
     case 'RESET_TRIP_DATA':
-      return { ...state, exchangeRates: null, tripLocations: [], tripLocationTree: [], sourceEmailMap: {}, refreshKey: state.refreshKey + 1 };
+      return { ...state, exchangeRates: null, tripLocations: [], tripLocationTree: [], sourceEmailMap: {}, myRole: null, refreshKey: state.refreshKey + 1 };
     default:
       return state;
   }
@@ -49,6 +54,7 @@ interface ActiveTripContextType {
   tripLocations: TripLocation[];
   sourceEmailMap: Record<string, { permalink?: string; subject?: string }>;
   refreshKey: number;
+  myRole: 'owner' | 'editor' | null;
   isLoading: boolean;
   error: string | null;
   setActiveTrip: (id: string) => void;
@@ -72,6 +78,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     tripLocationTree: [],
     sourceEmailMap: {},
     refreshKey: 0,
+    myRole: null,
   });
 
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId) || null, [trips, activeTripId]);
@@ -175,6 +182,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     if (activeTrip && activeTrip.id !== prevTripIdRef.current) {
       prevTripIdRef.current = activeTrip.id;
       loadTripMetadata(activeTrip.id);
+      dispatch({ type: 'SET_MY_ROLE', payload: activeTrip.myRole || 'owner' });
       fetchExchangeRates(activeTrip.currency, activeTrip.countries)
         .then(rates => dispatch({ type: 'SET_EXCHANGE_RATES', payload: rates }))
         .catch(e => console.error('Failed to fetch exchange rates:', e));
@@ -208,6 +216,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     tripLocations: state.tripLocations,
     sourceEmailMap: state.sourceEmailMap,
     refreshKey: state.refreshKey,
+    myRole: state.myRole,
     isLoading,
     error,
     setActiveTrip,
@@ -217,7 +226,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     setExchangeRates,
     addSiteToHierarchy,
     reloadLocations,
-  }), [activeTrip, state.exchangeRates, state.tripLocationTree, state.tripLocations, state.sourceEmailMap, state.refreshKey, isLoading, error, setActiveTrip, updateCurrentTrip, deleteCurrentTrip, loadTripData, setExchangeRates, addSiteToHierarchy, reloadLocations]);
+  }), [activeTrip, state.exchangeRates, state.tripLocationTree, state.tripLocations, state.sourceEmailMap, state.refreshKey, state.myRole, isLoading, error, setActiveTrip, updateCurrentTrip, deleteCurrentTrip, loadTripData, setExchangeRates, addSiteToHierarchy, reloadLocations]);
 
   return <ActiveTripContext.Provider value={value}>{children}</ActiveTripContext.Provider>;
 }

@@ -340,11 +340,22 @@ Deno.serve(async (req) => {
 
     const eventDate = extractEventDate(payload);
     if (eventDate && eventCountries.length > 0) {
-      let query = supabase
-        .from('trips').select('id, countries, start_date, end_date')
-        .lte('start_date', eventDate).gte('end_date', eventDate);
-      if (userId) query = query.eq('user_id', userId);
-      const { data: trips } = await query;
+      let trips;
+      if (userId) {
+        // Look up trips via trip_members join, filtered by event date range
+        const { data: memberRows } = await supabase
+          .from('trip_members').select('trip_id, trips(id, countries, start_date, end_date)')
+          .eq('user_id', userId);
+        trips = (memberRows || [])
+          .map((r: any) => r.trips)
+          .filter(Boolean)
+          .filter((t: any) => t.start_date <= eventDate && t.end_date >= eventDate);
+      } else {
+        const { data: allTrips } = await supabase
+          .from('trips').select('id, countries, start_date, end_date')
+          .lte('start_date', eventDate).gte('end_date', eventDate);
+        trips = allTrips;
+      }
       for (const trip of (trips || [])) {
         const tc = (trip.countries || []).map((c: string) => c.toLowerCase());
         if (eventCountries.some(ec => tc.includes(ec.toLowerCase()))) { matchedTripId = trip.id; break; }

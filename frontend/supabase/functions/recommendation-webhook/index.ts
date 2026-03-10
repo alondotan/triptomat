@@ -174,9 +174,17 @@ Deno.serve(async (req)=>{
         site_type: s.site_type
       }));
     if (countrySites.length > 0) {
-      let query = supabase.from('trips').select('id, countries');
-      if (userId) query = query.eq('user_id', userId);
-      const { data: trips } = await query;
+      let tripQuery;
+      if (userId) {
+        // Look up trips via trip_members join
+        const { data: memberRows } = await supabase
+          .from('trip_members').select('trip_id, trips(id, countries)').eq('user_id', userId);
+        tripQuery = (memberRows || []).map((r: any) => r.trips).filter(Boolean);
+      } else {
+        const { data: allTrips } = await supabase.from('trips').select('id, countries');
+        tripQuery = allTrips || [];
+      }
+      const trips = tripQuery;
       if (trips && trips.length > 0) {
         for (const trip of trips){
           const tripCountries = (trip.countries || []).map((c)=>c.toLowerCase());
