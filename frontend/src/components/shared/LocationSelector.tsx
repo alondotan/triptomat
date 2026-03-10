@@ -1,11 +1,10 @@
-import { useState, useMemo } from 'react';
-import { Check, ChevronsUpDown, Pencil } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { Check, ChevronsUpDown, ChevronDown, ChevronLeft, Plus, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { useCountrySites, type FlatSite } from '@/hooks/useCountrySites';
+import { useCountrySites, type SiteNode } from '@/hooks/useCountrySites';
 
 export const TYPE_LABELS: Record<string, string> = {
   city: 'עיר',
@@ -32,58 +31,47 @@ export const TYPE_LABELS: Record<string, string> = {
   municipality: 'עירייה',
 };
 
+const RECENT_KEY = 'triptomat-recent-locations';
+const MAX_RECENT = 8;
+
+function getRecentLocations(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+  } catch { return []; }
+}
+
+function addRecentLocation(location: string) {
+  const recent = getRecentLocations().filter(l => l !== location);
+  recent.unshift(location);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)));
+}
+
 interface LocationSelectorProps {
   countries: string[];
   value: string;
   onChange: (location: string) => void;
   placeholder?: string;
   className?: string;
-  extraHierarchy?: import('@/hooks/useCountrySites').SiteNode[];
+  extraHierarchy?: SiteNode[];
 }
 
 export function LocationSelector({ countries, value, onChange, placeholder = 'בחר מיקום...', className, extraHierarchy }: LocationSelectorProps) {
-  const { sites, loading } = useCountrySites(countries, extraHierarchy);
+  const { treeNodes, loading } = useCountrySites(countries, extraHierarchy);
   const [open, setOpen] = useState(false);
-  const [manualMode, setManualMode] = useState(false);
+  const [search, setSearch] = useState('');
 
-  const options = useMemo(() => {
-    const seen = new Set<string>();
-    return sites.filter(s => {
-      if (seen.has(s.label)) return false;
-      seen.add(s.label);
-      return true;
-    });
-  }, [sites]);
+  const handleSelect = useCallback((label: string) => {
+    addRecentLocation(label);
+    onChange(label);
+    setOpen(false);
+    setSearch('');
+  }, [onChange]);
 
-  const grouped = useMemo(() => {
-    const groups: Record<string, FlatSite[]> = {};
-    for (const site of options) {
-      const country = site.path[0] || 'Other';
-      if (!groups[country]) groups[country] = [];
-      groups[country].push(site);
-    }
-    return Object.entries(groups);
-  }, [options]);
-
-  if (manualMode) {
-    return (
-      <div className={cn('flex gap-1', className)}>
-        <Input
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          placeholder="הזן מיקום ידנית..."
-          className="flex-1"
-        />
-        <Button type="button" variant="ghost" size="sm" className="shrink-0 text-xs" onClick={() => setManualMode(false)}>
-          רשימה
-        </Button>
-      </div>
-    );
-  }
+  const recentLocations = useMemo(() => getRecentLocations(), [open]); // refresh on open
 
   return (
     <div className={cn('flex gap-1', className)}>
-      <Popover open={open} onOpenChange={setOpen}>
+      <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSearch(''); }}>
         <PopoverTrigger asChild>
           <Button
             type="button"
@@ -100,37 +88,253 @@ export function LocationSelector({ countries, value, onChange, placeholder = 'ב
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[280px] p-0 z-50" align="start">
-          <Command>
-            <CommandInput placeholder="חפש מיקום..." />
-            <CommandList>
-              <CommandEmpty>לא נמצא. נסה הזנה ידנית.</CommandEmpty>
-              {grouped.map(([country, sites]) => (
-                <CommandGroup key={country} heading={country}>
-                  {sites.map((site) => (
-                    <CommandItem
-                      key={site.label + site.path.join('/')}
-                      value={site.label}
-                      onSelect={() => { onChange(site.label); setOpen(false); }}
-                    >
-                      <Check className={cn('mr-2 h-4 w-4', value === site.label ? 'opacity-100' : 'opacity-0')} />
-                      <span style={{ paddingRight: `${Math.max(0, (site.depth - 1)) * 12}px` }}>
-                        {site.label}
-                      </span>
-                      <span className="ml-auto text-[10px] text-muted-foreground">
-                        {TYPE_LABELS[site.siteType] || site.siteType}
-                      </span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              ))}
-            </CommandList>
-          </Command>
+        <PopoverContent className="w-[320px] p-0 z-50" align="start" dir="rtl">
+          <div className="p-2 border-b">
+            <div className="relative">
+              <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="חפש מיקום..."
+                className="h-8 text-sm pr-8"
+                autoFocus
+              />
+            </div>
+          </div>
+          <div className="max-h-[300px] overflow-y-auto p-1">
+            {loading ? (
+              <p className="text-xs text-muted-foreground text-center py-4">טוען...</p>
+            ) : (
+              <LocationTree
+                nodes={treeNodes}
+                search={search}
+                value={value}
+                onSelect={handleSelect}
+                recentLocations={recentLocations}
+              />
+            )}
+          </div>
         </PopoverContent>
       </Popover>
-      <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => setManualMode(true)} title="הזנה ידנית">
-        <Pencil size={14} />
-      </Button>
+    </div>
+  );
+}
+
+// ── Tree components ─────────────────────────────
+
+interface LocationTreeProps {
+  nodes: SiteNode[];
+  search: string;
+  value: string;
+  onSelect: (label: string) => void;
+  recentLocations: string[];
+}
+
+function LocationTree({ nodes, search, value, onSelect, recentLocations }: LocationTreeProps) {
+  const lower = search.toLowerCase();
+
+  // Collect all site names for recent matching
+  const allNames = useMemo(() => {
+    const names = new Set<string>();
+    function collect(n: SiteNode) {
+      names.add(n.site);
+      n.sub_sites?.forEach(collect);
+    }
+    nodes.forEach(collect);
+    return names;
+  }, [nodes]);
+
+  // Filter recent to only those that exist in the tree
+  const validRecent = useMemo(
+    () => recentLocations.filter(r => allNames.has(r)),
+    [recentLocations, allNames]
+  );
+
+  if (search) {
+    // Flat search results
+    const results: { label: string; siteType: string; path: string[] }[] = [];
+    function searchNodes(node: SiteNode, path: string[]) {
+      const currentPath = [...path, node.site];
+      if (node.site.toLowerCase().includes(lower)) {
+        results.push({ label: node.site, siteType: node.site_type, path: currentPath });
+      }
+      node.sub_sites?.forEach(child => searchNodes(child, currentPath));
+    }
+    nodes.forEach(n => searchNodes(n, []));
+
+    if (results.length === 0) {
+      return <p className="text-xs text-muted-foreground text-center py-4">לא נמצא</p>;
+    }
+
+    return (
+      <div>
+        {results.map((r, i) => (
+          <button
+            key={`${r.label}-${i}`}
+            type="button"
+            onClick={() => onSelect(r.label)}
+            className={cn(
+              'flex items-center gap-1.5 w-full text-right py-1.5 px-2 rounded-md transition-colors text-sm hover:bg-accent',
+              value === r.label && 'bg-accent/50'
+            )}
+          >
+            <Check className={cn('h-3.5 w-3.5 shrink-0', value === r.label ? 'opacity-100' : 'opacity-0')} />
+            <span className="truncate">{r.label}</span>
+            <span className="text-[10px] text-muted-foreground mr-auto shrink-0">
+              {TYPE_LABELS[r.siteType] || r.siteType}
+            </span>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Recently used */}
+      {validRecent.length > 0 && (
+        <div className="mb-1">
+          <div className="px-2 py-1 text-[11px] font-semibold text-muted-foreground">בשימוש לאחרונה</div>
+          {validRecent.map(label => (
+            <button
+              key={`recent-${label}`}
+              type="button"
+              onClick={() => onSelect(label)}
+              className={cn(
+                'flex items-center gap-1.5 w-full text-right py-1.5 px-2 rounded-md transition-colors text-sm hover:bg-accent',
+                value === label && 'bg-accent/50'
+              )}
+            >
+              <Check className={cn('h-3.5 w-3.5 shrink-0', value === label ? 'opacity-100' : 'opacity-0')} />
+              <span className="truncate">{label}</span>
+            </button>
+          ))}
+          <div className="border-b my-1" />
+        </div>
+      )}
+
+      {/* Tree */}
+      {nodes.map(node => (
+        <TreeNode key={node.site} node={node} depth={0} value={value} onSelect={onSelect} />
+      ))}
+    </div>
+  );
+}
+
+interface TreeNodeProps {
+  node: SiteNode;
+  depth: number;
+  value: string;
+  onSelect: (label: string) => void;
+}
+
+function TreeNode({ node, depth, value, onSelect }: TreeNodeProps) {
+  const hasChildren = node.sub_sites && node.sub_sites.length > 0;
+  const isCountry = node.site_type === 'country';
+  const [expanded, setExpanded] = useState(depth < 1);
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState('');
+
+  const handleClick = () => {
+    if (isCountry) {
+      // Country nodes only toggle expand
+      setExpanded(!expanded);
+    } else {
+      // All other nodes are selectable
+      onSelect(node.site);
+    }
+  };
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpanded(!expanded);
+  };
+
+  const handleAddManual = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newName.trim();
+    if (trimmed) {
+      onSelect(trimmed);
+      setNewName('');
+      setAdding(false);
+    }
+  };
+
+  const typeLabel = TYPE_LABELS[node.site_type] || node.site_type;
+
+  return (
+    <div>
+      <div
+        className={cn(
+          'flex items-center gap-1 w-full text-right rounded-md transition-colors text-sm group',
+          isCountry ? 'hover:bg-muted/50 cursor-pointer' : 'hover:bg-accent cursor-pointer',
+          !isCountry && value === node.site && 'bg-accent/50',
+        )}
+      >
+        <button
+          type="button"
+          onClick={handleClick}
+          className="flex items-center gap-1 flex-1 py-1.5 min-w-0"
+          style={{ paddingRight: `${depth * 16 + 8}px` }}
+        >
+          {hasChildren ? (
+            <span onClick={handleToggle} className="shrink-0 p-0.5 rounded hover:bg-muted-foreground/20">
+              {expanded
+                ? <ChevronDown size={14} className="text-muted-foreground" />
+                : <ChevronLeft size={14} className="text-muted-foreground" />
+              }
+            </span>
+          ) : (
+            !isCountry && <Check className={cn('h-3.5 w-3.5 shrink-0', value === node.site ? 'opacity-100' : 'opacity-0')} />
+          )}
+          <span className={cn('truncate', isCountry && 'font-semibold')}>{node.site}</span>
+          {!isCountry && (
+            <span className="text-[10px] text-muted-foreground mr-auto shrink-0">{typeLabel}</span>
+          )}
+        </button>
+        {/* Add child button - visible on hover */}
+        {expanded && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setAdding(true); }}
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-muted-foreground/20 ml-1 shrink-0"
+            title="הוסף מיקום"
+          >
+            <Plus size={12} className="text-muted-foreground" />
+          </button>
+        )}
+      </div>
+
+      {expanded && (
+        <div>
+          {hasChildren && node.sub_sites!.map(child => (
+            <TreeNode key={child.site + child.site_type} node={child} depth={depth + 1} value={value} onSelect={onSelect} />
+          ))}
+          {/* Inline manual add */}
+          {adding && (
+            <form
+              onSubmit={handleAddManual}
+              className="flex items-center gap-1 py-1"
+              style={{ paddingRight: `${(depth + 1) * 16 + 8}px` }}
+            >
+              <Input
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                placeholder="שם מיקום חדש..."
+                className="h-7 text-xs flex-1"
+                autoFocus
+                onKeyDown={e => { if (e.key === 'Escape') { setAdding(false); setNewName(''); } }}
+              />
+              <Button type="submit" size="sm" className="h-7 text-xs px-2" disabled={!newName.trim()}>
+                בחר
+              </Button>
+              <Button type="button" variant="ghost" size="sm" className="h-7 text-xs px-1" onClick={() => { setAdding(false); setNewName(''); }}>
+                ✕
+              </Button>
+            </form>
+          )}
+        </div>
+      )}
     </div>
   );
 }

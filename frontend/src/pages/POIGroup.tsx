@@ -58,7 +58,7 @@ const POIGroupPage = () => {
     const map: Record<string, string> = {};
     for (const s of sites) {
       if (s.path.length >= 2) {
-        map[s.label.toLowerCase()] = s.path[s.path.length - 2];
+        map[s.label.toLowerCase()] = s.path[1];
       }
     }
     return map;

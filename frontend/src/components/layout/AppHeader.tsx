@@ -21,6 +21,7 @@ import {
   Pencil,
   Settings,
   Check,
+  Network,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -30,6 +31,7 @@ import { useTripList } from '@/context/TripListContext';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { CreateTripForm } from '@/components/forms/CreateTripForm';
 import { EditTripDialog } from '@/components/trip/EditTripDialog';
+import { LocationTreeDialog } from '@/components/trip/LocationTreeDialog';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -90,7 +92,8 @@ export function AppHeader() {
     try { return parseInt(localStorage.getItem('inbox_unread_count') || '0', 10); } catch { return 0; }
   });
   const { trips } = useTripList();
-  const { activeTrip, setActiveTrip, deleteCurrentTrip, updateCurrentTrip } = useActiveTrip();
+  const { activeTrip, setActiveTrip, deleteCurrentTrip, updateCurrentTrip, tripSitesHierarchy } = useActiveTrip();
+  const [locationTreeOpen, setLocationTreeOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -200,6 +203,9 @@ export function AppHeader() {
                 <DropdownMenuItem onClick={openEditDialog}>
                   <Pencil size={14} className="mr-2" /> Edit Trip
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLocationTreeOpen(true)}>
+                  <Network size={14} className="mr-2" /> Location Tree
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setNewTripOpen(true)}>
                   <Plus size={14} className="mr-2" /> New Trip
                 </DropdownMenuItem>
@@ -305,6 +311,13 @@ export function AppHeader() {
                 <Pencil size={16} /> Edit Trip
               </button>
               <button
+                onClick={() => { setHamburgerOpen(false); setLocationTreeOpen(true); }}
+                disabled={!activeTrip}
+                className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40"
+              >
+                <Network size={16} /> Location Tree
+              </button>
+              <button
                 onClick={() => { setHamburgerOpen(false); setNewTripOpen(true); }}
                 className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
               >
@@ -372,6 +385,9 @@ export function AppHeader() {
 
       {/* Edit Trip Dialog */}
       <EditTripDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} />
+
+      {/* Location Tree Dialog */}
+      <LocationTreeDialog open={locationTreeOpen} onOpenChange={setLocationTreeOpen} hierarchy={tripSitesHierarchy} />
 
       {/* User Preferences Dialog */}
       <Dialog open={prefsOpen} onOpenChange={setPrefsOpen}>

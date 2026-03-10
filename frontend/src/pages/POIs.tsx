@@ -92,12 +92,13 @@ const POIsPage = () => {
   const countries = activeTrip?.countries || [];
   const { sites } = useCountrySites(countries, tripSitesHierarchy as SiteNode[]);
 
-  // Build a lookup: lowercase city name → region label (its parent in hierarchy)
+  // Build a lookup: lowercase site name → city-level ancestor (path[1], first child under country)
+  // e.g. "panglao" → "Bohol", "bohol" → "Bohol", "hidden beach" → "El Nido"
   const cityRegionMap = useMemo(() => {
     const map: Record<string, string> = {};
     for (const s of sites) {
       if (s.path.length >= 2) {
-        map[s.label.toLowerCase()] = s.path[s.path.length - 2];
+        map[s.label.toLowerCase()] = s.path[1];
       }
     }
     return map;

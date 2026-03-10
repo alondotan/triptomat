@@ -72,23 +72,24 @@ export function useCountrySites(countries: string[], extraHierarchy?: SiteNode[]
     loadHierarchy().then(d => { setHierarchy(d); setLoading(false); });
   }, []);
 
-  const sites = useMemo<FlatSite[]>(() => {
-    if (!hierarchy || countries.length === 0) return [];
+  const { sites, treeNodes } = useMemo(() => {
+    if (!hierarchy || countries.length === 0) return { sites: [] as FlatSite[], treeNodes: [] as SiteNode[] };
     const allSites: FlatSite[] = [];
+    const allNodes: SiteNode[] = [];
     for (const country of countries) {
       const countryNode = findCountryNode(hierarchy.world_hierarchy, country);
       if (countryNode) {
-        // Merge extra hierarchy nodes into the country node
         const mergedNode = extraHierarchy
           ? mergeHierarchyIntoCountry(countryNode, extraHierarchy, country)
           : countryNode;
         allSites.push(...flattenSites(mergedNode));
+        allNodes.push(mergedNode);
       }
     }
-    return allSites;
+    return { sites: allSites, treeNodes: allNodes };
   }, [hierarchy, countries, extraHierarchy]);
 
-  return { sites, loading };
+  return { sites, treeNodes, loading };
 }
 
 /** Deep-merge extra SiteNode[] (from webhooks) into an existing country node, adding missing sub_sites */

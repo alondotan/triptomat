@@ -4,7 +4,7 @@ import { validateWebhookToken } from '../_shared/auth.ts';
 import { mergeWithNewWins } from '../_shared/merge.ts';
 import { fuzzyMatch } from '../_shared/matching.ts';
 import { TYPE_TO_CATEGORY, GEO_TYPES, TIP_TYPES } from '../_shared/categories.ts';
-import { buildSiteToCountryMap } from '../_shared/mapUtils.ts';
+import { buildSiteToCountryMap, buildSiteToCityMap } from '../_shared/mapUtils.ts';
 Deno.serve(async (req)=>{
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
@@ -170,6 +170,7 @@ Deno.serve(async (req)=>{
       ]);
       const items = payload.analysis.recommendations || [];
       const siteToCountry = buildSiteToCountryMap(payload.analysis.sites_hierarchy || []);
+      const siteToCity = buildSiteToCityMap(payload.analysis.sites_hierarchy || []);
       console.log(`[debug] Processing ${items.length} items`);
       for (const item of items){
         const itemType = item.category;
@@ -249,12 +250,14 @@ Deno.serve(async (req)=>{
         } else {
           // POI: accommodation, eatery, attraction, service
           const poiCategory = dbCategory;
+          // Resolve item.site to city-level using hierarchy (e.g. "Hidden Beach" → "El Nido")
+          const resolvedCity = siteToCity[(item.site || "").toLowerCase()] || item.site;
           // Fuzzy match: name + category, with optional city check when both have it
           const matchedPoi = existingPois?.find((p)=>{
             if (p.category !== poiCategory) return false;
             if (!fuzzyMatch(p.name, item.name)) return false;
             const existingCity = p.location?.city;
-            const newCity = item.site || item.location?.city;
+            const newCity = resolvedCity || item.location?.city;
             if (existingCity && newCity && !fuzzyMatch(existingCity, newCity)) return false;
             return true;
           });
@@ -265,7 +268,7 @@ Deno.serve(async (req)=>{
             if (!recIds.includes(sourceRecId)) {
               const incomingLocation = {
                 country: siteToCountry[(item.site || "").toLowerCase()] || undefined,
-                city: item.site || undefined,
+                city: resolvedCity || undefined,
                 address: item.location?.address || undefined,
                 coordinates: item.location?.coordinates || undefined
               };
@@ -309,7 +312,7 @@ Deno.serve(async (req)=>{
                 is_paid: false,
                 location: {
                   country: siteToCountry[(item.site || "").toLowerCase()] || null,
-                  city: item.site,
+                  city: resolvedCity,
                   address: item.location?.address,
                   coordinates: item.location?.coordinates
                 },
