@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import type { SiteNode } from '@/hooks/useCountrySites';
 
 export interface TripLocation {
@@ -121,6 +122,7 @@ function findCountryNode(nodes: SiteNode[], countryName: string): SiteNode | nul
 }
 
 export async function seedTripLocations(tripId: string, countries: string[]): Promise<void> {
+  console.log('[seedTripLocations] Starting seed for trip', tripId, 'countries:', countries);
   const data = await loadCountrySites();
   const countryNodes: SiteNode[] = [];
 
@@ -128,18 +130,28 @@ export async function seedTripLocations(tripId: string, countries: string[]): Pr
     const node = findCountryNode(data.world_hierarchy, country);
     if (node) {
       countryNodes.push(node);
+      console.log(`[seedTripLocations] Found country node: ${node.site} (${node.sub_sites?.length ?? 0} sub-sites)`);
+    } else {
+      console.warn(`[seedTripLocations] Country not found in hierarchy: "${country}"`);
     }
   }
 
-  if (countryNodes.length === 0) return;
+  if (countryNodes.length === 0) {
+    console.warn('[seedTripLocations] No matching country nodes found, skipping seed');
+    return;
+  }
 
   // Use the DB function for efficient batch insert in a single transaction
   const { error } = await supabase.rpc('seed_trip_locations', {
     p_trip_id: tripId,
-    p_locations: countryNodes as unknown as Record<string, unknown>,
+    p_locations: countryNodes as unknown as Json,
   });
 
-  if (error) throw error;
+  if (error) {
+    console.error('[seedTripLocations] RPC error:', error);
+    throw error;
+  }
+  console.log('[seedTripLocations] Seed completed successfully');
 }
 
 // ── Lookup helpers ──────────────────────────────
