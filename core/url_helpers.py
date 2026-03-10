@@ -3,7 +3,10 @@ import hashlib
 
 def is_video_url(url):
     """Checks if a URL is from a known video platform."""
-    return any(d in url for d in ['youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com'])
+    return any(d in url for d in [
+        'youtube.com', 'youtu.be', 'tiktok.com', 'instagram.com',
+        'facebook.com/reel', 'facebook.com/watch', 'fb.watch',
+    ])
 
 
 def is_google_maps_url(url):
