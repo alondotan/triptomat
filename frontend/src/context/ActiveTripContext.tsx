@@ -52,6 +52,7 @@ interface ActiveTripContextType {
   deleteCurrentTrip: () => Promise<void>;
   loadTripData: (tripId: string) => Promise<void>;
   setExchangeRates: (rates: ExchangeRates | null) => void;
+  addSiteToHierarchy: (siteName: string, parentSiteName?: string) => void;
 }
 
 const ActiveTripContext = createContext<ActiveTripContextType | undefined>(undefined);
@@ -147,6 +148,44 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'INCREMENT_REFRESH_KEY' });
   }, [loadTripMetadata]);
 
+  const addSiteToHierarchy = useCallback((siteName: string, parentSiteName?: string) => {
+    const current = state.tripSitesHierarchy;
+    const newNode: SiteHierarchyNode = { site: siteName, site_type: 'city' };
+
+    if (parentSiteName) {
+      // Clone and insert under parent
+      const cloned: SiteHierarchyNode[] = JSON.parse(JSON.stringify(current));
+      function insertUnder(nodes: SiteHierarchyNode[]): boolean {
+        for (const node of nodes) {
+          if (node.site.toLowerCase() === parentSiteName.toLowerCase()) {
+            if (!node.sub_sites) node.sub_sites = [];
+            // Don't add duplicates
+            if (!node.sub_sites.some(s => s.site.toLowerCase() === siteName.toLowerCase())) {
+              node.sub_sites.push(newNode);
+            }
+            return true;
+          }
+          if (node.sub_sites && insertUnder(node.sub_sites)) return true;
+        }
+        return false;
+      }
+      if (insertUnder(cloned)) {
+        dispatch({ type: 'SET_TRIP_SITES_HIERARCHY', payload: cloned });
+        return;
+      }
+    }
+
+    // No parent or parent not found — add at root level of first country, or as standalone
+    if (current.length > 0) {
+      const cloned: SiteHierarchyNode[] = JSON.parse(JSON.stringify(current));
+      if (!cloned[0].sub_sites) cloned[0].sub_sites = [];
+      if (!cloned[0].sub_sites.some(s => s.site.toLowerCase() === siteName.toLowerCase())) {
+        cloned[0].sub_sites.push(newNode);
+      }
+      dispatch({ type: 'SET_TRIP_SITES_HIERARCHY', payload: cloned });
+    }
+  }, [state.tripSitesHierarchy]);
+
   const setExchangeRates = useCallback((rates: ExchangeRates | null) => {
     dispatch({ type: 'SET_EXCHANGE_RATES', payload: rates });
   }, []);
@@ -178,7 +217,8 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     deleteCurrentTrip,
     loadTripData,
     setExchangeRates,
-  }), [activeTrip, state.exchangeRates, state.tripSitesHierarchy, state.sourceEmailMap, state.refreshKey, isLoading, error, setActiveTrip, updateCurrentTrip, deleteCurrentTrip, loadTripData, setExchangeRates]);
+    addSiteToHierarchy,
+  }), [activeTrip, state.exchangeRates, state.tripSitesHierarchy, state.sourceEmailMap, state.refreshKey, isLoading, error, setActiveTrip, updateCurrentTrip, deleteCurrentTrip, loadTripData, setExchangeRates, addSiteToHierarchy]);
 
   return <ActiveTripContext.Provider value={value}>{children}</ActiveTripContext.Provider>;
 }

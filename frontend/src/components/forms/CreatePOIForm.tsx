@@ -17,7 +17,7 @@ import type { POICategory, POIStatus } from '@/types/trip';
 import { getPOICategories, getCategoryLabel } from '@/lib/subCategoryConfig';
 
 export function CreatePOIForm() {
-  const { activeTrip, tripSitesHierarchy } = useActiveTrip();
+  const { activeTrip, tripSitesHierarchy, addSiteToHierarchy } = useActiveTrip();
   const { addPOI } = usePOI();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -170,6 +170,7 @@ export function CreatePOIForm() {
                 onChange={setCity}
                 placeholder="בחר מיקום..."
                 extraHierarchy={tripSitesHierarchy}
+                onAddToTree={addSiteToHierarchy}
               />
             </div>
             <div className="space-y-2">

@@ -12,11 +12,12 @@ interface LocationContextPickerProps {
   onSave: () => void;
   onCancel: () => void;
   extraHierarchy?: import('@/hooks/useCountrySites').SiteNode[];
+  onAddToTree?: (siteName: string, parentSiteName?: string) => void;
 }
 
 export function LocationContextPicker({
   countries, value, onChange, daysForward, onDaysForwardChange,
-  maxDaysForward, onSave, onCancel, extraHierarchy,
+  maxDaysForward, onSave, onCancel, extraHierarchy, onAddToTree,
 }: LocationContextPickerProps) {
   return (
     <div className="space-y-2">
@@ -26,6 +27,7 @@ export function LocationContextPicker({
         onChange={onChange}
         placeholder="בחר מיקום..."
         extraHierarchy={extraHierarchy}
+        onAddToTree={onAddToTree}
       />
       <DaysForwardControl value={daysForward} onChange={onDaysForwardChange} max={maxDaysForward} />
       <div className="flex gap-2">

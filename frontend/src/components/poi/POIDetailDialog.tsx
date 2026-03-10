@@ -51,7 +51,7 @@ interface RecommendationQuote {
 export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProps) {
   const { updatePOI, deletePOI } = usePOI();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const { activeTrip, tripSitesHierarchy } = useActiveTrip();
+  const { activeTrip, tripSitesHierarchy, addSiteToHierarchy } = useActiveTrip();
   const { isResearch, isPlanning } = useTripMode();
 
   // Editable fields
@@ -339,6 +339,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           onChange={setCity}
           placeholder="בחר מיקום..."
           extraHierarchy={tripSitesHierarchy}
+          onAddToTree={addSiteToHierarchy}
         />
       </div>
       <div className="space-y-2">

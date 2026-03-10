@@ -53,9 +53,10 @@ interface LocationSelectorProps {
   placeholder?: string;
   className?: string;
   extraHierarchy?: SiteNode[];
+  onAddToTree?: (siteName: string, parentSiteName?: string) => void;
 }
 
-export function LocationSelector({ countries, value, onChange, placeholder = 'בחר מיקום...', className, extraHierarchy }: LocationSelectorProps) {
+export function LocationSelector({ countries, value, onChange, placeholder = 'בחר מיקום...', className, extraHierarchy, onAddToTree }: LocationSelectorProps) {
   const { treeNodes, loading } = useCountrySites(countries, extraHierarchy);
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -110,12 +111,13 @@ export function LocationSelector({ countries, value, onChange, placeholder = 'ב
                 search={search}
                 value={value}
                 onSelect={handleSelect}
+                onAddToTree={onAddToTree}
                 recentLocations={recentLocations}
               />
             )}
           </div>
           {/* Always-visible manual entry at bottom */}
-          <ManualEntryFooter onSelect={handleSelect} />
+          <ManualEntryFooter onSelect={handleSelect} onAddToTree={onAddToTree} />
         </PopoverContent>
       </Popover>
     </div>
@@ -129,10 +131,11 @@ interface LocationTreeProps {
   search: string;
   value: string;
   onSelect: (label: string) => void;
+  onAddToTree?: (siteName: string, parentSiteName?: string) => void;
   recentLocations: string[];
 }
 
-function LocationTree({ nodes, search, value, onSelect, recentLocations }: LocationTreeProps) {
+function LocationTree({ nodes, search, value, onSelect, onAddToTree, recentLocations }: LocationTreeProps) {
   const lower = search.toLowerCase();
 
   // Collect all site names for recent matching
@@ -217,7 +220,7 @@ function LocationTree({ nodes, search, value, onSelect, recentLocations }: Locat
 
       {/* Tree */}
       {nodes.map(node => (
-        <TreeNode key={node.site} node={node} depth={0} value={value} onSelect={onSelect} />
+        <TreeNode key={node.site} node={node} depth={0} value={value} onSelect={onSelect} onAddToTree={onAddToTree} />
       ))}
     </div>
   );
@@ -228,9 +231,10 @@ interface TreeNodeProps {
   depth: number;
   value: string;
   onSelect: (label: string) => void;
+  onAddToTree?: (siteName: string, parentSiteName?: string) => void;
 }
 
-function ManualEntryFooter({ onSelect }: { onSelect: (label: string) => void }) {
+function ManualEntryFooter({ onSelect, onAddToTree }: { onSelect: (label: string) => void; onAddToTree?: (siteName: string, parentSiteName?: string) => void }) {
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -238,6 +242,7 @@ function ManualEntryFooter({ onSelect }: { onSelect: (label: string) => void }) 
     e.preventDefault();
     const trimmed = newName.trim();
     if (trimmed) {
+      onAddToTree?.(trimmed);
       onSelect(trimmed);
       setNewName('');
       setAdding(false);
@@ -278,7 +283,7 @@ function ManualEntryFooter({ onSelect }: { onSelect: (label: string) => void }) 
   );
 }
 
-function TreeNode({ node, depth, value, onSelect }: TreeNodeProps) {
+function TreeNode({ node, depth, value, onSelect, onAddToTree }: TreeNodeProps) {
   const hasChildren = node.sub_sites && node.sub_sites.length > 0;
   const isCountry = node.site_type === 'country';
   const [expanded, setExpanded] = useState(depth < 1);
@@ -287,10 +292,8 @@ function TreeNode({ node, depth, value, onSelect }: TreeNodeProps) {
 
   const handleClick = () => {
     if (isCountry) {
-      // Country nodes only toggle expand
       setExpanded(!expanded);
     } else {
-      // All other nodes are selectable
       onSelect(node.site);
     }
   };
@@ -304,6 +307,7 @@ function TreeNode({ node, depth, value, onSelect }: TreeNodeProps) {
     e.preventDefault();
     const trimmed = newName.trim();
     if (trimmed) {
+      onAddToTree?.(trimmed, node.site);
       onSelect(trimmed);
       setNewName('');
       setAdding(false);
@@ -358,7 +362,7 @@ function TreeNode({ node, depth, value, onSelect }: TreeNodeProps) {
       {expanded && (
         <div>
           {hasChildren && node.sub_sites!.map(child => (
-            <TreeNode key={child.site + child.site_type} node={child} depth={depth + 1} value={value} onSelect={onSelect} />
+            <TreeNode key={child.site + child.site_type} node={child} depth={depth + 1} value={value} onSelect={onSelect} onAddToTree={onAddToTree} />
           ))}
           {/* Inline manual add */}
           {adding && (

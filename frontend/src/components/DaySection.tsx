@@ -378,7 +378,7 @@ function LocationInput({ value, onChange, placeholder, suggestions }: {
 }
 
 function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookingMissionOption, countries }: QuickCreateFormProps) {
-  const { tripSitesHierarchy } = useActiveTrip();
+  const { tripSitesHierarchy, addSiteToHierarchy } = useActiveTrip();
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [subCategory, setSubCategory] = useState('');
@@ -464,7 +464,7 @@ function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookin
       )}
       <div className="space-y-1">
         <Label className="text-xs">מיקום</Label>
-        <LocationSelector countries={countries || []} value={city} onChange={setCity} placeholder="בחר מיקום..." extraHierarchy={tripSitesHierarchy} />
+        <LocationSelector countries={countries || []} value={city} onChange={setCity} placeholder="בחר מיקום..." extraHierarchy={tripSitesHierarchy} onAddToTree={addSiteToHierarchy} />
       </div>
       {showBookingMissionOption && (
         <div className="flex items-center gap-2 mt-1">

@@ -748,7 +748,7 @@ function ScheduleZone({ children, activePotentialDrag, isEmpty }: {
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function DndTestPage() {
-  const { activeTrip, updateCurrentTrip, tripSitesHierarchy } = useActiveTrip();
+  const { activeTrip, updateCurrentTrip, tripSitesHierarchy, addSiteToHierarchy } = useActiveTrip();
   const { updateTripInList } = useTripList();
   const { pois, addPOI, updatePOI } = usePOI();
   const { transportation, deleteTransportation } = useTransport();
@@ -2023,6 +2023,7 @@ export default function DndTestPage() {
                 onSave={updateLocationContext}
                 onCancel={() => { setEditingLocation(false); setLocationDaysForward(0); }}
                 extraHierarchy={tripSitesHierarchy}
+                onAddToTree={addSiteToHierarchy}
               />
             </div>
           )}
