@@ -23,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { DaySection, type LocationSuggestion } from '@/components/DaySection';
 import type { PointOfInterest } from '@/types/trip';
-import type { SiteNode } from '@/hooks/useCountrySites';
+
 
 // ─── Shared types ─────────────────────────────────────────────────────────────
 
@@ -89,7 +89,6 @@ export interface ItineraryDayContentProps {
   availableActivities: { id: string; label: string; sublabel: string; city?: string; status?: string }[];
   locationContext?: string;
   countries: string[];
-  tripSitesHierarchy: SiteNode[];
   onMoveActivityToDay: (id: string, targetDayNum: number) => Promise<void>;
   onRemoveActivity: (id: string) => Promise<void>;
   onAddActivity: (id: string, nights?: number, createBooking?: boolean) => Promise<void>;
@@ -684,7 +683,7 @@ export function ItineraryDayContent({
   selectedDayNum, tripDays,
   isDragging, isOverPotential, isOverNewSchedule, isScheduledBeingDragged,
   prevDayAccommodations,
-  potentialActivities, availableActivities, locationContext, countries, tripSitesHierarchy,
+  potentialActivities, availableActivities, locationContext, countries,
   onMoveActivityToDay, onRemoveActivity, onAddActivity, onCreateNewActivity,
   scheduleCells, availableTransport, locationSuggestions,
   onRemoveTransport, onAddTransport, onCreateNewTransport,
@@ -756,7 +755,7 @@ export function ItineraryDayContent({
             addLabel="הוסף פעילות"
             locationContext={locationContext}
             countries={countries}
-            extraHierarchy={tripSitesHierarchy}
+
             showBookingMissionOption
           />
         </div>
@@ -810,7 +809,6 @@ export function ItineraryDayContent({
           showBookingMissionOption
           locationContext={locationContext}
           countries={countries}
-          extraHierarchy={tripSitesHierarchy}
         />
       </SectionBlock>
 

@@ -748,7 +748,7 @@ function ScheduleZone({ children, activePotentialDrag, isEmpty }: {
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function DndTestPage() {
-  const { activeTrip, updateCurrentTrip, tripSitesHierarchy, addSiteToHierarchy } = useActiveTrip();
+  const { activeTrip, updateCurrentTrip } = useActiveTrip();
   const { updateTripInList } = useTripList();
   const { pois, addPOI, updatePOI } = usePOI();
   const { transportation, deleteTransportation } = useTransport();
@@ -2014,7 +2014,6 @@ export default function DndTestPage() {
           {activeTrip && editingLocation && (
             <div className="w-full sm:w-80">
               <LocationContextPicker
-                countries={activeTrip.countries}
                 value={locationContext}
                 onChange={setLocationContext}
                 daysForward={locationDaysForward}
@@ -2022,8 +2021,6 @@ export default function DndTestPage() {
                 maxDaysForward={tripDays.length - selectedDayNum}
                 onSave={updateLocationContext}
                 onCancel={() => { setEditingLocation(false); setLocationDaysForward(0); }}
-                extraHierarchy={tripSitesHierarchy}
-                onAddToTree={addSiteToHierarchy}
               />
             </div>
           )}
@@ -2097,7 +2094,7 @@ export default function DndTestPage() {
                 addLabel="הוסף פעילות"
                 locationContext={currentDayLocation}
                 countries={activeTrip?.countries}
-                extraHierarchy={tripSitesHierarchy}
+
                 showBookingMissionOption
               />
             </div>
@@ -2145,7 +2142,7 @@ export default function DndTestPage() {
                 addLabel="הוסף פעילות"
                 locationContext={currentDayLocation}
                 countries={activeTrip?.countries}
-                extraHierarchy={tripSitesHierarchy}
+
                 showBookingMissionOption
               />
             </div>
@@ -2337,7 +2334,7 @@ export default function DndTestPage() {
                   showBookingMissionOption
                   locationContext={currentDayLocation}
                   countries={activeTrip?.countries}
-                  extraHierarchy={tripSitesHierarchy}
+  
                 />
               </div>
 

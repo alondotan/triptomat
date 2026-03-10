@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Trip, Collection } from '@/types/trip';
 import { fetchItineraryDays, updateItineraryDay } from './itineraryService';
+import { seedTripLocations } from './tripLocationService';
 
 // ============================================================
 // TRIPS
@@ -36,7 +37,18 @@ export async function createTrip(trip: Omit<Trip, 'id' | 'createdAt' | 'updatedA
     .single();
 
   if (error) throw error;
-  return mapTrip(data);
+  const mapped = mapTrip(data);
+
+  // Seed location tree from global hierarchy for selected countries
+  if (mapped.countries.length > 0) {
+    try {
+      await seedTripLocations(mapped.id, mapped.countries);
+    } catch (e) {
+      console.error('Failed to seed trip locations:', e);
+    }
+  }
+
+  return mapped;
 }
 
 export async function updateTrip(tripId: string, updates: Partial<Trip>): Promise<void> {

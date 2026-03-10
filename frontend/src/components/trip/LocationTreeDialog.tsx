@@ -1,33 +1,11 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronLeft } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { SiteHierarchyNode } from '@/types/webhook';
+import type { SiteNode } from '@/hooks/useCountrySites';
 import { TYPE_LABELS } from '@/components/shared/LocationSelector';
 import { cn } from '@/lib/utils';
 
-/** Merge duplicate nodes in a SiteHierarchyNode[] (e.g. same country from multiple sources) */
-function mergeNodes(nodes: SiteHierarchyNode[]): SiteHierarchyNode[] {
-  const map = new Map<string, SiteHierarchyNode>();
-  for (const node of nodes) {
-    const key = node.site.toLowerCase();
-    const existing = map.get(key);
-    if (existing) {
-      // Merge sub_sites
-      if (node.sub_sites?.length) {
-        existing.sub_sites = mergeNodes([...(existing.sub_sites || []), ...node.sub_sites]);
-      }
-    } else {
-      map.set(key, {
-        site: node.site,
-        site_type: node.site_type,
-        sub_sites: node.sub_sites ? mergeNodes(node.sub_sites) : undefined,
-      });
-    }
-  }
-  return Array.from(map.values());
-}
-
-function TreeNode({ node, depth = 0 }: { node: SiteHierarchyNode; depth?: number }) {
+function TreeNode({ node, depth = 0 }: { node: SiteNode; depth?: number }) {
   const hasChildren = node.sub_sites && node.sub_sites.length > 0;
   const [expanded, setExpanded] = useState(depth < 2);
 
@@ -67,12 +45,10 @@ function TreeNode({ node, depth = 0 }: { node: SiteHierarchyNode; depth?: number
 interface LocationTreeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  hierarchy: SiteHierarchyNode[];
+  hierarchy: SiteNode[];
 }
 
 export function LocationTreeDialog({ open, onOpenChange, hierarchy }: LocationTreeDialogProps) {
-  const merged = mergeNodes(hierarchy);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col" dir="rtl">
@@ -80,12 +56,12 @@ export function LocationTreeDialog({ open, onOpenChange, hierarchy }: LocationTr
           <DialogTitle>עץ מיקומים</DialogTitle>
         </DialogHeader>
         <div className="overflow-y-auto flex-1 -mx-2 px-2">
-          {merged.length === 0 ? (
+          {hierarchy.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">
               אין מיקומים עדיין. מיקומים יופיעו כאן לאחר עיבוד המלצות ומיילים.
             </p>
           ) : (
-            merged.map((node) => (
+            hierarchy.map((node) => (
               <TreeNode key={node.site + node.site_type} node={node} depth={0} />
             ))
           )}

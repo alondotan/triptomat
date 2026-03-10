@@ -5,6 +5,69 @@ import { mergeWithNewWins } from '../_shared/merge.ts';
 import { fuzzyMatch } from '../_shared/matching.ts';
 import { TYPE_TO_CATEGORY, GEO_TYPES, TIP_TYPES } from '../_shared/categories.ts';
 import { buildSiteToCountryMap, buildSiteToCityMap } from '../_shared/mapUtils.ts';
+
+interface SiteHierarchyNode {
+  site: string;
+  site_type: string;
+  sub_sites?: SiteHierarchyNode[];
+}
+
+/**
+ * Sync incoming sites_hierarchy into the trip_locations table.
+ * Walks the hierarchy tree and inserts any nodes not already present.
+ */
+async function syncSitesHierarchyToTripLocations(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  tripId: string,
+  hierarchy: SiteHierarchyNode[],
+) {
+  // Fetch all existing locations for this trip
+  const { data: existing } = await supabase
+    .from('trip_locations')
+    .select('id, name, parent_id')
+    .eq('trip_id', tripId);
+
+  // Build a lookup: lowercase name → id (for finding parents)
+  const nameToId = new Map<string, string>();
+  for (const loc of (existing || [])) {
+    nameToId.set((loc.name as string).toLowerCase(), loc.id as string);
+  }
+
+  // Recursively insert missing nodes
+  async function walkAndInsert(nodes: SiteHierarchyNode[], parentId: string | null) {
+    for (const node of nodes) {
+      const key = node.site.toLowerCase();
+      let nodeId = nameToId.get(key);
+
+      if (!nodeId) {
+        // Insert new location
+        const { data: inserted } = await supabase
+          .from('trip_locations')
+          .insert({
+            trip_id: tripId,
+            parent_id: parentId,
+            name: node.site,
+            site_type: node.site_type,
+            source: 'webhook',
+          })
+          .select('id')
+          .maybeSingle();
+
+        if (inserted) {
+          nodeId = inserted.id as string;
+          nameToId.set(key, nodeId);
+        }
+      }
+
+      if (nodeId && node.sub_sites && node.sub_sites.length > 0) {
+        await walkAndInsert(node.sub_sites, nodeId);
+      }
+    }
+  }
+
+  await walkAndInsert(hierarchy, null);
+}
+
 Deno.serve(async (req)=>{
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
@@ -387,6 +450,16 @@ Deno.serve(async (req)=>{
           }
         }
       }
+      // Sync sites_hierarchy into trip_locations table
+      const sitesHierarchy = payload.analysis.sites_hierarchy || [];
+      if (sitesHierarchy.length > 0) {
+        try {
+          await syncSitesHierarchyToTripLocations(supabase, matchedTripId, sitesHierarchy);
+        } catch (e) {
+          console.error('Failed to sync sites hierarchy to trip_locations:', e);
+        }
+      }
+
       // Update source_recommendation with linked entities
       if (linkedEntities.length > 0) {
         await supabase.from('source_recommendations').update({

@@ -92,7 +92,7 @@ export function AppHeader() {
     try { return parseInt(localStorage.getItem('inbox_unread_count') || '0', 10); } catch { return 0; }
   });
   const { trips } = useTripList();
-  const { activeTrip, setActiveTrip, deleteCurrentTrip, updateCurrentTrip, tripSitesHierarchy } = useActiveTrip();
+  const { activeTrip, setActiveTrip, deleteCurrentTrip, updateCurrentTrip, tripLocationTree } = useActiveTrip();
   const [locationTreeOpen, setLocationTreeOpen] = useState(false);
   const { toast } = useToast();
 
@@ -387,7 +387,7 @@ export function AppHeader() {
       <EditTripDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} />
 
       {/* Location Tree Dialog */}
-      <LocationTreeDialog open={locationTreeOpen} onOpenChange={setLocationTreeOpen} hierarchy={tripSitesHierarchy} />
+      <LocationTreeDialog open={locationTreeOpen} onOpenChange={setLocationTreeOpen} hierarchy={tripLocationTree} />
 
       {/* User Preferences Dialog */}
       <Dialog open={prefsOpen} onOpenChange={setPrefsOpen}>

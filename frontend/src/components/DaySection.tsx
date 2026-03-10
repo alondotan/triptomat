@@ -13,7 +13,7 @@ import { Plus, X, Star, Moon, Heart, ArrowRight, CalendarDays } from 'lucide-rea
 import { LocationSelector } from '@/components/shared/LocationSelector';
 import { SubCategorySelector } from '@/components/shared/SubCategorySelector';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
-import { useCountrySites, type SiteNode } from '@/hooks/useCountrySites';
+import { getDescendantNames } from '@/services/tripLocationService';
 
 export interface DaySectionItem {
   id: string;
@@ -45,7 +45,6 @@ export interface DaySectionProps {
   locationSuggestions?: LocationSuggestion[];
   showBookingMissionOption?: boolean;
   countries?: string[];
-  extraHierarchy?: SiteNode[];
   // New optional props
   hideHeader?: boolean;
   hideEmptyState?: boolean;
@@ -95,7 +94,7 @@ const TRANSPORT_CATEGORIES = [
 export function DaySection({
   title, icon, items, onRemove, availableItems, onAdd,
   onCreateNew, onToggleSelected, addLabel, entityType, maxNights, locationSuggestions,
-  showBookingMissionOption, locationContext, countries, extraHierarchy,
+  showBookingMissionOption, locationContext, countries,
   hideHeader, hideEmptyState, onMoveToSchedule, onMoveToDay, tripDays, selectedDayNum, onOpen,
 }: DaySectionProps) {
   const [showPicker, setShowPicker] = useState(false);
@@ -103,19 +102,11 @@ export function DaySection({
   const [createBookingMission, setCreateBookingMission] = useState(false);
 
   // Build set of location names that are descendants of locationContext in the hierarchy
-  const { sites } = useCountrySites(countries || [], extraHierarchy);
+  const { tripLocations } = useActiveTrip();
   const localLocationNames = useMemo(() => {
     if (!locationContext) return new Set<string>();
-    const loc = locationContext.toLowerCase();
-    const names = new Set<string>([loc]);
-    // Any site whose path includes locationContext is considered local
-    for (const site of sites) {
-      if (site.path.some(p => p.toLowerCase() === loc)) {
-        names.add(site.label.toLowerCase());
-      }
-    }
-    return names;
-  }, [locationContext, sites]);
+    return getDescendantNames(tripLocations, locationContext);
+  }, [locationContext, tripLocations]);
 
   // Sort by status: interested/planned/scheduled first, then others
   const sortByStatus = (items: typeof availableItems) => {
@@ -378,7 +369,7 @@ function LocationInput({ value, onChange, placeholder, suggestions }: {
 }
 
 function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookingMissionOption, countries }: QuickCreateFormProps) {
-  const { tripSitesHierarchy, addSiteToHierarchy } = useActiveTrip();
+  // LocationSelector now reads from context directly
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [subCategory, setSubCategory] = useState('');
@@ -464,7 +455,7 @@ function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookin
       )}
       <div className="space-y-1">
         <Label className="text-xs">מיקום</Label>
-        <LocationSelector countries={countries || []} value={city} onChange={setCity} placeholder="בחר מיקום..." extraHierarchy={tripSitesHierarchy} onAddToTree={addSiteToHierarchy} />
+        <LocationSelector value={city} onChange={setCity} placeholder="בחר מיקום..." />
       </div>
       {showBookingMissionOption && (
         <div className="flex items-center gap-2 mt-1">

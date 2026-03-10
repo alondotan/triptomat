@@ -88,7 +88,7 @@ function DroppableDayPill({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 const Index = () => {
-  const { activeTrip, tripSitesHierarchy, isLoading, loadTripData } = useActiveTrip();
+  const { activeTrip, isLoading, loadTripData } = useActiveTrip();
   const { pois, addPOI, updatePOI } = usePOI();
   const { transportation, addTransportation } = useTransport();
   const { itineraryDays, addMission } = useItinerary();
@@ -968,7 +968,6 @@ const Index = () => {
                 maxDaysForward={tripDays.length - selectedDayNum}
                 onSave={updateLocationContext}
                 onCancel={() => { setEditingLocation(false); setLocationDaysForward(0); }}
-                extraHierarchy={tripSitesHierarchy}
               />
             </div>
           )}
@@ -996,7 +995,6 @@ const Index = () => {
               }))}
               locationContext={currentItDay?.locationContext || ''}
               countries={trip.countries}
-              tripSitesHierarchy={tripSitesHierarchy}
               onMoveActivityToDay={moveActivityToDay}
               onRemoveActivity={(id) => removeEntityFromDay('activity', id)}
               onAddActivity={async (id, _nights, createBooking) => {

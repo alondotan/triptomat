@@ -1,22 +1,25 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
 import { Trip } from '@/types/trip';
-import { SiteHierarchyNode } from '@/types/webhook';
+import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { updateTrip, deleteTrip } from '@/services/tripService';
 import { ExchangeRates, fetchExchangeRates } from '@/services/exchangeRateService';
+import { fetchTripLocations, buildLocationTree, addTripLocation, findInFlatList, type TripLocation } from '@/services/tripLocationService';
+import type { SiteNode } from '@/hooks/useCountrySites';
 import { useToast } from '@/hooks/use-toast';
 import { useTripList } from './TripListContext';
 
 // State
 interface ActiveTripState {
   exchangeRates: ExchangeRates | null;
-  tripSitesHierarchy: SiteHierarchyNode[];
+  tripLocations: TripLocation[];
+  tripLocationTree: SiteNode[];
   sourceEmailMap: Record<string, { permalink?: string; subject?: string }>;
   refreshKey: number;
 }
 
 type ActiveTripAction =
   | { type: 'SET_EXCHANGE_RATES'; payload: ExchangeRates | null }
-  | { type: 'SET_TRIP_SITES_HIERARCHY'; payload: SiteHierarchyNode[] }
+  | { type: 'SET_TRIP_LOCATIONS'; payload: { flat: TripLocation[]; tree: SiteNode[] } }
   | { type: 'SET_SOURCE_EMAIL_MAP'; payload: Record<string, { permalink?: string; subject?: string }> }
   | { type: 'INCREMENT_REFRESH_KEY' }
   | { type: 'RESET_TRIP_DATA' };
@@ -25,14 +28,14 @@ function activeTripReducer(state: ActiveTripState, action: ActiveTripAction): Ac
   switch (action.type) {
     case 'SET_EXCHANGE_RATES':
       return { ...state, exchangeRates: action.payload };
-    case 'SET_TRIP_SITES_HIERARCHY':
-      return { ...state, tripSitesHierarchy: action.payload };
+    case 'SET_TRIP_LOCATIONS':
+      return { ...state, tripLocations: action.payload.flat, tripLocationTree: action.payload.tree };
     case 'SET_SOURCE_EMAIL_MAP':
       return { ...state, sourceEmailMap: action.payload };
     case 'INCREMENT_REFRESH_KEY':
       return { ...state, refreshKey: state.refreshKey + 1 };
     case 'RESET_TRIP_DATA':
-      return { ...state, exchangeRates: null, tripSitesHierarchy: [], sourceEmailMap: {}, refreshKey: state.refreshKey + 1 };
+      return { ...state, exchangeRates: null, tripLocations: [], tripLocationTree: [], sourceEmailMap: {}, refreshKey: state.refreshKey + 1 };
     default:
       return state;
   }
@@ -42,7 +45,8 @@ function activeTripReducer(state: ActiveTripState, action: ActiveTripAction): Ac
 interface ActiveTripContextType {
   activeTrip: Trip | null;
   exchangeRates: ExchangeRates | null;
-  tripSitesHierarchy: SiteHierarchyNode[];
+  tripLocationTree: SiteNode[];
+  tripLocations: TripLocation[];
   sourceEmailMap: Record<string, { permalink?: string; subject?: string }>;
   refreshKey: number;
   isLoading: boolean;
@@ -53,6 +57,7 @@ interface ActiveTripContextType {
   loadTripData: (tripId: string) => Promise<void>;
   setExchangeRates: (rates: ExchangeRates | null) => void;
   addSiteToHierarchy: (siteName: string, parentSiteName?: string) => void;
+  reloadLocations: () => Promise<void>;
 }
 
 const ActiveTripContext = createContext<ActiveTripContextType | undefined>(undefined);
@@ -63,7 +68,8 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
 
   const [state, dispatch] = useReducer(activeTripReducer, {
     exchangeRates: null,
-    tripSitesHierarchy: [],
+    tripLocations: [],
+    tripLocationTree: [],
     sourceEmailMap: {},
     refreshKey: 0,
   });
@@ -100,38 +106,33 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     }
   }, [activeTrip, removeTrip, toast]);
 
-  const loadTripMetadata = useCallback(async (tripId: string) => {
-    // Load sites_hierarchy from source_emails AND source_recommendations
+  // Load trip locations from DB
+  const loadLocations = useCallback(async (tripId: string) => {
     try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const [{ data: emails }, { data: recommendations }] = await Promise.all([
-        supabase
-          .from('source_emails')
-          .select('id, source_email_info, parsed_data')
-          .eq('trip_id', tripId)
-          .eq('status', 'linked'),
-        supabase
-          .from('source_recommendations')
-          .select('analysis')
-          .eq('trip_id', tripId)
-          .eq('status', 'linked'),
-      ]);
-      const allHierarchy: SiteHierarchyNode[] = [];
-      for (const email of (emails || [])) {
-        const pd = email.parsed_data as any;
-        if (pd?.sites_hierarchy && Array.isArray(pd.sites_hierarchy)) {
-          allHierarchy.push(...pd.sites_hierarchy);
-        }
-      }
-      for (const rec of (recommendations || [])) {
-        const analysis = rec.analysis as any;
-        if (analysis?.sites_hierarchy && Array.isArray(analysis.sites_hierarchy)) {
-          allHierarchy.push(...analysis.sites_hierarchy);
-        }
-      }
-      dispatch({ type: 'SET_TRIP_SITES_HIERARCHY', payload: allHierarchy });
+      const flat = await fetchTripLocations(tripId);
+      const tree = buildLocationTree(flat);
+      dispatch({ type: 'SET_TRIP_LOCATIONS', payload: { flat, tree } });
+    } catch (e) {
+      console.error('Failed to load trip locations:', e);
+    }
+  }, []);
 
-      // Build email map
+  const reloadLocations = useCallback(async () => {
+    if (activeTrip) await loadLocations(activeTrip.id);
+  }, [activeTrip, loadLocations]);
+
+  const loadTripMetadata = useCallback(async (tripId: string) => {
+    // Load locations from trip_locations table
+    await loadLocations(tripId);
+
+    // Load email map (still from source_emails)
+    try {
+      const { data: emails } = await supabaseClient
+        .from('source_emails')
+        .select('id, source_email_info')
+        .eq('trip_id', tripId)
+        .eq('status', 'linked');
+
       const emailMap: Record<string, { permalink?: string; subject?: string }> = {};
       for (const email of (emails || [])) {
         const info = email.source_email_info as { email_permalink?: string; subject?: string } | undefined;
@@ -139,9 +140,9 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
       }
       dispatch({ type: 'SET_SOURCE_EMAIL_MAP', payload: emailMap });
     } catch (e) {
-      console.error('Failed to load trip sites hierarchy:', e);
+      console.error('Failed to load source email map:', e);
     }
-  }, []);
+  }, [loadLocations]);
 
   const loadTripData = useCallback(async (tripId: string) => {
     await loadTripMetadata(tripId);
@@ -149,48 +150,26 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
   }, [loadTripMetadata]);
 
   const addSiteToHierarchy = useCallback((siteName: string, parentSiteName?: string) => {
-    const current = state.tripSitesHierarchy;
-    const newNode: SiteHierarchyNode = { site: siteName, site_type: 'city' };
+    if (!activeTrip) return;
 
+    // Find parent ID from the flat list
+    let parentId: string | null = null;
     if (parentSiteName) {
-      // Clone and insert under parent
-      const cloned: SiteHierarchyNode[] = JSON.parse(JSON.stringify(current));
-      function insertUnder(nodes: SiteHierarchyNode[]): boolean {
-        for (const node of nodes) {
-          if (node.site.toLowerCase() === parentSiteName.toLowerCase()) {
-            if (!node.sub_sites) node.sub_sites = [];
-            // Don't add duplicates
-            if (!node.sub_sites.some(s => s.site.toLowerCase() === siteName.toLowerCase())) {
-              node.sub_sites.push(newNode);
-            }
-            return true;
-          }
-          if (node.sub_sites && insertUnder(node.sub_sites)) return true;
-        }
-        return false;
-      }
-      if (insertUnder(cloned)) {
-        dispatch({ type: 'SET_TRIP_SITES_HIERARCHY', payload: cloned });
-        return;
-      }
+      const parent = findInFlatList(state.tripLocations, parentSiteName);
+      if (parent) parentId = parent.id;
     }
 
-    // No parent or parent not found — add at root level of first country, or as standalone
-    if (current.length > 0) {
-      const cloned: SiteHierarchyNode[] = JSON.parse(JSON.stringify(current));
-      if (!cloned[0].sub_sites) cloned[0].sub_sites = [];
-      if (!cloned[0].sub_sites.some(s => s.site.toLowerCase() === siteName.toLowerCase())) {
-        cloned[0].sub_sites.push(newNode);
-      }
-      dispatch({ type: 'SET_TRIP_SITES_HIERARCHY', payload: cloned });
-    }
-  }, [state.tripSitesHierarchy]);
+    // Insert into DB, then reload
+    addTripLocation(activeTrip.id, siteName, 'city', parentId, 'manual')
+      .then(() => loadLocations(activeTrip.id))
+      .catch(e => console.error('Failed to add location:', e));
+  }, [activeTrip, state.tripLocations, loadLocations]);
 
   const setExchangeRates = useCallback((rates: ExchangeRates | null) => {
     dispatch({ type: 'SET_EXCHANGE_RATES', payload: rates });
   }, []);
 
-  // Fetch exchange rates when active trip changes
+  // Fetch data when active trip changes
   const prevTripIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (activeTrip && activeTrip.id !== prevTripIdRef.current) {
@@ -204,10 +183,29 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     }
   }, [activeTrip, loadTripMetadata]);
 
+  // Subscribe to realtime changes on trip_locations
+  useEffect(() => {
+    if (!activeTrip) return;
+    const channel = supabaseClient
+      .channel(`trip_locations_${activeTrip.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'trip_locations',
+        filter: `trip_id=eq.${activeTrip.id}`,
+      }, () => {
+        loadLocations(activeTrip.id);
+      })
+      .subscribe();
+
+    return () => { supabaseClient.removeChannel(channel); };
+  }, [activeTrip?.id, loadLocations]);
+
   const value = useMemo(() => ({
     activeTrip,
     exchangeRates: state.exchangeRates,
-    tripSitesHierarchy: state.tripSitesHierarchy,
+    tripLocationTree: state.tripLocationTree,
+    tripLocations: state.tripLocations,
     sourceEmailMap: state.sourceEmailMap,
     refreshKey: state.refreshKey,
     isLoading,
@@ -218,7 +216,8 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     loadTripData,
     setExchangeRates,
     addSiteToHierarchy,
-  }), [activeTrip, state.exchangeRates, state.tripSitesHierarchy, state.sourceEmailMap, state.refreshKey, isLoading, error, setActiveTrip, updateCurrentTrip, deleteCurrentTrip, loadTripData, setExchangeRates, addSiteToHierarchy]);
+    reloadLocations,
+  }), [activeTrip, state.exchangeRates, state.tripLocationTree, state.tripLocations, state.sourceEmailMap, state.refreshKey, isLoading, error, setActiveTrip, updateCurrentTrip, deleteCurrentTrip, loadTripData, setExchangeRates, addSiteToHierarchy, reloadLocations]);
 
   return <ActiveTripContext.Provider value={value}>{children}</ActiveTripContext.Provider>;
 }

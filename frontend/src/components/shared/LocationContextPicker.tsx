@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { LocationSelector } from './LocationSelector';
 
 interface LocationContextPickerProps {
-  countries: string[];
   value: string;
   onChange: (value: string) => void;
   daysForward: number;
@@ -11,23 +10,18 @@ interface LocationContextPickerProps {
   maxDaysForward: number;
   onSave: () => void;
   onCancel: () => void;
-  extraHierarchy?: import('@/hooks/useCountrySites').SiteNode[];
-  onAddToTree?: (siteName: string, parentSiteName?: string) => void;
 }
 
 export function LocationContextPicker({
-  countries, value, onChange, daysForward, onDaysForwardChange,
-  maxDaysForward, onSave, onCancel, extraHierarchy, onAddToTree,
+  value, onChange, daysForward, onDaysForwardChange,
+  maxDaysForward, onSave, onCancel,
 }: LocationContextPickerProps) {
   return (
     <div className="space-y-2">
       <LocationSelector
-        countries={countries}
         value={value}
         onChange={onChange}
         placeholder="בחר מיקום..."
-        extraHierarchy={extraHierarchy}
-        onAddToTree={onAddToTree}
       />
       <DaysForwardControl value={daysForward} onChange={onDaysForwardChange} max={maxDaysForward} />
       <div className="flex gap-2">

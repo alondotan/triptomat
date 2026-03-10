@@ -399,6 +399,57 @@ export type Database = {
           },
         ]
       }
+      trip_locations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          parent_id: string | null
+          site_type: string
+          sort_order: number
+          source: string
+          trip_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          parent_id?: string | null
+          site_type: string
+          sort_order?: number
+          source?: string
+          trip_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          parent_id?: string | null
+          site_type?: string
+          sort_order?: number
+          source?: string
+          trip_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_locations_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_locations_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "trip_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transportation: {
         Row: {
           additional_info: Json | null
@@ -521,6 +572,7 @@ export type Database = {
     }
     Functions: {
       owns_trip: { Args: { _trip_id: string }; Returns: boolean }
+      seed_trip_locations: { Args: { p_trip_id: string; p_locations: Json; p_parent_id?: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

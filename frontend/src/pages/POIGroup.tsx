@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
 import { Heart, ArrowRight, MapPin, Clock, CalendarDays, ExternalLink } from 'lucide-react';
-import { useCountrySites, type SiteNode } from '@/hooks/useCountrySites';
+import { flattenTripLocations } from '@/services/tripLocationService';
 import { getCategoryIcon, getCategoryLabel } from '@/lib/subCategoryConfig';
 import { supabase } from '@/integrations/supabase/client';
 import type { PointOfInterest, POIStatus } from '@/types/trip';
@@ -44,15 +44,14 @@ const POIGroupPage = () => {
   const groupBy = (searchParams.get('groupBy') || 'category') as GroupBy;
   const groupKey = searchParams.get('key') || '';
 
-  const { activeTrip, tripSitesHierarchy } = useActiveTrip();
+  const { activeTrip, tripLocations } = useActiveTrip();
   const { pois, updatePOI } = usePOI();
   const { itineraryDays } = useItinerary();
   const { formatDualCurrency } = useFinance();
   const [dialogPoi, setDialogPoi] = useState<PointOfInterest | null>(null);
   const [quotesMap, setQuotesMap] = useState<Record<string, QuoteData[]>>({});
 
-  const countries = activeTrip?.countries || [];
-  const { sites } = useCountrySites(countries, tripSitesHierarchy as SiteNode[]);
+  const sites = useMemo(() => flattenTripLocations(tripLocations), [tripLocations]);
 
   const cityRegionMap = useMemo(() => {
     const map: Record<string, string> = {};

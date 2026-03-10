@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
 import type { PointOfInterest, POIStatus, POICategory } from '@/types/trip';
-import { useCountrySites, type SiteNode } from '@/hooks/useCountrySites';
+import { flattenTripLocations } from '@/services/tripLocationService';
 import { POICard } from '@/components/poi/POICard';
 import { getCategoryIcon, getCategoryLabel, getPOICategories } from '@/lib/subCategoryConfig';
 
@@ -32,7 +32,7 @@ type SortBy = 'name' | 'updated_at' | 'created_at';
 
 const POIsPage = () => {
   const navigate = useNavigate();
-  const { activeTrip, tripSitesHierarchy } = useActiveTrip();
+  const { activeTrip, tripLocations } = useActiveTrip();
   const { pois, mergePOIs } = usePOI();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [categoryFilters, setCategoryFilters] = useState<Set<POICategory | 'all'>>(new Set(['all']));
@@ -89,8 +89,7 @@ const POIsPage = () => {
   };
 
 
-  const countries = activeTrip?.countries || [];
-  const { sites } = useCountrySites(countries, tripSitesHierarchy as SiteNode[]);
+  const sites = useMemo(() => flattenTripLocations(tripLocations), [tripLocations]);
 
   // Build a lookup: lowercase site name → city-level ancestor (path[1], first child under country)
   // e.g. "panglao" → "Bohol", "bohol" → "Bohol", "hidden beach" → "El Nido"

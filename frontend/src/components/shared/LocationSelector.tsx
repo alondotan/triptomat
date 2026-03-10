@@ -4,7 +4,8 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useCountrySites, type SiteNode } from '@/hooks/useCountrySites';
+import type { SiteNode } from '@/hooks/useCountrySites';
+import { useActiveTrip } from '@/context/ActiveTripContext';
 
 export const TYPE_LABELS: Record<string, string> = {
   city: 'עיר',
@@ -29,6 +30,7 @@ export const TYPE_LABELS: Record<string, string> = {
   volcano: 'הר געש',
   mountain: 'הר',
   municipality: 'עירייה',
+  country: 'מדינה',
 };
 
 const RECENT_KEY = 'triptomat-recent-locations';
@@ -47,17 +49,14 @@ function addRecentLocation(location: string) {
 }
 
 interface LocationSelectorProps {
-  countries: string[];
   value: string;
   onChange: (location: string) => void;
   placeholder?: string;
   className?: string;
-  extraHierarchy?: SiteNode[];
-  onAddToTree?: (siteName: string, parentSiteName?: string) => void;
 }
 
-export function LocationSelector({ countries, value, onChange, placeholder = 'בחר מיקום...', className, extraHierarchy, onAddToTree }: LocationSelectorProps) {
-  const { treeNodes, loading } = useCountrySites(countries, extraHierarchy);
+export function LocationSelector({ value, onChange, placeholder = 'בחר מיקום...', className }: LocationSelectorProps) {
+  const { tripLocationTree, addSiteToHierarchy } = useActiveTrip();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -84,7 +83,7 @@ export function LocationSelector({ countries, value, onChange, placeholder = 'ב
             {value ? (
               <span className="truncate">{value}</span>
             ) : (
-              <span className="text-muted-foreground">{loading ? 'טוען...' : placeholder}</span>
+              <span className="text-muted-foreground">{placeholder}</span>
             )}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -103,21 +102,17 @@ export function LocationSelector({ countries, value, onChange, placeholder = 'ב
             </div>
           </div>
           <div className="max-h-[300px] overflow-y-auto p-1">
-            {loading ? (
-              <p className="text-xs text-muted-foreground text-center py-4">טוען...</p>
-            ) : (
-              <LocationTree
-                nodes={treeNodes}
-                search={search}
-                value={value}
-                onSelect={handleSelect}
-                onAddToTree={onAddToTree}
-                recentLocations={recentLocations}
-              />
-            )}
+            <LocationTree
+              nodes={tripLocationTree}
+              search={search}
+              value={value}
+              onSelect={handleSelect}
+              onAddToTree={addSiteToHierarchy}
+              recentLocations={recentLocations}
+            />
           </div>
           {/* Always-visible manual entry at bottom */}
-          <ManualEntryFooter onSelect={handleSelect} onAddToTree={onAddToTree} />
+          <ManualEntryFooter onSelect={handleSelect} onAddToTree={addSiteToHierarchy} />
         </PopoverContent>
       </Popover>
     </div>

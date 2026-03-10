@@ -250,6 +250,43 @@ function extractEventDate(payload: WebhookPayload): string | null {
   return metadata.date || null;
 }
 
+// ── Sync sites hierarchy to trip_locations ──────────────────────
+
+async function syncSitesHierarchyToTripLocations(
+  supabase: any, tripId: string, hierarchy: SiteNode[],
+) {
+  const { data: existing } = await supabase
+    .from('trip_locations')
+    .select('id, name, parent_id')
+    .eq('trip_id', tripId);
+
+  const nameToId = new Map<string, string>();
+  for (const loc of (existing || [])) {
+    nameToId.set((loc.name as string).toLowerCase(), loc.id as string);
+  }
+
+  async function walkAndInsert(nodes: SiteNode[], parentId: string | null) {
+    for (const node of nodes) {
+      const key = node.site.toLowerCase();
+      let nodeId = nameToId.get(key);
+      if (!nodeId) {
+        const { data: inserted } = await supabase
+          .from('trip_locations')
+          .insert({
+            trip_id: tripId, parent_id: parentId,
+            name: node.site, site_type: node.site_type, source: 'webhook',
+          })
+          .select('id').maybeSingle();
+        if (inserted) { nodeId = inserted.id as string; nameToId.set(key, nodeId); }
+      }
+      if (nodeId && node.sub_sites?.length) {
+        await walkAndInsert(node.sub_sites, nodeId);
+      }
+    }
+  }
+  await walkAndInsert(hierarchy, null);
+}
+
 // ── Main handler ─────────────────────────────────────────────────
 
 Deno.serve(async (req) => {
@@ -564,6 +601,15 @@ Deno.serve(async (req) => {
               if (poi) linkedEntities.push({ entity_type: 'poi', entity_id: poi.id, description: isAttraction ? 'Attraction' : 'Eatery' });
             }
           }
+        }
+      }
+
+      // Sync sites_hierarchy into trip_locations table
+      if (sites_hierarchy && sites_hierarchy.length > 0) {
+        try {
+          await syncSitesHierarchyToTripLocations(supabase, matchedTripId, sites_hierarchy);
+        } catch (e) {
+          console.error('Failed to sync sites hierarchy to trip_locations:', e);
         }
       }
 
