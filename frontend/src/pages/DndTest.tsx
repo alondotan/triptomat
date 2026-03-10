@@ -52,6 +52,8 @@ import { RouteMapPanel } from '@/components/route/RouteMapPanel';
 import { TravelLegRow } from '@/components/route/TravelLegRow';
 import { TRANSPORT_CATEGORY_CONFIG, formatDuration, type RouteLeg, type LegOverride } from '@/services/routeService';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTripWeather } from '@/hooks/useWeather';
+import { weatherCodeToIcon } from '@/services/weatherService';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -641,12 +643,13 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
 // ─── Droppable day pill (real trip days) ─────────────────────────────────────
 
 function DroppableDayPill({
-  dayNum, shortLabel, isSelected, hasContent, onClick,
+  dayNum, shortLabel, isSelected, hasContent, weatherIcon, onClick,
 }: {
   dayNum: number;
   shortLabel: { line1: string; line2: string; line3: string };
   isSelected: boolean;
   hasContent: boolean;
+  weatherIcon?: string;
   onClick: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `day-drop-${dayNum}` });
@@ -667,7 +670,9 @@ function DroppableDayPill({
       <span className="text-[10px] sm:text-xs">{shortLabel.line1}</span>
       <span className="text-base sm:text-lg font-bold">{shortLabel.line2}</span>
       {shortLabel.line3 && <span className="text-[9px] sm:text-[10px]">{shortLabel.line3}</span>}
-      {hasContent && !isSelected && <div className="w-1.5 h-1.5 rounded-full bg-current mt-1 opacity-60" />}
+      {weatherIcon
+        ? <span className="text-sm mt-0.5 leading-none">{weatherIcon}</span>
+        : hasContent && !isSelected && <div className="w-1.5 h-1.5 rounded-full bg-current mt-1 opacity-60" />}
     </button>
   );
 }
@@ -817,6 +822,7 @@ export default function DndTestPage() {
   };
 
   const tripDays = useTripDays();
+  const { weatherByDate } = useTripWeather(activeTrip ?? undefined, itineraryDays);
 
   const locationSpans = useMemo(() => {
     if (tripDays.length === 0) return [];
@@ -1955,6 +1961,7 @@ export default function DndTestPage() {
                     (itDay.activities?.length ?? 0) > 0 ||
                     (itDay.accommodationOptions?.length ?? 0) > 0
                   );
+                  const dayWeather = td.dateStr ? weatherByDate.get(td.dateStr) : undefined;
                   return (
                     <DroppableDayPill
                       key={td.dayNum}
@@ -1962,6 +1969,7 @@ export default function DndTestPage() {
                       shortLabel={td.shortLabel}
                       isSelected={selectedDayNum === td.dayNum}
                       hasContent={hasContent}
+                      weatherIcon={dayWeather ? weatherCodeToIcon(dayWeather.weatherCode) : undefined}
                       onClick={() => { setSelectedDayNum(td.dayNum); setSelectedItemId(null); setHighlightedLegId(null); }}
                     />
                   );

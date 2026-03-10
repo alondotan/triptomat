@@ -18,6 +18,7 @@ export function TripDaySelect({ value, onChange, placeholder = 'בחר יום...
     <Select
       value={value ? String(value) : ''}
       onValueChange={(v) => onChange(v ? parseInt(v) : '')}
+      aria-label="בחר יום"
     >
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder} />

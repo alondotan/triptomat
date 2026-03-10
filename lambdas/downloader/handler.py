@@ -10,10 +10,14 @@ Optional env vars:
 
 import json
 import os
+import re
+import urllib.request
+import urllib.parse
 
 import boto3
 import yt_dlp
 from pydantic import ValidationError
+from youtube_transcript_api import YouTubeTranscriptApi
 
 from core.schemas import DownloadMessage
 from core.telemetry import (
@@ -59,6 +63,49 @@ def _get_cookies_path():
         print(f"Downloaded cookies from s3://{S3_BUCKET}/{COOKIES_S3_KEY}")
         return cookies_path
     except Exception:
+        return None
+
+
+def _extract_video_id(url):
+    """Extract YouTube video ID from various URL formats."""
+    patterns = [
+        r'(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/shorts/)([a-zA-Z0-9_-]{11})',
+        r'youtube\.com/embed/([a-zA-Z0-9_-]{11})',
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            return match.group(1)
+    return None
+
+
+def _get_youtube_oembed(url):
+    """Get video metadata via YouTube oEmbed API (no API key needed)."""
+    oembed_url = f"https://www.youtube.com/oembed?url={urllib.parse.quote(url, safe='')}&format=json"
+    try:
+        req = urllib.request.Request(oembed_url, headers={"User-Agent": "Mozilla/5.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+            return {
+                "title": data.get("title", ""),
+                "image": data.get("thumbnail_url", ""),
+            }
+    except Exception as e:
+        print(f"oEmbed fetch failed: {e}")
+        return {"title": "", "image": ""}
+
+
+def _get_youtube_transcript(video_id):
+    """Get transcript text via youtube-transcript-api. Returns None if unavailable."""
+    try:
+        ytt = YouTubeTranscriptApi()
+        transcript = ytt.fetch(video_id)
+        parts = [snippet.text for snippet in transcript]
+        text = " ".join(parts)
+        # Limit to 5000 chars (same as gateway text limit)
+        return text[:5000] if text else None
+    except Exception as e:
+        print(f"Transcript fetch failed for {video_id}: {e}")
         return None
 
 
@@ -153,6 +200,51 @@ def lambda_handler(event, context):
                     os.remove(video_path)
                     print(f"Job {job_id}: video sent to analysis queue")
                     record_counter(downloads_counter, attributes={"status": "success"})
+
+                except yt_dlp.utils.DownloadError as e:
+                    print(f"Job {job_id}: yt-dlp failed, trying text fallback: {e}")
+
+                    video_id = _extract_video_id(url)
+                    if not video_id:
+                        record_counter(downloads_counter, attributes={"status": "failure"})
+                        if root_span:
+                            record_span_error(root_span, e)
+                        raise
+
+                    source_metadata = _get_youtube_oembed(url)
+                    transcript = _get_youtube_transcript(video_id)
+                    description = source_metadata.get("title", "")
+
+                    if not transcript and not description:
+                        print(f"Job {job_id}: text fallback also failed — no transcript or metadata")
+                        record_counter(downloads_counter, attributes={"status": "failure"})
+                        if root_span:
+                            record_span_error(root_span, e)
+                        raise
+
+                    # Build text for analysis from transcript + description
+                    text_parts = []
+                    if description:
+                        text_parts.append(f"Video title: {description}")
+                    if transcript:
+                        text_parts.append(f"Video transcript:\n{transcript}")
+                    text = "\n\n".join(text_parts)
+
+                    with safe_span(tracer, "downloader.text_fallback_dispatch"):
+                        sqs.send_message(
+                            QueueUrl=ANALYSIS_QUEUE_URL,
+                            MessageBody=json.dumps({
+                                "job_id": job_id,
+                                "url": url,
+                                "source_type": "web",
+                                "source_metadata": source_metadata,
+                                "text": text[:5000],
+                                "webhook_token": webhook_token,
+                            }),
+                        )
+
+                    print(f"Job {job_id}: sent to analysis queue via text fallback (transcript: {bool(transcript)})")
+                    record_counter(downloads_counter, attributes={"status": "text_fallback"})
 
                 except Exception as e:
                     record_counter(downloads_counter, attributes={"status": "failure"})

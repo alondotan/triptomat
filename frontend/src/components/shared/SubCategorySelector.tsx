@@ -51,7 +51,7 @@ export function SubCategorySelector({ categoryFilter, value, onChange, placehold
             {CurrentIcon && <CurrentIcon size={14} className="shrink-0 text-muted-foreground" />}
             {value || <span className="text-muted-foreground">{placeholder}</span>}
           </span>
-          <ChevronDown size={14} className="shrink-0 opacity-50" />
+          <ChevronDown size={14} className="shrink-0 opacity-50" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2 max-h-64 overflow-hidden flex flex-col" align="start">
@@ -61,6 +61,9 @@ export function SubCategorySelector({ categoryFilter, value, onChange, placehold
           placeholder="חפש..."
           className="mb-2 h-8 text-sm"
           autoFocus
+          aria-label="חיפוש קטגוריה"
+          name="subcategory-search"
+          autoComplete="off"
         />
         <div className="overflow-y-auto flex-1 space-y-0.5">
           {/* Clear option */}

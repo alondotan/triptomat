@@ -22,17 +22,30 @@ async function loadHierarchy(): Promise<WorldHierarchy> {
   return loadingPromise;
 }
 
+const COUNTRY_ALIASES: Record<string, string> = {
+  'usa': 'united states of america',
+  'uk': 'united kingdom',
+  'uae': 'united arab emirates',
+};
+
 function findCountryNode(nodes: SiteNode[], countryName: string): SiteNode | null {
+  const lower = COUNTRY_ALIASES[countryName.toLowerCase()] || countryName.toLowerCase();
+  let partialMatch: SiteNode | null = null;
+
   for (const node of nodes) {
-    if (node.site_type === 'country' && node.site.toLowerCase() === countryName.toLowerCase()) {
-      return node;
+    if (node.site_type === 'country') {
+      const nodeLower = node.site.toLowerCase();
+      if (nodeLower === lower) return node;
+      if (!partialMatch && (nodeLower.startsWith(lower) || lower.startsWith(nodeLower))) {
+        partialMatch = node;
+      }
     }
     if (node.sub_sites) {
       const found = findCountryNode(node.sub_sites, countryName);
       if (found) return found;
     }
   }
-  return null;
+  return partialMatch;
 }
 
 /** Flatten a site node tree into a list of { label, path } for display */
@@ -61,6 +74,33 @@ function flattenSites(node: SiteNode, parentPath: string[] = []): FlatSite[] {
     }
   }
   return results;
+}
+
+function collectCountryNames(nodes: SiteNode[]): string[] {
+  const names: string[] = [];
+  for (const node of nodes) {
+    if (node.site_type === 'country') {
+      names.push(node.site);
+    }
+    if (node.sub_sites) {
+      names.push(...collectCountryNames(node.sub_sites));
+    }
+  }
+  return names.sort((a, b) => a.localeCompare(b));
+}
+
+export function useCountryList() {
+  const [countries, setCountries] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadHierarchy().then(d => {
+      setCountries(collectCountryNames(d.world_hierarchy));
+      setLoading(false);
+    });
+  }, []);
+
+  return { countries, loading };
 }
 
 export function useCountrySites(countries: string[], extraHierarchy?: SiteNode[]) {

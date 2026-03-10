@@ -152,7 +152,7 @@ export function MergeConfirmDialog({
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Merge size={18} />
+            <Merge size={18} aria-hidden="true" />
             מיזוג פריטים
           </DialogTitle>
         </DialogHeader>
@@ -192,7 +192,7 @@ export function MergeConfirmDialog({
             ביטול
           </Button>
           <Button onClick={handleConfirm} disabled={loading} className="gap-1.5">
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <Merge size={16} />}
+            {loading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Merge size={16} aria-hidden="true" />}
             מזג
           </Button>
         </div>

@@ -108,17 +108,31 @@ async function loadCountrySites(): Promise<{ world_hierarchy: SiteNode[] }> {
   return countrySitesCache!;
 }
 
+const COUNTRY_ALIASES: Record<string, string> = {
+  'usa': 'united states of america',
+  'uk': 'united kingdom',
+  'uae': 'united arab emirates',
+};
+
 function findCountryNode(nodes: SiteNode[], countryName: string): SiteNode | null {
+  const lower = COUNTRY_ALIASES[countryName.toLowerCase()] || countryName.toLowerCase();
+  let partialMatch: SiteNode | null = null;
+
   for (const node of nodes) {
-    if (node.site_type === 'country' && node.site.toLowerCase() === countryName.toLowerCase()) {
-      return node;
+    if (node.site_type === 'country') {
+      const nodeLower = node.site.toLowerCase();
+      if (nodeLower === lower) return node;
+      // Fallback: partial match (e.g. "United States" matches "United States of America")
+      if (!partialMatch && (nodeLower.startsWith(lower) || lower.startsWith(nodeLower))) {
+        partialMatch = node;
+      }
     }
     if (node.sub_sites) {
       const found = findCountryNode(node.sub_sites, countryName);
       if (found) return found;
     }
   }
-  return null;
+  return partialMatch;
 }
 
 export async function seedTripLocations(tripId: string, countries: string[]): Promise<void> {

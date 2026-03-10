@@ -78,7 +78,7 @@ export function TextSubmit() {
         onClick={() => setExpanded(v => !v)}
       >
         <div className="flex items-center gap-2">
-          <FileText size={16} className="text-muted-foreground" />
+          <FileText size={16} className="text-muted-foreground" aria-hidden="true" />
           <h2 className="font-semibold text-sm">Paste text</h2>
         </div>
         {expanded
@@ -100,6 +100,8 @@ export function TextSubmit() {
               disabled={status === 'loading' || !webhookToken}
               className="min-h-[100px] text-sm"
               dir="auto"
+              aria-label="הזן טקסט"
+              name="text"
             />
             <div className="flex justify-end">
               <Button
@@ -112,16 +114,18 @@ export function TextSubmit() {
             </div>
           </form>
 
-          {status === 'success' && (
-            <p className="flex items-center gap-1.5 text-xs text-green-600">
-              <CheckCircle size={13} /> {message}
-            </p>
-          )}
-          {status === 'error' && (
-            <p className="flex items-center gap-1.5 text-xs text-destructive">
-              <AlertCircle size={13} /> {message}
-            </p>
-          )}
+          <div aria-live="polite">
+            {status === 'success' && (
+              <p className="flex items-center gap-1.5 text-xs text-green-600">
+                <CheckCircle size={13} /> {message}
+              </p>
+            )}
+            {status === 'error' && (
+              <p className="flex items-center gap-1.5 text-xs text-destructive">
+                <AlertCircle size={13} /> {message}
+              </p>
+            )}
+          </div>
         </>
       )}
     </div>

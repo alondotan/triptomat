@@ -95,7 +95,7 @@ export function POICard({
     return (
       <div className={`flex items-center gap-2 ${className}`}>
         {iconName
-          ? <span className="material-symbols-outlined text-sm shrink-0">{iconName}</span>
+          ? <span className="material-symbols-outlined text-sm shrink-0" aria-hidden="true">{iconName}</span>
           : <SubCategoryIcon type={poi.subCategory || ''} size={14} className="shrink-0" />
         }
         <span className="text-sm font-medium truncate">{poi.name}</span>
@@ -113,21 +113,30 @@ export function POICard({
     return (
       <>
         {poi.imageUrl && (
-          <img
-            src={poi.imageUrl}
-            alt=""
-            className={`w-14 h-14 rounded-lg object-cover shrink-0 cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
+          <button
+            type="button"
+            aria-label="הגדל תמונה"
+            className={`bg-transparent border-0 p-0 cursor-pointer shrink-0 ${isSelected ? 'ring-2 ring-primary' : ''} rounded-lg`}
             onClick={handleCardClick}
-          />
+          >
+            <img
+              src={poi.imageUrl}
+              alt=""
+              width={56}
+              height={56}
+              className="w-14 h-14 rounded-lg object-cover"
+            />
+          </button>
         )}
-        <div
-          className={`flex flex-col gap-0.5 flex-1 min-w-0 cursor-pointer ${isSelected ? 'text-primary' : ''} ${className}`}
+        <button
+          type="button"
+          className={`flex flex-col gap-0.5 flex-1 min-w-0 cursor-pointer bg-transparent border-0 p-0 text-start ${isSelected ? 'text-primary' : ''} ${className}`}
           onClick={handleCardClick}
         >
           {/* Name row */}
           <div className="flex items-center gap-2">
             {!poi.imageUrl && (iconName
-              ? <span className="material-symbols-outlined text-sm shrink-0">{iconName}</span>
+              ? <span className="material-symbols-outlined text-sm shrink-0" aria-hidden="true">{iconName}</span>
               : <SubCategoryIcon type={poi.subCategory || ''} size={14} className="shrink-0" />
             )}
             <span className="text-sm font-medium truncate">{poi.name}</span>
@@ -161,6 +170,8 @@ export function POICard({
                   <input
                     type="number"
                     min="1"
+                    name="duration"
+                    aria-label="משך זמן בדקות"
                     className="text-xs border rounded px-1.5 py-0.5 w-16 bg-background"
                     value={durationValue}
                     onChange={e => setDurationValue(e.target.value)}
@@ -177,13 +188,14 @@ export function POICard({
                 </div>
               </div>
             ) : (
-              <div
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer w-fit"
+              <button
+                type="button"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer w-fit bg-transparent border-0 p-0"
                 onClick={handleStartEditDuration}
               >
                 <Clock size={11} />
                 <span>{currentDuration != null ? formatDuration(currentDuration) : 'הוסף משך זמן...'}</span>
-              </div>
+              </button>
             )
           ) : currentDuration != null && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -201,6 +213,8 @@ export function POICard({
                 onClick={e => e.stopPropagation()}
               >
                 <textarea
+                  name="notes"
+                  aria-label="הערות"
                   className="text-xs border rounded px-1.5 py-0.5 w-full resize-none bg-background"
                   value={notesValue}
                   onChange={e => setNotesValue(e.target.value)}
@@ -218,12 +232,13 @@ export function POICard({
                 </div>
               </div>
             ) : (
-              <p
-                className="text-xs text-muted-foreground/70 italic truncate cursor-pointer hover:text-muted-foreground w-fit max-w-full"
+              <button
+                type="button"
+                className="text-xs text-muted-foreground/70 italic truncate cursor-pointer hover:text-muted-foreground w-fit max-w-full bg-transparent border-0 p-0 text-start"
                 onClick={handleStartEditNotes}
               >
                 {currentNotes || 'הוסף הערה...'}
-              </p>
+              </button>
             )
           ) : currentNotes && (
             <p className="text-xs text-muted-foreground/70 italic truncate">{currentNotes}</p>
@@ -240,11 +255,12 @@ export function POICard({
               </button>
             </div>
           )}
-        </div>
+        </button>
 
         {onSelect && (
           <button
             type="button"
+            aria-label="ערוך"
             className="shrink-0 p-1 mt-0.5 text-muted-foreground/50 hover:text-primary transition-colors self-start"
             onClick={(e) => { e.stopPropagation(); setDialogOpen(true); }}
           >
@@ -271,14 +287,15 @@ export function POICard({
 
   return (
     <>
-      <div
-        className={`cursor-pointer group ${poi.isCancelled ? 'opacity-50' : ''} ${className}`}
+      <button
+        type="button"
+        className={`cursor-pointer group ${poi.isCancelled ? 'opacity-50' : ''} ${className} bg-transparent border-0 p-0 text-start w-full`}
         onClick={() => setDialogOpen(true)}
       >
         {/* Square image with heart overlay */}
         <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
           {poi.imageUrl ? (
-            <img src={poi.imageUrl} alt={poi.name} className="w-full h-full object-cover" />
+            <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <SubCategoryIcon type={poi.subCategory || ''} size={32} className="text-muted-foreground/40" />
@@ -292,6 +309,7 @@ export function POICard({
           )}
           {/* Heart button overlay */}
           <button
+            aria-label="מועדף"
             onClick={handleToggleLike}
             className={`absolute top-1.5 right-1.5 p-1 rounded-full bg-black/30 backdrop-blur-sm transition-colors ${
               poi.status === 'interested' || poi.status === 'planned' || poi.status === 'scheduled' ? 'text-red-500' :
@@ -320,7 +338,7 @@ export function POICard({
             </div>
           )}
         </div>
-      </div>
+      </button>
 
       {dialogOpen && (
         <POIDetailDialog poi={poi} open={dialogOpen} onOpenChange={setDialogOpen} />

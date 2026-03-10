@@ -134,7 +134,7 @@ export function AppHeader() {
         <div className="md:hidden grid grid-cols-[auto_1fr_auto] items-center w-full">
           {/* Left: Hamburger */}
           <div className="flex items-center">
-            <Button variant="ghost" size="icon" onClick={() => setHamburgerOpen(true)}>
+            <Button variant="ghost" size="icon" aria-label="תפריט" onClick={() => setHamburgerOpen(true)}>
               <Menu size={22} />
             </Button>
           </div>
@@ -167,7 +167,7 @@ export function AppHeader() {
 
         {/* ── DESKTOP HEADER ── */}
         <div className="hidden md:flex items-center gap-3">
-          <RouterNavLink to="/" className="flex items-center gap-2">
+          <RouterNavLink to="/" className="flex items-center gap-2" aria-label="דף הבית">
             <div className="p-2 rounded-lg bg-hero-gradient text-primary-foreground">
               <Compass size={20} />
             </div>
@@ -256,10 +256,10 @@ export function AppHeader() {
 
         {/* Desktop user actions */}
         <div className="hidden md:flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => { setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }} title="Preferences">
+          <Button variant="ghost" size="icon" onClick={() => { setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }} aria-label="הגדרות" title="Preferences">
             <Settings size={18} />
           </Button>
-          <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign out">
+          <Button variant="ghost" size="icon" onClick={handleSignOut} aria-label="התנתק" title="Sign out">
             <LogOut size={18} />
           </Button>
         </div>
@@ -268,7 +268,7 @@ export function AppHeader() {
 
       {/* ── MOBILE HAMBURGER SHEET ── */}
       <Sheet open={hamburgerOpen} onOpenChange={setHamburgerOpen}>
-        <SheetContent side="left" className="px-0 w-72">
+        <SheetContent side="left" className="px-0 w-72 overscroll-contain">
           <SheetHeader className="px-6 pb-4 border-b border-border">
             <SheetTitle className="text-left flex items-center gap-2">
               <Compass size={18} /> Triptomat
@@ -397,10 +397,10 @@ export function AppHeader() {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <label className="text-sm font-medium">Display Currency</label>
+              <label htmlFor="display-currency" className="text-sm font-medium">Display Currency</label>
               <p className="text-xs text-muted-foreground">All costs will be shown converted to this currency.</p>
               <Select value={prefsCurrency} onValueChange={setPrefsCurrency}>
-                <SelectTrigger>
+                <SelectTrigger id="display-currency">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

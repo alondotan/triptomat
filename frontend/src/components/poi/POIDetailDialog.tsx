@@ -298,7 +298,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Details</span>
       <div className="space-y-2">
         <Label>שם</Label>
-        <Input value={name} onChange={e => setName(e.target.value)} />
+        <Input name="name" value={name} onChange={e => setName(e.target.value)} />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
@@ -341,7 +341,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
       </div>
       <div className="space-y-2">
         <Label>כתובת</Label>
-        <Input value={address} onChange={e => setAddress(e.target.value)} />
+        <Input name="address" value={address} onChange={e => setAddress(e.target.value)} />
       </div>
     </div>
   );
@@ -352,7 +352,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
       <div className="space-y-2">
         <Label>עלות</Label>
         <div className="grid grid-cols-3 gap-2">
-          <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" />
+          <Input name="cost" type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" />
           <Select value={costCurrency} onValueChange={setCostCurrency}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -381,12 +381,12 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           {isPlanning ? (
             <TripDaySelect value={checkinDate ? parseInt(checkinDate) || '' : ''} onChange={(v) => setCheckinDate(v ? String(v) : '')} />
           ) : (
-            <Input type="date" value={checkinDate} onChange={e => setCheckinDate(e.target.value)} />
+            <Input name="checkinDate" type="date" value={checkinDate} onChange={e => setCheckinDate(e.target.value)} />
           )}
         </div>
         <div className="space-y-2">
           <Label>שעת צ׳ק-אין</Label>
-          <Input type="time" value={checkinHour} onChange={e => setCheckinHour(e.target.value)} />
+          <Input name="checkinTime" type="time" value={checkinHour} onChange={e => setCheckinHour(e.target.value)} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -395,27 +395,27 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           {isPlanning ? (
             <TripDaySelect value={checkoutDate ? parseInt(checkoutDate) || '' : ''} onChange={(v) => setCheckoutDate(v ? String(v) : '')} />
           ) : (
-            <Input type="date" value={checkoutDate} onChange={e => setCheckoutDate(e.target.value)} />
+            <Input name="checkoutDate" type="date" value={checkoutDate} onChange={e => setCheckoutDate(e.target.value)} />
           )}
         </div>
         <div className="space-y-2">
           <Label>שעת צ׳ק-אאוט</Label>
-          <Input type="time" value={checkoutHour} onChange={e => setCheckoutHour(e.target.value)} />
+          <Input name="checkoutTime" type="time" value={checkoutHour} onChange={e => setCheckoutHour(e.target.value)} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label>סוג חדר</Label>
-          <Input value={roomType} onChange={e => setRoomType(e.target.value)} placeholder="Double, Suite..." />
+          <Input name="roomType" value={roomType} onChange={e => setRoomType(e.target.value)} placeholder="Double, Suite..." />
         </div>
         <div className="space-y-2">
           <Label>תפוסה</Label>
-          <Input value={occupancy} onChange={e => setOccupancy(e.target.value)} placeholder="2 adults" />
+          <Input name="occupancy" value={occupancy} onChange={e => setOccupancy(e.target.value)} placeholder="2 adults" />
         </div>
       </div>
       <div className="space-y-2">
         <Label>ביטול חינם עד</Label>
-        <Input type="datetime-local" value={freeCancellationUntil} onChange={e => setFreeCancellationUntil(e.target.value)} />
+        <Input name="freeCancellationUntil" type="datetime-local" value={freeCancellationUntil} onChange={e => setFreeCancellationUntil(e.target.value)} />
       </div>
     </div>
   );
@@ -425,11 +425,11 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
       <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Notes</span>
       <div className="space-y-2">
         <Label>מספר הזמנה</Label>
-        <Input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="Booking ref..." />
+        <Input name="orderNumber" value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="Booking ref..." />
       </div>
       <div className="space-y-2">
         <Label>הערות</Label>
-        <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="הוסף הערה..." rows={3} />
+        <Textarea name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="הוסף הערה..." rows={3} />
       </div>
     </div>
   );
@@ -450,18 +450,18 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
               className="flex-1 min-w-0"
             />
           ) : (
-            <Input type="date" value={slot.date} className="flex-1 min-w-0 w-0 px-1.5" onChange={e => {
+            <Input name="scheduleDate" type="date" value={slot.date} className="flex-1 min-w-0 w-0 px-1.5" onChange={e => {
               const next = [...bookings];
               next[i] = { ...slot, date: e.target.value };
               setBookings(next);
             }} />
           )}
-          <Input type="time" value={slot.hour} className="w-[80px] shrink-0 px-1.5" disabled={!slot.date} onChange={e => {
+          <Input name="scheduleTime" type="time" value={slot.hour} className="w-[80px] shrink-0 px-1.5" disabled={!slot.date} onChange={e => {
             const next = [...bookings];
             next[i] = { ...slot, hour: e.target.value };
             setBookings(next);
           }} />
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => {
+          <Button variant="ghost" size="icon" aria-label="הסר" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => {
             setBookings(bookings.filter((_, j) => j !== i));
           }}>
             <X size={14} />
@@ -482,16 +482,20 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
             { label: '3 שעות', value: '180' },
             { label: 'יום שלם', value: '480' },
           ].map(opt => (
-            <Badge
+            <button
               key={opt.value}
-              variant={duration === opt.value ? 'default' : 'outline'}
-              className="cursor-pointer select-none text-xs"
+              type="button"
+              className={`cursor-pointer select-none text-xs inline-flex items-center rounded-full border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                duration === opt.value
+                  ? 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80'
+                  : 'border-border text-foreground hover:bg-accent hover:text-accent-foreground'
+              }`}
               onClick={() => setDuration(duration === opt.value ? '' : opt.value)}
             >
               {opt.label}
-            </Badge>
+            </button>
           ))}
-          <Input type="number" value={!['30','60','90','120','180','480'].includes(duration) ? duration : ''} className="w-[70px] h-7 px-1.5 text-xs" placeholder="דק׳" min="0" onChange={e => setDuration(e.target.value)} />
+          <Input name="customDuration" type="number" value={!['30','60','90','120','180','480'].includes(duration) ? duration : ''} className="w-[70px] h-7 px-1.5 text-xs" placeholder="דק׳" min="0" onChange={e => setDuration(e.target.value)} />
         </div>
       </div>
     </div>
@@ -545,7 +549,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
             <div className="pe-5 space-y-4">
               {poi.imageUrl && (
                 <div className="w-full aspect-[4/3] overflow-hidden rounded-xl">
-                  <img src={poi.imageUrl} alt={poi.name} className="w-full h-full object-cover" />
+                  <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" />
                 </div>
               )}
               {hasCoordinates && (
@@ -583,7 +587,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
 
         {poi.imageUrl && (
           <div className="w-full h-48 overflow-hidden rounded-lg -mt-2">
-            <img src={poi.imageUrl} alt={poi.name} className="w-full h-full object-cover" />
+            <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" />
           </div>
         )}
 

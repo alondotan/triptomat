@@ -47,8 +47,9 @@ export function AdminGuard({ children }: { children: ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="animate-spin h-8 w-8 text-muted-foreground" />
+      <div className="flex items-center justify-center h-screen" role="status">
+        <Loader2 className="animate-spin h-8 w-8 text-muted-foreground" aria-hidden="true" />
+        <span className="sr-only">טוען...</span>
       </div>
     );
   }

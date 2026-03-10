@@ -99,7 +99,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
 
   const triggerEl = trigger || (openProp === undefined ? (
     <Button className="gap-2">
-      <Plus size={18} />
+      <Plus size={18} aria-hidden="true" />
       New Trip
     </Button>
   ) : null);
@@ -122,6 +122,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              autoComplete="off"
             />
           </div>
 
@@ -129,14 +130,16 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
             <Label htmlFor="description">תיאור (אופציונלי)</Label>
             <Textarea
               id="description"
+              name="description"
               placeholder="שבוע בלונדון ופריז..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              autoComplete="off"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>מדינות</Label>
+            <Label htmlFor="trip-countries">מדינות</Label>
             <CountrySelector
               value={countries}
               onChange={setCountries}
@@ -146,7 +149,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
 
           {/* Planning level selection */}
           <div className="space-y-2">
-            <Label>באיזה שלב אתה?</Label>
+            <Label htmlFor="trip-planning-level">באיזה שלב אתה?</Label>
             <PlanningLevelPicker value={planningLevel} onChange={setPlanningLevel} />
           </div>
 
@@ -163,6 +166,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
                 value={numberOfDays}
                 onChange={(e) => setNumberOfDays(e.target.value ? parseInt(e.target.value) : '')}
                 required
+                autoComplete="off"
               />
             </div>
           )}
@@ -177,6 +181,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   required
+                  autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
@@ -188,6 +193,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
                   onChange={(e) => setEndDate(e.target.value)}
                   min={startDate}
                   required
+                  autoComplete="off"
                 />
               </div>
             </div>

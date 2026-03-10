@@ -56,7 +56,7 @@ export function MobileBottomNav() {
                     : 'text-muted-foreground'
                 )}
               >
-                <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8} />
+                <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8} aria-hidden="true" />
                 <span className="whitespace-nowrap">{item.label}</span>
               </RouterNavLink>
             );
@@ -76,7 +76,7 @@ export function MobileBottomNav() {
       </nav>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="px-0 pb-safe rounded-t-2xl">
+        <SheetContent side="bottom" className="px-0 pb-safe rounded-t-2xl overscroll-contain">
           <div className="flex flex-col gap-1 py-4">
             {moreItems.map((item) => {
               const Icon = item.icon;
@@ -93,7 +93,7 @@ export function MobileBottomNav() {
                       : 'text-foreground hover:bg-muted'
                   )}
                 >
-                  <Icon size={20} />
+                  <Icon size={20} aria-hidden="true" />
                   {item.label}
                 </RouterNavLink>
               );

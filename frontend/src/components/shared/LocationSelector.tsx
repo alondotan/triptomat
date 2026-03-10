@@ -98,6 +98,8 @@ export function LocationSelector({ value, onChange, placeholder = 'בחר מיק
                 placeholder="חפש מיקום..."
                 className="h-8 text-sm pr-8"
                 autoFocus
+                aria-label="חיפוש מיקום"
+                name="location-search"
               />
             </div>
           </div>
@@ -269,6 +271,8 @@ function ManualEntryFooter({ onSelect, onAddToTree }: { onSelect: (label: string
           className="h-8 text-sm flex-1"
           autoFocus
           onKeyDown={e => { if (e.key === 'Escape') { setAdding(false); setNewName(''); } }}
+          aria-label="שם מיקום חדש"
+          name="new-location"
         />
         <Button type="submit" size="sm" className="h-8 text-xs px-3" disabled={!newName.trim()}>
           בחר
@@ -327,12 +331,12 @@ function TreeNode({ node, depth, value, onSelect, onAddToTree }: TreeNodeProps) 
           style={{ paddingRight: `${depth * 16 + 8}px` }}
         >
           {hasChildren ? (
-            <span onClick={handleToggle} className="shrink-0 p-0.5 rounded hover:bg-muted-foreground/20">
+            <button type="button" onClick={handleToggle} className="shrink-0 p-0.5 rounded hover:bg-muted-foreground/20 bg-transparent border-0 cursor-pointer">
               {expanded
                 ? <ChevronDown size={14} className="text-muted-foreground" />
                 : <ChevronLeft size={14} className="text-muted-foreground" />
               }
-            </span>
+            </button>
           ) : (
             !isCountry && <Check className={cn('h-3.5 w-3.5 shrink-0', value === node.site ? 'opacity-100' : 'opacity-0')} />
           )}
@@ -348,6 +352,7 @@ function TreeNode({ node, depth, value, onSelect, onAddToTree }: TreeNodeProps) 
             onClick={(e) => { e.stopPropagation(); setAdding(true); }}
             className="p-1 rounded hover:bg-muted-foreground/20 ml-1 shrink-0"
             title="הוסף מיקום"
+            aria-label="הוסף"
           >
             <Plus size={12} className="text-muted-foreground" />
           </button>
@@ -373,6 +378,8 @@ function TreeNode({ node, depth, value, onSelect, onAddToTree }: TreeNodeProps) 
                 className="h-7 text-xs flex-1"
                 autoFocus
                 onKeyDown={e => { if (e.key === 'Escape') { setAdding(false); setNewName(''); } }}
+                aria-label="שם מיקום חדש"
+                name="new-child-location"
               />
               <Button type="submit" size="sm" className="h-7 text-xs px-2" disabled={!newName.trim()}>
                 בחר

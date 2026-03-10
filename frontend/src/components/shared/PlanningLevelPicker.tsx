@@ -3,9 +3,9 @@ import { Search, CalendarDays, Calendar } from 'lucide-react';
 export type PlanningLevel = 'research' | 'planning' | 'detailed_planning';
 
 const options: { value: PlanningLevel; icon: React.ReactNode; title: string; desc: string }[] = [
-  { value: 'research', icon: <Search size={20} />, title: 'מחקר', desc: 'אוסף מידע על יעד, בלי תאריכים' },
-  { value: 'planning', icon: <CalendarDays size={20} />, title: 'תכנון', desc: 'יודע כמה ימים, בלי תאריכים מדויקים' },
-  { value: 'detailed_planning', icon: <Calendar size={20} />, title: 'תכנון מפורט', desc: 'יש תאריכים מדויקים' },
+  { value: 'research', icon: <Search size={20} aria-hidden="true" />, title: 'מחקר', desc: 'אוסף מידע על יעד, בלי תאריכים' },
+  { value: 'planning', icon: <CalendarDays size={20} aria-hidden="true" />, title: 'תכנון', desc: 'יודע כמה ימים, בלי תאריכים מדויקים' },
+  { value: 'detailed_planning', icon: <Calendar size={20} aria-hidden="true" />, title: 'תכנון מפורט', desc: 'יש תאריכים מדויקים' },
 ];
 
 interface PlanningLevelPickerProps {
@@ -21,7 +21,8 @@ export function PlanningLevelPicker({ value, onChange }: PlanningLevelPickerProp
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
-          className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all text-center ${
+          aria-pressed={value === opt.value}
+          className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors text-center ${
             value === opt.value
               ? 'border-primary bg-primary/10'
               : 'border-border hover:border-primary/40'

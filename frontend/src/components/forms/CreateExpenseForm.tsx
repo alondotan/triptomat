@@ -88,12 +88,12 @@ export function CreateExpenseForm() {
         <DialogHeader><DialogTitle>הוספת הוצאה</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label>תיאור *</Label>
-            <Input value={description} onChange={e => setDescription(e.target.value)} required placeholder="על מה ההוצאה..." />
+            <Label htmlFor="expense-description">תיאור *</Label>
+            <Input id="expense-description" name="description" value={description} onChange={e => setDescription(e.target.value)} required placeholder="על מה ההוצאה..." autoComplete="off" />
           </div>
 
           <div className="space-y-2">
-            <Label>קטגוריה</Label>
+            <Label htmlFor="expense-category">קטגוריה</Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -106,23 +106,23 @@ export function CreateExpenseForm() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>סכום *</Label>
-              <Input type="number" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="0.00" />
+              <Label htmlFor="expense-amount">סכום *</Label>
+              <Input id="expense-amount" name="amount" type="number" inputMode="decimal" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="0.00" autoComplete="off" />
             </div>
             <div className="space-y-2">
-              <Label>מטבע</Label>
-              <Input value={currency} onChange={e => setCurrency(e.target.value)} placeholder="ILS" />
+              <Label htmlFor="expense-currency">מטבע</Label>
+              <Input id="expense-currency" name="currency" value={currency} onChange={e => setCurrency(e.target.value)} placeholder="ILS" autoComplete="off" />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>תאריך</Label>
-            <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
+            <Label htmlFor="expense-date">תאריך</Label>
+            <Input id="expense-date" name="date" type="date" value={date} onChange={e => setDate(e.target.value)} autoComplete="off" />
           </div>
 
           <div className="space-y-2">
-            <Label>הערות</Label>
-            <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="פרטים נוספים..." />
+            <Label htmlFor="expense-notes">הערות</Label>
+            <Textarea id="expense-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="פרטים נוספים..." autoComplete="off" />
           </div>
 
           <div className="flex items-center justify-between">

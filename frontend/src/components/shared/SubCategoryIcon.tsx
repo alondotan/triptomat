@@ -18,5 +18,5 @@ export function SubCategoryIcon({ type, size = 14, className = '' }: SubCategory
     });
   }, [type]);
 
-  return <Icon size={size} className={className} />;
+  return <Icon size={size} className={className} aria-hidden="true" />;
 }

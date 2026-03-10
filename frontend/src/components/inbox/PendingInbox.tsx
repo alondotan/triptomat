@@ -114,7 +114,7 @@ export function PendingInbox() {
 
   const renderCategoryIcon = (category?: string) => {
     const Icon = getCategoryIcon(category || '');
-    return <Icon className="h-4 w-4" />;
+    return <Icon className="h-4 w-4" aria-hidden="true" />;
   };
 
   const getEmailTitle = (item: SourceEmail) => {
@@ -136,7 +136,7 @@ export function PendingInbox() {
   const totalPending = emails.length + recommendations.length;
 
   if (isLoading) {
-    return <Card><CardContent className="p-6 text-center">Loading...</CardContent></Card>;
+    return <Card><CardContent className="p-6 text-center" aria-live="polite">Loading...</CardContent></Card>;
   }
 
   if (totalPending === 0) {
@@ -148,7 +148,7 @@ export function PendingInbox() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center py-8 text-muted-foreground">
-            <Inbox className="h-12 w-12 mb-2 opacity-40" />
+            <Inbox className="h-12 w-12 mb-2 opacity-40" aria-hidden="true" />
             <p>No pending items</p>
           </div>
         </CardContent>
@@ -200,11 +200,11 @@ export function PendingInbox() {
                         <Link2 className="h-4 w-4 mr-1" /> Link
                       </Button>
                       {item.sourceEmailInfo.email_permalink && (
-                        <a href={item.sourceEmailInfo.email_permalink} target="_blank" rel="noopener noreferrer" className="p-2">
+                        <a href={item.sourceEmailInfo.email_permalink} target="_blank" rel="noopener noreferrer" className="p-2" aria-label="פתח אימייל">
                           <ExternalLink className="h-4 w-4" />
                         </a>
                       )}
-                      <Button size="sm" variant="ghost" onClick={() => handleDeleteEmail(item.id)}>
+                      <Button size="sm" variant="ghost" aria-label="מחק" onClick={() => { if (window.confirm('האם למחוק?')) handleDeleteEmail(item.id); }}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
@@ -221,7 +221,7 @@ export function PendingInbox() {
                   <div key={rec.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-full bg-muted">
-                        <Star className="h-4 w-4" />
+                        <Star className="h-4 w-4" aria-hidden="true" />
                       </div>
                       <div>
                         <span className="font-medium">{rec.analysis.main_site || 'Recommendation'}</span>
@@ -240,11 +240,11 @@ export function PendingInbox() {
                         <Link2 className="h-4 w-4 mr-1" /> Link
                       </Button>
                       {rec.sourceUrl && (
-                        <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer" className="p-2">
+                        <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer" className="p-2" aria-label="פתח המלצה">
                           <ExternalLink className="h-4 w-4" />
                         </a>
                       )}
-                      <Button size="sm" variant="ghost" onClick={() => handleDeleteRecommendation(rec.id)}>
+                      <Button size="sm" variant="ghost" aria-label="מחק" onClick={() => { if (window.confirm('האם למחוק?')) handleDeleteRecommendation(rec.id); }}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
@@ -260,7 +260,7 @@ export function PendingInbox() {
         <DialogContent>
           <DialogHeader><DialogTitle>Link to Trip</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <Select value={selectedTripId} onValueChange={setSelectedTripId}>
+            <Select value={selectedTripId} onValueChange={setSelectedTripId} aria-label="בחר טיול">
               <SelectTrigger><SelectValue placeholder="Choose a trip..." /></SelectTrigger>
               <SelectContent>
                 {trips.map(trip => (

@@ -189,14 +189,16 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
               <Label htmlFor="editName">שם הטיול</Label>
               <Input
                 id="editName"
+                name="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                autoComplete="off"
               />
             </div>
 
             {/* Planning level */}
             <div className="space-y-2">
-              <Label>שלב התכנון</Label>
+              <Label htmlFor="editPlanningLevel">שלב התכנון</Label>
               <PlanningLevelPicker value={planningLevel} onChange={handleLevelChange} />
             </div>
 
@@ -206,12 +208,14 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
                 <Label htmlFor="editDays">מספר ימים</Label>
                 <Input
                   id="editDays"
+                  name="days"
                   type="number"
                   min={1}
                   max={365}
                   placeholder="7"
                   value={numberOfDays}
                   onChange={(e) => setNumberOfDays(e.target.value ? parseInt(e.target.value) : '')}
+                  autoComplete="off"
                 />
               </div>
             )}
@@ -222,19 +226,23 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
                   <Label htmlFor="editStart">תאריך התחלה</Label>
                   <Input
                     id="editStart"
+                    name="startDate"
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
+                    autoComplete="off"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="editEnd">תאריך סיום</Label>
                   <Input
                     id="editEnd"
+                    name="endDate"
                     type="date"
                     value={endDate}
                     min={startDate}
                     onChange={(e) => setEndDate(e.target.value)}
+                    autoComplete="off"
                   />
                 </div>
               </div>

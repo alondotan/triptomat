@@ -44,6 +44,8 @@ function DaysForwardControl({ value, onChange, max }: { value: number; onChange:
         value={value}
         onChange={e => onChange(Math.max(0, parseInt(e.target.value) || 0))}
         className="h-6 text-xs w-12 text-center"
+        aria-label="מספר ימים"
+        name="days"
       />
       <span>ימים קדימה</span>
     </div>

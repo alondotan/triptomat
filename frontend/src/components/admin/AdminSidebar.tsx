@@ -60,7 +60,7 @@ export function AdminSidebar() {
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               )}
             >
-              <Icon size={18} />
+              <Icon size={18} aria-hidden="true" />
               {item.label}
             </NavLink>
           );

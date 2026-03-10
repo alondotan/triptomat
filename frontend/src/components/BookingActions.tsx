@@ -41,6 +41,7 @@ export function BookingActions({ orderNumber, emailLinks }: BookingActionsProps)
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
                 onClick={e => e.stopPropagation()}
+                aria-label="קישור לאימייל"
               >
                 <Mail size={13} />
               </a>
@@ -48,6 +49,7 @@ export function BookingActions({ orderNumber, emailLinks }: BookingActionsProps)
               <button
                 className="inline-flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
                 onClick={e => { e.stopPropagation(); setViewingEmail(email); }}
+                aria-label="צפה באימייל"
               >
                 <Mail size={13} />
               </button>
@@ -64,6 +66,7 @@ export function BookingActions({ orderNumber, emailLinks }: BookingActionsProps)
             <button
               onClick={handleCopy}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors rounded px-1.5 py-0.5 hover:bg-muted"
+              aria-label="העתק מספר הזמנה"
             >
               {copied
                 ? <Check size={11} className="text-green-500 shrink-0" />

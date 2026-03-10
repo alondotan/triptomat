@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ExternalLink, Mail, Trash2, ChevronDown, ChevronRight, Calendar, DollarSign, MapPinned, User, Hash } from 'lucide-react';
+import { ExternalLink, Mail, Trash2, ChevronDown, ChevronRight, Calendar, DollarSign, MapPinned, User, Hash, Hotel, Plane, MapPin } from 'lucide-react';
 import { getCategoryIcon } from '@/lib/subCategoryConfig';
 import { SourceEmail } from '@/types/webhook';
 import { fetchSourceEmails, deleteSourceEmail } from '@/services/webhookService';
@@ -123,7 +123,7 @@ export function SourceEmailsDashboard() {
 
   const renderCategoryIcon = (category?: string) => {
     const Icon = getCategoryIcon(category || '');
-    return <Icon className="h-4 w-4" />;
+    return <Icon className="h-4 w-4" aria-hidden="true" />;
   };
 
   const getTripName = (tripId?: string) => {
@@ -134,7 +134,7 @@ export function SourceEmailsDashboard() {
 
   const unreadCount = items.filter(i => !readIds.has(i.id)).length;
 
-  if (isLoading) return <Card><CardContent className="p-6 text-center">Loading...</CardContent></Card>;
+  if (isLoading) return <Card><CardContent className="p-6 text-center" aria-live="polite">Loading...</CardContent></Card>;
 
   if (items.length === 0) {
     return (
@@ -144,7 +144,7 @@ export function SourceEmailsDashboard() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center py-8 text-muted-foreground">
-            <Mail className="h-12 w-12 mb-2 opacity-40" />
+            <Mail className="h-12 w-12 mb-2 opacity-40" aria-hidden="true" />
             <p>No source emails yet</p>
           </div>
         </CardContent>
@@ -209,11 +209,12 @@ export function SourceEmailsDashboard() {
                       {item.status}
                     </Badge>
                     {item.sourceEmailInfo.email_permalink && (
-                      <a href={item.sourceEmailInfo.email_permalink} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md hover:bg-muted">
+                      <a href={item.sourceEmailInfo.email_permalink} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md hover:bg-muted" aria-label="פתח אימייל">
                         <ExternalLink className="h-4 w-4" />
                       </a>
                     )}
-                    <Button size="sm" variant="ghost" onClick={async () => {
+                    <Button size="sm" variant="ghost" aria-label="מחק" onClick={async () => {
+                      if (!window.confirm('האם למחוק?')) return;
                       try {
                         await deleteSourceEmail(item.id);
                         setItems(prev => prev.filter(i => i.id !== item.id));

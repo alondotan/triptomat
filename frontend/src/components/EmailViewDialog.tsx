@@ -40,7 +40,7 @@ export function EmailViewDialog({ emailId, subject, open, onOpenChange }: EmailV
           <DialogTitle className="text-base">{subject || 'מייל'}</DialogTitle>
         </DialogHeader>
         {loading ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm py-8">טוען...</div>
+          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm py-8" aria-live="polite">טוען...</div>
         ) : content ? (
           <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
             {(content.sender || content.date) && (
@@ -49,7 +49,7 @@ export function EmailViewDialog({ emailId, subject, open, onOpenChange }: EmailV
                 {content.date && <p>תאריך: {content.date}</p>}
               </div>
             )}
-            <pre className="text-xs whitespace-pre-wrap font-sans leading-relaxed">
+            <pre className="text-xs whitespace-pre-wrap font-sans leading-relaxed break-words" style={{ overflowWrap: 'break-word' }}>
               {content.body || '(אין תוכן)'}
             </pre>
           </div>

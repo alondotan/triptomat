@@ -110,8 +110,8 @@ export function CreatePOIForm() {
           <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Basic Info</span>
             <div className="space-y-2">
-              <Label>Name *</Label>
-              <Input value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Eiffel Tower" />
+              <Label htmlFor="poi-name">Name *</Label>
+              <Input id="poi-name" name="name" value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Eiffel Tower" autoComplete="off" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
@@ -136,10 +136,10 @@ export function CreatePOIForm() {
           <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Location</span>
             <div className="space-y-2">
-              <Label>Country</Label>
+              <Label htmlFor="poi-country">Country</Label>
               {manualCountry ? (
                 <div className="flex gap-1">
-                  <Input value={country} onChange={e => setCountry(e.target.value)} placeholder="הזן מדינה ידנית..." className="flex-1" />
+                  <Input id="poi-country" name="country" value={country} onChange={e => setCountry(e.target.value)} placeholder="הזן מדינה ידנית..." className="flex-1" autoComplete="off" />
                   <Button type="button" variant="ghost" size="sm" className="shrink-0 text-xs" onClick={() => setManualCountry(false)}>
                     רשימה
                   </Button>
@@ -154,12 +154,12 @@ export function CreatePOIForm() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => setManualCountry(true)} title="הזנה ידנית">
+                  <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => setManualCountry(true)} title="הזנה ידנית" aria-label="ערוך מדינה">
                     <Pencil size={14} />
                   </Button>
                 </div>
               ) : (
-                <Input value={country} onChange={e => setCountry(e.target.value)} placeholder="France" />
+                <Input id="poi-country" name="country" value={country} onChange={e => setCountry(e.target.value)} placeholder="France" autoComplete="off" />
               )}
             </div>
             <div className="space-y-2">
@@ -171,8 +171,8 @@ export function CreatePOIForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Address</Label>
-              <Input value={address} onChange={e => setAddress(e.target.value)} placeholder="5 Avenue Anatole" />
+              <Label htmlFor="poi-address">Address</Label>
+              <Input id="poi-address" name="address" value={address} onChange={e => setAddress(e.target.value)} placeholder="5 Avenue Anatole" autoComplete="off" />
             </div>
           </div>
 
@@ -180,9 +180,9 @@ export function CreatePOIForm() {
           <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cost</span>
             <div className="space-y-2">
-              <Label>עלות</Label>
+              <Label htmlFor="poi-cost">עלות</Label>
               <div className="grid grid-cols-3 gap-2">
-                <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" />
+                <Input id="poi-cost" name="cost" type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" autoComplete="off" />
                 <Select value={costCurrency} onValueChange={setCostCurrency}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -200,8 +200,8 @@ export function CreatePOIForm() {
           </div>
 
           <div className="space-y-2">
-            <Label>Notes</Label>
-            <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional notes..." />
+            <Label htmlFor="poi-notes">Notes</Label>
+            <Textarea id="poi-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional notes..." autoComplete="off" />
           </div>
 
           <Button type="submit" className="w-full">Add POI</Button>

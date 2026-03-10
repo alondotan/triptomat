@@ -171,36 +171,36 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">קטע {i + 1}</span>
                       {segments.length > 1 && (
-                        <button type="button" onClick={() => removeSegment(i)} className="text-destructive/70 hover:text-destructive transition-colors p-0.5">
+                        <button type="button" onClick={() => removeSegment(i)} className="text-destructive/70 hover:text-destructive transition-colors p-0.5" aria-label="הסר מקטע">
                           <Trash2 size={13} />
                         </button>
                       )}
                     </div>
                     <div className="grid grid-cols-[1fr_auto] gap-1.5">
-                      <Input value={seg.fromName} onChange={e => updateSegment(i, 'fromName', e.target.value)} placeholder="מוצא" className="h-7 text-sm bg-background/50" />
-                      <Input value={seg.fromCode} onChange={e => updateSegment(i, 'fromCode', e.target.value)} placeholder="קוד" className="h-7 text-sm w-14 bg-background/50 text-center" />
+                      <Input value={seg.fromName} onChange={e => updateSegment(i, 'fromName', e.target.value)} placeholder="מוצא" className="h-7 text-sm bg-background/50" aria-label="שם מוצא" name={`detail-segment-${i}-fromName`} autoComplete="off" />
+                      <Input value={seg.fromCode} onChange={e => updateSegment(i, 'fromCode', e.target.value)} placeholder="קוד" className="h-7 text-sm w-14 bg-background/50 text-center" aria-label="קוד מוצא" name={`detail-segment-${i}-fromCode`} autoComplete="off" />
                     </div>
                     <div className="grid grid-cols-[1fr_auto] gap-1.5">
-                      <Input value={seg.toName} onChange={e => updateSegment(i, 'toName', e.target.value)} placeholder="יעד" className="h-7 text-sm bg-background/50" />
-                      <Input value={seg.toCode} onChange={e => updateSegment(i, 'toCode', e.target.value)} placeholder="קוד" className="h-7 text-sm w-14 bg-background/50 text-center" />
+                      <Input value={seg.toName} onChange={e => updateSegment(i, 'toName', e.target.value)} placeholder="יעד" className="h-7 text-sm bg-background/50" aria-label="שם יעד" name={`detail-segment-${i}-toName`} autoComplete="off" />
+                      <Input value={seg.toCode} onChange={e => updateSegment(i, 'toCode', e.target.value)} placeholder="קוד" className="h-7 text-sm w-14 bg-background/50 text-center" aria-label="קוד יעד" name={`detail-segment-${i}-toCode`} autoComplete="off" />
                     </div>
                     {!isResearch && (
                       <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
                         <div>
                           <Label className="text-[10px] text-muted-foreground">יציאה</Label>
-                          <Input type="datetime-local" value={seg.departureTime} onChange={e => updateSegment(i, 'departureTime', e.target.value)} className="h-7 text-[11px] bg-background/50" />
+                          <Input type="datetime-local" value={seg.departureTime} onChange={e => updateSegment(i, 'departureTime', e.target.value)} className="h-7 text-[11px] bg-background/50" aria-label="זמן יציאה" name={`detail-segment-${i}-departureTime`} autoComplete="off" />
                         </div>
                         <div>
                           <Label className="text-[10px] text-muted-foreground">הגעה</Label>
-                          <Input type="datetime-local" value={seg.arrivalTime} onChange={e => updateSegment(i, 'arrivalTime', e.target.value)} className="h-7 text-[11px] bg-background/50" />
+                          <Input type="datetime-local" value={seg.arrivalTime} onChange={e => updateSegment(i, 'arrivalTime', e.target.value)} className="h-7 text-[11px] bg-background/50" aria-label="זמן הגעה" name={`detail-segment-${i}-arrivalTime`} autoComplete="off" />
                         </div>
-                        <Input value={seg.flightNumber} onChange={e => updateSegment(i, 'flightNumber', e.target.value)} placeholder="טיסה #" className="h-7 text-sm w-20 bg-background/50" />
+                        <Input value={seg.flightNumber} onChange={e => updateSegment(i, 'flightNumber', e.target.value)} placeholder="טיסה #" className="h-7 text-sm w-20 bg-background/50" aria-label="מספר טיסה" name={`detail-segment-${i}-flightNumber`} autoComplete="off" />
                       </div>
                     )}
                   </div>
                   {i < segments.length - 1 && (
                     <div className="flex justify-center py-0.5">
-                      <ArrowDown size={12} className="text-muted-foreground/50" />
+                      <ArrowDown size={12} className="text-muted-foreground/50" aria-hidden="true" />
                     </div>
                   )}
                 </div>
@@ -220,7 +220,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Details</span>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">סוג</Label>
+                    <Label htmlFor="detail-transport-type" className="text-xs text-muted-foreground">סוג</Label>
                     <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -241,12 +241,12 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">מוביל</Label>
-                    <Input value={carrierName} onChange={e => setCarrierName(e.target.value)} className="h-8" />
+                    <Label htmlFor="detail-transport-carrier" className="text-xs text-muted-foreground">מוביל</Label>
+                    <Input id="detail-transport-carrier" name="carrierName" value={carrierName} onChange={e => setCarrierName(e.target.value)} className="h-8" autoComplete="off" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">מספר הזמנה</Label>
-                    <Input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} className="h-8" />
+                    <Label htmlFor="detail-transport-order" className="text-xs text-muted-foreground">מספר הזמנה</Label>
+                    <Input id="detail-transport-order" name="orderNumber" value={orderNumber} onChange={e => setOrderNumber(e.target.value)} className="h-8" autoComplete="off" />
                   </div>
                 </div>
               </div>
@@ -256,7 +256,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cost & Booking</span>
                 <div className="space-y-1">
                   <div className="grid grid-cols-[1fr_auto] gap-2">
-                    <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="h-8" />
+                    <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="h-8" name="costAmount" autoComplete="off" />
                     <Select value={costCurrency} onValueChange={setCostCurrency}>
                       <SelectTrigger className="h-8 w-[72px]"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -278,8 +278,8 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">הערות</Label>
-                <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="text-sm resize-none" />
+                <Label htmlFor="detail-transport-notes" className="text-xs text-muted-foreground">הערות</Label>
+                <Textarea id="detail-transport-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="text-sm resize-none" autoComplete="off" />
               </div>
 
               <Button onClick={handleSave} className="w-full h-9 gap-1.5">

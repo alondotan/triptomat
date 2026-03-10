@@ -77,11 +77,15 @@ export function UrlSubmit() {
       }
 
       // Gateway flow: videos, websites, single Maps place
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30_000);
       const res = await fetch(GATEWAY_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: trimmed, webhook_token: webhookToken }),
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
 
       const data = await res.json();
 
@@ -112,16 +116,20 @@ export function UrlSubmit() {
       }
 
       setUrl('');
-    } catch {
+    } catch (err) {
       setStatus('error');
-      setMessage('Failed to reach the server. Please try again.');
+      setMessage(
+        err instanceof DOMException && err.name === 'AbortError'
+          ? 'Request timed out. Please try again.'
+          : 'Failed to reach the server. Please try again.'
+      );
     }
   };
 
   return (
     <div className="rounded-lg border bg-card p-4 space-y-3">
       <div className="flex items-center gap-2">
-        <Link size={16} className="text-muted-foreground" />
+        <Link size={16} className="text-muted-foreground" aria-hidden="true" />
         <h2 className="font-semibold text-sm">Add from URL</h2>
       </div>
       <p className="text-xs text-muted-foreground">
@@ -134,6 +142,10 @@ export function UrlSubmit() {
           onChange={e => setUrl(e.target.value)}
           disabled={status === 'loading' || !webhookToken}
           className="flex-1 text-sm"
+          aria-label="הזן כתובת URL"
+          name="url"
+          type="url"
+          autoComplete="off"
         />
         <Button
           type="submit"
@@ -144,16 +156,18 @@ export function UrlSubmit() {
         </Button>
       </form>
 
-      {status === 'success' && (
-        <p className="flex items-center gap-1.5 text-xs text-green-600">
-          <CheckCircle size={13} /> {message}
-        </p>
-      )}
-      {status === 'error' && (
-        <p className="flex items-center gap-1.5 text-xs text-destructive">
-          <AlertCircle size={13} /> {message}
-        </p>
-      )}
+      <div aria-live="polite">
+        {status === 'success' && (
+          <p className="flex items-center gap-1.5 text-xs text-green-600">
+            <CheckCircle size={13} /> {message}
+          </p>
+        )}
+        {status === 'error' && (
+          <p className="flex items-center gap-1.5 text-xs text-destructive">
+            <AlertCircle size={13} /> {message}
+          </p>
+        )}
+      </div>
       {!webhookToken && (
         <p className="text-xs text-muted-foreground">Loading your account token…</p>
       )}

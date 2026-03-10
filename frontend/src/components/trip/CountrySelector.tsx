@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { COUNTRIES } from '@/data/countries';
+import { useCountryList } from '@/hooks/useCountrySites';
 
 interface CountrySelectorProps {
   value: string[];
@@ -17,12 +17,13 @@ interface CountrySelectorProps {
 export function CountrySelector({ value, onChange, placeholder = 'Select countries...', className }: CountrySelectorProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const { countries: COUNTRIES } = useCountryList();
 
   const filteredCountries = useMemo(() => {
     if (!search) return COUNTRIES;
     const lower = search.toLowerCase();
     return COUNTRIES.filter(country => country.toLowerCase().includes(lower));
-  }, [search]);
+  }, [search, COUNTRIES]);
 
   const toggleCountry = (country: string) => {
     if (value.includes(country)) {
@@ -95,7 +96,8 @@ export function CountrySelector({ value, onChange, placeholder = 'Select countri
               <button
                 type="button"
                 onClick={() => removeCountry(country)}
-                className="ml-1 rounded-full outline-none hover:bg-secondary-foreground/20"
+                className="ml-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-secondary-foreground/20"
+                aria-label="הסר מדינה"
               >
                 <X className="h-3 w-3" />
               </button>

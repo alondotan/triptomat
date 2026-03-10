@@ -132,7 +132,7 @@ export function MapListManager() {
     <div className="rounded-lg border bg-card p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Map size={16} className="text-muted-foreground" />
+          <Map size={16} className="text-muted-foreground" aria-hidden="true" />
           <h2 className="font-semibold text-sm">Google Maps Lists</h2>
         </div>
         <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => setShowAdd(v => !v)}>
@@ -146,7 +146,7 @@ export function MapListManager() {
 
       {showAdd && (
         <div className="space-y-2 border rounded-md p-3 bg-muted/30">
-          <Input placeholder="Google Maps list URL" value={newUrl} onChange={e => setNewUrl(e.target.value)} className="text-sm h-8" />
+          <Input placeholder="Google Maps list URL" aria-label="הזן כתובת URL" name="url" type="url" autoComplete="off" value={newUrl} onChange={e => setNewUrl(e.target.value)} className="text-sm h-8" />
           <div className="flex gap-2 justify-end">
             <Button variant="outline" size="sm" onClick={() => setShowAdd(false)}>Cancel</Button>
             <Button size="sm" onClick={handleAdd} disabled={adding || !newUrl.trim()}>
@@ -164,7 +164,7 @@ export function MapListManager() {
         {lists.map(list => (
           <div key={list.id} className="border rounded-md overflow-hidden">
             <div className="flex items-center gap-2 px-3 py-2 bg-muted/20">
-              <button className="flex items-center gap-1 flex-1 min-w-0 text-left" onClick={() => toggleExpand(list.id)}>
+              <button type="button" className="flex items-center gap-1 flex-1 min-w-0 text-left bg-transparent border-0 p-0" aria-label={expanded[list.id] ? 'כווץ רשימה' : 'הרחב רשימה'} aria-expanded={!!expanded[list.id]} onClick={() => toggleExpand(list.id)}>
                 {expanded[list.id] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                 <span className="text-sm font-medium truncate">{list.name}</span>
                 <span className="text-xs text-muted-foreground ml-1 shrink-0">
@@ -173,20 +173,22 @@ export function MapListManager() {
               </button>
               <Button
                 variant="ghost" size="icon"
+                aria-label="סנכרן"
                 className="h-6 w-6 shrink-0"
                 onClick={() => handleSync(list)}
                 disabled={syncing[list.id] || !webhookToken}
                 title={list.last_synced_at ? 'Sync again' : 'Syncing...'}
               >
-                <RefreshCw size={13} className={syncing[list.id] || !list.last_synced_at ? 'animate-spin' : ''} />
+                <RefreshCw size={13} className={syncing[list.id] || !list.last_synced_at ? 'animate-spin' : ''} aria-hidden="true" />
               </Button>
               <Button
                 variant="ghost" size="icon"
+                aria-label="מחק"
                 className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
-                onClick={() => handleDelete(list.id)}
+                onClick={() => { if (window.confirm('האם למחוק?')) handleDelete(list.id); }}
                 title="Remove list"
               >
-                <Trash2 size={13} />
+                <Trash2 size={13} aria-hidden="true" />
               </Button>
             </div>
 

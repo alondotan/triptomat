@@ -143,6 +143,7 @@ export function DaySection({
             <button
               onClick={() => onToggleSelected(item.id, !item.isSelected)}
               className={`shrink-0 transition-colors ${item.isSelected ? 'text-yellow-500' : 'text-muted-foreground/40 hover:text-yellow-400'}`}
+              aria-label="סמן כמועדף"
               title={item.isSelected ? 'נבחר' : 'סמן כנבחר'}
             >
               <Star size={16} fill={item.isSelected ? 'currentColor' : 'none'} />
@@ -151,6 +152,7 @@ export function DaySection({
           <div
             className={`flex-1 min-w-0 flex items-center gap-2 ${onOpen ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
             onClick={onOpen ? () => onOpen(item.id) : undefined}
+            {...(onOpen ? { role: 'button' as const, tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(item.id); } } } : {})}
           >
             {item.subCategory && <SubCategoryIcon type={item.subCategory} size={15} className="shrink-0 text-muted-foreground" />}
             <div className="min-w-0">
@@ -165,6 +167,7 @@ export function DaySection({
           {onMoveToSchedule && (
             <button
               onClick={() => onMoveToSchedule(item.id)}
+              aria-label="העבר ללוח זמנים"
               title="העבר ללו״ז"
               className="shrink-0 p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
             >
@@ -176,6 +179,7 @@ export function DaySection({
             <select
               className="shrink-0 appearance-none bg-transparent text-muted-foreground hover:text-primary cursor-pointer p-1 text-[10px] rounded hover:bg-primary/10 transition-colors"
               value=""
+              aria-label="בחר יום"
               title="העבר ליום אחר"
               onChange={e => {
                 const targetDay = parseInt(e.target.value);
@@ -194,7 +198,7 @@ export function DaySection({
               })}
             </select>
           )}
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" onClick={() => onRemove(item.id)}>
+          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" aria-label="הסר" onClick={() => onRemove(item.id)}>
             <X size={14} />
           </Button>
         </div>
@@ -223,6 +227,7 @@ export function DaySection({
                   <Label className="text-xs">מספר לילות:</Label>
                   <Input
                     type="number"
+                    name="nights"
                     min={1}
                     max={maxNights}
                     value={nights}
@@ -290,6 +295,7 @@ export function DaySection({
                     <Label className="text-xs">מספר לילות:</Label>
                     <Input
                       type="number"
+                      name="nights-new"
                       min={1}
                       max={maxNights}
                       value={nights}
@@ -445,7 +451,7 @@ function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookin
       )}
       <div className="space-y-1">
         <Label className="text-xs">שם *</Label>
-        <Input value={name} onChange={e => setName(e.target.value)} required placeholder={entityType === 'accommodation' ? 'שם המלון' : 'שם המקום'} />
+        <Input name="item-name" value={name} onChange={e => setName(e.target.value)} required placeholder={entityType === 'accommodation' ? 'שם המלון' : 'שם המקום'} />
       </div>
       {entityType === 'accommodation' && (
         <div className="space-y-1">

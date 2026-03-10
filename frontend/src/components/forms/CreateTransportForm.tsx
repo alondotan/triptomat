@@ -198,18 +198,18 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">Segment {i + 1}</span>
                       {segments.length > 1 && (
-                        <button type="button" onClick={() => removeSegment(i)} className="text-destructive/70 hover:text-destructive transition-colors p-0.5">
+                        <button type="button" onClick={() => removeSegment(i)} className="text-destructive/70 hover:text-destructive transition-colors p-0.5" aria-label="הסר מקטע">
                           <Trash2 size={13} />
                         </button>
                       )}
                     </div>
                     <div className="grid grid-cols-[1fr_auto] gap-1.5">
-                      <Input value={seg.fromName} onChange={e => updateSegment(i, 'fromName', e.target.value)} required placeholder="From" className="h-7 text-sm bg-background/50" />
-                      <Input value={seg.fromCode} onChange={e => updateSegment(i, 'fromCode', e.target.value)} placeholder="TLV" className="h-7 text-sm w-14 bg-background/50 text-center" />
+                      <Input value={seg.fromName} onChange={e => updateSegment(i, 'fromName', e.target.value)} required placeholder="From" className="h-7 text-sm bg-background/50" aria-label="שם מוצא" name={`segment-${i}-fromName`} autoComplete="off" />
+                      <Input value={seg.fromCode} onChange={e => updateSegment(i, 'fromCode', e.target.value)} placeholder="TLV" className="h-7 text-sm w-14 bg-background/50 text-center" aria-label="קוד מוצא" name={`segment-${i}-fromCode`} autoComplete="off" />
                     </div>
                     <div className="grid grid-cols-[1fr_auto] gap-1.5">
-                      <Input value={seg.toName} onChange={e => updateSegment(i, 'toName', e.target.value)} required placeholder="To" className="h-7 text-sm bg-background/50" />
-                      <Input value={seg.toCode} onChange={e => updateSegment(i, 'toCode', e.target.value)} placeholder="CDG" className="h-7 text-sm w-14 bg-background/50 text-center" />
+                      <Input value={seg.toName} onChange={e => updateSegment(i, 'toName', e.target.value)} required placeholder="To" className="h-7 text-sm bg-background/50" aria-label="שם יעד" name={`segment-${i}-toName`} autoComplete="off" />
+                      <Input value={seg.toCode} onChange={e => updateSegment(i, 'toCode', e.target.value)} placeholder="CDG" className="h-7 text-sm w-14 bg-background/50 text-center" aria-label="קוד יעד" name={`segment-${i}-toCode`} autoComplete="off" />
                     </div>
                     {!isResearch && (
                       <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
@@ -218,10 +218,10 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
                           {isPlanning ? (
                             <div className="flex gap-1">
                               <TripDaySelect value={seg.departureTime ? parseInt(seg.departureTime) || '' : ''} onChange={(v) => updateSegment(i, 'departureTime', v ? String(v) : '')} className="h-7 text-[11px]" />
-                              <Input type="time" value="" onChange={e => updateSegment(i, 'departureTime', seg.departureTime + 'T' + e.target.value)} className="h-7 text-[11px] w-20 bg-background/50" placeholder="HH:mm" />
+                              <Input type="time" value="" onChange={e => updateSegment(i, 'departureTime', seg.departureTime + 'T' + e.target.value)} className="h-7 text-[11px] w-20 bg-background/50" placeholder="HH:mm" aria-label="שעת יציאה" name={`segment-${i}-departureTime`} autoComplete="off" />
                             </div>
                           ) : (
-                            <Input type="datetime-local" value={seg.departureTime} onChange={e => updateSegment(i, 'departureTime', e.target.value)} className="h-7 text-[11px] bg-background/50" />
+                            <Input type="datetime-local" value={seg.departureTime} onChange={e => updateSegment(i, 'departureTime', e.target.value)} className="h-7 text-[11px] bg-background/50" aria-label="זמן יציאה" name={`segment-${i}-departureTime`} autoComplete="off" />
                           )}
                         </div>
                         <div>
@@ -229,19 +229,19 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
                           {isPlanning ? (
                             <div className="flex gap-1">
                               <TripDaySelect value={seg.arrivalTime ? parseInt(seg.arrivalTime) || '' : ''} onChange={(v) => updateSegment(i, 'arrivalTime', v ? String(v) : '')} className="h-7 text-[11px]" />
-                              <Input type="time" value="" onChange={e => updateSegment(i, 'arrivalTime', seg.arrivalTime + 'T' + e.target.value)} className="h-7 text-[11px] w-20 bg-background/50" placeholder="HH:mm" />
+                              <Input type="time" value="" onChange={e => updateSegment(i, 'arrivalTime', seg.arrivalTime + 'T' + e.target.value)} className="h-7 text-[11px] w-20 bg-background/50" placeholder="HH:mm" aria-label="שעת הגעה" name={`segment-${i}-arrivalTime`} autoComplete="off" />
                             </div>
                           ) : (
-                            <Input type="datetime-local" value={seg.arrivalTime} onChange={e => updateSegment(i, 'arrivalTime', e.target.value)} className="h-7 text-[11px] bg-background/50" />
+                            <Input type="datetime-local" value={seg.arrivalTime} onChange={e => updateSegment(i, 'arrivalTime', e.target.value)} className="h-7 text-[11px] bg-background/50" aria-label="זמן הגעה" name={`segment-${i}-arrivalTime`} autoComplete="off" />
                           )}
                         </div>
-                        <Input value={seg.flightNumber} onChange={e => updateSegment(i, 'flightNumber', e.target.value)} placeholder="Flight #" className="h-7 text-sm w-20 bg-background/50" />
+                        <Input value={seg.flightNumber} onChange={e => updateSegment(i, 'flightNumber', e.target.value)} placeholder="Flight #" className="h-7 text-sm w-20 bg-background/50" aria-label="מספר טיסה" name={`segment-${i}-flightNumber`} autoComplete="off" />
                       </div>
                     )}
                   </div>
                   {i < segments.length - 1 && (
                     <div className="flex justify-center py-0.5">
-                      <ArrowDown size={12} className="text-muted-foreground/50" />
+                      <ArrowDown size={12} className="text-muted-foreground/50" aria-hidden="true" />
                     </div>
                   )}
                 </div>
@@ -261,7 +261,7 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Details</span>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Type</Label>
+                    <Label htmlFor="transport-type" className="text-xs text-muted-foreground">Type</Label>
                     <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -274,12 +274,12 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Carrier</Label>
-                    <Input value={carrierName} onChange={e => setCarrierName(e.target.value)} placeholder="El Al" className="h-8" />
+                    <Label htmlFor="transport-carrier" className="text-xs text-muted-foreground">Carrier</Label>
+                    <Input id="transport-carrier" name="carrierName" value={carrierName} onChange={e => setCarrierName(e.target.value)} placeholder="El Al" className="h-8" autoComplete="off" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Order #</Label>
-                    <Input value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="ABC123" className="h-8" />
+                    <Label htmlFor="transport-order" className="text-xs text-muted-foreground">Order #</Label>
+                    <Input id="transport-order" name="orderNumber" value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="ABC123" className="h-8" autoComplete="off" />
                   </div>
                 </div>
               </div>
@@ -289,7 +289,7 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cost</span>
                 <div className="space-y-1">
                   <div className="grid grid-cols-[1fr_auto] gap-2">
-                    <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="h-8" />
+                    <Input type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="h-8" name="costAmount" autoComplete="off" />
                     <Select value={costCurrency} onValueChange={setCostCurrency}>
                       <SelectTrigger className="h-8 w-[72px]"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -305,8 +305,8 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Notes</Label>
-                <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Layover info, seat preferences..." rows={2} className="text-sm resize-none" />
+                <Label htmlFor="transport-notes" className="text-xs text-muted-foreground">Notes</Label>
+                <Textarea id="transport-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Layover info, seat preferences..." rows={2} className="text-sm resize-none" autoComplete="off" />
               </div>
 
               <Button type="submit" className="w-full h-9">Add Transportation</Button>

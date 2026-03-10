@@ -24,7 +24,7 @@ export function AuthGuard({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  if (loading) return null;
+  if (loading) return <div aria-live="polite"><span className="sr-only">טוען...</span></div>;
   if (!session) return null;
 
   return <>{children}</>;

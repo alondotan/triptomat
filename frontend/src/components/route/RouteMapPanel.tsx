@@ -170,6 +170,7 @@ export function RouteMapPanel({
           <Button
             variant={defaultMode === 'car' ? 'default' : 'ghost'}
             size="sm"
+            aria-label="נהיגה"
             className="h-6 px-1.5 text-[11px]"
             onClick={() => onModeChange('car')}
           >
@@ -178,6 +179,7 @@ export function RouteMapPanel({
           <Button
             variant={defaultMode === 'walk' ? 'default' : 'ghost'}
             size="sm"
+            aria-label="הליכה"
             className="h-6 px-1.5 text-[11px]"
             onClick={() => onModeChange('walk')}
           >
@@ -192,7 +194,7 @@ export function RouteMapPanel({
           disabled={!canCalculate}
         >
           {isCalculating ? (
-            <Loader2 size={11} className="animate-spin" />
+            <Loader2 size={11} className="animate-spin" aria-hidden="true" />
           ) : (
             'Route'
           )}
@@ -202,6 +204,7 @@ export function RouteMapPanel({
           <Button
             variant="ghost"
             size="sm"
+            aria-label="איפוס"
             className="h-6 px-1.5 text-[11px] text-muted-foreground hover:text-destructive"
             onClick={onReset}
           >
@@ -298,7 +301,7 @@ export function RouteMapPanel({
         <div className="flex items-center gap-2.5 px-2 py-0.5 border-t text-[9px] text-muted-foreground shrink-0">
           {activeModes.map(mode => (
             <span key={mode} className="flex items-center gap-1">
-              <svg width="18" height="4">
+              <svg width="18" height="4" aria-hidden="true">
                 <line x1="0" y1="2" x2="18" y2="2"
                   stroke={MODE_COLORS[mode]}
                   strokeWidth="2"

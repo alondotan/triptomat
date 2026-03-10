@@ -26,8 +26,9 @@ export function TravelLegRow({ leg, onHighlight, onSetDuration }: TravelLegRowPr
   const Icon = modeInfo.icon;
 
   return (
-    <div
-      className="flex items-center gap-2 px-2 py-0.5 text-[11px] text-muted-foreground cursor-pointer hover:bg-muted/40 rounded transition-colors"
+    <button
+      type="button"
+      className="flex items-center gap-2 px-2 py-0.5 text-[11px] text-muted-foreground cursor-pointer hover:bg-muted/40 rounded transition-colors w-full bg-transparent border-0 font-inherit"
       onClick={onHighlight}
     >
       <div className="flex-1 h-px bg-border" />
@@ -36,15 +37,18 @@ export function TravelLegRow({ leg, onHighlight, onSetDuration }: TravelLegRowPr
           {leg.transportLabel}
         </span>
       ) : (
-        <Icon size={11} className={`shrink-0 ${modeInfo.className}`} />
+        <Icon size={11} className={`shrink-0 ${modeInfo.className}`} aria-hidden="true" />
       )}
       {leg.isUnknown ? (
-        <button
-          className="text-[10px] text-amber-500 hover:text-amber-700 font-medium underline underline-offset-2"
+        <span
+          role="button"
+          tabIndex={0}
+          className="text-[10px] text-amber-500 hover:text-amber-700 font-medium underline underline-offset-2 cursor-pointer"
           onClick={(e) => { e.stopPropagation(); onSetDuration?.(leg.fromStopId); }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); onSetDuration?.(leg.fromStopId); } }}
         >
           ? set duration
-        </button>
+        </span>
       ) : (
         <span className="font-semibold text-primary whitespace-nowrap">
           {formatDuration(leg.durationMin)}
@@ -54,6 +58,6 @@ export function TravelLegRow({ leg, onHighlight, onSetDuration }: TravelLegRowPr
         <span className="whitespace-nowrap">{formatDistance(leg.distanceKm)}</span>
       )}
       <div className="flex-1 h-px bg-border" />
-    </div>
+    </button>
   );
 }

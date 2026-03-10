@@ -211,7 +211,7 @@ function SortableActivityItem({
       </button>
 
       {activity.poi.imageUrl ? (
-        <img src={activity.poi.imageUrl} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+        <img src={activity.poi.imageUrl} alt="" width={32} height={32} className="w-8 h-8 rounded object-cover shrink-0" />
       ) : activity.poi.subCategory ? (
         <SubCategoryIcon type={activity.poi.subCategory} size={13} className="text-muted-foreground shrink-0" />
       ) : null}
@@ -239,6 +239,7 @@ function SortableActivityItem({
       {/* Remove */}
       <button
         onClick={() => onRemove(activity.id)}
+        aria-label="הסר"
         className="shrink-0 p-0.5 rounded text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
       >
         <X size={12} />
@@ -278,6 +279,8 @@ function TransportLocationInput({ value, onChange, placeholder, suggestions }: {
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder={placeholder}
+        aria-label={placeholder}
+        name={`transport-location-${placeholder}`}
         required
       />
       {open && filtered.length > 0 && (
@@ -417,7 +420,7 @@ function LockedNewSchedItem({
       <div className="flex items-center gap-2 px-2.5 py-2">
         <div className="shrink-0 w-[18px]" />
         {imageUrl ? (
-          <img src={imageUrl} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+          <img src={imageUrl} alt="" width={32} height={32} className="w-8 h-8 rounded object-cover shrink-0" />
         ) : category ? (
           <SubCategoryIcon type={category} size={13} className="text-muted-foreground shrink-0" />
         ) : null}
@@ -436,6 +439,7 @@ function LockedNewSchedItem({
         </div>
         <button
           onClick={() => onRemove(activityId)}
+          aria-label="הסר"
           className="shrink-0 p-0.5 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
         >
           <X size={11} />
@@ -489,7 +493,7 @@ function SortableNewSchedItem({
           <GripVertical size={13} />
         </button>
         {imageUrl ? (
-          <img src={imageUrl} alt="" className="w-8 h-8 rounded object-cover shrink-0" />
+          <img src={imageUrl} alt="" width={32} height={32} className="w-8 h-8 rounded object-cover shrink-0" />
         ) : category ? (
           <SubCategoryIcon type={category} size={13} className="text-muted-foreground shrink-0" />
         ) : null}
@@ -508,6 +512,7 @@ function SortableNewSchedItem({
         </div>
         <button
           onClick={() => onRemove(activityId)}
+          aria-label="הסר"
           className="shrink-0 p-0.5 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
         >
           <X size={11} />
@@ -599,6 +604,7 @@ function NewScheduleDropZone({
                       {cell.transportId && (
                         <button
                           onClick={() => onRemoveTransport(cell.transportId!)}
+                          aria-label="הסר"
                           className="shrink-0 p-0.5 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
                         >
                           <X size={11} />
