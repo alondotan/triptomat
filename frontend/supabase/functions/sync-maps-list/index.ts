@@ -276,6 +276,8 @@ serve(async (req) => {
       if (ep.imageUrl) imageByName.set(ep.name.toLowerCase().trim(), ep.imageUrl);
     }
 
+    let linkedEntities: Array<{ entity_type: string; entity_id: string; description: string }> = [];
+
     if (matchingRecs.length > 0) {
       const poiRows = matchingRecs.map((rec) => {
         const subCat = rec.category in TYPE_TO_CATEGORY ? rec.category : "landmark";
@@ -296,15 +298,22 @@ serve(async (req) => {
           details: {
             from_map_list: true,
             source_url: list.url,
-            source_title: list.name,
+            source_title: listName || list.name,
           },
           image_url: imageByName.get(rec.name.toLowerCase().trim()) || null,
         };
       });
 
-      const { error: poiError } = await supabase.from("points_of_interest").insert(poiRows);
+      const { data: insertedPois, error: poiError } = await supabase.from("points_of_interest").insert(poiRows).select("id, name");
       if (poiError) console.error("[sync] POI insert error:", poiError);
-      else console.log(`[sync] Inserted ${poiRows.length} POIs`);
+      else {
+        console.log(`[sync] Inserted ${insertedPois?.length ?? 0} POIs`);
+        linkedEntities = (insertedPois || []).map((p: any) => ({
+          entity_type: "poi",
+          entity_id: p.id,
+          description: p.name,
+        }));
+      }
     }
 
     // ── Step 7: record synced items + update list metadata ──
@@ -326,9 +335,9 @@ serve(async (req) => {
         source_url: list.url,
         source_title: listName || list.name,
         source_image: null,
-        analysis: { sites_hierarchy: matchingHierarchy, recommendations: [], map_list_id: list_id },
+        analysis: { sites_hierarchy: matchingHierarchy, recommendations: matchingRecs, map_list_id: list_id },
         status: "linked",
-        linked_entities: [],
+        linked_entities: linkedEntities,
       }]);
 
       // Sync hierarchy into trip_locations table
