@@ -13,12 +13,16 @@ Optional env vars:
 """
 
 import json
+import logging
 import os
 import time
 import traceback
 import uuid
 from decimal import Decimal
 from urllib.parse import urlparse
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 import boto3
 from botocore.exceptions import ClientError
@@ -28,6 +32,7 @@ from core.schemas import GatewayRequest
 from core.url_helpers import is_google_maps_url, is_video_url
 from core.scrapers import extract_text_from_url, get_final_maps_url, get_web_metadata, MapsService
 from core.geocoding import extract_coords_from_url
+from core.pipeline_events import report_event
 from core.telemetry import (
     init_telemetry, get_tracer, get_meter,
     safe_span, record_counter, time_ms,
@@ -135,6 +140,7 @@ def lambda_handler(event, context):
                 url = str(req.url) if req.url else None
                 text = req.text
                 overwrite = req.overwrite
+                logger.info("Request: url=%s text=%s overwrite=%s", url[:200] if url else None, bool(text), overwrite)
                 webhook_token = req.webhook_token or ""
 
                 # Rate limiting — prefer webhook_token, fall back to source IP
@@ -179,6 +185,7 @@ def lambda_handler(event, context):
                             })
                         )
 
+                    report_event(job_id, "gateway", "completed", source_url=synthetic_url, source_type="text", title=title, metadata={"queue": "analysis"})
                     record_counter(requests_counter, attributes={"source_type": "text", "cache_hit": "false"})
                     return _response(202, {
                         "status": "processing",
@@ -211,6 +218,7 @@ def lambda_handler(event, context):
 
                     if cache_hit:
                         source_type = "cached"
+                        logger.info("Cache hit for %s", url[:200])
                         record_counter(requests_counter, attributes={"source_type": source_type, "cache_hit": "true"})
                         return _response(200, {
                             "status": "completed",
@@ -220,6 +228,8 @@ def lambda_handler(event, context):
                         })
 
                 job_id = str(uuid.uuid4())
+
+                logger.info("Classifying URL: video=%s maps=%s", is_video_url(url), is_google_maps_url(url))
 
                 if is_video_url(url):
                     source_type = "video"
@@ -293,12 +303,20 @@ def lambda_handler(event, context):
                         )
 
                 # Mark as processing in DynamoDB
+                logger.info("Job %s dispatched: type=%s url=%s", job_id, source_type, url[:200])
                 table.put_item(Item={
                     "url": url,
                     "job_id": job_id,
                     "status": "processing"
                 })
 
+                report_event(
+                    job_id, "gateway", "completed",
+                    source_url=url, source_type=source_type,
+                    title=source_metadata.get("title", ""),
+                    image=source_metadata.get("image", ""),
+                    metadata={"queue": "download" if source_type == "video" else "analysis"},
+                )
                 record_counter(requests_counter, attributes={"source_type": source_type, "cache_hit": "false"})
 
                 return _response(202, {
@@ -309,9 +327,10 @@ def lambda_handler(event, context):
                 })
 
             except json.JSONDecodeError:
+                logger.warning("Invalid JSON in request body")
                 return _response(400, {"error": "Invalid JSON in request body"})
             except Exception as e:
-                traceback.print_exc()
+                logger.error("Gateway error: %s", e, exc_info=True)
                 if root_span:
                     record_span_error(root_span, e)
                 return _response(500, {"error": str(e)})

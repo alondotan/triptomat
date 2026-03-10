@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveTrip } from '@/context/ActiveTripContext';
@@ -27,8 +27,11 @@ export default function ShareTargetPage() {
 
   const [status, setStatus] = useState<Status>('loading');
   const [message, setMessage] = useState('');
+  const submittedRef = useRef(false);
 
   useEffect(() => {
+    if (submittedRef.current) return;
+
     const urlParam = searchParams.get('url') || '';
     const textParam = searchParams.get('text') || '';
     const sharedUrl = urlParam || extractUrl(textParam);
@@ -38,17 +41,21 @@ export default function ShareTargetPage() {
       return;
     }
 
+    submittedRef.current = true;
+    console.log('[ShareTarget] submitting:', sharedUrl, 'tripId:', tripId);
+
     async function submit() {
-      const { data: tokenData } = await supabase.from('webhook_tokens').select('token').single();
-      const webhookToken = tokenData?.token;
-
-      if (!webhookToken) {
-        setStatus('error');
-        setMessage('Could not load account token.');
-        return;
-      }
-
       try {
+        const { data: tokenData, error: tokenError } = await supabase.from('webhook_tokens').select('token').single();
+        const webhookToken = tokenData?.token;
+
+        if (!webhookToken) {
+          console.error('[ShareTarget] no webhook token:', tokenError);
+          setStatus('error');
+          setMessage('Could not load account token. Try opening the app first.');
+          return;
+        }
+
         // For Google Maps URLs: try the saved-list flow first
         if (isMapsUrl(sharedUrl) && tripId) {
           const listRes = await fetch(`${SUPABASE_URL}/functions/v1/sync-maps-list`, {
@@ -83,23 +90,41 @@ export default function ShareTargetPage() {
           body: JSON.stringify({ url: sharedUrl, webhook_token: webhookToken }),
         });
 
+        const data = await res.json();
+
         if (res.status === 200) {
           setStatus('cached');
         } else if (res.status === 202) {
+          // Insert placeholder so Recommendations page shows it immediately
+          const jobId = data.job_id;
+          const meta = data.source_metadata || {};
+          if (jobId && tripId) {
+            await supabase.from('source_recommendations').insert([{
+              recommendation_id: jobId,
+              trip_id: tripId,
+              source_url: sharedUrl,
+              source_title: meta.title || null,
+              source_image: meta.image || null,
+              status: 'processing',
+              analysis: {},
+              linked_entities: [],
+            }]);
+          }
           setStatus('success');
         } else {
-          const data = await res.json();
           setStatus('error');
           setMessage(data.error || 'Something went wrong.');
         }
-      } catch {
+      } catch (err) {
+        console.error('[ShareTarget] submit failed:', err);
         setStatus('error');
         setMessage('Failed to reach the server.');
       }
     }
 
     submit();
-  }, [searchParams, tripId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">

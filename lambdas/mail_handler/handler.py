@@ -25,6 +25,7 @@ from email.policy import default
 from email.utils import parseaddr
 
 from core.config import load_config
+from core.pipeline_events import report_event
 from core.reconciliation import reconcile
 from core.telemetry import (
     init_telemetry, get_tracer, get_meter,
@@ -147,6 +148,13 @@ def lambda_handler(event, context):
                     record_counter(emails_counter, attributes={"status": "skipped"})
                     return {'statusCode': 200, 'body': json.dumps('No user found, skipped')}
 
+                mail_job_id = str(uuid.uuid4())
+                report_event(
+                    mail_job_id, "mail_handler", "started",
+                    source_url=f"s3://{bucket}/{key}", source_type="email",
+                    title=subject[:120],
+                )
+
                 # ── AI analysis ─────────────────────────────────────────────
                 clean_html = clean_html_for_ai(html_content)
 
@@ -199,10 +207,23 @@ def lambda_handler(event, context):
                                         pass
                                 print(f"Webhook delivery failed: {wh_exc}")
 
+                if travel_data:
+                    report_event(mail_job_id, "mail_handler", "completed", metadata={
+                        "category": travel_data.get("metadata", {}).get("category", ""),
+                        "sub_category": travel_data.get("metadata", {}).get("sub_category", ""),
+                        "action": travel_data.get("metadata", {}).get("action", ""),
+                        "order_number": travel_data.get("metadata", {}).get("order_number", ""),
+                        "subject": subject[:120],
+                    })
+                else:
+                    report_event(mail_job_id, "mail_handler", "completed", metadata={"result": "no_travel_data"})
+
                 record_counter(emails_counter, attributes={"status": "success"})
                 return {'statusCode': 200, 'body': json.dumps('Processed and Sent')}
 
             except Exception as e:
+                _err_job_id = mail_job_id if 'mail_job_id' in locals() else key[:36]
+                report_event(_err_job_id, "mail_handler", "failed", metadata={"error": str(e)[:300]})
                 print(f"Error: {str(e)}")
                 record_counter(emails_counter, attributes={"status": "failure"})
                 if root_span:

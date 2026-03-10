@@ -19,6 +19,7 @@ import yt_dlp
 from pydantic import ValidationError
 from youtube_transcript_api import YouTubeTranscriptApi
 
+from core.pipeline_events import report_event
 from core.schemas import DownloadMessage
 from core.telemetry import (
     init_telemetry, get_tracer, get_meter,
@@ -130,6 +131,7 @@ def lambda_handler(event, context):
                 "downloader.url": url[:200],
             }) as root_span:
                 try:
+                    report_event(job_id, "downloader", "started", source_url=url, source_type="video")
                     print(f"Downloading video for job {job_id}: {url}")
 
                     # Load cookies if available
@@ -198,6 +200,7 @@ def lambda_handler(event, context):
 
                     # Clean up
                     os.remove(video_path)
+                    report_event(job_id, "downloader", "completed", title=source_metadata.get("title", ""), image=source_metadata.get("image", ""), metadata={"s3_key": s3_key, "file_size_mb": round(file_size / 1048576, 1)})
                     print(f"Job {job_id}: video sent to analysis queue")
                     record_counter(downloads_counter, attributes={"status": "success"})
 
@@ -243,10 +246,12 @@ def lambda_handler(event, context):
                             }),
                         )
 
+                    report_event(job_id, "downloader", "completed", title=source_metadata.get("title", ""), image=source_metadata.get("image", ""), metadata={"fallback": "transcript", "has_transcript": bool(transcript)})
                     print(f"Job {job_id}: sent to analysis queue via text fallback (transcript: {bool(transcript)})")
                     record_counter(downloads_counter, attributes={"status": "text_fallback"})
 
                 except Exception as e:
+                    report_event(job_id, "downloader", "failed", metadata={"error": str(e)[:300]})
                     record_counter(downloads_counter, attributes={"status": "failure"})
                     if root_span:
                         record_span_error(root_span, e)

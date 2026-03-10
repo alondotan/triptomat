@@ -28,6 +28,7 @@ from core.geocoding import enrich_analysis_data, extract_coords_from_url
 from core.prompts import build_main_prompt
 from core.scrapers import MapsService
 from core.schemas import AnalysisMessage
+from core.pipeline_events import report_event
 from core.reconciliation import reconcile
 from core.webhook import send_to_webhook, send_failure_to_webhook
 from core.telemetry import (
@@ -109,6 +110,7 @@ def lambda_handler(event, context):
                 "worker.source_type": source_type,
             }) as root_span:
                 print(f"Analyzing job {job_id} ({source_type}): {url}")
+                report_event(job_id, "worker", "started", source_url=url, source_type=source_type, title=source_metadata.get("title", ""), image=source_metadata.get("image", ""))
 
                 try:
                     response_json = None
@@ -173,6 +175,15 @@ def lambda_handler(event, context):
                         record_histogram(analysis_duration_hist, ai_duration, {"source_type": source_type})
 
                     if response_json:
+                        rec_count = len(response_json.get("recommendations", []))
+                        hierarchy = response_json.get("sites_hierarchy", [])
+                        report_event(job_id, "worker", "started", metadata={
+                            "sub_stage": "ai_done",
+                            "recommendations_count": rec_count,
+                            "sites_hierarchy": hierarchy,
+                            "ai_duration_ms": round(ai_duration),
+                        })
+
                         # ── Geocoding ────────────────────────────────────────
                         with safe_span(tracer, "worker.geocoding") as geo_span:
                             enriched_data = enrich_analysis_data(
@@ -241,6 +252,16 @@ def lambda_handler(event, context):
                                 "source_metadata": source_metadata,
                                 "created_at": datetime.now(timezone.utc).isoformat(),
                             })
+                        # Report final enriched results for monitoring
+                        final_recs = enriched_data.get("recommendations", [])
+                        report_event(job_id, "worker", "completed", metadata={
+                            "recommendations_count": len(final_recs),
+                            "recommendations": [
+                                {"name": r.get("name", ""), "category": r.get("category", ""), "site": r.get("site", "")}
+                                for r in final_recs[:20]
+                            ],
+                            "contacts_count": len(enriched_data.get("contacts", [])),
+                        })
                         print(f"Job {job_id}: completed and cached")
                         record_counter(analyses_counter, attributes={"source_type": source_type, "status": "success"})
 
@@ -261,6 +282,7 @@ def lambda_handler(event, context):
                         record_counter(analyses_counter, attributes={"source_type": source_type, "status": "empty"})
 
                 except Exception as e:
+                    report_event(job_id, "worker", "failed", metadata={"error": str(e)[:300]})
                     print(f"Job {job_id} failed: {e}")
                     record_counter(analyses_counter, attributes={"source_type": source_type, "status": "failure"})
                     if root_span:
