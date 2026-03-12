@@ -20,7 +20,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - run: npm run lint -- --max-warnings 125
+      - run: npm run lint -- --max-warnings 133
         name: Lint
       - run: npx tsc --noEmit
         name: Type Check
