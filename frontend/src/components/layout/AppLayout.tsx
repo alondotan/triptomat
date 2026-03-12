@@ -22,7 +22,8 @@ export function AppLayout({ children, hideHero = false }: AppLayoutProps) {
   const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSnappingRef = useRef(false);
   const { activeTripId } = useTripList();
-  const hasHero = !hideHero && !!useDestinationImageUrl();
+  const destinationImageUrl = useDestinationImageUrl();
+  const hasHero = !hideHero && !!destinationImageUrl;
 
   // Reset when trip changes
   const isNewTrip = activeTripId !== persistedTripId;
