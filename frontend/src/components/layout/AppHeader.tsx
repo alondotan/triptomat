@@ -82,7 +82,12 @@ const COMMON_CURRENCIES = [
   { code: 'THB', label: '฿ THB — Thai Baht' },
 ];
 
-export function AppHeader() {
+interface AppHeaderProps {
+  heroScrolledPast?: boolean;
+  hasHero?: boolean;
+}
+
+export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHeaderProps) {
   const location = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -142,9 +147,12 @@ export function AppHeader() {
             </Button>
           </div>
 
-          {/* Center: Trip name */}
+          {/* Center: Trip name (fades in when hero scrolls past) */}
           <div className="flex items-center justify-center min-w-0">
-            <span className="font-bold text-base truncate">
+            <span className={cn(
+              'font-bold text-base truncate transition-opacity duration-300',
+              hasHero && !heroScrolledPast ? 'opacity-0' : 'opacity-100'
+            )}>
               {activeTrip?.name || 'Triptomat'}
             </span>
           </div>
@@ -170,23 +178,11 @@ export function AppHeader() {
 
         {/* ── DESKTOP HEADER ── */}
         <div className="hidden md:flex items-center gap-3">
-          <RouterNavLink to="/" className="flex items-center gap-2" aria-label="דף הבית">
-            <div className="p-2 rounded-lg bg-hero-gradient text-primary-foreground">
-              <Compass size={20} />
-            </div>
-          </RouterNavLink>
-
           {activeTrip ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="gap-1 font-bold text-base sm:text-lg px-1 sm:px-2 max-w-[180px] sm:max-w-none truncate">
-                  {activeTrip.name}
-                  {activeTrip.status !== 'detailed_planning' && (
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-normal">
-                      {activeTrip.status === 'research' ? 'מחקר' : 'תכנון'}
-                    </Badge>
-                  )}
-                  <ChevronDown size={16} className="text-muted-foreground" />
+                <Button variant="ghost" size="icon" className="rounded-lg p-1 h-9 w-9 shrink-0" aria-label="תפריט טיול">
+                  <img src="/icon.png" alt="Triptomat" className="h-7 w-7 rounded" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56">
@@ -231,9 +227,21 @@ export function AppHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <span className="text-muted-foreground text-sm">No trip selected</span>
+            <RouterNavLink to="/" className="flex items-center" aria-label="דף הבית">
+              <img src="/icon.png" alt="Triptomat" className="h-7 w-7 rounded" />
+            </RouterNavLink>
           )}
         </div>
+
+        {/* Trip name — fades in when hero is scrolled past */}
+        {activeTrip && (
+          <span className={cn(
+            'hidden md:block font-bold text-base truncate max-w-[200px] transition-all duration-300',
+            heroScrolledPast ? 'opacity-100' : 'opacity-0'
+          )}>
+            {activeTrip.name}
+          </span>
+        )}
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
