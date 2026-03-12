@@ -193,6 +193,15 @@
   color: #f2f2f2;
   @apply rounded-lg shadow-lg;
 }
+.attraction-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+  overflow: hidden;
+  @apply rounded-xl;
+}
+.attraction-popup .leaflet-popup-content {
+  margin: 0;
+  width: 280px !important;
+}
 .leaflet-control-zoom {
   @apply border-none shadow-md rounded-lg overflow-hidden;
 }

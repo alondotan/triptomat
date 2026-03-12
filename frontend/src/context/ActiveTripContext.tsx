@@ -86,6 +86,12 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
   const setActiveTrip = useCallback((id: string) => {
     dispatch({ type: 'RESET_TRIP_DATA' });
     setActiveTripId(id);
+    // Track last-opened timestamp for "recent trips" ordering
+    try {
+      const stored = JSON.parse(localStorage.getItem('trip_last_opened') || '{}');
+      stored[id] = Date.now();
+      localStorage.setItem('trip_last_opened', JSON.stringify(stored));
+    } catch { /* ignore */ }
   }, [setActiveTripId]);
 
   const updateCurrentTrip = useCallback(async (updates: Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>) => {

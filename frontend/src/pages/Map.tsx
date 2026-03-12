@@ -4,6 +4,9 @@ import L from 'leaflet';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
+import { useCountryMapData } from '@/hooks/useCountryMapData';
+import { BoundaryLayer } from '@/components/map/BoundaryLayer';
+import { MapBreadcrumb } from '@/components/map/MapBreadcrumb';
 import { AppLayout } from '@/components/layout';
 import 'leaflet/dist/leaflet.css';
 
@@ -46,6 +49,8 @@ const LEGEND_ITEMS = [
   { color: POI_COLORS.attraction, label: 'Attraction' },
   { color: POI_COLORS.service, label: 'Service' },
   { color: '#1d4ed8', label: 'Transport stop', square: true },
+  { color: '#3498db', label: 'Region boundary', outline: true },
+  { color: '#e94560', label: 'Top attraction', star: true },
 ];
 
 function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
@@ -64,8 +69,11 @@ const MapPage = () => {
   const { pois } = usePOI();
   const { transportation } = useTransport();
 
+  const countries = activeTrip?.countries || [];
+  const mapData = useCountryMapData(countries);
+
   if (!activeTrip) {
-    return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
+    return <AppLayout hideHero><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
   }
 
   // ── POI markers ──────────────────────────────────────────────
@@ -100,27 +108,14 @@ const MapPage = () => {
       const label = `${t.category.charAt(0).toUpperCase() + t.category.slice(1)}: ${route}`;
 
       if (fromCoords?.lat && fromCoords?.lng) {
-        transportStops.push({
-          position: [fromCoords.lat, fromCoords.lng],
-          label,
-          route,
-          color,
-        });
+        transportStops.push({ position: [fromCoords.lat, fromCoords.lng], label, route, color });
       }
       if (toCoords?.lat && toCoords?.lng) {
-        transportStops.push({
-          position: [toCoords.lat, toCoords.lng],
-          label,
-          route,
-          color,
-        });
+        transportStops.push({ position: [toCoords.lat, toCoords.lng], label, route, color });
       }
       if (fromCoords?.lat && fromCoords?.lng && toCoords?.lat && toCoords?.lng) {
         routeLines.push({
-          positions: [
-            [fromCoords.lat, fromCoords.lng],
-            [toCoords.lat, toCoords.lng],
-          ],
+          positions: [[fromCoords.lat, fromCoords.lng], [toCoords.lat, toCoords.lng]],
           color,
         });
       }
@@ -132,11 +127,12 @@ const MapPage = () => {
     ...transportStops.map(s => s.position),
   ];
 
+  const hasBoundaryNav = !!mapData.currentNode;
   const defaultCenter: [number, number] = allCoordinates.length > 0 ? allCoordinates[0] : [48.8566, 2.3522];
   const totalOnMap = poiMarkers.length + transportStops.length;
 
   return (
-    <AppLayout>
+    <AppLayout hideHero>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Trip Map</h2>
@@ -149,7 +145,19 @@ const MapPage = () => {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            {allCoordinates.length > 0 && <FitBounds coordinates={allCoordinates} />}
+
+            {/* Fit bounds: defer to BoundaryLayer when navigating, otherwise use POI coords */}
+            {!hasBoundaryNav && allCoordinates.length > 0 && <FitBounds coordinates={allCoordinates} />}
+
+            {/* Boundary navigation layer */}
+            <BoundaryLayer
+              currentNode={mapData.currentNode}
+              currentBoundary={mapData.currentBoundary}
+              childRegions={mapData.childRegions}
+              topAttractions={mapData.topAttractions}
+              typeIconMap={mapData.typeIconMap}
+              navigateTo={mapData.navigateTo}
+            />
 
             {/* Route lines */}
             {routeLines.map((line, i) => (
@@ -189,26 +197,40 @@ const MapPage = () => {
             ))}
           </MapContainer>
 
+          {/* Breadcrumb navigation */}
+          {hasBoundaryNav && (
+            <MapBreadcrumb
+              breadcrumbs={mapData.breadcrumbs}
+              onJumpTo={mapData.jumpTo}
+              onBack={mapData.goBack}
+              canGoBack={mapData.canGoBack}
+            />
+          )}
+
           {/* Legend */}
-          <div className="absolute bottom-4 left-4 z-[1000] bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow text-xs space-y-1.5">
+          <div className="absolute bottom-4 right-4 z-[1000] bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow text-xs space-y-1.5">
             {LEGEND_ITEMS.map(item => (
               <div key={item.label} className="flex items-center gap-2">
                 <div style={{
-                  background: item.color,
-                  width: item.square ? 12 : 14,
-                  height: item.square ? 12 : 14,
-                  borderRadius: item.square ? 3 : '50%',
-                  border: '2px solid white',
+                  background: (item as any).outline ? 'transparent' : (item as any).star ? '#e94560' : item.color,
+                  width: (item as any).star ? 16 : item.square ? 12 : 14,
+                  height: (item as any).star ? 16 : item.square ? 12 : 14,
+                  borderRadius: item.square ? 3 : (item as any).outline ? 3 : '50%',
+                  border: (item as any).outline ? `2px solid ${item.color}` : '2px solid white',
                   boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
                   flexShrink: 0,
-                }} />
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'white', fontSize: 10,
+                }}>
+                  {(item as any).star ? '★' : ''}
+                </div>
                 <span className="text-gray-700">{item.label}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {totalOnMap === 0 && (
+        {totalOnMap === 0 && !hasBoundaryNav && (
           <p className="text-sm text-muted-foreground text-center">
             No items with coordinates found. Add location data to your POIs or transportation.
           </p>

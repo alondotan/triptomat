@@ -1,6 +1,56 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import type { SiteNode } from '@/hooks/useCountrySites';
+import { createOrMergePOI } from './poiService';
+import type { PointOfInterest } from '@/types/trip';
+
+// ── Per-country JSON types ──────────────────────
+
+export interface CountryLocationNode {
+  id: string;
+  type: string;
+  name: string;
+  name_he?: string;
+  coordinates?: { lat: number; lng: number };
+  population?: number;
+  is_capital?: boolean;
+  topAttractions?: string[];
+  children?: CountryLocationNode[];
+}
+
+export interface CountryPlace {
+  id: string;
+  subCategory: string;
+  name: string;
+  description?: string;
+  maps_id?: string;
+  address?: string;
+  coordinates?: { lat: number; lng: number };
+  rating?: number;
+  user_ratings_total?: number;
+  photo_url?: string;
+  locationId?: string;
+  locationPath?: string[];
+}
+
+export interface CountryData {
+  id: string;
+  type: string;
+  data: {
+    country_code: string;
+    site_type: string;
+    name: string;
+    name_he?: string;
+    currency?: string;
+    phone_prefix?: string;
+    timezone?: string;
+  };
+  topAttractions?: string[];
+  locations: CountryLocationNode[];
+  places?: CountryPlace[];
+  geoData?: unknown;
+  boundaries?: unknown;
+}
 
 export interface TripLocation {
   id: string;
@@ -8,6 +58,7 @@ export interface TripLocation {
   parentId: string | null;
   name: string;
   siteType: string;
+  externalId: string | null;
   sortOrder: number;
   source: string;
   createdAt: string;
@@ -37,6 +88,7 @@ export function buildLocationTree(locations: TripLocation[]): SiteNode[] {
       _parentId: loc.parentId,
       site: loc.name,
       site_type: loc.siteType,
+      external_id: loc.externalId || undefined,
       sub_sites: [],
     });
   }
@@ -75,7 +127,21 @@ export async function addTripLocation(
   siteType: string,
   parentId?: string | null,
   source: string = 'manual',
+  externalId?: string,
 ): Promise<TripLocation> {
+  // Auto-generate external_id from parent's external_id + slugified name
+  let resolvedExternalId = externalId;
+  if (!resolvedExternalId && parentId) {
+    const { data: parentRow } = await supabase
+      .from('trip_locations')
+      .select('external_id')
+      .eq('id', parentId)
+      .single();
+    const parentExtId = parentRow?.external_id as string | null;
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    resolvedExternalId = parentExtId ? `${parentExtId}/${slug}` : slug;
+  }
+
   const { data, error } = await supabase
     .from('trip_locations')
     .insert({
@@ -84,6 +150,7 @@ export async function addTripLocation(
       site_type: siteType,
       parent_id: parentId || null,
       source,
+      external_id: resolvedExternalId || null,
     })
     .select()
     .single();
@@ -99,6 +166,52 @@ export async function deleteTripLocation(id: string): Promise<void> {
 
 // ── Seeding ─────────────────────────────────────
 
+// Cache per-country data to avoid re-fetching
+const countryDataCache = new Map<string, CountryData | null>();
+
+/** Try to load a per-country JSON file; returns null if not found */
+export async function loadCountryData(countryName: string): Promise<CountryData | null> {
+  if (countryDataCache.has(countryName)) return countryDataCache.get(countryName)!;
+
+  try {
+    const res = await fetch(`https://triptomat-media.s3.eu-central-1.amazonaws.com/geodata/countries/${encodeURIComponent(countryName)}.json`);
+    if (!res.ok) {
+      countryDataCache.set(countryName, null);
+      return null;
+    }
+    const data: CountryData = await res.json();
+    countryDataCache.set(countryName, data);
+    return data;
+  } catch {
+    countryDataCache.set(countryName, null);
+    return null;
+  }
+}
+
+/** Convert per-country location tree to SiteNode format for the existing RPC */
+function countryLocationToSiteNode(node: CountryLocationNode): SiteNode {
+  return {
+    site: node.name,
+    site_type: node.type,
+    external_id: node.id,
+    sub_sites: node.children && node.children.length > 0
+      ? node.children.map(countryLocationToSiteNode)
+      : undefined,
+  };
+}
+
+/** Build a flat map of locationId → node name from the country locations tree */
+function buildLocationIdMap(nodes: CountryLocationNode[]): Map<string, string> {
+  const map = new Map<string, string>();
+  function walk(node: CountryLocationNode) {
+    map.set(node.id, node.name);
+    for (const c of (node.children || [])) walk(c);
+  }
+  for (const n of nodes) walk(n);
+  return map;
+}
+
+// Fallback: legacy country-sites.json
 let countrySitesCache: { world_hierarchy: SiteNode[] } | null = null;
 
 async function loadCountrySites(): Promise<{ world_hierarchy: SiteNode[] }> {
@@ -122,7 +235,6 @@ function findCountryNode(nodes: SiteNode[], countryName: string): SiteNode | nul
     if (node.site_type === 'country') {
       const nodeLower = node.site.toLowerCase();
       if (nodeLower === lower) return node;
-      // Fallback: partial match (e.g. "United States" matches "United States of America")
       if (!partialMatch && (nodeLower.startsWith(lower) || lower.startsWith(nodeLower))) {
         partialMatch = node;
       }
@@ -137,16 +249,41 @@ function findCountryNode(nodes: SiteNode[], countryName: string): SiteNode | nul
 
 export async function seedTripLocations(tripId: string, countries: string[]): Promise<void> {
   console.log('[seedTripLocations] Starting seed for trip', tripId, 'countries:', countries);
-  const data = await loadCountrySites();
   const countryNodes: SiteNode[] = [];
+  const placesToSeed: { countryName: string; places: CountryPlace[]; locationIdMap: Map<string, string> }[] = [];
 
   for (const country of countries) {
-    const node = findCountryNode(data.world_hierarchy, country);
-    if (node) {
-      countryNodes.push(node);
-      console.log(`[seedTripLocations] Found country node: ${node.site} (${node.sub_sites?.length ?? 0} sub-sites)`);
+    // Try per-country file first
+    const countryData = await loadCountryData(country);
+    if (countryData) {
+      // Convert locations → SiteNode, wrapped in a country-level node
+      const subSites = countryData.locations.map(countryLocationToSiteNode);
+      const countryNode: SiteNode = {
+        site: countryData.data.name,
+        site_type: 'country',
+        sub_sites: subSites.length > 0 ? subSites : undefined,
+      };
+      countryNodes.push(countryNode);
+      console.log(`[seedTripLocations] Loaded per-country file: ${country} (${subSites.length} regions, ${countryData.places?.length ?? 0} places)`);
+
+      // Collect places to seed as POIs
+      if (countryData.places && countryData.places.length > 0) {
+        placesToSeed.push({
+          countryName: countryData.data.name,
+          places: countryData.places,
+          locationIdMap: buildLocationIdMap(countryData.locations),
+        });
+      }
     } else {
-      console.warn(`[seedTripLocations] Country not found in hierarchy: "${country}"`);
+      // Fallback to legacy country-sites.json
+      const legacy = await loadCountrySites();
+      const node = findCountryNode(legacy.world_hierarchy, country);
+      if (node) {
+        countryNodes.push(node);
+        console.log(`[seedTripLocations] Fallback to country-sites.json: ${node.site}`);
+      } else {
+        console.warn(`[seedTripLocations] Country not found: "${country}"`);
+      }
     }
   }
 
@@ -155,7 +292,7 @@ export async function seedTripLocations(tripId: string, countries: string[]): Pr
     return;
   }
 
-  // Use the DB function for efficient batch insert in a single transaction
+  // Seed locations via the existing RPC
   const { error } = await supabase.rpc('seed_trip_locations', {
     p_trip_id: tripId,
     p_locations: countryNodes as unknown as Json,
@@ -166,6 +303,55 @@ export async function seedTripLocations(tripId: string, countries: string[]): Pr
     throw error;
   }
   console.log('[seedTripLocations] Seed completed successfully');
+
+  // Seed POIs from places (fire-and-forget per place, don't block trip creation)
+  if (placesToSeed.length > 0) {
+    seedTripPOIs(tripId, placesToSeed).catch(e =>
+      console.error('[seedTripLocations] POI seeding error:', e)
+    );
+  }
+}
+
+/** Create POIs from per-country places data */
+async function seedTripPOIs(
+  tripId: string,
+  countrySets: { countryName: string; places: CountryPlace[]; locationIdMap: Map<string, string> }[],
+): Promise<void> {
+  console.log('[seedTripPOIs] Starting POI seed for', countrySets.reduce((s, c) => s + c.places.length, 0), 'places');
+
+  for (const { countryName, places, locationIdMap } of countrySets) {
+    for (const place of places) {
+      // Resolve city name from locationId
+      const cityName = place.locationId ? locationIdMap.get(place.locationId) : undefined;
+
+      const poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'> = {
+        tripId,
+        category: 'attraction',
+        subCategory: place.subCategory || undefined,
+        name: place.name,
+        status: 'suggested',
+        location: {
+          country: countryName,
+          city: cityName,
+          address: place.address || undefined,
+          coordinates: place.coordinates,
+        },
+        sourceRefs: { email_ids: [], recommendation_ids: [] },
+        details: {},
+        isCancelled: false,
+        isPaid: false,
+        imageUrl: place.photo_url || undefined,
+      };
+
+      try {
+        await createOrMergePOI(poi);
+      } catch (e) {
+        console.warn(`[seedTripPOIs] Failed to create POI "${place.name}":`, e);
+      }
+    }
+  }
+
+  console.log('[seedTripPOIs] POI seed completed');
 }
 
 // ── Lookup helpers ──────────────────────────────
@@ -300,6 +486,7 @@ function mapTripLocation(row: Record<string, unknown>): TripLocation {
     parentId: (row.parent_id as string) || null,
     name: row.name as string,
     siteType: row.site_type as string,
+    externalId: (row.external_id as string) || null,
     sortOrder: row.sort_order as number,
     source: row.source as string,
     createdAt: row.created_at as string,

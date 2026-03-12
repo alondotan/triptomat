@@ -25,6 +25,7 @@ const AccommodationPage = lazy(() => import("./pages/Accommodation"));
 const DndTestPage = lazy(() => import("./pages/DndTest"));
 const ShareTargetPage = lazy(() => import("./pages/ShareTarget"));
 const ContactsPage = lazy(() => import("./pages/Contacts"));
+const TripsPage = lazy(() => import("./pages/Trips"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin pages (lazy-loaded)
@@ -84,6 +85,7 @@ const App = () => (
                       <Route path="/inbox" element={<ErrorBoundary><InboxPage /></ErrorBoundary>} />
                       <Route path="/accommodation" element={<ErrorBoundary><AccommodationPage /></ErrorBoundary>} />
                       <Route path="/contacts" element={<ErrorBoundary><ContactsPage /></ErrorBoundary>} />
+                      <Route path="/trips" element={<ErrorBoundary><TripsPage /></ErrorBoundary>} />
                       <Route path="/share-target" element={<ErrorBoundary><ShareTargetPage /></ErrorBoundary>} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>

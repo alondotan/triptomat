@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { MapPin, Filter, LayoutGrid, Search, Merge, ChevronLeft, ChevronDown, ChevronRight, ArrowUpDown } from 'lucide-react';
+import { MapPin, LayoutGrid, Search, Merge, ChevronLeft, ChevronDown, ChevronUp, ArrowUpDown, SlidersHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -292,69 +292,69 @@ const POIsPage = () => {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <Input
-            placeholder="חפש לפי שם, מיקום, קטגוריה..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="pr-8 h-9 text-sm"
-          />
-        </div>
-
-        {/* Filter & Group Controls */}
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setFiltersOpen(prev => !prev)}
-              className="gap-1.5 text-xs"
-            >
-              <Filter size={14} />
-              סינון
-              {(!statusFilters.has('all') || !categoryFilters.has('all')) && (
-                <span className="bg-primary text-primary-foreground rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
-                  {(statusFilters.has('all') ? 0 : statusFilters.size) + (categoryFilters.has('all') ? 0 : categoryFilters.size)}
+        {/* Collapsible Filter/Sort/Search Panel */}
+        <div className="border rounded-lg overflow-hidden">
+          <button
+            onClick={() => setFiltersOpen(prev => !prev)}
+            className="flex items-center justify-between w-full px-3 py-2 bg-muted/30 hover:bg-muted/50 transition-colors"
+          >
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <SlidersHorizontal size={16} />
+              <span>סינון, מיון וחיפוש</span>
+              {(!statusFilters.has('all') || !categoryFilters.has('all') || searchQuery) && (
+                <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-[10px]">
+                  {(statusFilters.has('all') ? 0 : statusFilters.size) + (categoryFilters.has('all') ? 0 : categoryFilters.size) + (searchQuery ? 1 : 0)}
                 </span>
               )}
-              {filtersOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </Button>
-
-            <div className="flex items-center gap-3 mr-auto">
-              <div className="flex items-center gap-1">
-                <LayoutGrid size={14} className="text-muted-foreground" />
-                <Select value={groupBy} onValueChange={v => setGroupBy(v as GroupBy)}>
-                  <SelectTrigger className="h-8 w-[140px] text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="category">לפי קטגוריה</SelectItem>
-                    <SelectItem value="location">לפי מיקום</SelectItem>
-                    <SelectItem value="status">לפי סטטוס</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-1">
-                <ArrowUpDown size={14} className="text-muted-foreground" />
-                <Select value={sortBy} onValueChange={v => setSortBy(v as SortBy)}>
-                  <SelectTrigger className="h-8 w-[130px] text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name">לפי שם</SelectItem>
-                    <SelectItem value="updated_at">לפי עדכון</SelectItem>
-                    <SelectItem value="created_at">לפי יצירה</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
-          </div>
+            {filtersOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
 
           {filtersOpen && (
-            <div className="flex flex-wrap gap-3 items-center border rounded-lg p-3 bg-muted/30">
-              <div className="flex items-center gap-2">
+            <div className="p-3 space-y-3 border-t">
+              {/* Search */}
+              <div className="relative">
+                <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder="חפש לפי שם, מיקום, קטגוריה..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pr-8 h-9 text-sm"
+                />
+              </div>
+
+              {/* Group & Sort */}
+              <div className="flex flex-wrap gap-2">
+                <div className="flex items-center gap-1">
+                  <LayoutGrid size={14} className="text-muted-foreground" />
+                  <Select value={groupBy} onValueChange={v => setGroupBy(v as GroupBy)}>
+                    <SelectTrigger className="h-8 w-[130px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="category">לפי קטגוריה</SelectItem>
+                      <SelectItem value="location">לפי מיקום</SelectItem>
+                      <SelectItem value="status">לפי סטטוס</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-1">
+                  <ArrowUpDown size={14} className="text-muted-foreground" />
+                  <Select value={sortBy} onValueChange={v => setSortBy(v as SortBy)}>
+                    <SelectTrigger className="h-8 w-[120px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">לפי שם</SelectItem>
+                      <SelectItem value="updated_at">לפי עדכון</SelectItem>
+                      <SelectItem value="created_at">לפי יצירה</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Status Filters */}
+              <div className="space-y-1.5">
                 <span className="text-xs text-muted-foreground font-medium">סטטוס:</span>
                 <div className="flex gap-1 flex-wrap">
                   <Badge
@@ -379,7 +379,8 @@ const POIsPage = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Category Filters */}
+              <div className="space-y-1.5">
                 <span className="text-xs text-muted-foreground font-medium">קטגוריה:</span>
                 <div className="flex gap-1 flex-wrap">
                   <Badge

@@ -177,13 +177,15 @@ export interface SubCategoryEntry {
   icon: string;
   category: string;
   is_geo_location: boolean;
+  spatial_type?: string;
+  names?: { en?: string; he?: string };
 }
 
 export interface CategoryMeta {
   db_name: string | null;
   icon: string;
   color: string;
-  label_he: string;
+  labels: { he?: string; en?: string }[];
 }
 
 export interface SubCategoryConfig {
@@ -310,7 +312,8 @@ export function getCategoryIcon(dbCategory: string): LucideIcon {
 /** Get Hebrew label for a DB category (e.g., 'eatery' → 'אוכל'). */
 export function getCategoryLabel(dbCategory: string): string {
   const meta = dbCategoryMap[dbCategory];
-  return meta?.label_he || dbCategory;
+  const heLabel = meta?.labels?.find(l => l.he)?.he;
+  return heLabel || dbCategory;
 }
 
 /** Get Tailwind color class for a DB category. */

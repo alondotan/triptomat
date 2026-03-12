@@ -1,4 +1,4 @@
-import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
+import { NavLink as RouterNavLink, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   CalendarDays,
@@ -23,6 +23,9 @@ import {
   Check,
   Network,
   Share2,
+  Sparkles,
+  MoreVertical,
+  ListIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -34,6 +37,7 @@ import { CreateTripForm } from '@/components/forms/CreateTripForm';
 import { EditTripDialog } from '@/components/trip/EditTripDialog';
 import { LocationTreeDialog } from '@/components/trip/LocationTreeDialog';
 import { ShareTripDialog } from '@/components/trip/ShareTripDialog';
+import { AIChatSheet, type TripContext } from '@/components/chat/AIChatSheet';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -102,7 +106,16 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
   const { activeTrip, setActiveTrip, deleteCurrentTrip, updateCurrentTrip, tripLocationTree, myRole } = useActiveTrip();
   const [locationTreeOpen, setLocationTreeOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [aiChatOpen, setAiChatOpen] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
+
+  // 3 most recently opened trips for the dropdown menus
+  const recentTrips = (() => {
+    let lastOpened: Record<string, number> = {};
+    try { lastOpened = JSON.parse(localStorage.getItem('trip_last_opened') || '{}'); } catch { /* ignore */ }
+    return [...trips].sort((a, b) => (lastOpened[b.id] || 0) - (lastOpened[a.id] || 0)).slice(0, 3);
+  })();
 
   useEffect(() => {
     const handler = (e: Event) => setInboxUnread((e as CustomEvent).detail.count);
@@ -117,12 +130,6 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
   const openEditDialog = () => {
     setHamburgerOpen(false);
     setEditDialogOpen(true);
-  };
-
-  const openPrefs = () => {
-    setPrefsCurrency(activeTrip?.currency || 'ILS');
-    setHamburgerOpen(false);
-    setPrefsOpen(true);
   };
 
   const handleSavePrefs = async () => {
@@ -157,8 +164,15 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
             </span>
           </div>
 
-          {/* Right: Inbox */}
+          {/* Right: AI + Inbox + User menu */}
           <div className="flex items-center justify-end">
+            <button
+              onClick={() => setAiChatOpen(true)}
+              className="relative p-2 rounded-lg transition-colors text-muted-foreground"
+              aria-label="AI Chat"
+            >
+              <Sparkles size={22} />
+            </button>
             <RouterNavLink
               to="/inbox"
               className={cn(
@@ -173,6 +187,22 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                 </span>
               )}
             </RouterNavLink>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 rounded-lg transition-colors text-muted-foreground" aria-label="תפריט משתמש">
+                  <MoreVertical size={22} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => { setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }}>
+                  <Settings size={14} className="mr-2" /> הגדרות
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleSignOut}>
+                  <LogOut size={14} className="mr-2" /> יציאה
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -186,7 +216,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56">
-                {trips.map(trip => (
+                {recentTrips.map(trip => (
                   <DropdownMenuItem
                     key={trip.id}
                     onClick={() => setActiveTrip(trip.id)}
@@ -203,6 +233,10 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                     </div>
                   </DropdownMenuItem>
                 ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/trips')}>
+                  <ListIcon size={14} className="mr-2" /> הצג טיולים
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={openEditDialog}>
                   <Pencil size={14} className="mr-2" /> Edit Trip
@@ -277,12 +311,25 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
 
         {/* Desktop user actions */}
         <div className="hidden md:flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => { setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }} aria-label="הגדרות" title="Preferences">
-            <Settings size={18} />
+          <Button variant="ghost" size="icon" onClick={() => setAiChatOpen(true)} aria-label="AI Chat" title="AI Travel Assistant" className="relative">
+            <Sparkles size={18} />
           </Button>
-          <Button variant="ghost" size="icon" onClick={handleSignOut} aria-label="התנתק" title="Sign out">
-            <LogOut size={18} />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="תפריט משתמש" title="Menu">
+                <MoreVertical size={18} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => { setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }}>
+                <Settings size={14} className="mr-2" /> הגדרות
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleSignOut}>
+                <LogOut size={14} className="mr-2" /> יציאה
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
       </div>
@@ -297,11 +344,11 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
           </SheetHeader>
 
           <div className="flex flex-col overflow-y-auto">
-            {/* Trip list */}
+            {/* Trip list — 3 most recent */}
             {trips.length > 0 && (
               <div className="py-3">
                 <p className="px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Trips</p>
-                {trips.map(trip => (
+                {recentTrips.map(trip => (
                   <button
                     key={trip.id}
                     onClick={() => { setActiveTrip(trip.id); setHamburgerOpen(false); }}
@@ -321,6 +368,12 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                     {trip.id === activeTrip?.id && <Check size={16} className="text-primary shrink-0" />}
                   </button>
                 ))}
+                <button
+                  onClick={() => { setHamburgerOpen(false); navigate('/trips'); }}
+                  className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-primary hover:bg-muted transition-colors"
+                >
+                  <ListIcon size={16} /> הצג טיולים
+                </button>
               </div>
             )}
 
@@ -367,29 +420,6 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
               )}
             </div>
 
-            <div className="mx-6 border-t border-border" />
-
-            {/* Preferences & tools */}
-            <div className="py-3">
-              <p className="px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Settings</p>
-              <button
-                onClick={openPrefs}
-                className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
-              >
-                <Settings size={16} /> User Preferences
-              </button>
-            </div>
-
-            <div className="mx-6 border-t border-border" />
-
-            <div className="py-3">
-              <button
-                onClick={handleSignOut}
-                className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-destructive hover:bg-muted transition-colors"
-              >
-                <LogOut size={16} /> Sign Out
-              </button>
-            </div>
           </div>
         </SheetContent>
       </Sheet>
@@ -426,6 +456,23 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
 
       {/* Share Trip Dialog */}
       <ShareTripDialog open={shareOpen} onOpenChange={setShareOpen} />
+
+      {/* AI Chat */}
+      <AIChatSheet
+        open={aiChatOpen}
+        onOpenChange={setAiChatOpen}
+        tripContext={activeTrip ? {
+          tripId: activeTrip.id,
+          tripName: activeTrip.name,
+          countries: activeTrip.countries,
+          startDate: activeTrip.startDate,
+          endDate: activeTrip.endDate,
+          numberOfDays: activeTrip.numberOfDays,
+          status: activeTrip.status,
+          currency: activeTrip.currency,
+          locations: (tripLocationTree || []).flatMap(n => [n.site, ...(n.sub_sites || []).flatMap(s => [s.site, ...(s.sub_sites || []).map(c => c.site)])]),
+        } : null}
+      />
 
       {/* User Preferences Dialog */}
       <Dialog open={prefsOpen} onOpenChange={setPrefsOpen}>

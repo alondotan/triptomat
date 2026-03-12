@@ -200,7 +200,7 @@ export function CountrySelector({ value, onChange, placeholder = 'בחר יעד�
 
   return (
     <div className={cn('space-y-2', className)}>
-      <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setNavPath([]); setSearch(''); } }} modal={false}>
+      <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setNavPath([]); setSearch(''); } }} modal={true}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -216,7 +216,7 @@ export function CountrySelector({ value, onChange, placeholder = 'בחר יעד�
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[340px] p-0" align="start">
+        <PopoverContent className="w-[340px] p-0 z-[1200]" align="start">
           <Command>
             <CommandInput
               placeholder="חפש מדינה או אזור..."
