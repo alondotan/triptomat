@@ -165,6 +165,9 @@ const he = {
     noTrips: 'אין טיולים עדיין',
     updated: 'עודכן {{time}}',
     shared: 'משותף',
+    welcomeTitle: 'ברוכים הבאים ל-Triptomat',
+    welcomeSubtitle: 'המערכת שתעזור לך לתכנן את הטיול המושלם — מסלולים, אטרקציות, תקציב ועוד, הכל במקום אחד.',
+    welcomeCta: 'צור טיול חדש',
   },
 
   // ── Create Trip Form ──
@@ -659,6 +662,7 @@ const he = {
     disclaimer: 'AI עלול לטעות. אמת מידע חשוב על טיולים באופן עצמאי.',
     insightsSent: 'תובנות נשלחו',
     insightsDescription: 'המלצות AI מעובדות. בדוק את עמוד ההמלצות.',
+    integrationConfirmation: 'עיבדתי את השיחה ושלחתי את ההמלצות הבאות לשילוב בטיול:',
   },
 
   // ── Source Emails Dashboard ──

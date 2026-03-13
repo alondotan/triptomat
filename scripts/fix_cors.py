@@ -8,7 +8,7 @@ print("Updating CORS config...")
 resp = client.update_api(
     ApiId='9hhwxodv7a',
     CorsConfiguration={
-        'AllowOrigins': ['http://localhost:5173', 'https://frontend-three-omega-84.vercel.app', 'https://aqpzhflzsqkjceeeufyf.supabase.co'],
+        'AllowOrigins': ['http://localhost:5173', 'https://triptomat.com', 'https://www.triptomat.com', 'https://frontend-three-omega-84.vercel.app', 'https://aqpzhflzsqkjceeeufyf.supabase.co'],
         'AllowMethods': ['GET', 'POST', 'DELETE', 'OPTIONS'],
         'AllowHeaders': ['Content-Type', 'Authorization'],
         'MaxAge': 86400,

@@ -6,7 +6,7 @@ import { useActiveTrip } from '@/context/ActiveTripContext';
 import { useWorldTree, type WorldTreeNode } from '@/hooks/useWorldTree';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, MapPin, Check, Settings, LogOut, MoreVertical, Plus } from 'lucide-react';
+import { CalendarDays, MapPin, Check, Settings, LogOut, MoreVertical, Plus, Compass } from 'lucide-react';
 import { CreateTripForm } from '@/components/forms/CreateTripForm';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -248,12 +248,13 @@ const TripsPage = () => {
         <h1 className="text-2xl font-bold mb-6">{t('tripsPage.myTrips')}</h1>
 
         {sortedTrips.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground">
-            <MapPin size={48} className="mx-auto mb-4 opacity-40" />
-            <p className="text-lg mb-4">{t('tripsPage.noTrips')}</p>
-            <Button className="gap-2" onClick={() => setNewTripOpen(true)}>
-              <Plus size={18} />
-              {t('createTrip.newTrip')}
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <Compass size={56} className="text-primary mb-6" />
+            <h2 className="text-2xl font-bold mb-3">{t('tripsPage.welcomeTitle')}</h2>
+            <p className="text-muted-foreground max-w-md mb-8">{t('tripsPage.welcomeSubtitle')}</p>
+            <Button size="lg" className="gap-2" onClick={() => setNewTripOpen(true)}>
+              <Plus size={20} />
+              {t('tripsPage.welcomeCta')}
             </Button>
           </div>
         ) : (

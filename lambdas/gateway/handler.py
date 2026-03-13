@@ -61,7 +61,7 @@ DOWNLOAD_QUEUE_URL = os.environ.get("DOWNLOAD_QUEUE_URL", "")
 ANALYSIS_QUEUE_URL = os.environ.get("ANALYSIS_QUEUE_URL", "")
 DYNAMODB_TABLE = os.environ.get("DYNAMODB_TABLE", "triptomat-cache")
 MAP_GOOGLE_API_KEY = os.environ.get("MAP_GOOGLE_API_KEY", "")
-_DEFAULT_ORIGINS = "https://aqpzhflzsqkjceeeufyf.supabase.co,http://localhost:5173,http://localhost:8080"
+_DEFAULT_ORIGINS = "https://aqpzhflzsqkjceeeufyf.supabase.co,https://triptomat.com,https://www.triptomat.com,http://localhost:5173,http://localhost:8080"
 ALLOWED_ORIGINS = {
     o.strip() for o in os.environ.get("ALLOWED_ORIGINS", _DEFAULT_ORIGINS).split(",") if o.strip()
 }

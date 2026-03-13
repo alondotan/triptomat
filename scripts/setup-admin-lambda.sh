@@ -237,7 +237,7 @@ ENV_VARS_JSON=$(cat <<ENVEOF
     "SQS_ANALYSIS_QUEUE_URL": "${SQS_ANALYSIS_QUEUE_URL}",
     "SUPABASE_URL": "https://aqpzhflzsqkjceeeufyf.supabase.co",
     "SUPABASE_SERVICE_KEY": "PLACEHOLDER_SET_VIA_CONSOLE",
-    "ALLOWED_ORIGINS": "https://frontend-three-omega-84.vercel.app,https://aqpzhflzsqkjceeeufyf.supabase.co,http://localhost:5173"
+    "ALLOWED_ORIGINS": "https://triptomat.com,https://www.triptomat.com,https://frontend-three-omega-84.vercel.app,https://aqpzhflzsqkjceeeufyf.supabase.co,http://localhost:5173"
   }
 }
 ENVEOF

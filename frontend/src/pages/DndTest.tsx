@@ -2352,7 +2352,7 @@ export default function DndTestPage() {
 
             {/* ── Column 3: Route map ─────────── */}
             {(!isMobile || mobileTab === 'map') && (
-              <div className={`${isMobile ? 'min-h-0 flex-1' : 'hidden md:block md:min-h-0'} border rounded-lg overflow-hidden`}>
+              <div className={`${isMobile ? 'min-h-[calc(100vh-12rem)]' : 'hidden md:block md:min-h-0'} border rounded-lg overflow-hidden`}>
                 <RouteMapPanel
                   dayPOIs={dayPOIs}
                   stops={routeStops}

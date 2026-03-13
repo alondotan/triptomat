@@ -208,6 +208,13 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
           }]);
         }
 
+        // Show the summary in chat so the user sees what was sent
+        const confirmationMsg: Message = {
+          role: 'assistant',
+          content: `${t('aiChat.integrationConfirmation')}\n\n${summaryText}`,
+        };
+        setMessages(prev => [...prev, confirmationMsg]);
+
         toast({
           title: t('aiChat.insightsSent'),
           description: t('aiChat.insightsDescription'),
@@ -236,7 +243,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:w-[420px] sm:max-w-[420px] p-0 flex flex-col">
         <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pr-6">
             <SheetTitle className="flex items-center gap-2 text-base">
               <Bot size={18} className="text-primary" />
               <span className="truncate">{t('aiChat.title', { trip: tripLabel })}</span>

@@ -55,6 +55,8 @@ ANALYSIS_QUEUE_URL = os.environ.get("ANALYSIS_QUEUE_URL", "")
 
 _DEFAULT_ORIGINS = (
     "https://aqpzhflzsqkjceeeufyf.supabase.co,"
+    "https://triptomat.com,"
+    "https://www.triptomat.com,"
     "http://localhost:5173,"
     "http://localhost:8080"
 )

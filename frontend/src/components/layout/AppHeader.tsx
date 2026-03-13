@@ -119,12 +119,12 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Auto-open create trip dialog when no trips exist
+  // Navigate to trips page when no trips exist
   useEffect(() => {
     if (!tripsLoading && trips.length === 0) {
-      setNewTripOpen(true);
+      navigate('/trips');
     }
-  }, [tripsLoading, trips.length]);
+  }, [tripsLoading, trips.length, navigate]);
 
   // 3 most recently opened trips for the dropdown menus
   const recentTrips = (() => {

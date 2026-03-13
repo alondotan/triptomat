@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -12,6 +12,7 @@ import { MapBreadcrumb } from '@/components/map/MapBreadcrumb';
 import { AppLayout } from '@/components/layout';
 import { Badge } from '@/components/ui/badge';
 import type { POIStatus } from '@/types/trip';
+import type { CountryPlace } from '@/services/tripLocationService';
 import { getSubCategoryLabel, getCategoryLabel } from '@/lib/subCategoryConfig';
 import 'leaflet/dist/leaflet.css';
 
@@ -64,7 +65,7 @@ function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
 const MapPage = () => {
   const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
-  const { pois } = usePOI();
+  const { pois, addPOI, updatePOI } = usePOI();
   const { transportation } = useTransport();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [legendOpen, setLegendOpen] = useState(false);
@@ -113,6 +114,43 @@ const MapPage = () => {
     allPoiMarkers.forEach(m => { counts[m.status] = (counts[m.status] || 0) + 1; });
     return counts;
   }, [allPoiMarkers]);
+
+  // ── Map-attraction like (heart) ────────────────────────────
+  // Build a set of CountryPlace IDs that already exist as POIs (matched by name)
+  const likedPlaceIds = useMemo(() => {
+    const poiNames = new Set(pois.map(p => p.name.toLowerCase()));
+    return new Set(
+      mapData.topAttractions.filter(a => poiNames.has(a.name.toLowerCase())).map(a => a.id),
+    );
+  }, [pois, mapData.topAttractions]);
+
+  const handleToggleAttractionLike = useCallback(async (place: CountryPlace) => {
+    if (!activeTrip) return;
+    // If already exists as POI, toggle between suggested <-> interested
+    const existingPoi = pois.find(p => p.name.toLowerCase() === place.name.toLowerCase());
+    if (existingPoi) {
+      const newStatus = existingPoi.status === 'interested' ? 'suggested' : 'interested';
+      await updatePOI({ ...existingPoi, status: newStatus });
+    } else {
+      // Create a new POI from the attraction
+      await addPOI({
+        tripId: activeTrip.id,
+        category: 'attraction',
+        subCategory: place.subCategory || undefined,
+        name: place.name,
+        status: 'interested',
+        location: {
+          address: place.address || undefined,
+          coordinates: place.coordinates,
+        },
+        sourceRefs: { email_ids: [], recommendation_ids: [] },
+        details: place.description ? { notes: { user_summary: place.description } } : {},
+        isCancelled: false,
+        isPaid: false,
+        imageUrl: place.photo_url || undefined,
+      });
+    }
+  }, [activeTrip, pois, addPOI, updatePOI]);
 
   if (!activeTrip) {
     return <AppLayout hideHero><div className="text-center py-12 text-muted-foreground">{t('common.noTripSelected')}</div></AppLayout>;
@@ -213,6 +251,8 @@ const MapPage = () => {
               topAttractions={mapData.topAttractions}
               typeIconMap={mapData.typeIconMap}
               navigateTo={mapData.navigateTo}
+              likedPlaceIds={likedPlaceIds}
+              onToggleLike={handleToggleAttractionLike}
             />
 
             {/* Route lines */}

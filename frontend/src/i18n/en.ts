@@ -166,6 +166,9 @@ const en = {
     noTrips: 'No trips yet',
     updated: 'Updated {{time}}',
     shared: 'shared',
+    welcomeTitle: 'Welcome to Triptomat',
+    welcomeSubtitle: 'Your all-in-one trip planner — routes, attractions, budget and more, all in one place.',
+    welcomeCta: 'Create your first trip',
   },
 
   // ── Create Trip Form ──
@@ -661,6 +664,7 @@ const en = {
     disclaimer: 'AI may make mistakes. Verify important travel info independently.',
     insightsSent: 'Insights sent',
     insightsDescription: 'AI recommendations are being processed. Check the Recommendations page.',
+    integrationConfirmation: 'I processed the conversation and sent the following recommendations for integration:',
   },
 
   // ── Source Emails Dashboard ──

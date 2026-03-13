@@ -12,6 +12,8 @@ interface BoundaryLayerProps {
   topAttractions: CountryPlace[];
   typeIconMap: Record<string, string>;
   navigateTo: (node: NavigationNode) => void;
+  likedPlaceIds?: Set<string>;
+  onToggleLike?: (place: CountryPlace) => void;
 }
 
 const REGION_COLOR = '#3498db';
@@ -60,6 +62,8 @@ export function BoundaryLayer({
   topAttractions,
   typeIconMap,
   navigateTo,
+  likedPlaceIds,
+  onToggleLike,
 }: BoundaryLayerProps) {
   if (!currentNode) return null;
 
@@ -132,11 +136,47 @@ export function BoundaryLayer({
             <Popup maxWidth={300} minWidth={280} className="attraction-popup">
               <div>
                 {place.photo_url && (
-                  <img
-                    src={place.photo_url}
-                    alt=""
-                    style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <img
+                      src={place.photo_url}
+                      alt=""
+                      style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }}
+                    />
+                    {onToggleLike && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onToggleLike(place); }}
+                        style={{
+                          position: 'absolute', top: 8, right: 8,
+                          background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(4px)',
+                          border: 'none', borderRadius: '50%', width: 30, height: 30,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', padding: 0,
+                          color: likedPlaceIds?.has(place.id) ? '#ef4444' : 'rgba(255,255,255,0.75)',
+                          transition: 'color 0.2s',
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill={likedPlaceIds?.has(place.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                )}
+                {!place.photo_url && onToggleLike && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 8px 0' }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onToggleLike(place); }}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer', padding: 2,
+                        color: likedPlaceIds?.has(place.id) ? '#ef4444' : 'rgba(255,255,255,0.5)',
+                        transition: 'color 0.2s',
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill={likedPlaceIds?.has(place.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                      </svg>
+                    </button>
+                  </div>
                 )}
                 <div style={{ padding: '10px 12px' }}>
                   <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>{place.name}</div>
