@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Clock, Heart, Pencil } from 'lucide-react';
 import { SubCategoryIcon } from '../shared/SubCategoryIcon';
 import { POIDetailDialog } from './POIDetailDialog';
@@ -13,14 +14,14 @@ function formatDuration(minutes: number): string {
   return m === 0 ? `${h}ש'` : `${h}:${m.toString().padStart(2, '0')}`;
 }
 
-const statusLabels: Record<string, string> = {
-  suggested: 'מוצע',
-  interested: 'מעניין',
-  planned: 'מתוכנן',
-  scheduled: 'בלו״ז',
-  booked: 'הוזמן',
-  visited: 'בוקר',
-  skipped: 'דילגתי',
+const STATUS_KEYS: Record<string, string> = {
+  suggested: 'status.suggested',
+  interested: 'status.interested',
+  planned: 'status.planned',
+  scheduled: 'status.scheduled',
+  booked: 'status.booked',
+  visited: 'status.visited',
+  skipped: 'status.skipped',
 };
 
 interface POICardProps {
@@ -46,6 +47,7 @@ export function POICard({
   isSelected,
   className = '',
 }: POICardProps) {
+  const { t } = useTranslation();
   const { updatePOI } = usePOI();
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -115,7 +117,7 @@ export function POICard({
         {poi.imageUrl && (
           <button
             type="button"
-            aria-label="הגדל תמונה"
+            aria-label={t('poiCard.enlargeImage')}
             className={`bg-transparent border-0 p-0 cursor-pointer shrink-0 ${isSelected ? 'ring-2 ring-primary' : ''} rounded-lg`}
             onClick={handleCardClick}
           >
@@ -171,19 +173,19 @@ export function POICard({
                     type="number"
                     min="1"
                     name="duration"
-                    aria-label="משך זמן בדקות"
+                    aria-label={t('poiCard.addDuration')}
                     className="text-xs border rounded px-1.5 py-0.5 w-16 bg-background"
                     value={durationValue}
                     onChange={e => setDurationValue(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') handleSaveDuration(); if (e.key === 'Escape') setEditingDuration(false); }}
-                    placeholder="דקות..."
+                    placeholder={t('poiDetail.minutes')}
                     autoFocus
                   />
                   <button type="button" className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded" onClick={handleSaveDuration}>
-                    שמור
+                    {t('common.save')}
                   </button>
                   <button type="button" className="text-xs px-2 py-0.5 border border-border rounded hover:bg-muted" onClick={() => setEditingDuration(false)}>
-                    ביטול
+                    {t('common.cancel')}
                   </button>
                 </div>
               </div>
@@ -194,7 +196,7 @@ export function POICard({
                 onClick={handleStartEditDuration}
               >
                 <Clock size={11} />
-                <span>{currentDuration != null ? formatDuration(currentDuration) : 'הוסף משך זמן...'}</span>
+                <span>{currentDuration != null ? formatDuration(currentDuration) : t('poiCard.addDuration')}</span>
               </button>
             )
           ) : currentDuration != null && (
@@ -214,7 +216,7 @@ export function POICard({
               >
                 <textarea
                   name="notes"
-                  aria-label="הערות"
+                  aria-label={t('poiDetail.notes')}
                   className="text-xs border rounded px-1.5 py-0.5 w-full resize-none bg-background"
                   value={notesValue}
                   onChange={e => setNotesValue(e.target.value)}
@@ -224,10 +226,10 @@ export function POICard({
                 />
                 <div className="flex gap-1 items-center">
                   <button type="button" className="text-xs px-2 py-0.5 bg-primary text-primary-foreground rounded" onClick={handleSaveNotes}>
-                    שמור
+                    {t('common.save')}
                   </button>
                   <button type="button" className="text-xs px-2 py-0.5 border border-border rounded hover:bg-muted" onClick={() => setEditingNotes(false)}>
-                    ביטול
+                    {t('common.cancel')}
                   </button>
                 </div>
               </div>
@@ -237,7 +239,7 @@ export function POICard({
                 className="text-xs text-muted-foreground/70 italic truncate cursor-pointer hover:text-muted-foreground w-fit max-w-full bg-transparent border-0 p-0 text-start"
                 onClick={handleStartEditNotes}
               >
-                {currentNotes || 'הוסף הערה...'}
+                {currentNotes || t('poiCard.addNote')}
               </button>
             )
           ) : currentNotes && (
@@ -251,7 +253,7 @@ export function POICard({
                 className="text-[11px] text-muted-foreground/60 hover:text-primary border border-dashed border-muted-foreground/30 hover:border-primary/50 rounded-full px-3 py-0.5 transition-colors"
                 onClick={onAddTransport}
               >
-                + הוסף תחבורה
+                + {t('poiCard.addTransport')}
               </button>
             </div>
           )}
@@ -260,7 +262,7 @@ export function POICard({
         {onSelect && (
           <button
             type="button"
-            aria-label="ערוך"
+            aria-label={t('common.edit')}
             className="shrink-0 p-1 mt-0.5 text-muted-foreground/50 hover:text-primary transition-colors self-start"
             onClick={(e) => { e.stopPropagation(); setDialogOpen(true); }}
           >
@@ -304,19 +306,19 @@ export function POICard({
           {/* New badge */}
           {isNew && (
             <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 text-[10px] font-bold bg-green-500 text-white rounded-full leading-none z-10">
-              חדש
+              {t('common.new')}
             </span>
           )}
           {/* Heart button overlay */}
           <button
-            aria-label="מועדף"
+            aria-label={t('poiCard.favorite')}
             onClick={handleToggleLike}
             className={`absolute top-1.5 right-1.5 p-1 rounded-full bg-black/30 backdrop-blur-sm transition-colors ${
               poi.status === 'interested' || poi.status === 'planned' || poi.status === 'scheduled' ? 'text-red-500' :
               poi.status === 'booked' || poi.status === 'visited' || poi.status === 'skipped' ? 'text-white/40 cursor-default' :
               'text-white/70 hover:text-red-400'
             }`}
-            title={['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(poi.status) ? statusLabels[poi.status] : poi.status === 'interested' ? 'הסר עניין' : 'מעניין אותי'}
+            title={['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(poi.status) ? t(STATUS_KEYS[poi.status]) : poi.status === 'interested' ? t('poiCard.removeInterest') : t('poiCard.interestedInThis')}
           >
             <Heart
               size={14}

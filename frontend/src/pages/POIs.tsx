@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -17,20 +18,11 @@ import { flattenTripLocations } from '@/services/tripLocationService';
 import { POICard } from '@/components/poi/POICard';
 import { getCategoryIcon, getCategoryLabel, getPOICategories } from '@/lib/subCategoryConfig';
 
-const statusLabels: Record<string, string> = {
-  suggested: 'מוצע',
-  interested: 'מעניין',
-  planned: 'מתוכנן',
-  scheduled: 'בלו״ז',
-  booked: 'הוזמן',
-  visited: 'בוקר',
-  skipped: 'דילגתי',
-};
-
 type GroupBy = 'category' | 'location' | 'status';
 type SortBy = 'name' | 'updated_at' | 'created_at';
 
 const POIsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { activeTrip, tripLocations } = useActiveTrip();
   const { pois, mergePOIs } = usePOI();
@@ -135,7 +127,7 @@ const POIsPage = () => {
         key = poi.category;
       } else if (groupBy === 'location') {
         const city = poi.location.city?.toLowerCase() || '';
-        key = cityRegionMap[city] || poi.location.country || 'לא ידוע';
+        key = cityRegionMap[city] || poi.location.country || t('common.unknown');
       } else {
         key = poi.status;
       }
@@ -162,10 +154,10 @@ const POIsPage = () => {
         }
       }
 
-      // Merge small regions into "country::כללי"
+      // Merge small regions into "country::General"
       for (const key of keysToMerge) {
         const country = regionCountryMap[key];
-        const mergedKey = `${country}::כללי`;
+        const mergedKey = `${country}::${t('common.general')}`;
         if (!primaryGroups[mergedKey]) primaryGroups[mergedKey] = [];
         primaryGroups[mergedKey].push(...primaryGroups[key]);
         delete primaryGroups[key];
@@ -201,7 +193,7 @@ const POIsPage = () => {
             }
           }
           if (remaining.length > 0) {
-            result.push([`${key}::כללי`, remaining]);
+            result.push([`${key}::${t('common.general')}`, remaining]);
           }
         } else {
           result.push([key, pois]);
@@ -236,7 +228,7 @@ const POIsPage = () => {
     // Handle split sub-group keys like "category::subName"
     const [primary, sub] = key.split('::');
     const baseLabel = groupBy === 'category' ? getCategoryLabel(primary)
-      : groupBy === 'status' ? (statusLabels[primary] || primary)
+      : groupBy === 'status' ? (t(`status.${primary}`, primary))
       : primary;
     return sub ? `${baseLabel} | ${sub}` : baseLabel;
   };
@@ -267,7 +259,7 @@ const POIsPage = () => {
   }, [nonAccommodationPois]);
 
   if (!activeTrip) {
-    return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
+    return <AppLayout><div className="text-center py-12 text-muted-foreground">{t('common.noTripSelected')}</div></AppLayout>;
   }
 
   return (
@@ -275,8 +267,8 @@ const POIsPage = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Points of Interest</h2>
-            <p className="text-muted-foreground">{filteredPois.length} / {nonAccommodationPois.length} items</p>
+            <h2 className="text-2xl font-bold">{t('poisPage.title')}</h2>
+            <p className="text-muted-foreground">{filteredPois.length} / {nonAccommodationPois.length} {t('common.items')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -286,7 +278,7 @@ const POIsPage = () => {
               className="gap-1"
             >
               <Merge size={14} />
-              {mergeMode ? 'בטל מיזוג' : 'מזג'}
+              {mergeMode ? t('common.cancelMerge') : t('common.merge')}
             </Button>
             {!mergeMode && <CreatePOIForm />}
           </div>
@@ -300,7 +292,7 @@ const POIsPage = () => {
           >
             <div className="flex items-center gap-2 text-sm font-medium">
               <SlidersHorizontal size={16} />
-              <span>סינון, מיון וחיפוש</span>
+              <span>{t('poisPage.filterSortSearch')}</span>
               {(!statusFilters.has('all') || !categoryFilters.has('all') || searchQuery) && (
                 <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-[10px]">
                   {(statusFilters.has('all') ? 0 : statusFilters.size) + (categoryFilters.has('all') ? 0 : categoryFilters.size) + (searchQuery ? 1 : 0)}
@@ -316,7 +308,7 @@ const POIsPage = () => {
               <div className="relative">
                 <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                 <Input
-                  placeholder="חפש לפי שם, מיקום, קטגוריה..."
+                  placeholder={t('poisPage.searchPlaceholder')}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="pr-8 h-9 text-sm"
@@ -332,9 +324,9 @@ const POIsPage = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="category">לפי קטגוריה</SelectItem>
-                      <SelectItem value="location">לפי מיקום</SelectItem>
-                      <SelectItem value="status">לפי סטטוס</SelectItem>
+                      <SelectItem value="category">{t('poisPage.byCategory')}</SelectItem>
+                      <SelectItem value="location">{t('poisPage.byLocation')}</SelectItem>
+                      <SelectItem value="status">{t('poisPage.byStatus')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -345,9 +337,9 @@ const POIsPage = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="name">לפי שם</SelectItem>
-                      <SelectItem value="updated_at">לפי עדכון</SelectItem>
-                      <SelectItem value="created_at">לפי יצירה</SelectItem>
+                      <SelectItem value="name">{t('poisPage.byName')}</SelectItem>
+                      <SelectItem value="updated_at">{t('poisPage.byUpdated')}</SelectItem>
+                      <SelectItem value="created_at">{t('poisPage.byCreated')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -355,14 +347,14 @@ const POIsPage = () => {
 
               {/* Status Filters */}
               <div className="space-y-1.5">
-                <span className="text-xs text-muted-foreground font-medium">סטטוס:</span>
+                <span className="text-xs text-muted-foreground font-medium">{t('poisPage.statusLabel')}</span>
                 <div className="flex gap-1 flex-wrap">
                   <Badge
                     variant={statusFilters.has('all') ? 'default' : 'outline'}
                     className="cursor-pointer text-xs"
                     onClick={() => toggleStatusFilter('all')}
                   >
-                    הכל ({statusCounts.all || 0})
+                    {t('common.all')} ({statusCounts.all || 0})
                   </Badge>
                   {(['suggested', 'interested', 'planned', 'scheduled', 'booked', 'visited', 'skipped'] as POIStatus[]).map(s => (
                     statusCounts[s] ? (
@@ -372,7 +364,7 @@ const POIsPage = () => {
                         className="cursor-pointer text-xs"
                         onClick={() => toggleStatusFilter(s)}
                       >
-                        {statusLabels[s]} ({statusCounts[s]})
+                        {t(`status.${s}`)} ({statusCounts[s]})
                       </Badge>
                     ) : null
                   ))}
@@ -381,14 +373,14 @@ const POIsPage = () => {
 
               {/* Category Filters */}
               <div className="space-y-1.5">
-                <span className="text-xs text-muted-foreground font-medium">קטגוריה:</span>
+                <span className="text-xs text-muted-foreground font-medium">{t('poisPage.categoryLabel')}</span>
                 <div className="flex gap-1 flex-wrap">
                   <Badge
                     variant={categoryFilters.has('all') ? 'default' : 'outline'}
                     className="cursor-pointer text-xs"
                     onClick={() => toggleCategoryFilter('all')}
                   >
-                    הכל
+                    {t('common.all')}
                   </Badge>
                   {getPOICategories().filter(c => c !== 'accommodation').map(c => {
                     const Icon = getCategoryIcon(c);
@@ -446,14 +438,14 @@ const POIsPage = () => {
 
         {filteredPois.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            {nonAccommodationPois.length === 0 ? 'אין נקודות עניין עדיין. הוסף אחת כדי להתחיל!' : 'אין תוצאות לפילטר הנוכחי.'}
+            {nonAccommodationPois.length === 0 ? t('poisPage.noPoiYet') : t('poisPage.noFilterResults')}
           </div>
         )}
 
         {mergeMode && selectedForMerge.size === 2 && (
           <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
             <Button onClick={() => setMergeDialogOpen(true)} className="gap-1.5 shadow-lg">
-              <Merge size={16} /> מזג פריטים נבחרים
+              <Merge size={16} /> {t('common.mergeSelected')}
             </Button>
           </div>
         )}

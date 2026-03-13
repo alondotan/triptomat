@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 export function TextSubmit() {
+  const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
   const tripId = activeTrip?.id;
   const [text, setText] = useState('');
@@ -58,16 +60,16 @@ export function TextSubmit() {
           }]);
         }
         setStatus('success');
-        setMessage('Submitted! Analysis in progress.');
+        setMessage(t('textSubmit.submitted'));
         setText('');
         setExpanded(false);
       } else {
         setStatus('error');
-        setMessage(data.error || 'Something went wrong.');
+        setMessage(data.error || t('common.somethingWentWrong'));
       }
     } catch {
       setStatus('error');
-      setMessage('Failed to reach the server. Please try again.');
+      setMessage(t('urlSubmit.serverError'));
     }
   };
 
@@ -79,7 +81,7 @@ export function TextSubmit() {
       >
         <div className="flex items-center gap-2">
           <FileText size={16} className="text-muted-foreground" aria-hidden="true" />
-          <h2 className="font-semibold text-sm">Paste text</h2>
+          <h2 className="font-semibold text-sm">{t('textSubmit.title')}</h2>
         </div>
         {expanded
           ? <ChevronUp size={16} className="text-muted-foreground" />
@@ -90,11 +92,11 @@ export function TextSubmit() {
       {expanded && (
         <>
           <p className="text-xs text-muted-foreground">
-            Paste text from a message, article, or any source to extract travel recommendations.
+            {t('textSubmit.description')}
           </p>
           <form onSubmit={handleSubmit} className="space-y-2">
             <Textarea
-              placeholder="Paste travel recommendations text here..."
+              placeholder={t('textSubmit.placeholder')}
               value={text}
               onChange={e => setText(e.target.value)}
               disabled={status === 'loading' || !webhookToken}
@@ -109,7 +111,7 @@ export function TextSubmit() {
                 disabled={!text.trim() || status === 'loading' || !webhookToken}
                 size="sm"
               >
-                {status === 'loading' ? <Loader2 size={14} className="animate-spin" /> : 'Analyze'}
+                {status === 'loading' ? <Loader2 size={14} className="animate-spin" /> : t('textSubmit.analyze')}
               </Button>
             </div>
           </form>

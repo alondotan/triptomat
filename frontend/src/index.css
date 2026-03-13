@@ -115,9 +115,9 @@
 }
 
 @layer components {
-  /* ── Card with accent left border (spec: 4px, accent color) ── */
+  /* ── Card with accent inline-start border (spec: 4px, accent color) ── */
   .accent-card {
-    border-left: 4px solid hsl(var(--accent));
+    border-inline-start: 4px solid hsl(var(--accent));
     @apply bg-card rounded-2xl;
   }
 
@@ -133,7 +133,8 @@
 
   /* ── Timeline connector ───────────────────────────────────── */
   .timeline-line {
-    @apply absolute left-6 top-12 bottom-0 w-0.5;
+    @apply absolute top-12 bottom-0 w-0.5;
+    inset-inline-start: 1.5rem;
     background: linear-gradient(to bottom, hsl(var(--primary) / 0.4), transparent);
   }
 

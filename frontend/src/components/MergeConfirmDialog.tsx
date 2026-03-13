@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,13 +9,13 @@ import { Merge, Loader2 } from 'lucide-react';
 import { SubCategoryIcon } from './shared/SubCategoryIcon';
 import type { PointOfInterest, Transportation } from '@/types/trip';
 
-const statusLabels: Record<string, string> = {
-  candidate: 'מועמד',
-  in_plan: 'בתוכנית',
-  matched: 'משודך',
-  booked: 'הוזמן',
-  visited: 'בוקר',
-  completed: 'הושלם',
+const STATUS_KEYS: Record<string, string> = {
+  candidate: 'status.candidate',
+  in_plan: 'status.inPlan',
+  matched: 'status.matched',
+  booked: 'status.booked',
+  visited: 'status.visited',
+  completed: 'status.completed',
 };
 
 interface MergeConfirmDialogProps {
@@ -26,6 +27,7 @@ interface MergeConfirmDialogProps {
 }
 
 function POISummary({ poi }: { poi: PointOfInterest }) {
+  const { t } = useTranslation();
   const sourceCount =
     (poi.sourceRefs.email_ids?.length || 0) +
     (poi.sourceRefs.recommendation_ids?.length || 0);
@@ -40,9 +42,9 @@ function POISummary({ poi }: { poi: PointOfInterest }) {
         <div className="text-muted-foreground text-xs">{poi.subCategory}</div>
       )}
       <div className="flex flex-wrap gap-1.5">
-        <Badge variant="outline" className="text-xs">{statusLabels[poi.status] || poi.status}</Badge>
-        {poi.isPaid && <Badge variant="default" className="text-xs">שולם</Badge>}
-        {poi.isCancelled && <Badge variant="destructive" className="text-xs">מבוטל</Badge>}
+        <Badge variant="outline" className="text-xs">{STATUS_KEYS[poi.status] ? t(STATUS_KEYS[poi.status]) : poi.status}</Badge>
+        {poi.isPaid && <Badge variant="default" className="text-xs">{t('common.paid')}</Badge>}
+        {poi.isCancelled && <Badge variant="destructive" className="text-xs">{t('transportPage.cancelled')}</Badge>}
       </div>
       {(poi.location.city || poi.location.country) && (
         <div className="text-muted-foreground">
@@ -53,22 +55,22 @@ function POISummary({ poi }: { poi: PointOfInterest }) {
         <div className="text-muted-foreground text-xs">{poi.location.address}</div>
       )}
       {poi.details.cost?.amount != null && poi.details.cost.amount > 0 && (
-        <div>עלות: {poi.details.cost.amount} {poi.details.cost.currency || ''}</div>
+        <div>{t('poiDetail.cost')}: {poi.details.cost.amount} {poi.details.cost.currency || ''}</div>
       )}
       {poi.details.accommodation_details?.checkin?.date && (
         <div className="text-xs text-muted-foreground">
-          כניסה: {poi.details.accommodation_details.checkin.date}
+          {t('poiDetail.checkinDate')}: {poi.details.accommodation_details.checkin.date}
           {poi.details.accommodation_details.checkin.hour && ` ${poi.details.accommodation_details.checkin.hour}`}
         </div>
       )}
       {poi.details.accommodation_details?.checkout?.date && (
         <div className="text-xs text-muted-foreground">
-          יציאה: {poi.details.accommodation_details.checkout.date}
+          {t('poiDetail.checkoutDate')}: {poi.details.accommodation_details.checkout.date}
           {poi.details.accommodation_details.checkout.hour && ` ${poi.details.accommodation_details.checkout.hour}`}
         </div>
       )}
       {poi.details.order_number && (
-        <div className="text-xs">הזמנה: {poi.details.order_number}</div>
+        <div className="text-xs">{t('poiDetail.orderNumber')}: {poi.details.order_number}</div>
       )}
       {poi.details.notes?.user_summary && (
         <div className="text-xs text-muted-foreground italic">
@@ -76,20 +78,21 @@ function POISummary({ poi }: { poi: PointOfInterest }) {
         </div>
       )}
       {sourceCount > 0 && (
-        <div className="text-xs text-muted-foreground">{sourceCount} מקורות</div>
+        <div className="text-xs text-muted-foreground">{t('recsPage.sources', { count: sourceCount })}</div>
       )}
     </div>
   );
 }
 
 function TransportSummary({ transport }: { transport: Transportation }) {
+  const { t } = useTranslation();
   const sourceCount =
     (transport.sourceRefs.email_ids?.length || 0) +
     (transport.sourceRefs.recommendation_ids?.length || 0);
 
   const route = transport.segments.length > 0
     ? `${transport.segments[0].from.name} → ${transport.segments[transport.segments.length - 1].to.name}`
-    : 'Route TBD';
+    : t('transportPage.routeTBD');
 
   return (
     <div className="space-y-2 text-sm">
@@ -99,21 +102,21 @@ function TransportSummary({ transport }: { transport: Transportation }) {
       </div>
       <div className="text-muted-foreground text-xs">{transport.category}</div>
       <div className="flex flex-wrap gap-1.5">
-        <Badge variant="outline" className="text-xs">{statusLabels[transport.status] || transport.status}</Badge>
-        {transport.isPaid && <Badge variant="default" className="text-xs">שולם</Badge>}
-        {transport.isCancelled && <Badge variant="destructive" className="text-xs">מבוטל</Badge>}
+        <Badge variant="outline" className="text-xs">{STATUS_KEYS[transport.status] ? t(STATUS_KEYS[transport.status]) : transport.status}</Badge>
+        {transport.isPaid && <Badge variant="default" className="text-xs">{t('common.paid')}</Badge>}
+        {transport.isCancelled && <Badge variant="destructive" className="text-xs">{t('transportPage.cancelled')}</Badge>}
       </div>
       {transport.segments.length > 0 && (
-        <div className="text-xs text-muted-foreground">{transport.segments.length} קטעים</div>
+        <div className="text-xs text-muted-foreground">{transport.segments.length} {t('transportDetail.segments')}</div>
       )}
       {transport.cost.total_amount > 0 && (
-        <div>עלות: {transport.cost.total_amount} {transport.cost.currency || ''}</div>
+        <div>{t('transportDetail.cost')}: {transport.cost.total_amount} {transport.cost.currency || ''}</div>
       )}
       {transport.booking.carrier_name && (
-        <div className="text-xs">חברה: {transport.booking.carrier_name}</div>
+        <div className="text-xs">{t('transportDetail.carrier')}: {transport.booking.carrier_name}</div>
       )}
       {transport.booking.order_number && (
-        <div className="text-xs">הזמנה: {transport.booking.order_number}</div>
+        <div className="text-xs">{t('transportDetail.orderNumber')}: {transport.booking.order_number}</div>
       )}
       {transport.additionalInfo.notes && (
         <div className="text-xs text-muted-foreground italic">
@@ -121,7 +124,7 @@ function TransportSummary({ transport }: { transport: Transportation }) {
         </div>
       )}
       {sourceCount > 0 && (
-        <div className="text-xs text-muted-foreground">{sourceCount} מקורות</div>
+        <div className="text-xs text-muted-foreground">{t('recsPage.sources', { count: sourceCount })}</div>
       )}
     </div>
   );
@@ -134,6 +137,7 @@ export function MergeConfirmDialog({
   items,
   onConfirm,
 }: MergeConfirmDialogProps) {
+  const { t } = useTranslation();
   const [primaryId, setPrimaryId] = useState(items[0].id);
   const [loading, setLoading] = useState(false);
 
@@ -153,12 +157,12 @@ export function MergeConfirmDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Merge size={18} aria-hidden="true" />
-            מיזוג פריטים
+            {t('mergeDialog.title')}
           </DialogTitle>
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground">
-          בחר את הפריט הראשי (ישמר). נתונים חסרים ישלמו מהפריט השני, שיימחק.
+          {t('mergeDialog.description')}
         </p>
 
         <RadioGroup value={primaryId} onValueChange={setPrimaryId} className="grid grid-cols-2 gap-4">
@@ -175,7 +179,7 @@ export function MergeConfirmDialog({
               <div className="flex items-center gap-2">
                 <RadioGroupItem value={item.id} id={`merge-item-${i}`} />
                 <span className="text-xs font-medium">
-                  {primaryId === item.id ? 'ראשי (ישמר)' : 'משני (יימחק)'}
+                  {primaryId === item.id ? t('mergeDialog.primary') : t('mergeDialog.secondary')}
                 </span>
               </div>
               {entityType === 'poi' ? (
@@ -189,11 +193,11 @@ export function MergeConfirmDialog({
 
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-            ביטול
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleConfirm} disabled={loading} className="gap-1.5">
             {loading ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Merge size={16} aria-hidden="true" />}
-            מזג
+            {t('common.merge')}
           </Button>
         </div>
       </DialogContent>

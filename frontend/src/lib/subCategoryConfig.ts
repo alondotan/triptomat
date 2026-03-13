@@ -302,6 +302,16 @@ export function getSubCategoryEntry(type: string): SubCategoryEntry | undefined 
   return cachedConfig.master_list.find(e => e.type.toLowerCase() === type.toLowerCase());
 }
 
+/** Get the localized display name for a sub-category type. */
+export function getSubCategoryLabel(type: string, lang?: string): string {
+  const entry = getSubCategoryEntry(type);
+  if (!entry) return type;
+  const isHe = (lang ?? document.documentElement.lang) === 'he';
+  if (isHe && entry.names?.he) return entry.names.he;
+  if (entry.names?.en) return entry.names.en;
+  return type;
+}
+
 export function getSubCategoriesForPOICategory(poiCategory: string): SubCategoryEntry[] {
   if (!cachedConfig) return [];
   const catToDb = getCategoryToDbMap();
@@ -360,11 +370,17 @@ export function getCategoryIcon(dbCategory: string): LucideIcon {
   return lucideByName[meta.icon] || MapPin;
 }
 
-/** Get Hebrew label for a DB category (e.g., 'eatery' → 'אוכל'). */
-export function getCategoryLabel(dbCategory: string): string {
+/** Get label for a DB category in the given language, falling back to English then raw name. */
+export function getCategoryLabel(dbCategory: string, lang?: string): string {
   const meta = dbCategoryMap[dbCategory];
-  const heLabel = meta?.labels?.find(l => l.he)?.he;
-  return heLabel || dbCategory;
+  if (!meta) return dbCategory;
+  const isHe = (lang ?? document.documentElement.lang) === 'he';
+  if (isHe) {
+    const heLabel = meta.labels?.find(l => l.he)?.he;
+    if (heLabel) return heLabel;
+  }
+  const enLabel = meta.labels?.find(l => l.en)?.en;
+  return enLabel || dbCategory;
 }
 
 /** Get Tailwind color class for a DB category. */

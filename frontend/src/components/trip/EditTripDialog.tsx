@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +31,7 @@ interface EditTripDialogProps {
 }
 
 export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
+  const { t } = useTranslation();
   const { activeTrip, updateCurrentTrip } = useActiveTrip();
   const { updateTripInList } = useTripList();
   const { toast } = useToast();
@@ -67,8 +69,8 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
   };
 
   const downgradeWarning = (target: PlanningLevel): string => {
-    if (target === 'research') return 'מעבר למצב מחקר ימחק את כל שיבוצי הימים והתאריכים. פעולה זו אינה הפיכה.';
-    if (target === 'planning') return 'מעבר לתכנון יסיר את התאריכים המדויקים. מספר הימים יישמר.';
+    if (target === 'research') return t('editTrip.switchToResearch');
+    if (target === 'planning') return t('editTrip.switchToPlanning');
     return '';
   };
 
@@ -89,20 +91,20 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      toast({ title: 'יש להזין שם לטיול', variant: 'destructive' });
+      toast({ title: t('createTrip.mustEnterName'), variant: 'destructive' });
       return;
     }
     if (planningLevel === 'planning' && (!numberOfDays || Number(numberOfDays) < 1)) {
-      toast({ title: 'יש להזין מספר ימים', variant: 'destructive' });
+      toast({ title: t('createTrip.mustEnterDays'), variant: 'destructive' });
       return;
     }
     if (planningLevel === 'detailed_planning') {
       if (!startDate || !endDate) {
-        toast({ title: 'יש להזין תאריך התחלה וסיום', variant: 'destructive' });
+        toast({ title: t('createTrip.mustEnterDates'), variant: 'destructive' });
         return;
       }
       if (endDate < startDate) {
-        toast({ title: 'תאריך סיום חייב להיות אחרי תאריך התחלה', variant: 'destructive' });
+        toast({ title: t('createTrip.endDateAfterStart'), variant: 'destructive' });
         return;
       }
     }
@@ -169,7 +171,7 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
 
       onOpenChange(false);
     } catch {
-      toast({ title: 'שגיאה בעדכון הטיול', variant: 'destructive' });
+      toast({ title: t('common.somethingWentWrong'), variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
@@ -180,13 +182,13 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>עריכת טיול</DialogTitle>
+            <DialogTitle>{t('editTrip.editTrip')}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             {/* Trip name */}
             <div className="space-y-2">
-              <Label htmlFor="editName">שם הטיול</Label>
+              <Label htmlFor="editName">{t('editTrip.tripName')}</Label>
               <Input
                 id="editName"
                 name="name"
@@ -198,14 +200,14 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
 
             {/* Planning level */}
             <div className="space-y-2">
-              <Label htmlFor="editPlanningLevel">שלב התכנון</Label>
+              <Label htmlFor="editPlanningLevel">{t('editTrip.planningStage')}</Label>
               <PlanningLevelPicker value={planningLevel} onChange={handleLevelChange} />
             </div>
 
             {/* Conditional fields */}
             {planningLevel === 'planning' && (
               <div className="space-y-2">
-                <Label htmlFor="editDays">מספר ימים</Label>
+                <Label htmlFor="editDays">{t('editTrip.numberOfDays')}</Label>
                 <Input
                   id="editDays"
                   name="days"
@@ -223,7 +225,7 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
             {planningLevel === 'detailed_planning' && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="editStart">תאריך התחלה</Label>
+                  <Label htmlFor="editStart">{t('editTrip.startDate')}</Label>
                   <Input
                     id="editStart"
                     name="startDate"
@@ -234,7 +236,7 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="editEnd">תאריך סיום</Label>
+                  <Label htmlFor="editEnd">{t('editTrip.endDate')}</Label>
                   <Input
                     id="editEnd"
                     name="endDate"
@@ -249,9 +251,9 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
             )}
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>ביטול</Button>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
               <Button onClick={handleSave} disabled={isSubmitting || !name.trim()}>
-                {isSubmitting ? 'שומר...' : 'שמור'}
+                {isSubmitting ? t('editTrip.saving') : t('common.save')}
               </Button>
             </div>
           </div>
@@ -262,18 +264,18 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
       <AlertDialog open={!!confirmDowngrade} onOpenChange={() => setConfirmDowngrade(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>שינוי מצב טיול</AlertDialogTitle>
+            <AlertDialogTitle>{t('editTrip.statusChange')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmDowngrade && downgradeWarning(confirmDowngrade)} להמשיך?
+              {confirmDowngrade && downgradeWarning(confirmDowngrade)} {t('editTrip.continueQuestion')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDowngrade}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              אישור
+              {t('common.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

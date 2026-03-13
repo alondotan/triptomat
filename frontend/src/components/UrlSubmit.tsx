@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ function isMapsUrl(url: string) {
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 export function UrlSubmit() {
+  const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
   const tripId = activeTrip?.id;
 
@@ -61,8 +63,8 @@ export function UrlSubmit() {
           setStatus('success');
           setMessage(
             listData.new_places > 0
-              ? `List imported! ${listData.new_places} places added to POIs.`
-              : 'List synced — no new places found.'
+              ? t('urlSubmit.listImported', { count: listData.new_places })
+              : t('urlSubmit.listSynced')
           );
           setUrl('');
           return;
@@ -91,7 +93,7 @@ export function UrlSubmit() {
 
       if (res.status === 200) {
         setStatus('success');
-        setMessage('Already analyzed — results available in Recommendations.');
+        setMessage(t('urlSubmit.alreadyAnalyzed'));
       } else if (res.status === 202) {
         // Insert a placeholder row so Recommendations page shows it immediately
         const jobId = data.job_id;
@@ -109,10 +111,10 @@ export function UrlSubmit() {
           }]);
         }
         setStatus('success');
-        setMessage('Submitted! Analysis in progress.');
+        setMessage(t('urlSubmit.submitted'));
       } else {
         setStatus('error');
-        setMessage(data.error || 'Something went wrong.');
+        setMessage(data.error || t('common.somethingWentWrong'));
       }
 
       setUrl('');
@@ -120,8 +122,8 @@ export function UrlSubmit() {
       setStatus('error');
       setMessage(
         err instanceof DOMException && err.name === 'AbortError'
-          ? 'Request timed out. Please try again.'
-          : 'Failed to reach the server. Please try again.'
+          ? t('urlSubmit.timeout')
+          : t('urlSubmit.serverError')
       );
     }
   };
@@ -130,14 +132,14 @@ export function UrlSubmit() {
     <div className="rounded-lg border bg-card p-4 space-y-3">
       <div className="flex items-center gap-2">
         <Link size={16} className="text-muted-foreground" aria-hidden="true" />
-        <h2 className="font-semibold text-sm">Add from URL</h2>
+        <h2 className="font-semibold text-sm">{t('urlSubmit.title')}</h2>
       </div>
       <p className="text-xs text-muted-foreground">
-        Paste a YouTube video, Google Maps link, or any travel page to extract recommendations.
+        {t('urlSubmit.description')}
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <Input
-          placeholder="https://..."
+          placeholder={t('urlSubmit.placeholder')}
           value={url}
           onChange={e => setUrl(e.target.value)}
           disabled={status === 'loading' || !webhookToken}
@@ -152,7 +154,7 @@ export function UrlSubmit() {
           disabled={!url.trim() || status === 'loading' || !webhookToken}
           size="sm"
         >
-          {status === 'loading' ? <Loader2 size={14} className="animate-spin" /> : 'Analyze'}
+          {status === 'loading' ? <Loader2 size={14} className="animate-spin" /> : t('urlSubmit.analyze')}
         </Button>
       </form>
 
@@ -169,7 +171,7 @@ export function UrlSubmit() {
         )}
       </div>
       {!webhookToken && (
-        <p className="text-xs text-muted-foreground">Loading your account token…</p>
+        <p className="text-xs text-muted-foreground">{t('urlSubmit.loadingToken')}</p>
       )}
     </div>
   );

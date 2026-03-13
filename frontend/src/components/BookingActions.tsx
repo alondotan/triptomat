@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Mail, Copy, Check } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { EmailViewDialog } from './EmailViewDialog';
@@ -15,6 +16,7 @@ interface BookingActionsProps {
 }
 
 export function BookingActions({ orderNumber, emailLinks }: BookingActionsProps) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const [viewingEmail, setViewingEmail] = useState<EmailLink | null>(null);
 
@@ -41,7 +43,7 @@ export function BookingActions({ orderNumber, emailLinks }: BookingActionsProps)
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
                 onClick={e => e.stopPropagation()}
-                aria-label="קישור לאימייל"
+                aria-label={t('bookingActions.emailLink')}
               >
                 <Mail size={13} />
               </a>
@@ -49,14 +51,14 @@ export function BookingActions({ orderNumber, emailLinks }: BookingActionsProps)
               <button
                 className="inline-flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
                 onClick={e => { e.stopPropagation(); setViewingEmail(email); }}
-                aria-label="צפה באימייל"
+                aria-label={t('bookingActions.viewEmail')}
               >
                 <Mail size={13} />
               </button>
             )}
           </TooltipTrigger>
           <TooltipContent side="top">
-            {email.subject ? `פתח מייל: ${email.subject}` : 'פתח מייל'}
+            {email.subject ? t('bookingActions.openEmailSubject', { subject: email.subject }) : t('bookingActions.openEmail')}
           </TooltipContent>
         </Tooltip>
       ))}
@@ -66,7 +68,7 @@ export function BookingActions({ orderNumber, emailLinks }: BookingActionsProps)
             <button
               onClick={handleCopy}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors rounded px-1.5 py-0.5 hover:bg-muted"
-              aria-label="העתק מספר הזמנה"
+              aria-label={t('bookingActions.copyOrderNumber')}
             >
               {copied
                 ? <Check size={11} className="text-green-500 shrink-0" />
@@ -75,7 +77,7 @@ export function BookingActions({ orderNumber, emailLinks }: BookingActionsProps)
               <span className="font-mono">{orderNumber}</span>
             </button>
           </TooltipTrigger>
-          <TooltipContent side="top">העתק מספר הזמנה</TooltipContent>
+          <TooltipContent side="top">{t('bookingActions.copyOrderNumber')}</TooltipContent>
         </Tooltip>
       )}
 

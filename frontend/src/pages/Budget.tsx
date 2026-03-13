@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { useFinance } from '@/context/FinanceContext';
 import { usePOI } from '@/context/POIContext';
@@ -15,14 +16,10 @@ import { AppLayout } from '@/components/layout';
 import { CreateExpenseForm } from '@/components/forms/CreateExpenseForm';
 import type { Expense } from '@/types/trip';
 
-const EXPENSE_CATEGORY_LABELS: Record<string, string> = {
-  food: 'אוכל', transport: 'תחבורה', accommodation: 'לינה', attraction: 'אטרקציה',
-  shopping: 'קניות', communication: 'תקשורת', insurance: 'ביטוח', tips: 'טיפים', other: 'אחר',
-};
-
 type PaidFilter = 'all' | 'paid' | 'unpaid';
 
 const BudgetPage = () => {
+  const { t } = useTranslation();
   const { activeTrip, exchangeRates } = useActiveTrip();
   const { expenses, getCostBreakdown, formatCurrency, formatDualCurrency, convertToPreferredCurrency, updateExpense, deleteExpense, togglePaidStatus } = useFinance();
   const { pois } = usePOI();
@@ -37,10 +34,10 @@ const BudgetPage = () => {
   const [paidFilter, setPaidFilter] = useState<PaidFilter>('all');
 
   const categories = [
-    { label: 'תחבורה', value: breakdown.transport, icon: Plane, color: 'bg-transport-flight' },
-    { label: 'לינה', value: breakdown.lodging, icon: Building2, color: 'bg-primary' },
-    { label: 'פעילויות', value: breakdown.activities, icon: MapPin, color: 'bg-accent' },
-    { label: 'שירותים', value: breakdown.services, icon: Wrench, color: 'bg-muted-foreground' },
+    { label: t('budgetPage.categoryTransport'), value: breakdown.transport, icon: Plane, color: 'bg-transport-flight' },
+    { label: t('budgetPage.categoryAccommodation'), value: breakdown.lodging, icon: Building2, color: 'bg-primary' },
+    { label: t('budgetPage.categoryActivities'), value: breakdown.activities, icon: MapPin, color: 'bg-accent' },
+    { label: t('budgetPage.categoryServices'), value: breakdown.services, icon: Wrench, color: 'bg-muted-foreground' },
   ].map(c => ({ ...c, percentage: breakdown.total > 0 ? (c.value / breakdown.total) * 100 : 0 }));
 
   // Build all expense lines
@@ -124,18 +121,18 @@ const BudgetPage = () => {
   };
 
   if (!activeTrip) {
-    return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
+    return <AppLayout><div className="text-center py-12 text-muted-foreground">{t('common.noTripSelected')}</div></AppLayout>;
   }
 
   return (
     <AppLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">סקירה פיננסית</h2>
+          <h2 className="text-2xl font-bold">{t('budgetPage.title')}</h2>
           <div className="flex items-center gap-2">
             {exchangeRates && (
               <span className="text-xs text-muted-foreground">
-                שערי המרה ל-{preferred} • עודכן {new Date(exchangeRates.fetchedAt).toLocaleDateString('he-IL')}
+                {t('budgetPage.exchangeRates', { currency: preferred, date: new Date(exchangeRates.fetchedAt).toLocaleDateString('he-IL') })}
               </span>
             )}
             <CreateExpenseForm />
@@ -145,7 +142,7 @@ const BudgetPage = () => {
         <Card className="bg-hero-gradient text-primary-foreground">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-primary-foreground/80">
-              <DollarSign size={20} /> סה״כ עלות משוערת ({preferred})
+              <DollarSign size={20} /> {t('budgetPage.totalEstimatedCost', { currency: preferred })}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -154,11 +151,11 @@ const BudgetPage = () => {
             <div className="flex gap-4 mt-3">
               <span className="flex items-center gap-1 text-sm text-primary-foreground/80">
                 <CheckCircle2 size={14} className="text-green-300" />
-                שולם: {formatCurrency(Math.round(paidTotal), preferred)}
+                {t('budgetPage.paidLabel')} {formatCurrency(Math.round(paidTotal), preferred)}
               </span>
               <span className="flex items-center gap-1 text-sm text-primary-foreground/80">
                 <Clock size={14} className="text-yellow-300" />
-                לא שולם: {formatCurrency(Math.round(unpaidTotal), preferred)}
+                {t('budgetPage.unpaidLabel')} {formatCurrency(Math.round(unpaidTotal), preferred)}
               </span>
             </div>
           </CardContent>
@@ -180,7 +177,7 @@ const BudgetPage = () => {
                     </div>
                   </div>
                   <Progress value={cat.percentage} className="h-2" />
-                  <p className="text-xs text-muted-foreground mt-2">{cat.percentage.toFixed(1)}% מהסכום</p>
+                  <p className="text-xs text-muted-foreground mt-2">{t('budgetPage.percentOfTotal', { percent: cat.percentage.toFixed(1) })}</p>
                 </CardContent>
               </Card>
             );
@@ -192,7 +189,7 @@ const BudgetPage = () => {
         {/* Detailed expense list */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold">פירוט הוצאות ({filteredExpenses.length})</h3>
+            <h3 className="text-lg font-bold">{t('budgetPage.expenseDetails', { count: filteredExpenses.length })}</h3>
             {/* Filter tabs */}
             <div className="flex gap-1 border rounded-lg p-1">
               {(['all', 'paid', 'unpaid'] as PaidFilter[]).map(f => (
@@ -203,24 +200,24 @@ const BudgetPage = () => {
                   className="h-7 px-3 text-xs"
                   onClick={() => setPaidFilter(f)}
                 >
-                  {f === 'all' ? 'הכל' : f === 'paid' ? 'שולם' : 'לא שולם'}
+                  {f === 'all' ? t('common.all') : f === 'paid' ? t('common.paid') : t('common.unpaid')}
                 </Button>
               ))}
             </div>
           </div>
           {filteredExpenses.length === 0 ? (
-            <p className="text-center py-8 text-muted-foreground">אין הוצאות עדיין</p>
+            <p className="text-center py-8 text-muted-foreground">{t('budgetPage.noExpenses')}</p>
           ) : (
             <Card>
               <div className="overflow-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>מקור</TableHead>
-                      <TableHead>תיאור</TableHead>
-                      <TableHead>קטגוריה</TableHead>
-                      <TableHead className="text-left">סכום</TableHead>
-                      <TableHead>סטטוס</TableHead>
+                      <TableHead>{t('budgetPage.sourceColumn')}</TableHead>
+                      <TableHead>{t('budgetPage.descriptionColumn')}</TableHead>
+                      <TableHead>{t('budgetPage.categoryColumn')}</TableHead>
+                      <TableHead className="text-left">{t('budgetPage.amountColumn')}</TableHead>
+                      <TableHead>{t('budgetPage.statusColumn')}</TableHead>
                       <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -229,7 +226,7 @@ const BudgetPage = () => {
                       <TableRow key={`${exp.type}-${exp.id}`}>
                         <TableCell>
                           <Badge variant={exp.type === 'manual' ? 'default' : 'secondary'} className="text-xs">
-                            {exp.type === 'poi' ? 'POI' : exp.type === 'transport' ? 'תחבורה' : 'ידני'}
+                            {exp.type === 'poi' ? t('budgetPage.sourcePOI') : exp.type === 'transport' ? t('budgetPage.sourceTransport') : t('budgetPage.sourceManual')}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -240,7 +237,7 @@ const BudgetPage = () => {
                           )}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
-                          {EXPENSE_CATEGORY_LABELS[exp.category] || exp.category}
+                          {t(`expenseCategory.${exp.category}`, exp.category)}
                         </TableCell>
                         <TableCell className="font-medium">
                           {editingId === exp.id ? (
@@ -260,8 +257,8 @@ const BudgetPage = () => {
                             onClick={() => togglePaidStatus(exp.entityType, exp.id, !exp.isPaid)}
                           >
                             {exp.isPaid
-                              ? <><CheckCircle2 size={13} /> שולם</>
-                              : <><Clock size={13} /> לא שולם</>
+                              ? <><CheckCircle2 size={13} /> {t('common.paid')}</>
+                              : <><Clock size={13} /> {t('common.unpaid')}</>
                             }
                           </Button>
                         </TableCell>

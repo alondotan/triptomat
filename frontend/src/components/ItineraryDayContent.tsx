@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import {
   useDroppable,
@@ -165,6 +166,7 @@ export function DragPreview({ label, category }: { label: string; category?: str
 // ─── Potential drop zone ──────────────────────────────────────────────────────
 
 function PotentialDropZone({ isOver }: { isOver: boolean }) {
+  const { t } = useTranslation();
   const { setNodeRef } = useDroppable({ id: 'potential-drop-zone' });
   return (
     <div
@@ -175,7 +177,7 @@ function PotentialDropZone({ isOver }: { isOver: boolean }) {
           : 'border-amber-500/30 text-amber-600/60'
       }`}
     >
-      {isOver ? 'שחרר להחזרה לפוטנציאל' : '↑ גרור לכאן להחזרה לפוטנציאל'}
+      {isOver ? t('timeline.releaseToReturn') : t('timeline.dragToReturn')}
     </div>
   );
 }
@@ -188,6 +190,7 @@ function SortableActivityItem({
   activity: PotentialActivity;
   onRemove: (id: string) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: activity.id,
   });
@@ -205,7 +208,7 @@ function SortableActivityItem({
         {...attributes}
         {...listeners}
         className="shrink-0 cursor-grab active:cursor-grabbing p-0.5 text-muted-foreground/30 hover:text-muted-foreground/60 touch-none select-none"
-        aria-label="גרור"
+        aria-label={t('timeline.drag')}
       >
         <GripVertical size={14} />
       </button>
@@ -239,7 +242,7 @@ function SortableActivityItem({
       {/* Remove */}
       <button
         onClick={() => onRemove(activity.id)}
-        aria-label="הסר"
+        aria-label={t('timeline.remove')}
         className="shrink-0 p-0.5 rounded text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100"
       >
         <X size={12} />
@@ -250,14 +253,14 @@ function SortableActivityItem({
 
 // ─── Transport add dialog ─────────────────────────────────────────────────────
 
-const TRANSPORT_CATS = [
-  { value: 'flight', label: 'טיסה' },
-  { value: 'train', label: 'רכבת' },
-  { value: 'bus', label: 'אוטובוס' },
-  { value: 'ferry', label: 'מעבורת' },
-  { value: 'taxi', label: 'מונית' },
-  { value: 'car_rental', label: 'השכרת רכב' },
-  { value: 'other', label: 'אחר' },
+const TRANSPORT_CAT_KEYS = [
+  { value: 'flight', key: 'transportCategory.airplane' },
+  { value: 'train', key: 'transportCategory.train' },
+  { value: 'bus', key: 'transportCategory.bus' },
+  { value: 'ferry', key: 'transportCategory.ferry' },
+  { value: 'taxi', key: 'transportCategory.taxi' },
+  { value: 'car_rental', key: 'transportCategory.carRental' },
+  { value: 'other', key: 'transportCategory.otherTransportation' },
 ];
 
 function TransportLocationInput({ value, onChange, placeholder, suggestions }: {
@@ -312,6 +315,7 @@ function AddTransportDialog({
   onAdd: (id: string) => Promise<void>;
   onCreateNew: (data: Record<string, string>) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState('flight');
   const [fromName, setFromName] = useState('');
@@ -334,19 +338,19 @@ function AddTransportDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1 text-xs h-7">
-          <Plus size={12} /> הוסף תחבורה
+          <Plus size={12} /> {t('timeline.addTransport')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>הוסף תחבורה</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('timeline.addTransport')}</DialogTitle></DialogHeader>
         <Tabs defaultValue={availableTransport.length > 0 ? 'existing' : 'new'}>
           <TabsList className="w-full">
-            <TabsTrigger value="existing" className="flex-1">בחר קיים</TabsTrigger>
-            <TabsTrigger value="new" className="flex-1">צור חדש</TabsTrigger>
+            <TabsTrigger value="existing" className="flex-1">{t('timeline.chooseExisting')}</TabsTrigger>
+            <TabsTrigger value="new" className="flex-1">{t('timeline.createNew')}</TabsTrigger>
           </TabsList>
           <TabsContent value="existing">
             {availableTransport.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">אין תחבורה זמינה</p>
+              <p className="text-sm text-muted-foreground text-center py-4">{t('timeline.noItemsAvailable')}</p>
             ) : (
               <div className="space-y-1 max-h-64 overflow-y-auto">
                 {availableTransport.map(t => (
@@ -365,26 +369,26 @@ function AddTransportDialog({
           <TabsContent value="new">
             <form onSubmit={handleCreate} className="space-y-3 pt-2">
               <div className="space-y-1">
-                <Label className="text-xs">סוג</Label>
+                <Label className="text-xs">{t('timeline.type')}</Label>
                 <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {TRANSPORT_CATS.map(c => (
-                      <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                    {TRANSPORT_CAT_KEYS.map(c => (
+                      <SelectItem key={c.value} value={c.value}>{t(c.key)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">מוצא *</Label>
-                <TransportLocationInput value={fromName} onChange={setFromName} placeholder="תל אביב" suggestions={locationSuggestions} />
+                <Label className="text-xs">{t('timeline.origin')}</Label>
+                <TransportLocationInput value={fromName} onChange={setFromName} placeholder="" suggestions={locationSuggestions} />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">יעד *</Label>
-                <TransportLocationInput value={toName} onChange={setToName} placeholder="בנגקוק" suggestions={locationSuggestions} />
+                <Label className="text-xs">{t('timeline.destination')}</Label>
+                <TransportLocationInput value={toName} onChange={setToName} placeholder="" suggestions={locationSuggestions} />
               </div>
               <Button type="submit" className="w-full" size="sm" disabled={submitting || !fromName || !toName}>
-                {submitting ? 'יוצר...' : 'צור והוסף'}
+                {submitting ? t('createTrip.creating') : t('timeline.createAndAdd')}
               </Button>
             </form>
           </TabsContent>
@@ -410,6 +414,7 @@ function LockedNewSchedItem({
   imageUrl?: string;
   onRemove: (id: string) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="rounded-xl border-2 overflow-hidden border-amber-400/60 bg-amber-50/5">
       <div className="px-2.5 py-0.5 border-b border-amber-400/30 flex items-center gap-1.5">
@@ -439,7 +444,7 @@ function LockedNewSchedItem({
         </div>
         <button
           onClick={() => onRemove(activityId)}
-          aria-label="הסר"
+          aria-label={t('timeline.remove')}
           className="shrink-0 p-0.5 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
         >
           <X size={11} />
@@ -465,6 +470,7 @@ function SortableNewSchedItem({
   imageUrl?: string;
   onRemove: (id: string) => Promise<void>;
 }) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `newsched-${activityId}`,
   });
@@ -488,7 +494,7 @@ function SortableNewSchedItem({
           {...attributes}
           {...listeners}
           className="shrink-0 cursor-grab active:cursor-grabbing p-0.5 text-muted-foreground/30 hover:text-muted-foreground/60 touch-none select-none"
-          aria-label="גרור"
+          aria-label={t('timeline.drag')}
         >
           <GripVertical size={13} />
         </button>
@@ -512,7 +518,7 @@ function SortableNewSchedItem({
         </div>
         <button
           onClick={() => onRemove(activityId)}
-          aria-label="הסר"
+          aria-label={t('timeline.remove')}
           className="shrink-0 p-0.5 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
         >
           <X size={11} />
@@ -525,6 +531,7 @@ function SortableNewSchedItem({
 // ─── New-schedule drop gap ────────────────────────────────────────────────────
 
 function NewSchedDropGap({ index }: { index: number }) {
+  const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({ id: `newsched-gap-${index}` });
   return (
     <div
@@ -537,7 +544,7 @@ function NewSchedDropGap({ index }: { index: number }) {
           : 'h-4'
       }`}
     >
-      {isOver && <p className="text-[10px] text-primary/70 font-medium">שחרר כאן</p>}
+      {isOver && <p className="text-[10px] text-primary/70 font-medium">{t('timeline.dropHere')}</p>}
       {!isOver && (
         <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center gap-2 px-2 pointer-events-none opacity-20">
           <div className="flex-1 h-px border-t border-dashed border-primary/40" />
@@ -561,6 +568,7 @@ function NewScheduleDropZone({
   isOver: boolean;
   showGaps: boolean;
 }) {
+  const { t } = useTranslation();
   const { setNodeRef } = useDroppable({ id: 'new-schedule-zone', disabled: !isActive });
 
   return (
@@ -576,7 +584,7 @@ function NewScheduleDropZone({
     >
       {scheduleCells.length === 0 ? (
         <p className={`text-xs px-1 py-2 text-center ${isOver ? 'text-primary/80 font-medium' : 'text-muted-foreground'}`}>
-          {isOver ? 'שחרר כאן' : 'גרור פעילויות פוטנציאליות לכאן'}
+          {isOver ? t('timeline.dropHere') : t('timeline.dragPotentialHere')}
         </p>
       ) : (
         <div className="space-y-1.5">
@@ -604,7 +612,7 @@ function NewScheduleDropZone({
                       {cell.transportId && (
                         <button
                           onClick={() => onRemoveTransport(cell.transportId!)}
-                          aria-label="הסר"
+                          aria-label={t('timeline.remove')}
                           className="shrink-0 p-0.5 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
                         >
                           <X size={11} />
@@ -648,7 +656,7 @@ function NewScheduleDropZone({
                   <div className="rounded-xl border-2 border-primary/40 bg-primary/5 overflow-hidden">
                     <div className="px-2.5 py-1 border-b border-primary/20 flex items-center gap-1.5">
                       <span className="text-[10px] text-primary/70 font-semibold">{cell.label}</span>
-                      <span className="text-[10px] text-primary/40">· {cell.groupItems.length} פעילויות</span>
+                      <span className="text-[10px] text-primary/40">· {cell.groupItems.length} {t('common.items')}</span>
                     </div>
                     <div className="p-1 space-y-0.5">
                       {cell.groupItems.map(gi => (
@@ -696,17 +704,17 @@ export function ItineraryDayContent({
   dayAccommodations, availableAccom, onToggleAccommodationSelected,
   onRemoveAccommodation, onAddAccommodation, onCreateNewAccommodation, maxNights,
 }: ItineraryDayContentProps) {
-
+  const { t } = useTranslation();
   const morningAccom = prevDayAccommodations.find(a => a.is_selected) ?? prevDayAccommodations[0];
 
   return (
     <div className="space-y-6">
 
       {/* ── Section 1: Where I wake up ──────────────────────────────── */}
-      <SectionBlock icon={<Sun size={12} />} title="איפה אני קם" colorClass="text-warning">
+      <SectionBlock icon={<Sun size={12} />} title={t('timeline.wakeUp')} colorClass="text-warning">
         {selectedDayNum === 1 ? (
           <div className="px-3 py-2.5 text-xs text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border/40">
-            יום ראשון — נקודת הזינוק
+            {t('timeline.firstDay')}
           </div>
         ) : morningAccom ? (
           <div className="flex items-center gap-2.5 bg-muted/40 rounded-xl px-3 py-2.5 border border-border/40">
@@ -720,13 +728,13 @@ export function ItineraryDayContent({
           </div>
         ) : (
           <div className="px-3 py-2.5 text-xs text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border/40">
-            לא הוגדרה לינה ליום {selectedDayNum - 1}
+            {t('timeline.noAccommodationSet', { day: selectedDayNum - 1 })}
           </div>
         )}
       </SectionBlock>
 
       {/* ── Section 2: Potential Activities ─────────────────────────── */}
-      <SectionBlock icon={<Lightbulb size={12} />} title="פעילויות פוטנציאליות" colorClass="text-info">
+      <SectionBlock icon={<Lightbulb size={12} />} title={t('timeline.potentialActivities')} colorClass="text-info">
         {/* Drop zone shown when dragging a scheduled item back */}
         {isScheduledBeingDragged && (
           <PotentialDropZone isOver={isOverPotential} />
@@ -735,7 +743,7 @@ export function ItineraryDayContent({
         <SortableContext items={potentialActivities.map(a => a.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-1.5">
             {potentialActivities.length === 0 && !isScheduledBeingDragged && (
-              <p className="text-xs text-muted-foreground px-1">גרור פעילות ללו״ז — או הוסף מהרשימה</p>
+              <p className="text-xs text-muted-foreground px-1">{t('timeline.dragActivityToSchedule')}</p>
             )}
             {potentialActivities.map(activity => (
               <SortableActivityItem
@@ -758,7 +766,7 @@ export function ItineraryDayContent({
             availableItems={availableActivities}
             onAdd={onAddActivity}
             onCreateNew={onCreateNewActivity}
-            addLabel="הוסף פעילות"
+            addLabel={t('timeline.addActivity')}
             locationContext={locationContext}
             countries={countries}
 
@@ -770,7 +778,7 @@ export function ItineraryDayContent({
       {/* ── Section 2.5: Schedule ─────────────────────────────────────── */}
       <SectionBlock
         icon={<CalendarDays size={12} />}
-        title='לו"ז'
+        title={t('timeline.schedule')}
         colorClass="text-primary"
         action={
           <AddTransportDialog
@@ -792,7 +800,7 @@ export function ItineraryDayContent({
       </SectionBlock>
 
       {/* ── Section 4: Evening Accommodation ────────────────────────── */}
-      <SectionBlock icon={<Moon size={12} />} title="איפה אני ישן" colorClass="text-info">
+      <SectionBlock icon={<Moon size={12} />} title={t('timeline.sleepAt')} colorClass="text-info">
         <DaySection
           title="" icon={null as any}
           hideHeader
@@ -810,7 +818,7 @@ export function ItineraryDayContent({
           onAdd={onAddAccommodation}
           onCreateNew={onCreateNewAccommodation}
           onToggleSelected={onToggleAccommodationSelected}
-          addLabel="הוסף לינה"
+          addLabel={t('timeline.addAccommodation')}
           maxNights={maxNights}
           showBookingMissionOption
           locationContext={locationContext}

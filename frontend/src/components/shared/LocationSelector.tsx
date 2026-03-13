@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check, ChevronsUpDown, ChevronDown, ChevronLeft, Plus, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -7,30 +8,30 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import type { SiteNode } from '@/hooks/useCountrySites';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 
-export const TYPE_LABELS: Record<string, string> = {
-  city: 'עיר',
-  town: 'עיירה',
-  state: 'מדינה/מחוז',
-  neighborhood: 'שכונה',
-  historicDistrict: 'רובע היסטורי',
-  island: 'אי',
-  region: 'אזור',
-  archipelago: 'ארכיפלג',
-  waterfall: 'מפל',
-  nationalPark: 'פארק לאומי',
-  resort: 'ריזורט',
-  village: 'כפר',
-  district: 'מחוז',
-  beach: 'חוף',
-  province: 'פרובינציה',
-  peninsula: 'חצי אי',
-  valley: 'עמק',
-  desert: 'מדבר',
-  lake: 'אגם',
-  volcano: 'הר געש',
-  mountain: 'הר',
-  municipality: 'עירייה',
-  country: 'מדינה',
+export const TYPE_LABEL_KEYS: Record<string, string> = {
+  city: 'locationType.city',
+  town: 'locationType.town',
+  state: 'locationType.state',
+  neighborhood: 'locationType.neighborhood',
+  historicDistrict: 'locationType.historicDistrict',
+  island: 'locationType.island',
+  region: 'locationType.region',
+  archipelago: 'locationType.archipelago',
+  waterfall: 'locationType.waterfall',
+  nationalPark: 'locationType.nationalPark',
+  resort: 'locationType.resort',
+  village: 'locationType.village',
+  district: 'locationType.district',
+  beach: 'locationType.beach',
+  province: 'locationType.province',
+  peninsula: 'locationType.peninsula',
+  valley: 'locationType.valley',
+  desert: 'locationType.desert',
+  lake: 'locationType.lake',
+  volcano: 'locationType.volcano',
+  mountain: 'locationType.mountain',
+  municipality: 'locationType.municipality',
+  country: 'locationType.country',
 };
 
 const RECENT_KEY = 'triptomat-recent-locations';
@@ -55,7 +56,9 @@ interface LocationSelectorProps {
   className?: string;
 }
 
-export function LocationSelector({ value, onChange, placeholder = 'בחר מיקום...', className }: LocationSelectorProps) {
+export function LocationSelector({ value, onChange, placeholder, className }: LocationSelectorProps) {
+  const { t } = useTranslation();
+  const effectivePlaceholder = placeholder ?? t('locationSelector.chooseLocation');
   const { tripLocationTree, addSiteToHierarchy } = useActiveTrip();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -83,7 +86,7 @@ export function LocationSelector({ value, onChange, placeholder = 'בחר מיק
             {value ? (
               <span className="truncate">{value}</span>
             ) : (
-              <span className="text-muted-foreground">{placeholder}</span>
+              <span className="text-muted-foreground">{effectivePlaceholder}</span>
             )}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -95,10 +98,10 @@ export function LocationSelector({ value, onChange, placeholder = 'בחר מיק
               <Input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="חפש מיקום..."
+                placeholder={t('locationSelector.searchLocation')}
                 className="h-8 text-sm pr-8"
                 autoFocus
-                aria-label="חיפוש מיקום"
+                aria-label={t('locationSelector.searchLocation')}
                 name="location-search"
               />
             </div>
@@ -133,6 +136,7 @@ interface LocationTreeProps {
 }
 
 function LocationTree({ nodes, search, value, onSelect, onAddToTree, recentLocations }: LocationTreeProps) {
+  const { t } = useTranslation();
   const lower = search.toLowerCase();
 
   // Collect all site names for recent matching
@@ -165,7 +169,7 @@ function LocationTree({ nodes, search, value, onSelect, onAddToTree, recentLocat
     nodes.forEach(n => searchNodes(n, []));
 
     if (results.length === 0) {
-      return <p className="text-xs text-muted-foreground text-center py-4">לא נמצא</p>;
+      return <p className="text-xs text-muted-foreground text-center py-4">{t('locationSelector.notFound')}</p>;
     }
 
     return (
@@ -183,7 +187,7 @@ function LocationTree({ nodes, search, value, onSelect, onAddToTree, recentLocat
             <Check className={cn('h-3.5 w-3.5 shrink-0', value === r.label ? 'opacity-100' : 'opacity-0')} />
             <span className="truncate">{r.label}</span>
             <span className="text-[10px] text-muted-foreground mr-auto shrink-0">
-              {TYPE_LABELS[r.siteType] || r.siteType}
+              {TYPE_LABEL_KEYS[r.siteType] ? t(TYPE_LABEL_KEYS[r.siteType]) : r.siteType}
             </span>
           </button>
         ))}
@@ -196,7 +200,7 @@ function LocationTree({ nodes, search, value, onSelect, onAddToTree, recentLocat
       {/* Recently used */}
       {validRecent.length > 0 && (
         <div className="mb-1">
-          <div className="px-2 py-1 text-[11px] font-semibold text-muted-foreground">בשימוש לאחרונה</div>
+          <div className="px-2 py-1 text-[11px] font-semibold text-muted-foreground">{t('locationSelector.recentlyUsed')}</div>
           {validRecent.map(label => (
             <button
               key={`recent-${label}`}
@@ -232,6 +236,7 @@ interface TreeNodeProps {
 }
 
 function ManualEntryFooter({ onSelect, onAddToTree }: { onSelect: (label: string) => void; onAddToTree?: (siteName: string, parentSiteName?: string) => void }) {
+  const { t } = useTranslation();
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -255,7 +260,7 @@ function ManualEntryFooter({ onSelect, onAddToTree }: { onSelect: (label: string
           className="flex items-center gap-1.5 w-full text-right py-1.5 px-2 rounded-md transition-colors text-sm hover:bg-accent text-muted-foreground"
         >
           <Plus size={14} />
-          <span>הוסף מיקום ידנית</span>
+          <span>{t('locationSelector.addManually')}</span>
         </button>
       </div>
     );
@@ -267,15 +272,15 @@ function ManualEntryFooter({ onSelect, onAddToTree }: { onSelect: (label: string
         <Input
           value={newName}
           onChange={e => setNewName(e.target.value)}
-          placeholder="שם מיקום..."
+          placeholder={t('locationSelector.locationNamePlaceholder')}
           className="h-8 text-sm flex-1"
           autoFocus
           onKeyDown={e => { if (e.key === 'Escape') { setAdding(false); setNewName(''); } }}
-          aria-label="שם מיקום חדש"
+          aria-label={t('locationSelector.locationNamePlaceholder')}
           name="new-location"
         />
         <Button type="submit" size="sm" className="h-8 text-xs px-3" disabled={!newName.trim()}>
-          בחר
+          {t('locationSelector.choose')}
         </Button>
       </form>
     </div>
@@ -283,6 +288,7 @@ function ManualEntryFooter({ onSelect, onAddToTree }: { onSelect: (label: string
 }
 
 function TreeNode({ node, depth, value, onSelect, onAddToTree }: TreeNodeProps) {
+  const { t } = useTranslation();
   const hasChildren = node.sub_sites && node.sub_sites.length > 0;
   const isCountry = node.site_type === 'country';
   const [expanded, setExpanded] = useState(depth < 1);
@@ -313,7 +319,7 @@ function TreeNode({ node, depth, value, onSelect, onAddToTree }: TreeNodeProps) 
     }
   };
 
-  const typeLabel = TYPE_LABELS[node.site_type] || node.site_type;
+  const typeLabel = TYPE_LABEL_KEYS[node.site_type] ? t(TYPE_LABEL_KEYS[node.site_type]) : node.site_type;
 
   return (
     <div>
@@ -351,8 +357,8 @@ function TreeNode({ node, depth, value, onSelect, onAddToTree }: TreeNodeProps) 
             type="button"
             onClick={(e) => { e.stopPropagation(); setAdding(true); }}
             className="p-1 rounded hover:bg-muted-foreground/20 ml-1 shrink-0"
-            title="הוסף מיקום"
-            aria-label="הוסף"
+            title={t('locationSelector.addManually')}
+            aria-label={t('common.add')}
           >
             <Plus size={12} className="text-muted-foreground" />
           </button>
@@ -374,15 +380,15 @@ function TreeNode({ node, depth, value, onSelect, onAddToTree }: TreeNodeProps) 
               <Input
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
-                placeholder="שם מיקום חדש..."
+                placeholder={t('locationSelector.locationNamePlaceholder')}
                 className="h-7 text-xs flex-1"
                 autoFocus
                 onKeyDown={e => { if (e.key === 'Escape') { setAdding(false); setNewName(''); } }}
-                aria-label="שם מיקום חדש"
+                aria-label={t('locationSelector.locationNamePlaceholder')}
                 name="new-child-location"
               />
               <Button type="submit" size="sm" className="h-7 text-xs px-2" disabled={!newName.trim()}>
-                בחר
+                {t('locationSelector.choose')}
               </Button>
               <Button type="button" variant="ghost" size="sm" className="h-7 text-xs px-1" onClick={() => { setAdding(false); setNewName(''); }}>
                 ✕

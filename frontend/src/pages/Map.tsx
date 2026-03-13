@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useActiveTrip } from '@/context/ActiveTripContext';
@@ -43,16 +44,6 @@ const TRANSPORT_COLORS: Record<string, string> = {
   default: '#64748b',
 };
 
-const LEGEND_ITEMS = [
-  { color: POI_COLORS.accommodation, label: 'Accommodation' },
-  { color: POI_COLORS.eatery, label: 'Eatery' },
-  { color: POI_COLORS.attraction, label: 'Attraction' },
-  { color: POI_COLORS.service, label: 'Service' },
-  { color: '#1d4ed8', label: 'Transport stop', square: true },
-  { color: '#3498db', label: 'Region boundary', outline: true },
-  { color: '#e94560', label: 'Top attraction', star: true },
-];
-
 function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
@@ -65,6 +56,7 @@ function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
 }
 
 const MapPage = () => {
+  const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
   const { pois } = usePOI();
   const { transportation } = useTransport();
@@ -72,8 +64,18 @@ const MapPage = () => {
   const countries = activeTrip?.countries || [];
   const mapData = useCountryMapData(countries);
 
+  const LEGEND_ITEMS = [
+    { color: POI_COLORS.accommodation, label: t('mapPage.legendAccommodation') },
+    { color: POI_COLORS.eatery, label: t('mapPage.legendEatery') },
+    { color: POI_COLORS.attraction, label: t('mapPage.legendAttraction') },
+    { color: POI_COLORS.service, label: t('mapPage.legendService') },
+    { color: '#1d4ed8', label: t('mapPage.legendTransportStop'), square: true },
+    { color: '#3498db', label: t('mapPage.legendRegionBoundary'), outline: true },
+    { color: '#e94560', label: t('mapPage.legendTopAttraction'), star: true },
+  ];
+
   if (!activeTrip) {
-    return <AppLayout hideHero><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
+    return <AppLayout hideHero><div className="text-center py-12 text-muted-foreground">{t('common.noTripSelected')}</div></AppLayout>;
   }
 
   // ── POI markers ──────────────────────────────────────────────
@@ -135,11 +137,11 @@ const MapPage = () => {
     <AppLayout hideHero>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">Trip Map</h2>
-          <span className="text-sm text-muted-foreground">{totalOnMap} items on map</span>
+          <h2 className="text-2xl font-bold">{t('mapPage.title')}</h2>
+          <span className="text-sm text-muted-foreground">{t('mapPage.itemsOnMap', { count: totalOnMap })}</span>
         </div>
 
-        <div className="relative rounded-xl overflow-hidden border shadow-sm" style={{ height: 520 }}>
+        <div className="relative rounded-xl overflow-hidden border shadow-sm" style={{ height: 520, isolation: 'isolate' }}>
           <MapContainer center={defaultCenter} zoom={5} className="h-full w-full" scrollWheelZoom>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -232,7 +234,7 @@ const MapPage = () => {
 
         {totalOnMap === 0 && !hasBoundaryNav && (
           <p className="text-sm text-muted-foreground text-center">
-            No items with coordinates found. Add location data to your POIs or transportation.
+            {t('mapPage.noItems')}
           </p>
         )}
       </div>

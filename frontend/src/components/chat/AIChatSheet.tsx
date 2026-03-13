@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -40,6 +41,7 @@ const tripSessions = new Map<string, Message[]>();
 const SUMMARIZE_PROMPT = `Based on our conversation, please create a concise summary of all the specific travel recommendations, places, restaurants, activities, and tips you mentioned. Format it as a clear list with location names, what they are, and why they're recommended. Include addresses or areas if you mentioned them. Write it as a travel recommendation text that someone could use to plan their trip.`;
 
 export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProps) {
+  const { t } = useTranslation();
   const tripId = tripContext?.tripId || null;
   const [messages, setMessages] = useState<Message[]>(() =>
     tripId ? (tripSessions.get(tripId) || []) : []
@@ -207,8 +209,8 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
         }
 
         toast({
-          title: 'Insights sent',
-          description: 'AI recommendations are being processed. Check the Recommendations page.',
+          title: t('aiChat.insightsSent'),
+          description: t('aiChat.insightsDescription'),
         });
       } else {
         throw new Error(gatewayData.error || 'Gateway rejected the request');
@@ -237,7 +239,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
           <div className="flex items-center justify-between">
             <SheetTitle className="flex items-center gap-2 text-base">
               <Bot size={18} className="text-primary" />
-              <span className="truncate">AI — {tripLabel}</span>
+              <span className="truncate">{t('aiChat.title', { trip: tripLabel })}</span>
             </SheetTitle>
             {hasAssistantMessages && tripContext && (
               <Button
@@ -250,7 +252,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
                 {integrating
                   ? <Loader2 size={12} className="animate-spin" />
                   : <Sparkles size={12} />}
-                Integrate
+                {t('aiChat.integrate')}
               </Button>
             )}
           </div>
@@ -262,11 +264,11 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
             {messages.length === 0 && tripContext && (
               <div className="text-center text-muted-foreground text-sm py-12 space-y-2">
                 <Bot size={32} className="mx-auto text-muted-foreground/50" />
-                <p className="font-medium">Hi! I'm here to help with <span className="text-foreground">{tripLabel}</span></p>
+                <p className="font-medium">{t('aiChat.greeting', { trip: tripLabel })}</p>
                 <p className="text-xs">
                   {tripContext.countries.length > 0
-                    ? `Ask me anything about ${tripContext.countries.join(', ')} — activities, restaurants, logistics, tips...`
-                    : 'Ask me about destinations, activities, restaurants, logistics, or anything travel-related.'}
+                    ? t('aiChat.promptWithCountries', { countries: tripContext.countries.join(', ') })
+                    : t('aiChat.promptGeneric')}
                 </p>
               </div>
             )}
@@ -274,8 +276,8 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
             {!tripContext && (
               <div className="text-center text-muted-foreground text-sm py-12 space-y-2">
                 <Bot size={32} className="mx-auto text-muted-foreground/50" />
-                <p className="font-medium">No trip selected</p>
-                <p className="text-xs">Select a trip first to start chatting.</p>
+                <p className="font-medium">{t('aiChat.noTripSelected')}</p>
+                <p className="text-xs">{t('aiChat.selectTripFirst')}</p>
               </div>
             )}
 
@@ -339,7 +341,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
               value={input}
               onChange={e => setInput(e.target.value.slice(0, MAX_INPUT))}
               onKeyDown={handleKeyDown}
-              placeholder={tripContext ? `Ask about ${tripLabel}...` : 'Select a trip first...'}
+              placeholder={tripContext ? t('aiChat.inputPlaceholder', { trip: tripLabel }) : t('aiChat.inputDisabled')}
               rows={1}
               className="flex-1 resize-none rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 max-h-[120px] min-h-[40px]"
               style={{ height: 'auto', overflow: 'auto' }}
@@ -360,7 +362,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
             </Button>
           </div>
           <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-            AI may make mistakes. Verify important travel info independently.
+            {t('aiChat.disclaimer')}
           </p>
         </div>
       </SheetContent>

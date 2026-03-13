@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveTrip } from '@/context/ActiveTripContext';
@@ -20,6 +21,7 @@ function isMapsUrl(url: string) {
 type Status = 'loading' | 'success' | 'cached' | 'list-imported' | 'error' | 'no-url';
 
 export default function ShareTargetPage() {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { activeTrip } = useActiveTrip();
@@ -52,7 +54,7 @@ export default function ShareTargetPage() {
         if (!webhookToken) {
           console.error('[ShareTarget] no webhook token:', tokenError);
           setStatus('error');
-          setMessage('Could not load account token. Try opening the app first.');
+          setMessage(t('shareTarget.couldNotLoadToken'));
           return;
         }
 
@@ -113,12 +115,12 @@ export default function ShareTargetPage() {
           setStatus('success');
         } else {
           setStatus('error');
-          setMessage(data.error || 'Something went wrong.');
+          setMessage(data.error || t('common.somethingWentWrong'));
         }
       } catch (err) {
         console.error('[ShareTarget] submit failed:', err);
         setStatus('error');
-        setMessage('Failed to reach the server.');
+        setMessage(t('shareTarget.serverFailed'));
       }
     }
 
@@ -129,12 +131,12 @@ export default function ShareTargetPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
       <div className="max-w-sm w-full rounded-xl border bg-card p-6 space-y-4 text-center">
-        <h1 className="text-lg font-bold">Triptomat</h1>
+        <h1 className="text-lg font-bold">{t('nav.triptomat')}</h1>
 
         {status === 'loading' && (
           <div className="flex flex-col items-center gap-3 text-muted-foreground">
             <Loader2 size={32} className="animate-spin" />
-            <p className="text-sm">Submitting shared link…</p>
+            <p className="text-sm">{t('shareTarget.submitting')}</p>
           </div>
         )}
 
@@ -144,7 +146,7 @@ export default function ShareTargetPage() {
             <p className="text-sm text-green-600 font-medium">{message}</p>
             <Button size="sm" className="gap-1.5" onClick={() => navigate('/pois')}>
               <ExternalLink size={14} />
-              Go to POIs
+              {t('shareTarget.goToPOIs')}
             </Button>
           </div>
         )}
@@ -154,12 +156,12 @@ export default function ShareTargetPage() {
             <CheckCircle size={32} className="text-green-500" />
             <p className="text-sm text-green-600 font-medium">
               {status === 'cached'
-                ? 'Already analyzed — results available.'
-                : 'Submitted! Analysis in progress.'}
+                ? t('shareTarget.alreadyAnalyzed')
+                : t('shareTarget.analysisSubmitted')}
             </p>
             <Button size="sm" className="gap-1.5" onClick={() => navigate('/recommendations')}>
               <ExternalLink size={14} />
-              Go to Recommendations
+              {t('shareTarget.goToRecs')}
             </Button>
           </div>
         )}
@@ -169,7 +171,7 @@ export default function ShareTargetPage() {
             <AlertCircle size={32} className="text-destructive" />
             <p className="text-sm text-destructive">{message}</p>
             <Button variant="outline" size="sm" onClick={() => navigate('/')}>
-              Back to Home
+              {t('shareTarget.backToHome')}
             </Button>
           </div>
         )}
@@ -177,9 +179,9 @@ export default function ShareTargetPage() {
         {status === 'no-url' && (
           <div className="flex flex-col items-center gap-3">
             <AlertCircle size={32} className="text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">No URL found in the shared content.</p>
+            <p className="text-sm text-muted-foreground">{t('shareTarget.noUrl')}</p>
             <Button variant="outline" size="sm" onClick={() => navigate('/')}>
-              Back to Home
+              {t('shareTarget.backToHome')}
             </Button>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
@@ -20,6 +21,7 @@ import { TextSubmit } from '@/components/TextSubmit';
 import { supabase } from '@/integrations/supabase/client';
 
 const Recommendations = () => {
+  const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
   const { pois } = usePOI();
   const { transportation } = useTransport();
@@ -46,13 +48,13 @@ const Recommendations = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Sync failed');
       toast({
-        title: `Synced "${rec.sourceTitle}"`,
+        title: t('recsPage.synced', { name: rec.sourceTitle }),
         description: data.new_places > 0
-          ? `${data.new_places} new places found.`
-          : 'No new places found.',
+          ? t('recsPage.newPlacesFound', { count: data.new_places })
+          : t('recsPage.noNewPlaces'),
       });
     } catch (e: any) {
-      toast({ title: 'Sync failed', description: e.message, variant: 'destructive' });
+      toast({ title: t('recsPage.syncFailed'), description: e.message, variant: 'destructive' });
     }
     setSyncing(prev => ({ ...prev, [rec.id]: false }));
   };
@@ -61,9 +63,9 @@ const Recommendations = () => {
     try {
       await deleteRecommendation(id);
       setRecommendations(prev => prev.filter(r => r.id !== id));
-      toast({ title: 'המלצה נמחקה' });
+      toast({ title: t('recsPage.recDeleted') });
     } catch {
-      toast({ title: 'שגיאה', description: 'לא ניתן למחוק.', variant: 'destructive' });
+      toast({ title: t('recsPage.deleteError'), variant: 'destructive' });
     }
   };
 
@@ -100,7 +102,7 @@ const Recommendations = () => {
   }, [activeTrip?.id]);
 
   if (!activeTrip) {
-    return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
+    return <AppLayout><div className="text-center py-12 text-muted-foreground">{t('common.noTripSelected')}</div></AppLayout>;
   }
 
   if (loading) {
@@ -119,8 +121,8 @@ const Recommendations = () => {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold">Recommendations</h2>
-          <p className="text-muted-foreground">{recommendations.length} sources</p>
+          <h2 className="text-2xl font-bold">{t('recsPage.title')}</h2>
+          <p className="text-muted-foreground">{t('recsPage.sources', { count: recommendations.length })}</p>
         </div>
 
         <UrlSubmit />
@@ -128,7 +130,7 @@ const Recommendations = () => {
 
         {recommendations.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            No recommendations yet for this trip.
+            {t('recsPage.noRecs')}
           </div>
         )}
 
@@ -151,9 +153,9 @@ const Recommendations = () => {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Loader2 size={16} className="text-primary animate-spin" />
-                      {rec.sourceTitle || 'Analyzing...'}
+                      {rec.sourceTitle || t('recsPage.analyzing')}
                     </CardTitle>
-                    <Badge variant="outline" className="text-orange-600 border-orange-300">processing</Badge>
+                    <Badge variant="outline" className="text-orange-600 border-orange-300">{t('recsPage.processing')}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="text-sm space-y-2">
@@ -163,7 +165,7 @@ const Recommendations = () => {
                       <ExternalLink size={12} /> {rec.sourceUrl}
                     </a>
                   )}
-                  <p className="text-xs text-muted-foreground">Analysis in progress...</p>
+                  <p className="text-xs text-muted-foreground">{t('recsPage.analysisInProgress')}</p>
                 </CardContent>
               </Card>
             );
@@ -177,10 +179,10 @@ const Recommendations = () => {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
                       <AlertTriangle size={16} className="text-destructive" />
-                      {rec.sourceTitle || 'Failed'}
+                      {rec.sourceTitle || t('recsPage.failed')}
                     </CardTitle>
                     <div className="flex items-center gap-2">
-                      <Badge variant="destructive">failed</Badge>
+                      <Badge variant="destructive">{t('recsPage.failed')}</Badge>
                       <Button size="sm" variant="ghost" onClick={() => handleDelete(rec.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -237,7 +239,7 @@ const Recommendations = () => {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Star size={16} className="text-primary" />
-                    {rec.sourceTitle || rec.analysis.main_site || 'Recommendation'}
+                    {rec.sourceTitle || rec.analysis.main_site || t('recsPage.title')}
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <Badge variant={rec.status === 'linked' ? 'default' : 'secondary'}>{rec.status}</Badge>
@@ -268,7 +270,7 @@ const Recommendations = () => {
                 {/* Sites list */}
                 {rec.analysis.sites_list && rec.analysis.sites_list.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Sites mentioned:</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">{t('recsPage.sitesMentioned')}</p>
                     <div className="flex flex-wrap gap-1">
                       {rec.analysis.sites_list.map((s, i) => (
                         <Badge key={i} variant="outline" className="text-xs">
@@ -282,7 +284,7 @@ const Recommendations = () => {
                 {/* Extracted items */}
                 {rec.analysis.extracted_items && rec.analysis.extracted_items.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Extracted items:</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">{t('recsPage.extractedItems')}</p>
                     <div className="space-y-1.5">
                       {rec.analysis.extracted_items.map((item, i) => (
                         <div key={i} className="flex items-start gap-2 p-2 rounded bg-muted/50">
@@ -313,7 +315,7 @@ const Recommendations = () => {
                 {/* Extracted contacts */}
                 {rec.analysis.contacts && rec.analysis.contacts.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Contacts mentioned:</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-1">{t('recsPage.contactsMentioned')}</p>
                     <div className="space-y-1.5">
                       {rec.analysis.contacts.map((contact, i) => (
                         <div key={i} className="flex items-start gap-2 p-2 rounded bg-muted/50">
@@ -339,7 +341,7 @@ const Recommendations = () => {
                 {/* Linked entities — shown when expanded */}
                 {isExpanded && hasLinkedEntities && (
                   <div className="pt-3 border-t">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">אובייקטים שנוצרו:</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">{t('recsPage.objectsCreated')}</p>
                     <div className="space-y-1.5">
                       {linkedPois.map(poi => (
                         <button
@@ -385,7 +387,7 @@ const Recommendations = () => {
                 )}
 
                 <p className="text-xs text-muted-foreground">
-                  Added: {new Date(rec.createdAt).toLocaleDateString()}
+                  {t('recsPage.added')} {new Date(rec.createdAt).toLocaleDateString()}
                 </p>
               </CardContent>
             </Card>

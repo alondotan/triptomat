@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 export function PendingInbox() {
+  const { t } = useTranslation();
   const { trips } = useTripList();
   const { activeTrip, loadTripData } = useActiveTrip();
   const { toast } = useToast();
@@ -73,7 +75,7 @@ export function PendingInbox() {
       } else {
         await linkRecommendationToTrip(selectedItemId, selectedTripId);
       }
-      toast({ title: 'Item Linked', description: 'Successfully linked to trip.' });
+      toast({ title: t('inboxPage.itemLinked'), description: t('inboxPage.linkedSuccess') });
       setLinkDialogOpen(false);
       loadItems();
       if (activeTrip?.id === selectedTripId) {
@@ -81,7 +83,7 @@ export function PendingInbox() {
       }
     } catch (error) {
       console.error('Failed to link:', error);
-      toast({ title: 'Error', description: 'Failed to link item.', variant: 'destructive' });
+      toast({ title: t('inboxPage.error'), description: t('inboxPage.linkFailed'), variant: 'destructive' });
     }
   };
 
@@ -89,9 +91,9 @@ export function PendingInbox() {
     try {
       await deleteSourceEmail(id);
       setEmails(emails.filter(i => i.id !== id));
-      toast({ title: 'Deleted' });
+      toast({ title: t('inboxPage.deleted') });
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to delete.', variant: 'destructive' });
+      toast({ title: t('inboxPage.error'), description: t('inboxPage.deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -99,9 +101,9 @@ export function PendingInbox() {
     try {
       await deleteRecommendation(id);
       setRecommendations(recommendations.filter(r => r.id !== id));
-      toast({ title: 'Deleted' });
+      toast({ title: t('inboxPage.deleted') });
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to delete.', variant: 'destructive' });
+      toast({ title: t('inboxPage.error'), description: t('inboxPage.deleteFailed'), variant: 'destructive' });
     }
   };
 
@@ -124,32 +126,32 @@ export function PendingInbox() {
       const segments = (pd.transportation_details as any)?.segments;
       if (segments?.[0]) return `${segments[0].from?.name} → ${segments[0].to?.name}`;
     } else if (cat === 'accommodation') {
-      return (pd.accommodation_details as any)?.establishment_name || 'Accommodation';
+      return (pd.accommodation_details as any)?.establishment_name || t('poiCategory.accommodation');
     } else if (cat === 'attraction') {
-      return (pd.attraction_details as any)?.attraction_name || 'Attraction';
+      return (pd.attraction_details as any)?.attraction_name || t('poiCategory.attraction');
     } else if (cat === 'eatery') {
-      return (pd.eatery_details as any)?.establishment_name || 'Restaurant';
+      return (pd.eatery_details as any)?.establishment_name || t('poiCategory.eatery');
     }
-    return pd?.metadata?.order_number || 'Unknown';
+    return pd?.metadata?.order_number || t('common.unknown');
   };
 
   const totalPending = emails.length + recommendations.length;
 
   if (isLoading) {
-    return <Card><CardContent className="p-6 text-center" aria-live="polite">Loading...</CardContent></Card>;
+    return <Card><CardContent className="p-6 text-center" aria-live="polite">{t('common.loading')}</CardContent></Card>;
   }
 
   if (totalPending === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Inbox className="h-5 w-5" /> Pending Inbox</CardTitle>
-          <CardDescription>Unassigned items will appear here</CardDescription>
+          <CardTitle className="flex items-center gap-2"><Inbox className="h-5 w-5" /> {t('inboxPage.pendingInbox')}</CardTitle>
+          <CardDescription>{t('inboxPage.unassignedItems')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center py-8 text-muted-foreground">
             <Inbox className="h-12 w-12 mb-2 opacity-40" aria-hidden="true" />
-            <p>No pending items</p>
+            <p>{t('inboxPage.noPendingItems')}</p>
           </div>
         </CardContent>
       </Card>
@@ -161,23 +163,23 @@ export function PendingInbox() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Inbox className="h-5 w-5" /> Pending Inbox <Badge variant="secondary">{totalPending}</Badge>
+            <Inbox className="h-5 w-5" /> {t('inboxPage.pendingInbox')} <Badge variant="secondary">{totalPending}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="emails">
             <TabsList>
               <TabsTrigger value="emails">
-                Emails {emails.length > 0 && <Badge variant="secondary" className="ml-1.5 text-xs">{emails.length}</Badge>}
+                {t('inboxPage.emails')} {emails.length > 0 && <Badge variant="secondary" className="ml-1.5 text-xs">{emails.length}</Badge>}
               </TabsTrigger>
               <TabsTrigger value="recommendations">
-                Recommendations {recommendations.length > 0 && <Badge variant="secondary" className="ml-1.5 text-xs">{recommendations.length}</Badge>}
+                {t('nav.recommendations')} {recommendations.length > 0 && <Badge variant="secondary" className="ml-1.5 text-xs">{recommendations.length}</Badge>}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="emails" className="space-y-3 mt-3">
               {emails.length === 0 ? (
-                <p className="text-center py-4 text-muted-foreground text-sm">No pending emails</p>
+                <p className="text-center py-4 text-muted-foreground text-sm">{t('inboxPage.noPendingEmails')}</p>
               ) : (
                 emails.map(item => (
                   <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
@@ -197,14 +199,14 @@ export function PendingInbox() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Button size="sm" variant="outline" onClick={() => openLinkDialog(item.id, 'email')}>
-                        <Link2 className="h-4 w-4 mr-1" /> Link
+                        <Link2 className="h-4 w-4 mr-1" /> {t('inboxPage.linkItem')}
                       </Button>
                       {item.sourceEmailInfo.email_permalink && (
-                        <a href={item.sourceEmailInfo.email_permalink} target="_blank" rel="noopener noreferrer" className="p-2" aria-label="פתח אימייל">
+                        <a href={item.sourceEmailInfo.email_permalink} target="_blank" rel="noopener noreferrer" className="p-2" aria-label={t('sourceEmails.openEmail')}>
                           <ExternalLink className="h-4 w-4" />
                         </a>
                       )}
-                      <Button size="sm" variant="ghost" aria-label="מחק" onClick={() => { if (window.confirm('האם למחוק?')) handleDeleteEmail(item.id); }}>
+                      <Button size="sm" variant="ghost" aria-label={t('common.delete')} onClick={() => { if (window.confirm(t('sourceEmails.confirmDelete'))) handleDeleteEmail(item.id); }}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
@@ -215,7 +217,7 @@ export function PendingInbox() {
 
             <TabsContent value="recommendations" className="space-y-3 mt-3">
               {recommendations.length === 0 ? (
-                <p className="text-center py-4 text-muted-foreground text-sm">No pending recommendations</p>
+                <p className="text-center py-4 text-muted-foreground text-sm">{t('inboxPage.noPendingRecs')}</p>
               ) : (
                 recommendations.map(rec => (
                   <div key={rec.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
@@ -224,27 +226,27 @@ export function PendingInbox() {
                         <Star className="h-4 w-4" aria-hidden="true" />
                       </div>
                       <div>
-                        <span className="font-medium">{rec.analysis.main_site || 'Recommendation'}</span>
+                        <span className="font-medium">{rec.analysis.main_site || t('nav.recommendations')}</span>
                         {rec.sourceUrl && (
                           <p className="text-xs text-muted-foreground truncate max-w-[250px]">{rec.sourceUrl}</p>
                         )}
                         {rec.analysis.extracted_items && rec.analysis.extracted_items.length > 0 && (
                           <p className="text-xs text-muted-foreground">
-                            {rec.analysis.extracted_items.length} items extracted
+                            {t('inboxPage.itemsExtracted', { count: rec.analysis.extracted_items.length })}
                           </p>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button size="sm" variant="outline" onClick={() => openLinkDialog(rec.id, 'recommendation')}>
-                        <Link2 className="h-4 w-4 mr-1" /> Link
+                        <Link2 className="h-4 w-4 mr-1" /> {t('inboxPage.linkItem')}
                       </Button>
                       {rec.sourceUrl && (
-                        <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer" className="p-2" aria-label="פתח המלצה">
+                        <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer" className="p-2" aria-label={t('sourceEmails.openEmail')}>
                           <ExternalLink className="h-4 w-4" />
                         </a>
                       )}
-                      <Button size="sm" variant="ghost" aria-label="מחק" onClick={() => { if (window.confirm('האם למחוק?')) handleDeleteRecommendation(rec.id); }}>
+                      <Button size="sm" variant="ghost" aria-label={t('common.delete')} onClick={() => { if (window.confirm(t('sourceEmails.confirmDelete'))) handleDeleteRecommendation(rec.id); }}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
@@ -258,10 +260,10 @@ export function PendingInbox() {
 
       <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Link to Trip</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t('inboxPage.linkToTrip')}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <Select value={selectedTripId} onValueChange={setSelectedTripId} aria-label="בחר טיול">
-              <SelectTrigger><SelectValue placeholder="Choose a trip..." /></SelectTrigger>
+            <Select value={selectedTripId} onValueChange={setSelectedTripId} aria-label={t('inboxPage.chooseTrip')}>
+              <SelectTrigger><SelectValue placeholder={t('inboxPage.chooseTrip')} /></SelectTrigger>
               <SelectContent>
                 {trips.map(trip => (
                   <SelectItem key={trip.id} value={trip.id}>
@@ -271,8 +273,8 @@ export function PendingInbox() {
               </SelectContent>
             </Select>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setLinkDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleLink} disabled={!selectedTripId}>Link Item</Button>
+              <Button variant="outline" onClick={() => setLinkDialogOpen(false)}>{t('common.cancel')}</Button>
+              <Button onClick={handleLink} disabled={!selectedTripId}>{t('inboxPage.linkItem')}</Button>
             </div>
           </div>
         </DialogContent>

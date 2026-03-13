@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +19,7 @@ interface CreateTripFormProps {
 }
 
 export function CreateTripForm({ trigger, open: openProp, onOpenChange }: CreateTripFormProps) {
+  const { t } = useTranslation();
   const { createNewTrip } = useTripList();
   const { toast } = useToast();
   const [openInternal, setOpenInternal] = useState(false);
@@ -37,28 +39,28 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!planningLevel) {
-      toast({ title: 'יש לבחור מצב תכנון', variant: 'destructive' });
+      toast({ title: t('createTrip.mustChoosePlanningMode'), variant: 'destructive' });
       return;
     }
     if (!name.trim()) {
-      toast({ title: 'יש להזין שם לטיול', variant: 'destructive' });
+      toast({ title: t('createTrip.mustEnterName'), variant: 'destructive' });
       return;
     }
     if (countries.length === 0) {
-      toast({ title: 'יש לבחור לפחות מדינה אחת', variant: 'destructive' });
+      toast({ title: t('createTrip.mustChooseCountry'), variant: 'destructive' });
       return;
     }
     if (planningLevel === 'planning' && (!numberOfDays || numberOfDays < 1)) {
-      toast({ title: 'יש להזין מספר ימים', variant: 'destructive' });
+      toast({ title: t('createTrip.mustEnterDays'), variant: 'destructive' });
       return;
     }
     if (planningLevel === 'detailed_planning') {
       if (!startDate || !endDate) {
-        toast({ title: 'יש להזין תאריך התחלה וסיום', variant: 'destructive' });
+        toast({ title: t('createTrip.mustEnterDates'), variant: 'destructive' });
         return;
       }
       if (endDate < startDate) {
-        toast({ title: 'תאריך סיום חייב להיות אחרי תאריך התחלה', variant: 'destructive' });
+        toast({ title: t('createTrip.endDateAfterStart'), variant: 'destructive' });
         return;
       }
     }
@@ -100,7 +102,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
   const triggerEl = trigger || (openProp === undefined ? (
     <Button className="gap-2">
       <Plus size={18} aria-hidden="true" />
-      New Trip
+      {t('createTrip.newTrip')}
     </Button>
   ) : null);
 
@@ -109,16 +111,16 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
       {triggerEl && <DialogTrigger asChild>{triggerEl}</DialogTrigger>}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>טיול חדש</DialogTitle>
+          <DialogTitle>{t('createTrip.newTrip')}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Basic info */}
           <div className="space-y-2">
-            <Label htmlFor="name">שם הטיול</Label>
+            <Label htmlFor="name">{t('createTrip.tripName')}</Label>
             <Input
               id="name"
-              placeholder="למשל: הרפתקה באירופה"
+              placeholder={t('createTrip.tripNamePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -127,11 +129,11 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">תיאור (אופציונלי)</Label>
+            <Label htmlFor="description">{t('createTrip.description')}</Label>
             <Textarea
               id="description"
               name="description"
-              placeholder="שבוע בלונדון ופריז..."
+              placeholder={t('createTrip.descriptionPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               autoComplete="off"
@@ -139,24 +141,24 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="trip-countries">מדינות</Label>
+            <Label htmlFor="trip-countries">{t('createTrip.countries')}</Label>
             <CountrySelector
               value={countries}
               onChange={setCountries}
-              placeholder="בחר יעדים..."
+              placeholder={t('createTrip.chooseDestinations')}
             />
           </div>
 
           {/* Planning level selection */}
           <div className="space-y-2">
-            <Label htmlFor="trip-planning-level">באיזה שלב אתה?</Label>
+            <Label htmlFor="trip-planning-level">{t('createTrip.planningStage')}</Label>
             <PlanningLevelPicker value={planningLevel} onChange={setPlanningLevel} />
           </div>
 
           {/* Conditional fields based on planning level */}
           {planningLevel === 'planning' && (
             <div className="space-y-2">
-              <Label htmlFor="numberOfDays">מספר ימים</Label>
+              <Label htmlFor="numberOfDays">{t('createTrip.numberOfDays')}</Label>
               <Input
                 id="numberOfDays"
                 type="number"
@@ -174,7 +176,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
           {planningLevel === 'detailed_planning' && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="startDate">תאריך התחלה</Label>
+                <Label htmlFor="startDate">{t('createTrip.startDate')}</Label>
                 <Input
                   id="startDate"
                   type="date"
@@ -185,7 +187,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="endDate">תאריך סיום</Label>
+                <Label htmlFor="endDate">{t('createTrip.endDate')}</Label>
                 <Input
                   id="endDate"
                   type="date"
@@ -201,10 +203,10 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              ביטול
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={isSubmitting || !planningLevel}>
-              {isSubmitting ? 'יוצר...' : 'צור טיול'}
+              {isSubmitting ? t('createTrip.creating') : t('createTrip.createTrip')}
             </Button>
           </div>
         </form>

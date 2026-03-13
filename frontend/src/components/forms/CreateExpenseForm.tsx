@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { useFinance } from '@/context/FinanceContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -12,19 +13,13 @@ import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createExpenseSchema } from '@/schemas/expense.schema';
 
-const EXPENSE_CATEGORIES = [
-  { value: 'food', label: 'אוכל' },
-  { value: 'transport', label: 'תחבורה' },
-  { value: 'accommodation', label: 'לינה' },
-  { value: 'attraction', label: 'אטרקציה' },
-  { value: 'shopping', label: 'קניות' },
-  { value: 'communication', label: 'תקשורת' },
-  { value: 'insurance', label: 'ביטוח' },
-  { value: 'tips', label: 'טיפים' },
-  { value: 'other', label: 'אחר' },
-];
+const EXPENSE_CATEGORY_KEYS = [
+  'food', 'transport', 'accommodation', 'attraction',
+  'shopping', 'communication', 'insurance', 'tips', 'other',
+] as const;
 
 export function CreateExpenseForm() {
+  const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
   const { addExpense } = useFinance();
   const { toast } = useToast();
@@ -82,23 +77,23 @@ export function CreateExpenseForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-1"><Plus size={16} /> הוצאה חדשה</Button>
+        <Button variant="outline" className="gap-1"><Plus size={16} /> {t('createExpense.title')}</Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>הוספת הוצאה</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('createExpense.addExpense')}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="expense-description">תיאור *</Label>
-            <Input id="expense-description" name="description" value={description} onChange={e => setDescription(e.target.value)} required placeholder="על מה ההוצאה..." autoComplete="off" />
+            <Label htmlFor="expense-description">{t('createExpense.description')}</Label>
+            <Input id="expense-description" name="description" value={description} onChange={e => setDescription(e.target.value)} required placeholder={t('createExpense.descriptionPlaceholder')} autoComplete="off" />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="expense-category">קטגוריה</Label>
+            <Label htmlFor="expense-category">{t('createExpense.category')}</Label>
             <Select value={category} onValueChange={setCategory}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {EXPENSE_CATEGORIES.map(c => (
-                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                {EXPENSE_CATEGORY_KEYS.map(key => (
+                  <SelectItem key={key} value={key}>{t(`expenseCategory.${key}`)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -106,31 +101,31 @@ export function CreateExpenseForm() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="expense-amount">סכום *</Label>
+              <Label htmlFor="expense-amount">{t('createExpense.amount')}</Label>
               <Input id="expense-amount" name="amount" type="number" inputMode="decimal" min="0" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="0.00" autoComplete="off" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="expense-currency">מטבע</Label>
+              <Label htmlFor="expense-currency">{t('createExpense.currency')}</Label>
               <Input id="expense-currency" name="currency" value={currency} onChange={e => setCurrency(e.target.value)} placeholder="ILS" autoComplete="off" />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="expense-date">תאריך</Label>
+            <Label htmlFor="expense-date">{t('createExpense.date')}</Label>
             <Input id="expense-date" name="date" type="date" value={date} onChange={e => setDate(e.target.value)} autoComplete="off" />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="expense-notes">הערות</Label>
-            <Textarea id="expense-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="פרטים נוספים..." autoComplete="off" />
+            <Label htmlFor="expense-notes">{t('createExpense.notes')}</Label>
+            <Textarea id="expense-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('createExpense.notesPlaceholder')} autoComplete="off" />
           </div>
 
           <div className="flex items-center justify-between">
-            <Label htmlFor="is-paid-switch">שולם?</Label>
+            <Label htmlFor="is-paid-switch">{t('createExpense.paid')}</Label>
             <Switch id="is-paid-switch" checked={isPaid} onCheckedChange={setIsPaid} />
           </div>
 
-          <Button type="submit" className="w-full">הוסף הוצאה</Button>
+          <Button type="submit" className="w-full">{t('createExpense.addExpense')}</Button>
         </form>
       </DialogContent>
     </Dialog>

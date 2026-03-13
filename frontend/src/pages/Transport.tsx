@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { useTransport } from '@/context/TransportContext';
 import { useItinerary } from '@/context/ItineraryContext';
@@ -18,35 +19,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
 import { format, parseISO } from 'date-fns';
 import type { Transportation } from '@/types/trip';
-
-const categoryLabels: Record<string, string> = {
-  airplane:            'טיסה',
-  domesticFlight:      'טיסה פנים ארצית',
-  internationalFlight: 'טיסה בינלאומית',
-  train:               'רכבת',
-  nightTrain:          'רכבת לילה',
-  highSpeedTrain:      'רכבת מהירה',
-  bus:                 'אוטובוס',
-  subway:              'רכבת תחתית',
-  tram:                'חשמלית',
-  ferry:               'מעבורת',
-  cruise:              'שייט',
-  cruiseShip:          'ספינת שייט',
-  taxi:                'מונית',
-  carRental:           'השכרת רכב',
-  rideshare:           'שיתוף נסיעות',
-  privateTransfer:     'הסעה פרטית',
-  car:                 'רכב פרטי',
-  walk:                'הליכה ברגל',
-  bicycle:             'אופניים',
-  motorcycle:          'אופנוע',
-  scooter:             'קורקינט',
-  boatTaxi:            'מונית מים',
-  cableCar:            'רכבל',
-  funicular:           'רכבל הר',
-  rv:                  'RV / קרוואן',
-  otherTransportation: 'אחר',
-};
 
 const categoryIcons: Record<string, React.ReactNode> = {
   airplane:            <Plane size={16} />,
@@ -85,6 +57,7 @@ function formatDateTime(iso: string): string {
 }
 
 const TransportPage = () => {
+  const { t } = useTranslation();
   const { activeTrip, sourceEmailMap } = useActiveTrip();
   const { transportation, deleteTransportation, mergeTransportation } = useTransport();
   const { itineraryDays } = useItinerary();
@@ -158,7 +131,7 @@ const TransportPage = () => {
   }, [transportation]);
 
   if (!activeTrip) {
-    return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
+    return <AppLayout><div className="text-center py-12 text-muted-foreground">{t('common.noTripSelected')}</div></AppLayout>;
   }
 
   return (
@@ -166,8 +139,8 @@ const TransportPage = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Transportation</h2>
-            <p className="text-muted-foreground">{filteredTransport.length} / {transportation.length} items</p>
+            <h2 className="text-2xl font-bold">{t('transportPage.title')}</h2>
+            <p className="text-muted-foreground">{filteredTransport.length} / {transportation.length} {t('common.items')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -177,7 +150,7 @@ const TransportPage = () => {
               className="gap-1"
             >
               <Merge size={14} />
-              {mergeMode ? 'בטל מיזוג' : 'מזג'}
+              {mergeMode ? t('common.cancelMerge') : t('common.merge')}
             </Button>
             {!mergeMode && <CreateTransportForm />}
           </div>
@@ -186,7 +159,7 @@ const TransportPage = () => {
         <div className="relative">
           <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="חפש לפי יעד, טיסה, חברה..."
+            placeholder={t('transportPage.searchPlaceholder')}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="pr-8 h-9 text-sm"
@@ -199,9 +172,9 @@ const TransportPage = () => {
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="h-8 w-[160px] text-xs"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">הכל</SelectItem>
+                <SelectItem value="all">{t('common.all')}</SelectItem>
                 {categoryOptions.map(c => (
-                  <SelectItem key={c} value={c}>{categoryLabels[c] || c}</SelectItem>
+                  <SelectItem key={c} value={c}>{t(`transportCategory.${c}`, c)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -209,40 +182,40 @@ const TransportPage = () => {
         )}
 
         <div className="space-y-4">
-          {filteredTransport.map(t => (
-            <div key={t.id} className="relative">
+          {filteredTransport.map(tr => (
+            <div key={tr.id} className="relative">
               {mergeMode && (
                 <div className="absolute top-3 left-3 z-10" onClick={e => e.stopPropagation()}>
                   <Checkbox
-                    checked={selectedForMerge.has(t.id)}
-                    onCheckedChange={() => toggleMergeSelection(t.id)}
+                    checked={selectedForMerge.has(tr.id)}
+                    onCheckedChange={() => toggleMergeSelection(tr.id)}
                   />
                 </div>
               )}
               <Card
-                className={`cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${t.isCancelled ? 'opacity-50' : ''} ${mergeMode && selectedForMerge.has(t.id) ? 'ring-2 ring-primary' : ''}`}
-                onClick={() => mergeMode ? toggleMergeSelection(t.id) : setSelectedTransport(t)}
+                className={`cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${tr.isCancelled ? 'opacity-50' : ''} ${mergeMode && selectedForMerge.has(tr.id) ? 'ring-2 ring-primary' : ''}`}
+                onClick={() => mergeMode ? toggleMergeSelection(tr.id) : setSelectedTransport(tr)}
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
-                      {<SubCategoryIcon type={t.category} size={16} className="text-muted-foreground" />}
-                      {t.segments.length > 0
-                        ? `${t.segments[0].from.name} → ${t.segments[t.segments.length - 1].to.name}`
-                        : 'Route TBD'}
+                      {<SubCategoryIcon type={tr.category} size={16} className="text-muted-foreground" />}
+                      {tr.segments.length > 0
+                        ? `${tr.segments[0].from.name} → ${tr.segments[tr.segments.length - 1].to.name}`
+                        : t('transportPage.routeTBD')}
                     </CardTitle>
                     <div className="flex items-center gap-1">
-                      <Badge variant="outline">{t.category}</Badge>
-                      <Badge variant={t.status === 'booked' ? 'default' : 'secondary'}>{t.status}</Badge>
-                      {t.isCancelled && <Badge variant="destructive">Cancelled</Badge>}
+                      <Badge variant="outline">{t(`transportCategory.${tr.category}`, tr.category)}</Badge>
+                      <Badge variant={tr.status === 'booked' ? 'default' : 'secondary'}>{t(`status.${tr.status}`, tr.status)}</Badge>
+                      {tr.isCancelled && <Badge variant="destructive">{t('transportPage.cancelled')}</Badge>}
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
                   {/* Segments */}
-                  {t.segments.length > 0 && (
+                  {tr.segments.length > 0 && (
                     <div className="space-y-2">
-                      {t.segments.map((seg, i) => (
+                      {tr.segments.map((seg, i) => (
                         <div key={i} className="flex items-start gap-3 p-2 rounded bg-muted/50">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
@@ -252,21 +225,21 @@ const TransportPage = () => {
                               <span className="font-medium">{seg.to.name}</span>
                               {seg.to.code && <span className="text-xs text-muted-foreground">({seg.to.code})</span>}
                               {(() => {
-                                const dayInfo = segmentDayMap[`${t.id}_${seg.segment_id || ''}`];
+                                const dayInfo = segmentDayMap[`${tr.id}_${seg.segment_id || ''}`];
                                 if (!dayInfo) return null;
                                 return (
                                   <Badge variant="outline" className="text-xs ml-auto">
-                                    יום {dayInfo.dayNumber}{dayInfo.date ? ` (${format(parseISO(dayInfo.date), 'MMM d')})` : ''}
+                                    {t('transportPage.day', { num: dayInfo.dayNumber })}{dayInfo.date ? ` (${format(parseISO(dayInfo.date), 'MMM d')})` : ''}
                                   </Badge>
                                 );
                               })()}
                             </div>
                             <div className="text-xs text-muted-foreground mt-1 flex flex-wrap gap-3">
-                              <span>Depart: {formatDateTime(seg.departure_time)}</span>
-                              <span>Arrive: {formatDateTime(seg.arrival_time)}</span>
-                              {seg.flight_or_vessel_number && <span>Flight: {seg.flight_or_vessel_number}</span>}
-                              {seg.carrier_code && <span>Carrier: {seg.carrier_code}</span>}
-                              {seg.seat_info && <span>Seat: {seg.seat_info}</span>}
+                              <span>{t('transportPage.depart')} {formatDateTime(seg.departure_time)}</span>
+                              <span>{t('transportPage.arrive')} {formatDateTime(seg.arrival_time)}</span>
+                              {seg.flight_or_vessel_number && <span>{t('transportPage.flight')} {seg.flight_or_vessel_number}</span>}
+                              {seg.carrier_code && <span>{t('transportPage.carrier')} {seg.carrier_code}</span>}
+                              {seg.seat_info && <span>{t('transportPage.seat')} {seg.seat_info}</span>}
                             </div>
                           </div>
                         </div>
@@ -276,33 +249,33 @@ const TransportPage = () => {
 
                   {/* Cost & Booking */}
                   <div className="flex flex-wrap gap-4">
-                    {t.cost.total_amount > 0 && (
-                      <p className="font-semibold text-primary">{formatDualCurrency(t.cost.total_amount, t.cost.currency || activeTrip?.currency || 'USD')}</p>
+                    {tr.cost.total_amount > 0 && (
+                      <p className="font-semibold text-primary">{formatDualCurrency(tr.cost.total_amount, tr.cost.currency || activeTrip?.currency || 'USD')}</p>
                     )}
-                    {t.booking.carrier_name && (
-                      <p className="text-xs text-muted-foreground">Carrier: {t.booking.carrier_name}</p>
+                    {tr.booking.carrier_name && (
+                      <p className="text-xs text-muted-foreground">{t('transportPage.carrier')} {tr.booking.carrier_name}</p>
                     )}
                   </div>
 
-                  {t.booking.baggage_allowance && (
+                  {tr.booking.baggage_allowance && (
                     <div className="text-xs text-muted-foreground">
-                      {t.booking.baggage_allowance.cabin_bag && <span>Cabin: {t.booking.baggage_allowance.cabin_bag} </span>}
-                      {t.booking.baggage_allowance.checked_bag && <span>Checked: {t.booking.baggage_allowance.checked_bag}</span>}
+                      {tr.booking.baggage_allowance.cabin_bag && <span>{t('transportPage.cabin')} {tr.booking.baggage_allowance.cabin_bag} </span>}
+                      {tr.booking.baggage_allowance.checked_bag && <span>{t('transportPage.checked')} {tr.booking.baggage_allowance.checked_bag}</span>}
                     </div>
                   )}
 
-                  {t.additionalInfo.notes && (
-                    <p className="text-xs text-muted-foreground italic">{t.additionalInfo.notes}</p>
+                  {tr.additionalInfo.notes && (
+                    <p className="text-xs text-muted-foreground italic">{tr.additionalInfo.notes}</p>
                   )}
 
                   {!mergeMode && (
                     <div className="pt-1 flex justify-between items-center">
                       <BookingActions
-                        orderNumber={t.booking.order_number}
-                        emailLinks={t.sourceRefs.email_ids.map(id => ({ id, ...sourceEmailMap[id] }))}
+                        orderNumber={tr.booking.order_number}
+                        emailLinks={tr.sourceRefs.email_ids.map(id => ({ id, ...sourceEmailMap[id] }))}
                       />
-                      <Button variant="ghost" size="sm" className="text-destructive h-7" onClick={(e) => { e.stopPropagation(); deleteTransportation(t.id); }}>
-                        <Trash2 size={14} className="mr-1" /> Delete
+                      <Button variant="ghost" size="sm" className="text-destructive h-7" onClick={(e) => { e.stopPropagation(); deleteTransportation(tr.id); }}>
+                        <Trash2 size={14} className="mr-1" /> {t('common.delete')}
                       </Button>
                     </div>
                   )}
@@ -313,7 +286,7 @@ const TransportPage = () => {
 
           {filteredTransport.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
-              {transportation.length === 0 ? 'אין פריטי תחבורה עדיין.' : 'אין תוצאות לסינון הנוכחי.'}
+              {transportation.length === 0 ? t('transportPage.noTransportYet') : t('transportPage.noFilterResults')}
             </div>
           )}
         </div>
@@ -321,7 +294,7 @@ const TransportPage = () => {
         {mergeMode && selectedForMerge.size === 2 && (
           <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
             <Button onClick={() => setMergeDialogOpen(true)} className="gap-1.5 shadow-lg">
-              <Merge size={16} /> מזג פריטים נבחרים
+              <Merge size={16} /> {t('common.mergeSelected')}
             </Button>
           </div>
         )}

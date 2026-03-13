@@ -1,4 +1,5 @@
 import { NavLink as RouterNavLink, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import {
   CalendarDays,
@@ -17,22 +18,23 @@ import { useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 const primaryItems = [
-  { path: '/', label: 'Timeline', icon: CalendarDays },
-  { path: '/pois', label: 'POIs', icon: MapPin },
-  { path: '/map', label: 'Map', icon: Map },
-  { path: '/transport', label: 'Transport', icon: Plane },
-  { path: '/accommodation', label: 'Stay', icon: Hotel },
+  { path: '/', labelKey: 'nav.timeline', icon: CalendarDays },
+  { path: '/pois', labelKey: 'nav.pois', icon: MapPin },
+  { path: '/map', labelKey: 'nav.map', icon: Map },
+  { path: '/transport', labelKey: 'nav.transport', icon: Plane },
+  { path: '/accommodation', labelKey: 'nav.stay', icon: Hotel },
 ];
 
 const moreItems = [
-  { path: '/recommendations', label: 'Recommendations', icon: Star },
-  { path: '/itinerary', label: 'Itinerary', icon: Table2 },
-  { path: '/budget', label: 'Budget', icon: DollarSign },
-  { path: '/tasks', label: 'Tasks', icon: CheckSquare },
-  { path: '/contacts', label: 'Contacts', icon: Users },
+  { path: '/recommendations', labelKey: 'nav.recommendations', icon: Star },
+  { path: '/itinerary', labelKey: 'nav.itinerary', icon: Table2 },
+  { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },
+  { path: '/tasks', labelKey: 'nav.tasks', icon: CheckSquare },
+  { path: '/contacts', labelKey: 'nav.contacts', icon: Users },
 ];
 
 export function MobileBottomNav() {
+  const { t } = useTranslation();
   const location = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -57,7 +59,7 @@ export function MobileBottomNav() {
                 )}
               >
                 <Icon size={22} strokeWidth={isActive ? 2.5 : 1.8} aria-hidden="true" />
-                <span className="whitespace-nowrap">{item.label}</span>
+                <span className="whitespace-nowrap">{t(item.labelKey)}</span>
               </RouterNavLink>
             );
           })}
@@ -70,7 +72,7 @@ export function MobileBottomNav() {
             )}
           >
             <MoreHorizontal size={22} strokeWidth={1.8} />
-            <span className="whitespace-nowrap">More</span>
+            <span className="whitespace-nowrap">{t('nav.more')}</span>
           </button>
         </div>
       </nav>
@@ -94,7 +96,7 @@ export function MobileBottomNav() {
                   )}
                 >
                   <Icon size={20} aria-hidden="true" />
-                  {item.label}
+                  {t(item.labelKey)}
                 </RouterNavLink>
               );
             })}

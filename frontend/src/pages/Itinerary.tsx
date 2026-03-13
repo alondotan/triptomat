@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { useItinerary } from '@/context/ItineraryContext';
 import { usePOI } from '@/context/POIContext';
@@ -11,6 +12,7 @@ import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { useTripDays } from '@/hooks/useTripDays';
 
 const ItineraryPage = () => {
+  const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
   const { itineraryDays } = useItinerary();
   const { pois } = usePOI();
@@ -19,7 +21,7 @@ const ItineraryPage = () => {
   const tripDays = useTripDays();
 
   if (!activeTrip) {
-    return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
+    return <AppLayout><div className="text-center py-12 text-muted-foreground">{t('common.noTripSelected')}</div></AppLayout>;
   }
 
   // Research mode: no days to show
@@ -28,9 +30,9 @@ const ItineraryPage = () => {
       <AppLayout>
         <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
           <CalendarDays size={48} className="text-muted-foreground/50" />
-          <h3 className="text-lg font-semibold">מצב מחקר</h3>
+          <h3 className="text-lg font-semibold">{t('itineraryPage.researchMode')}</h3>
           <p className="text-sm text-muted-foreground max-w-md">
-            כדי לראות סיכום מסלול, יש להגדיר קודם את משך הטיול או תאריכים מדויקים.
+            {t('itineraryPage.researchDescription')}
           </p>
         </div>
       </AppLayout>
@@ -40,14 +42,14 @@ const ItineraryPage = () => {
   // Header subtitle
   const subtitle = activeTrip.startDate && activeTrip.endDate
     ? `${activeTrip.name} • ${activeTrip.startDate} – ${activeTrip.endDate}`
-    : `${activeTrip.name} • ${activeTrip.numberOfDays} ימים`;
+    : `${activeTrip.name} • ${t('itineraryPage.days', { count: activeTrip.numberOfDays })}`;
 
   return (
     <AppLayout>
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <CalendarDays size={24} /> סיכום מסלול
+            <CalendarDays size={24} /> {t('itineraryPage.title')}
           </h2>
           <p className="text-muted-foreground">{subtitle}</p>
         </div>
@@ -92,7 +94,7 @@ const ItineraryPage = () => {
                       </div>
 
                       {!hasContent && (
-                        <p className="text-xs text-muted-foreground">יום חופשי</p>
+                        <p className="text-xs text-muted-foreground">{t('itineraryPage.freeDay')}</p>
                       )}
 
                       <div className="space-y-1">

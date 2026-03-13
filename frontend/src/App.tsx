@@ -10,6 +10,7 @@ import { AuthGuard } from "./components/AuthGuard";
 import { AdminGuard } from "./components/admin/AdminGuard";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { LanguageProvider } from "./context/LanguageContext";
 import AuthPage from "./pages/Auth";
 
 const ItineraryPage = lazy(() => import("./pages/Itinerary"));
@@ -43,6 +44,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <ErrorBoundary>
+    <LanguageProvider>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
@@ -97,6 +99,7 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
+    </LanguageProvider>
   </ErrorBoundary>
 );
 

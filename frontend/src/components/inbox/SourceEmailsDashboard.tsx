@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,7 @@ function cleanSubject(subject: string): string {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function SourceEmailsDashboard() {
+  const { t } = useTranslation();
   const { trips } = useTripList();
   const { toast } = useToast();
   const [items, setItems] = useState<SourceEmail[]>([]);
@@ -134,18 +136,18 @@ export function SourceEmailsDashboard() {
 
   const unreadCount = items.filter(i => !readIds.has(i.id)).length;
 
-  if (isLoading) return <Card><CardContent className="p-6 text-center" aria-live="polite">Loading...</CardContent></Card>;
+  if (isLoading) return <Card><CardContent className="p-6 text-center" aria-live="polite">{t('common.loading')}</CardContent></Card>;
 
   if (items.length === 0) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Mail className="h-5 w-5" /> Source Emails</CardTitle>
+          <CardTitle className="flex items-center gap-2"><Mail className="h-5 w-5" /> {t('sourceEmails.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center py-8 text-muted-foreground">
             <Mail className="h-12 w-12 mb-2 opacity-40" aria-hidden="true" />
-            <p>No source emails yet</p>
+            <p>{t('sourceEmails.noEmails')}</p>
           </div>
         </CardContent>
       </Card>
@@ -156,10 +158,10 @@ export function SourceEmailsDashboard() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Mail className="h-5 w-5" /> Source Emails
+          <Mail className="h-5 w-5" /> {t('sourceEmails.title')}
           <Badge variant="secondary">{items.length}</Badge>
           {unreadCount > 0 && (
-            <Badge className="bg-blue-500 text-white hover:bg-blue-500">{unreadCount} new</Badge>
+            <Badge className="bg-blue-500 text-white hover:bg-blue-500">{unreadCount} {t('common.new')}</Badge>
           )}
         </CardTitle>
       </CardHeader>
@@ -189,7 +191,7 @@ export function SourceEmailsDashboard() {
                       <div className="flex items-center gap-2 overflow-hidden">
                         <span className="font-medium truncate">{title}</span>
                         {isUnread && (
-                          <span className="shrink-0 inline-flex items-center rounded-full bg-blue-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">NEW</span>
+                          <span className="shrink-0 inline-flex items-center rounded-full bg-blue-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{t('common.new').toUpperCase()}</span>
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">
@@ -209,18 +211,18 @@ export function SourceEmailsDashboard() {
                       {item.status}
                     </Badge>
                     {item.sourceEmailInfo.email_permalink && (
-                      <a href={item.sourceEmailInfo.email_permalink} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md hover:bg-muted" aria-label="פתח אימייל">
+                      <a href={item.sourceEmailInfo.email_permalink} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md hover:bg-muted" aria-label={t('sourceEmails.openEmail')}>
                         <ExternalLink className="h-4 w-4" />
                       </a>
                     )}
-                    <Button size="sm" variant="ghost" aria-label="מחק" onClick={async () => {
-                      if (!window.confirm('האם למחוק?')) return;
+                    <Button size="sm" variant="ghost" aria-label={t('common.delete')} onClick={async () => {
+                      if (!window.confirm(t('sourceEmails.confirmDelete'))) return;
                       try {
                         await deleteSourceEmail(item.id);
                         setItems(prev => prev.filter(i => i.id !== item.id));
-                        toast({ title: 'Deleted' });
+                        toast({ title: t('inboxPage.deleted') });
                       } catch {
-                        toast({ title: 'Error', description: 'Failed to delete.', variant: 'destructive' });
+                        toast({ title: t('inboxPage.error'), description: t('inboxPage.deleteFailed'), variant: 'destructive' });
                       }
                     }}>
                       <Trash2 className="h-4 w-4 text-destructive" />
@@ -247,6 +249,7 @@ interface EmailDetailsProps {
 }
 
 function EmailDetails({ parsedData, orderNumber, sender, dateSent }: EmailDetailsProps) {
+  const { t } = useTranslation();
   if (!parsedData) return null;
   const { metadata, sites_hierarchy, accommodation_details, transportation_details, attraction_details, eatery_details, additional_info } = parsedData;
   const accom = accommodation_details as Record<string, any> | undefined;
@@ -284,16 +287,16 @@ function EmailDetails({ parsedData, orderNumber, sender, dateSent }: EmailDetail
       {/* Accommodation */}
       {accom && Object.keys(accom).length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold flex items-center gap-1"><Hotel className="h-3.5 w-3.5" /> Accommodation</h4>
+          <h4 className="text-sm font-semibold flex items-center gap-1"><Hotel className="h-3.5 w-3.5" /> {t('sourceEmails.accommodationLabel')}</h4>
           <div className="grid grid-cols-2 gap-2 text-sm">
             {accom.establishment_name && (
-              <div><span className="text-muted-foreground">Name:</span> {accom.establishment_name}</div>
+              <div><span className="text-muted-foreground">{t('sourceEmails.nameLabel')}</span> {accom.establishment_name}</div>
             )}
             {accom.checkin_date && (
-              <div className="flex items-center gap-1"><Calendar className="h-3 w-3 text-muted-foreground" /> Check-in: {accom.checkin_date} {accom.checkin_hour && `at ${accom.checkin_hour}`}</div>
+              <div className="flex items-center gap-1"><Calendar className="h-3 w-3 text-muted-foreground" /> {t('sourceEmails.checkinLabel')} {accom.checkin_date} {accom.checkin_hour && t('sourceEmails.atHour', { hour: accom.checkin_hour })}</div>
             )}
             {accom.checkout_date && (
-              <div className="flex items-center gap-1"><Calendar className="h-3 w-3 text-muted-foreground" /> Check-out: {accom.checkout_date} {accom.checkout_hour && `at ${accom.checkout_hour}`}</div>
+              <div className="flex items-center gap-1"><Calendar className="h-3 w-3 text-muted-foreground" /> {t('sourceEmails.checkoutLabel')} {accom.checkout_date} {accom.checkout_hour && t('sourceEmails.atHour', { hour: accom.checkout_hour })}</div>
             )}
             {accom.cost && (
               <div className="flex items-center gap-1"><DollarSign className="h-3 w-3 text-muted-foreground" /> {accom.cost.amount?.toLocaleString()} {accom.cost.currency}</div>
@@ -315,22 +318,22 @@ function EmailDetails({ parsedData, orderNumber, sender, dateSent }: EmailDetail
       {/* Transportation */}
       {transport && transport.segments && transport.segments.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold flex items-center gap-1"><Plane className="h-3.5 w-3.5" /> Transportation</h4>
+          <h4 className="text-sm font-semibold flex items-center gap-1"><Plane className="h-3.5 w-3.5" /> {t('sourceEmails.transportLabel')}</h4>
           {transport.segments.map((seg: any, i: number) => (
             <div key={i} className="text-sm bg-muted/50 rounded p-2 space-y-1">
               <div className="font-medium">{seg.from?.name || seg.from?.code} → {seg.to?.name || seg.to?.code}</div>
               <div className="text-muted-foreground text-xs">
                 {seg.carrier && `${seg.carrier} `}{seg.flight_number && `#${seg.flight_number} `}
-                {seg.departure_time && `Dep: ${seg.departure_time} `}
-                {seg.arrival_time && `Arr: ${seg.arrival_time}`}
+                {seg.departure_time && `${t('sourceEmails.depLabel', { time: seg.departure_time })} `}
+                {seg.arrival_time && t('sourceEmails.arrLabel', { time: seg.arrival_time })}
               </div>
             </div>
           ))}
           {transport.cost && <div className="text-sm flex items-center gap-1"><DollarSign className="h-3 w-3 text-muted-foreground" /> {transport.cost.amount?.toLocaleString()} {transport.cost.currency}</div>}
           {transport.baggage_allowance && (
             <div className="text-xs text-muted-foreground">
-              {transport.baggage_allowance.cabin_bag && <div>Cabin: {transport.baggage_allowance.cabin_bag}</div>}
-              {transport.baggage_allowance.checked_bag && <div>Checked: {transport.baggage_allowance.checked_bag}</div>}
+              {transport.baggage_allowance.cabin_bag && <div>{t('sourceEmails.cabinLabel')} {transport.baggage_allowance.cabin_bag}</div>}
+              {transport.baggage_allowance.checked_bag && <div>{t('sourceEmails.checkedLabel')} {transport.baggage_allowance.checked_bag}</div>}
             </div>
           )}
         </div>
@@ -339,10 +342,10 @@ function EmailDetails({ parsedData, orderNumber, sender, dateSent }: EmailDetail
       {/* Attraction */}
       {attraction && Object.keys(attraction).length > 0 && (
         <div className="space-y-1">
-          <h4 className="text-sm font-semibold flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> Attraction</h4>
+          <h4 className="text-sm font-semibold flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {t('sourceEmails.attractionLabel')}</h4>
           <div className="text-sm">
             {attraction.attraction_name && <div>{attraction.attraction_name}</div>}
-            {attraction.reservation_date && <div className="text-muted-foreground">Date: {attraction.reservation_date} {attraction.reservation_hour && `at ${attraction.reservation_hour}`}</div>}
+            {attraction.reservation_date && <div className="text-muted-foreground">{t('sourceEmails.dateLabel')} {attraction.reservation_date} {attraction.reservation_hour && t('sourceEmails.atHour', { hour: attraction.reservation_hour })}</div>}
           </div>
         </div>
       )}
@@ -350,10 +353,10 @@ function EmailDetails({ parsedData, orderNumber, sender, dateSent }: EmailDetail
       {/* Eatery */}
       {eatery && Object.keys(eatery).length > 0 && (
         <div className="space-y-1">
-          <h4 className="text-sm font-semibold flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> Eatery</h4>
+          <h4 className="text-sm font-semibold flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {t('sourceEmails.eateryLabel')}</h4>
           <div className="text-sm">
             {eatery.establishment_name && <div>{eatery.establishment_name}</div>}
-            {eatery.reservation_date && <div className="text-muted-foreground">Date: {eatery.reservation_date} {eatery.reservation_hour && `at ${eatery.reservation_hour}`}</div>}
+            {eatery.reservation_date && <div className="text-muted-foreground">{t('sourceEmails.reservationDate')} {eatery.reservation_date} {eatery.reservation_hour && t('sourceEmails.atHour', { hour: eatery.reservation_hour })}</div>}
           </div>
         </div>
       )}

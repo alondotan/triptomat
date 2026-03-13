@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { useFinance } from '@/context/FinanceContext';
@@ -15,17 +16,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
 import type { PointOfInterest } from '@/types/trip';
 
-const statusLabels: Record<string, string> = {
-  suggested: 'מוצע',
-  interested: 'מעניין',
-  planned: 'מתוכנן',
-  scheduled: 'בלו״ז',
-  booked: 'הוזמן',
-  visited: 'בוקר',
-  skipped: 'דילגתי',
-};
-
 const AccommodationPage = () => {
+  const { t } = useTranslation();
   const { activeTrip, sourceEmailMap } = useActiveTrip();
   const { pois, deletePOI, mergePOIs } = usePOI();
   const { formatDualCurrency } = useFinance();
@@ -79,7 +71,7 @@ const AccommodationPage = () => {
   }, [pois, activeTrip, searchQuery]);
 
   if (!activeTrip) {
-    return <AppLayout><div className="text-center py-12 text-muted-foreground">No trip selected</div></AppLayout>;
+    return <AppLayout><div className="text-center py-12 text-muted-foreground">{t('common.noTripSelected')}</div></AppLayout>;
   }
 
   return (
@@ -87,8 +79,8 @@ const AccommodationPage = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">Accommodation</h2>
-            <p className="text-muted-foreground">{accommodations.length} stays</p>
+            <h2 className="text-2xl font-bold">{t('accommodationPage.title')}</h2>
+            <p className="text-muted-foreground">{t('accommodationPage.stays', { count: accommodations.length })}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -98,7 +90,7 @@ const AccommodationPage = () => {
               className="gap-1"
             >
               <Merge size={14} />
-              {mergeMode ? 'בטל מיזוג' : 'מזג'}
+              {mergeMode ? t('common.cancelMerge') : t('common.merge')}
             </Button>
             {!mergeMode && <CreatePOIForm />}
           </div>
@@ -107,7 +99,7 @@ const AccommodationPage = () => {
         <div className="relative">
           <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="חפש לפי שם, עיר, מדינה..."
+            placeholder={t('accommodationPage.searchPlaceholder')}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="pr-8 h-9 text-sm"
@@ -117,8 +109,8 @@ const AccommodationPage = () => {
         {accommodations.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
             {pois.filter(p => p.category === 'accommodation').length === 0
-              ? 'No accommodation added yet. Forward a booking confirmation email or add one manually.'
-              : 'אין תוצאות לחיפוש הנוכחי.'}
+              ? t('accommodationPage.noAccommodation')
+              : t('accommodationPage.noSearchResults')}
           </div>
         ) : (
           <div className="space-y-4">
@@ -161,9 +153,9 @@ const AccommodationPage = () => {
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <Badge variant={poi.status === 'booked' ? 'default' : 'secondary'} className="text-xs">
-                          {statusLabels[poi.status] || poi.status}
+                          {t(`status.${poi.status}`, poi.status)}
                         </Badge>
-                        {poi.isCancelled && <Badge variant="destructive">בוטל</Badge>}
+                        {poi.isCancelled && <Badge variant="destructive">{t('accommodationPage.cancelled')}</Badge>}
                       </div>
                     </div>
                   </CardHeader>
@@ -190,7 +182,7 @@ const AccommodationPage = () => {
                           </div>
                         )}
                         {nights !== null && (
-                          <span className="text-xs text-muted-foreground">{nights} {nights === 1 ? 'לילה' : 'לילות'}</span>
+                          <span className="text-xs text-muted-foreground">{t('accommodationPage.nights', { count: nights })}</span>
                         )}
                       </div>
                     )}
@@ -211,7 +203,7 @@ const AccommodationPage = () => {
                         </span>
                         {acc?.price_per_night && (
                           <span className="text-xs text-muted-foreground">
-                            ({formatDualCurrency(acc.price_per_night, poi.details.cost.currency || 'USD')} / לילה)
+                            ({formatDualCurrency(acc.price_per_night, poi.details.cost.currency || 'USD')} {t('accommodationPage.perNight')})
                           </span>
                         )}
                       </div>
@@ -226,7 +218,7 @@ const AccommodationPage = () => {
                       return (
                         <div className={`flex items-center gap-1.5 text-xs rounded-md px-2 py-1 w-fit ${isPast ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'}`}>
                           <Clock size={12} />
-                          <span>ביטול חינם עד {dateStr} {timeStr}</span>
+                          <span>{t('accommodationPage.freeCancellationUntil', { date: dateStr, time: timeStr })}</span>
                         </div>
                       );
                     })()}
@@ -248,7 +240,7 @@ const AccommodationPage = () => {
                           className="text-destructive h-7"
                           onClick={(e) => { e.stopPropagation(); deletePOI(poi.id); }}
                         >
-                          <Trash2 size={14} className="mr-1" /> מחק
+                          <Trash2 size={14} className="mr-1" /> {t('common.delete')}
                         </Button>
                       </div>
                     )}
@@ -263,7 +255,7 @@ const AccommodationPage = () => {
         {mergeMode && selectedForMerge.size === 2 && (
           <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
             <Button onClick={() => setMergeDialogOpen(true)} className="gap-1.5 shadow-lg">
-              <Merge size={16} /> מזג מלונות נבחרים
+              <Merge size={16} /> {t('accommodationPage.mergeHotels')}
             </Button>
           </div>
         )}

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useTripList } from '@/context/TripListContext';
 import { useActiveTrip } from '@/context/ActiveTripContext';
@@ -51,7 +52,7 @@ function findCountryNode(node: WorldTreeNode, countryName: string): WorldTreeNod
   return partialMatch;
 }
 
-function formatRelativeDate(dateStr: string): string {
+function formatRelativeDate(dateStr: string, t: (key: string, opts?: Record<string, any>) => string): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -59,10 +60,10 @@ function formatRelativeDate(dateStr: string): string {
   const diffHr = Math.floor(diffMin / 60);
   const diffDays = Math.floor(diffHr / 24);
 
-  if (diffMin < 1) return 'עכשיו';
-  if (diffMin < 60) return `לפני ${diffMin} דק׳`;
-  if (diffHr < 24) return `לפני ${diffHr} שע׳`;
-  if (diffDays < 7) return `לפני ${diffDays} ימים`;
+  if (diffMin < 1) return t('relativeTime.now');
+  if (diffMin < 60) return t('relativeTime.minutesAgo', { count: diffMin });
+  if (diffHr < 24) return t('relativeTime.hoursAgo', { count: diffHr });
+  if (diffDays < 7) return t('relativeTime.daysAgo', { count: diffDays });
   return date.toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
@@ -80,12 +81,13 @@ function getCountryImage(tree: WorldTreeNode | null, countries: string[]): strin
   return null;
 }
 
-function TripCard({ trip, isActive, tree, flagMap, onSelect }: {
+function TripCard({ trip, isActive, tree, flagMap, onSelect, t }: {
   trip: Trip;
   isActive: boolean;
   tree: WorldTreeNode | null;
   flagMap: Map<string, string>;
   onSelect: () => void;
+  t: (key: string, opts?: Record<string, any>) => string;
 }) {
   const heroImage = getCountryImage(tree, trip.countries);
 
@@ -146,10 +148,10 @@ function TripCard({ trip, isActive, tree, flagMap, onSelect }: {
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <CalendarDays size={12} />
-            <span>עודכן {formatRelativeDate(trip.updatedAt)}</span>
+            <span>{t('tripsPage.updated', { time: formatRelativeDate(trip.updatedAt, t) })}</span>
           </div>
           {trip.myRole === 'editor' && (
-            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 font-normal">shared</Badge>
+            <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 font-normal">{t('tripsPage.shared')}</Badge>
           )}
         </div>
 
@@ -166,6 +168,7 @@ function TripCard({ trip, isActive, tree, flagMap, onSelect }: {
 }
 
 const TripsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { trips } = useTripList();
   const { activeTrip, setActiveTrip, updateCurrentTrip } = useActiveTrip();
@@ -205,7 +208,7 @@ const TripsPage = () => {
   const handleSavePrefs = async () => {
     if (activeTrip) {
       await updateCurrentTrip({ currency: prefsCurrency });
-      toast({ title: 'Preferences saved', description: `Currency set to ${prefsCurrency}` });
+      toast({ title: t('preferences.saved'), description: t('preferences.currencySet', { currency: prefsCurrency }) });
     }
     setPrefsOpen(false);
   };
@@ -217,21 +220,21 @@ const TripsPage = () => {
         <div className="container max-w-5xl mx-auto px-4 flex h-14 items-center justify-between">
           <div className="flex items-center gap-2">
             <img src="/icon.png" alt="Triptomat" className="h-7 w-7 rounded" />
-            <span className="font-bold text-base">Triptomat</span>
+            <span className="font-bold text-base">{t('nav.triptomat')}</span>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="תפריט">
+              <Button variant="ghost" size="icon" aria-label={t('nav.menu')}>
                 <MoreVertical size={18} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => { setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }}>
-                <Settings size={14} className="mr-2" /> הגדרות
+                <Settings size={14} className="mr-2" /> {t('nav.settings')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleSignOut}>
-                <LogOut size={14} className="mr-2" /> יציאה
+                <LogOut size={14} className="mr-2" /> {t('nav.signOut')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -240,12 +243,12 @@ const TripsPage = () => {
 
       {/* Trips grid */}
       <div className="container max-w-5xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">הטיולים שלי</h1>
+        <h1 className="text-2xl font-bold mb-6">{t('tripsPage.myTrips')}</h1>
 
         {sortedTrips.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <MapPin size={48} className="mx-auto mb-4 opacity-40" />
-            <p className="text-lg">אין טיולים עדיין</p>
+            <p className="text-lg">{t('tripsPage.noTrips')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -257,6 +260,7 @@ const TripsPage = () => {
                 tree={tree}
                 flagMap={flagMap}
                 onSelect={() => handleSelect(trip.id)}
+                t={t}
               />
             ))}
           </div>
@@ -267,12 +271,12 @@ const TripsPage = () => {
       <Dialog open={prefsOpen} onOpenChange={setPrefsOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>User Preferences</DialogTitle>
+            <DialogTitle>{t('preferences.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <label htmlFor="trips-display-currency" className="text-sm font-medium">Display Currency</label>
-              <p className="text-xs text-muted-foreground">All costs will be shown converted to this currency.</p>
+              <label htmlFor="trips-display-currency" className="text-sm font-medium">{t('preferences.displayCurrency')}</label>
+              <p className="text-xs text-muted-foreground">{t('preferences.currencyDescription')}</p>
               <Select value={prefsCurrency} onValueChange={setPrefsCurrency}>
                 <SelectTrigger id="trips-display-currency">
                   <SelectValue />
@@ -285,8 +289,8 @@ const TripsPage = () => {
               </Select>
             </div>
             <div className="flex justify-end gap-2 pt-1">
-              <Button variant="outline" size="sm" onClick={() => setPrefsOpen(false)}>Cancel</Button>
-              <Button size="sm" onClick={handleSavePrefs}>Save</Button>
+              <Button variant="outline" size="sm" onClick={() => setPrefsOpen(false)}>{t('common.cancel')}</Button>
+              <Button size="sm" onClick={handleSavePrefs}>{t('common.save')}</Button>
             </div>
           </div>
         </DialogContent>

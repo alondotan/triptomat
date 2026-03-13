@@ -1,15 +1,17 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronLeft } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { SiteNode } from '@/hooks/useCountrySites';
-import { TYPE_LABELS } from '@/components/shared/LocationSelector';
+import { TYPE_LABEL_KEYS } from '@/components/shared/LocationSelector';
 import { cn } from '@/lib/utils';
 
 function TreeNode({ node, depth = 0 }: { node: SiteNode; depth?: number }) {
+  const { t } = useTranslation();
   const hasChildren = node.sub_sites && node.sub_sites.length > 0;
   const [expanded, setExpanded] = useState(depth < 2);
 
-  const typeLabel = TYPE_LABELS[node.site_type] || node.site_type;
+  const typeLabel = TYPE_LABEL_KEYS[node.site_type] ? t(TYPE_LABEL_KEYS[node.site_type]) : node.site_type;
 
   return (
     <div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { usePOI } from '@/context/POIContext';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -23,14 +24,14 @@ import { AccommodationMiniMap } from './AccommodationMiniMap';
 
 const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
 
-const statusLabels: Record<string, string> = {
-  suggested: 'מוצע',
-  interested: 'מעניין',
-  planned: 'מתוכנן',
-  scheduled: 'בלו״ז',
-  booked: 'הוזמן',
-  visited: 'בוקר',
-  skipped: 'דילגתי',
+const STATUS_KEYS: Record<string, string> = {
+  suggested: 'status.suggested',
+  interested: 'status.interested',
+  planned: 'status.planned',
+  scheduled: 'status.scheduled',
+  booked: 'status.booked',
+  visited: 'status.visited',
+  skipped: 'status.skipped',
 };
 import { supabase } from '@/integrations/supabase/client';
 
@@ -47,6 +48,7 @@ interface RecommendationQuote {
 }
 
 export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProps) {
+  const { t } = useTranslation();
   const { updatePOI, deletePOI } = usePOI();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -280,7 +282,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const quotesSection = quotes.length > 0 && (
     <div className="space-y-2">
       <h4 className="text-sm font-semibold flex items-center gap-1.5">
-        <Quote size={14} aria-hidden="true" /> המלצות
+        <Quote size={14} aria-hidden="true" /> {t('poiDetail.recommendations')}
       </h4>
       <div className="space-y-2">
         {quotes.map((q, i) => (
@@ -288,7 +290,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
             <p className="text-muted-foreground italic leading-relaxed" dir="auto">{q.paragraph}</p>
             {q.sourceUrl && (
               <a href={q.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1">
-                <ExternalLink size={12} aria-hidden="true" /> מקור
+                <ExternalLink size={12} aria-hidden="true" /> {t('poiDetail.source')}
               </a>
             )}
           </div>
@@ -301,7 +303,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     <div className="rounded-xl bg-secondary/40 p-3 space-y-2">
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <Label>קטגוריה</Label>
+          <Label>{t('poiDetail.category')}</Label>
           <Select value={category} onValueChange={v => setCategory(v as POICategory)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -312,8 +314,8 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           </Select>
         </div>
         <div className="space-y-1">
-          <Label>תת-קטגוריה</Label>
-          <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} placeholder="בחר..." />
+          <Label>{t('poiDetail.subCategory')}</Label>
+          <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} />
         </div>
       </div>
     </div>
@@ -322,15 +324,15 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const locationSection = (
     <div className="rounded-xl bg-secondary/40 p-3 space-y-2">
       <div className="space-y-1">
-        <Label>מיקום</Label>
+        <Label>{t('poiDetail.location')}</Label>
         <LocationSelector
           value={city}
           onChange={setCity}
-          placeholder="בחר מיקום…"
+          placeholder={t('locationSelector.chooseLocation')}
         />
       </div>
       <div className="space-y-1">
-        <Label>כתובת</Label>
+        <Label>{t('poiDetail.address')}</Label>
         <Input name="address" value={address} onChange={e => setAddress(e.target.value)} autoComplete="street-address" />
       </div>
     </div>
@@ -339,7 +341,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const costSection = (
     <div className="rounded-xl bg-secondary/40 p-3 space-y-2">
       <div className="space-y-1">
-        <Label>עלות</Label>
+        <Label>{t('poiDetail.cost')}</Label>
         <div className="grid grid-cols-3 gap-2">
           <Input name="cost" type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" />
           <Select value={costCurrency} onValueChange={setCostCurrency}>
@@ -351,11 +353,11 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
         </div>
       </div>
       <div className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2">
-        <Label htmlFor="poi-detail-is-booked">הוזמן?</Label>
+        <Label htmlFor="poi-detail-is-booked">{t('poiDetail.booked')}</Label>
         <Switch id="poi-detail-is-booked" checked={isBooked} onCheckedChange={setIsBooked} />
       </div>
       <div className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2">
-        <Label htmlFor="poi-detail-is-paid">שולם?</Label>
+        <Label htmlFor="poi-detail-is-paid">{t('poiDetail.paid')}</Label>
         <Switch id="poi-detail-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
       </div>
     </div>
@@ -365,7 +367,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     <div className="rounded-xl bg-secondary/40 p-3 space-y-2">
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <Label>{isPlanning ? 'יום צ׳ק-אין' : 'תאריך צ׳ק-אין'}</Label>
+          <Label>{isPlanning ? t('poiDetail.checkinDay') : t('poiDetail.checkinDate')}</Label>
           {isPlanning ? (
             <TripDaySelect value={checkinDate ? parseInt(checkinDate) || '' : ''} onChange={(v) => setCheckinDate(v ? String(v) : '')} />
           ) : (
@@ -373,13 +375,13 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           )}
         </div>
         <div className="space-y-2">
-          <Label>שעת צ׳ק-אין</Label>
+          <Label>{t('poiDetail.checkinTime')}</Label>
           <Input name="checkinTime" type="time" value={checkinHour} onChange={e => setCheckinHour(e.target.value)} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <Label>{isPlanning ? 'יום צ׳ק-אאוט' : 'תאריך צ׳ק-אאוט'}</Label>
+          <Label>{isPlanning ? t('poiDetail.checkoutDay') : t('poiDetail.checkoutDate')}</Label>
           {isPlanning ? (
             <TripDaySelect value={checkoutDate ? parseInt(checkoutDate) || '' : ''} onChange={(v) => setCheckoutDate(v ? String(v) : '')} />
           ) : (
@@ -387,22 +389,22 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           )}
         </div>
         <div className="space-y-1">
-          <Label>שעת צ׳ק-אאוט</Label>
+          <Label>{t('poiDetail.checkoutTime')}</Label>
           <Input name="checkoutTime" type="time" value={checkoutHour} onChange={e => setCheckoutHour(e.target.value)} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
-          <Label>סוג חדר</Label>
-          <Input name="roomType" value={roomType} onChange={e => setRoomType(e.target.value)} placeholder="Double, Suite…" />
+          <Label>{t('poiDetail.roomType')}</Label>
+          <Input name="roomType" value={roomType} onChange={e => setRoomType(e.target.value)} placeholder={t('poiDetail.roomTypePlaceholder')} />
         </div>
         <div className="space-y-1">
-          <Label>תפוסה</Label>
-          <Input name="occupancy" value={occupancy} onChange={e => setOccupancy(e.target.value)} placeholder="2 adults" />
+          <Label>{t('poiDetail.occupancy')}</Label>
+          <Input name="occupancy" value={occupancy} onChange={e => setOccupancy(e.target.value)} placeholder={t('poiDetail.occupancyPlaceholder')} />
         </div>
       </div>
       <div className="space-y-1">
-        <Label>ביטול חינם עד</Label>
+        <Label>{t('poiDetail.freeCancellationUntil')}</Label>
         <Input name="freeCancellationUntil" type="datetime-local" value={freeCancellationUntil} onChange={e => setFreeCancellationUntil(e.target.value)} />
       </div>
     </div>
@@ -411,12 +413,12 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const notesSection = (
     <div className="rounded-xl bg-secondary/40 p-3 space-y-2">
       <div className="space-y-1">
-        <Label>מספר הזמנה</Label>
-        <Input name="orderNumber" value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder="Booking ref…" />
+        <Label>{t('poiDetail.orderNumber')}</Label>
+        <Input name="orderNumber" value={orderNumber} onChange={e => setOrderNumber(e.target.value)} placeholder={t('poiDetail.orderNumberPlaceholder')} />
       </div>
       <div className="space-y-1">
-        <Label>הערות</Label>
-        <Textarea name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="הוסף הערה…" rows={3} />
+        <Label>{t('poiDetail.notes')}</Label>
+        <Textarea name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('poiDetail.addNote')} rows={3} />
       </div>
     </div>
   );
@@ -449,7 +451,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                 next[i] = { ...slot, hour: e.target.value };
                 setBookings(next);
               }} />
-              <Button variant="ghost" size="icon" aria-label="הסר" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => {
+              <Button variant="ghost" size="icon" aria-label={t('timeline.remove')} className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => {
                 setBookings(bookings.filter((_, j) => j !== i));
               }}>
                 <X size={14} />
@@ -483,7 +485,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                 next[i] = { ...slot, hour: e.target.value };
                 setBookings(next);
               }} />
-              <Button variant="ghost" size="icon" aria-label="הסר" className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => {
+              <Button variant="ghost" size="icon" aria-label={t('timeline.remove')} className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => {
                 setBookings(bookings.filter((_, j) => j !== i));
               }}>
                 <X size={14} />
@@ -493,10 +495,10 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
         </div>
       )}
       <Button variant="outline" size="sm" className="gap-1" onClick={() => setBookings([...bookings, { date: '', hour: '' }])}>
-        <Plus size={14} /> הוסף זמן
+        <Plus size={14} /> {t('poiDetail.addTime')}
       </Button>
       <div className="flex items-center gap-2">
-        <Label className="shrink-0 text-xs">משך:</Label>
+        <Label className="shrink-0 text-xs">{t('poiDetail.duration')}</Label>
         <Select
           value={isCustomDuration ? 'custom' : duration === '' ? 'none' : duration}
           onValueChange={v => {
@@ -509,20 +511,20 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">ללא</SelectItem>
-            <SelectItem value="30">30 דק׳</SelectItem>
-            <SelectItem value="60">שעה</SelectItem>
-            <SelectItem value="90">1.5 שעות</SelectItem>
-            <SelectItem value="120">2 שעות</SelectItem>
-            <SelectItem value="180">3 שעות</SelectItem>
-            <SelectItem value="480">יום שלם</SelectItem>
-            <SelectItem value="custom">אחר…</SelectItem>
+            <SelectItem value="none">{t('poiDetail.none')}</SelectItem>
+            <SelectItem value="30">{t('poiDetail.min30')}</SelectItem>
+            <SelectItem value="60">{t('poiDetail.hour1')}</SelectItem>
+            <SelectItem value="90">{t('poiDetail.hours1_5')}</SelectItem>
+            <SelectItem value="120">{t('poiDetail.hours2')}</SelectItem>
+            <SelectItem value="180">{t('poiDetail.hours3')}</SelectItem>
+            <SelectItem value="480">{t('poiDetail.fullDay')}</SelectItem>
+            <SelectItem value="custom">{t('poiDetail.otherDuration')}</SelectItem>
           </SelectContent>
         </Select>
         {isCustomDuration && (
           <div className="flex items-center gap-1">
-            <Input name="customDuration" type="number" value={duration} className="w-16 h-8 px-1.5 text-xs" placeholder="דק׳" min="1" autoFocus onChange={e => setDuration(e.target.value)} />
-            <span className="text-xs text-muted-foreground">דק׳</span>
+            <Input name="customDuration" type="number" value={duration} className="w-16 h-8 px-1.5 text-xs" placeholder={t('poiDetail.minutes')} min="1" autoFocus onChange={e => setDuration(e.target.value)} />
+            <span className="text-xs text-muted-foreground">{t('poiDetail.minutes')}</span>
           </div>
         )}
       </div>
@@ -555,32 +557,32 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                 )}
               </DialogHeader>
               <Badge variant={poi.status === 'booked' ? 'default' : 'secondary'} className="shrink-0">
-                {statusLabels[poi.status] || poi.status}
+                {STATUS_KEYS[poi.status] ? t(STATUS_KEYS[poi.status]) : poi.status}
               </Badge>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" size="sm" className="gap-1.5 text-destructive hover:text-destructive">
-                    <Trash2 size={14} /> מחק
+                    <Trash2 size={14} /> {t('common.delete')}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>למחוק את {poi.name}?</AlertDialogTitle>
-                    <AlertDialogDescription>פעולה זו לא ניתנת לביטול.</AlertDialogDescription>
+                    <AlertDialogTitle>{t('poiDetail.deleteConfirm', { name: poi.name })}</AlertDialogTitle>
+                    <AlertDialogDescription>{t('poiDetail.cannotUndo')}</AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>ביטול</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">מחק</AlertDialogAction>
+                    <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('common.delete')}</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
               <Button variant="outline" size="sm" onClick={handleCancel}>
-                ביטול
+                {t('common.cancel')}
               </Button>
               <Button onClick={handleSave} size="sm" className="gap-1.5">
-                <Save size={14} /> שמור
+                <Save size={14} /> {t('common.save')}
               </Button>
             </div>
           </div>
@@ -676,26 +678,26 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
 
           <div className="flex gap-2">
             <Button onClick={handleSave} className="flex-1 gap-1.5">
-              <Save size={16} /> שמור
+              <Save size={16} /> {t('common.save')}
             </Button>
             <Button variant="outline" onClick={handleCancel} className="flex-1">
-              ביטול
+              {t('common.cancel')}
             </Button>
           </div>
           <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
             <AlertDialogTrigger asChild>
               <Button variant="ghost" className="w-full gap-1.5 text-destructive hover:text-destructive">
-                <Trash2 size={16} /> מחק
+                <Trash2 size={16} /> {t('common.delete')}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>למחוק את {poi.name}?</AlertDialogTitle>
-                <AlertDialogDescription>פעולה זו לא ניתנת לביטול.</AlertDialogDescription>
+                <AlertDialogTitle>{t('poiDetail.deleteConfirm', { name: poi.name })}</AlertDialogTitle>
+                <AlertDialogDescription>{t('poiDetail.cannotUndo')}</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>ביטול</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">מחק</AlertDialogAction>
+                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('common.delete')}</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

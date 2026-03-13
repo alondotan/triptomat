@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -17,6 +18,7 @@ import type { POICategory, POIStatus } from '@/types/trip';
 import { getPOICategories, getCategoryLabel } from '@/lib/subCategoryConfig';
 
 export function CreatePOIForm() {
+  const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
   const { addPOI } = usePOI();
   const { toast } = useToast();
@@ -101,21 +103,21 @@ export function CreatePOIForm() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-1"><Plus size={16} /> New POI</Button>
+        <Button className="gap-1"><Plus size={16} /> {t('createPOI.newPOI')}</Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>Add Point of Interest</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{t('createPOI.title')}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Basic Info */}
           <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Basic Info</span>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('createPOI.basicInfo')}</span>
             <div className="space-y-2">
-              <Label htmlFor="poi-name">Name *</Label>
-              <Input id="poi-name" name="name" value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Eiffel Tower" autoComplete="off" />
+              <Label htmlFor="poi-name">{t('createPOI.name')}</Label>
+              <Input id="poi-name" name="name" value={name} onChange={e => setName(e.target.value)} required placeholder={t('createPOI.namePlaceholder')} autoComplete="off" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Category</Label>
+                <Label>{t('createPOI.category')}</Label>
                 <Select value={category} onValueChange={v => setCategory(v as POICategory)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -127,34 +129,34 @@ export function CreatePOIForm() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Sub-category</Label>
-              <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} placeholder="בחר תת-קטגוריה..." />
+              <Label>{t('createPOI.subCategory')}</Label>
+              <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} placeholder={t('createPOI.chooseSubCategory')} />
             </div>
           </div>
 
           {/* Location */}
           <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Location</span>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('createPOI.location')}</span>
             <div className="space-y-2">
-              <Label htmlFor="poi-country">Country</Label>
+              <Label htmlFor="poi-country">{t('createPOI.country')}</Label>
               {manualCountry ? (
                 <div className="flex gap-1">
-                  <Input id="poi-country" name="country" value={country} onChange={e => setCountry(e.target.value)} placeholder="הזן מדינה ידנית..." className="flex-1" autoComplete="off" />
+                  <Input id="poi-country" name="country" value={country} onChange={e => setCountry(e.target.value)} placeholder={t('createPOI.enterCountryManually')} className="flex-1" autoComplete="off" />
                   <Button type="button" variant="ghost" size="sm" className="shrink-0 text-xs" onClick={() => setManualCountry(false)}>
-                    רשימה
+                    {t('createPOI.list')}
                   </Button>
                 </div>
               ) : tripCountries.length > 0 ? (
                 <div className="flex gap-1">
                   <Select value={country} onValueChange={v => { setCountry(v); setCity(''); }}>
-                    <SelectTrigger className="flex-1"><SelectValue placeholder="בחר מדינה..." /></SelectTrigger>
+                    <SelectTrigger className="flex-1"><SelectValue placeholder={t('createPOI.chooseCountry')} /></SelectTrigger>
                     <SelectContent>
                       {tripCountries.map(c => (
                         <SelectItem key={c} value={c}>{c}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => setManualCountry(true)} title="הזנה ידנית" aria-label="ערוך מדינה">
+                  <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => setManualCountry(true)} title={t('createPOI.enterCountryManually')} aria-label={t('createPOI.editCountry')}>
                     <Pencil size={14} />
                   </Button>
                 </div>
@@ -163,24 +165,24 @@ export function CreatePOIForm() {
               )}
             </div>
             <div className="space-y-2">
-              <Label>מיקום</Label>
+              <Label>{t('createPOI.location')}</Label>
               <LocationSelector
                 value={city}
                 onChange={setCity}
-                placeholder="בחר מיקום..."
+                placeholder={t('createPOI.chooseLocation')}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="poi-address">Address</Label>
-              <Input id="poi-address" name="address" value={address} onChange={e => setAddress(e.target.value)} placeholder="5 Avenue Anatole" autoComplete="off" />
+              <Label htmlFor="poi-address">{t('createPOI.address')}</Label>
+              <Input id="poi-address" name="address" value={address} onChange={e => setAddress(e.target.value)} placeholder={t('createPOI.addressPlaceholder')} autoComplete="off" />
             </div>
           </div>
 
           {/* Cost & Payment */}
           <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Cost</span>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('createPOI.cost')}</span>
             <div className="space-y-2">
-              <Label htmlFor="poi-cost">עלות</Label>
+              <Label htmlFor="poi-cost">{t('createPOI.cost')}</Label>
               <div className="grid grid-cols-3 gap-2">
                 <Input id="poi-cost" name="cost" type="number" min="0" step="0.01" value={costAmount} onChange={e => setCostAmount(e.target.value)} placeholder="0.00" className="col-span-2" autoComplete="off" />
                 <Select value={costCurrency} onValueChange={setCostCurrency}>
@@ -194,17 +196,17 @@ export function CreatePOIForm() {
               </div>
             </div>
             <div className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2.5">
-              <Label htmlFor="poi-is-paid">שולם?</Label>
+              <Label htmlFor="poi-is-paid">{t('createPOI.paid')}</Label>
               <Switch id="poi-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="poi-notes">Notes</Label>
-            <Textarea id="poi-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any additional notes..." autoComplete="off" />
+            <Label htmlFor="poi-notes">{t('createPOI.notes')}</Label>
+            <Textarea id="poi-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('createPOI.notesPlaceholder')} autoComplete="off" />
           </div>
 
-          <Button type="submit" className="w-full">Add POI</Button>
+          <Button type="submit" className="w-full">{t('createPOI.addPOI')}</Button>
         </form>
       </DialogContent>
     </Dialog>

@@ -1,4 +1,5 @@
 import { NavLink as RouterNavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import {
   CalendarDays,
@@ -33,6 +34,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { useState, useEffect } from 'react';
 import { useTripList } from '@/context/TripListContext';
 import { useActiveTrip } from '@/context/ActiveTripContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { CreateTripForm } from '@/components/forms/CreateTripForm';
 import { EditTripDialog } from '@/components/trip/EditTripDialog';
 import { LocationTreeDialog } from '@/components/trip/LocationTreeDialog';
@@ -60,17 +62,17 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const navItems = [
-  { path: '/', label: 'Timeline', icon: CalendarDays },
-  { path: '/pois', label: 'POIs', icon: MapPin },
-  { path: '/accommodation', label: 'Stay', icon: Hotel },
-  { path: '/transport', label: 'Transport', icon: Plane },
-  { path: '/recommendations', label: 'Recs', icon: Star },
-  { path: '/itinerary', label: 'Itinerary', icon: Table2 },
-  { path: '/map', label: 'Map', icon: Map },
-  { path: '/budget', label: 'Budget', icon: DollarSign },
-  { path: '/tasks', label: 'Tasks', icon: CheckSquare },
-  { path: '/contacts', label: 'Contacts', icon: Users },
-  { path: '/inbox', label: 'Inbox', icon: Inbox },
+  { path: '/', labelKey: 'nav.timeline', icon: CalendarDays },
+  { path: '/pois', labelKey: 'nav.pois', icon: MapPin },
+  { path: '/accommodation', labelKey: 'nav.stay', icon: Hotel },
+  { path: '/transport', labelKey: 'nav.transport', icon: Plane },
+  { path: '/recommendations', labelKey: 'nav.recs', icon: Star },
+  { path: '/itinerary', labelKey: 'nav.itinerary', icon: Table2 },
+  { path: '/map', labelKey: 'nav.map', icon: Map },
+  { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },
+  { path: '/tasks', labelKey: 'nav.tasks', icon: CheckSquare },
+  { path: '/contacts', labelKey: 'nav.contacts', icon: Users },
+  { path: '/inbox', labelKey: 'nav.inbox', icon: Inbox },
 ];
 
 const COMMON_CURRENCIES = [
@@ -91,7 +93,14 @@ interface AppHeaderProps {
   hasHero?: boolean;
 }
 
+const LANGUAGE_OPTIONS = [
+  { code: 'he' as const, label: 'עברית' },
+  { code: 'en' as const, label: 'English' },
+];
+
 export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHeaderProps) {
+  const { t } = useTranslation();
+  const { language, setLanguage } = useLanguage();
   const location = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -135,7 +144,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
   const handleSavePrefs = async () => {
     if (activeTrip) {
       await updateCurrentTrip({ currency: prefsCurrency });
-      toast({ title: 'Preferences saved', description: `Currency set to ${prefsCurrency}` });
+      toast({ title: t('preferences.saved'), description: t('preferences.currencySet', { currency: prefsCurrency }) });
     }
     setPrefsOpen(false);
   };
@@ -149,7 +158,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
         <div className="md:hidden grid grid-cols-[auto_1fr_auto] items-center w-full">
           {/* Left: Hamburger */}
           <div className="flex items-center">
-            <Button variant="ghost" size="icon" aria-label="תפריט" onClick={() => setHamburgerOpen(true)}>
+            <Button variant="ghost" size="icon" aria-label={t('nav.menu')} onClick={() => setHamburgerOpen(true)}>
               <Menu size={22} />
             </Button>
           </div>
@@ -160,7 +169,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
               'font-bold text-base truncate transition-opacity duration-300',
               hasHero && !heroScrolledPast ? 'opacity-0' : 'opacity-100'
             )}>
-              {activeTrip?.name || 'Triptomat'}
+              {activeTrip?.name || t('nav.triptomat')}
             </span>
           </div>
 
@@ -189,17 +198,17 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
             </RouterNavLink>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-2 rounded-lg transition-colors text-muted-foreground" aria-label="תפריט משתמש">
+                <button className="p-2 rounded-lg transition-colors text-muted-foreground" aria-label={t('nav.menu')}>
                   <MoreVertical size={22} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem onClick={() => { setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }}>
-                  <Settings size={14} className="mr-2" /> הגדרות
+                  <Settings size={14} className="mr-2" /> {t('nav.settings')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleSignOut}>
-                  <LogOut size={14} className="mr-2" /> יציאה
+                  <LogOut size={14} className="mr-2" /> {t('nav.signOut')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -211,7 +220,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
           {activeTrip ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-lg p-1 h-9 w-9 shrink-0" aria-label="תפריט טיול">
+                <Button variant="ghost" size="icon" className="rounded-lg p-1 h-9 w-9 shrink-0" aria-label={t('nav.menu')}>
                   <img src="/icon.png" alt="Triptomat" className="h-7 w-7 rounded" />
                 </Button>
               </DropdownMenuTrigger>
@@ -226,7 +235,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                       <span className="flex items-center gap-1.5">
                         {trip.name}
                         {trip.myRole === 'editor' && (
-                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 font-normal">shared</Badge>
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 font-normal">{t('tripsPage.shared')}</Badge>
                         )}
                       </span>
                       <span className="text-xs text-muted-foreground">{trip.countries.join(', ')}</span>
@@ -235,33 +244,33 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                 ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/trips')}>
-                  <ListIcon size={14} className="mr-2" /> הצג טיולים
+                  <ListIcon size={14} className="mr-2" /> {t('nav.showTrips')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={openEditDialog}>
-                  <Pencil size={14} className="mr-2" /> Edit Trip
+                  <Pencil size={14} className="mr-2" /> {t('editTrip.editTrip')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setLocationTreeOpen(true)}>
-                  <Network size={14} className="mr-2" /> Location Tree
+                  <Network size={14} className="mr-2" /> {t('locationTree.title')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setShareOpen(true)}>
-                  <Share2 size={14} className="mr-2" /> Share Trip
+                  <Share2 size={14} className="mr-2" /> {t('shareTrip.title')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setNewTripOpen(true)}>
-                  <Plus size={14} className="mr-2" /> New Trip
+                  <Plus size={14} className="mr-2" /> {t('createTrip.newTrip')}
                 </DropdownMenuItem>
                 {myRole === 'owner' && (
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
                     onClick={() => setDeleteDialogOpen(true)}
                   >
-                    <Trash2 size={14} className="mr-2" /> Delete Trip
+                    <Trash2 size={14} className="mr-2" /> {t('deleteTrip.button')}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <RouterNavLink to="/" className="flex items-center" aria-label="דף הבית">
+            <RouterNavLink to="/" className="flex items-center" aria-label={t('nav.triptomat')}>
               <img src="/icon.png" alt="Triptomat" className="h-7 w-7 rounded" />
             </RouterNavLink>
           )}
@@ -303,7 +312,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                     </span>
                   )}
                 </div>
-                {item.label}
+                {t(item.labelKey)}
               </RouterNavLink>
             );
           })}
@@ -311,22 +320,22 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
 
         {/* Desktop user actions */}
         <div className="hidden md:flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => setAiChatOpen(true)} aria-label="AI Chat" title="AI Travel Assistant" className="relative">
+          <Button variant="ghost" size="icon" onClick={() => setAiChatOpen(true)} aria-label="AI Chat" title={t('nav.aiAssistant')} className="relative">
             <Sparkles size={18} />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="תפריט משתמש" title="Menu">
+              <Button variant="ghost" size="icon" aria-label={t('nav.menu')} title={t('nav.menu')}>
                 <MoreVertical size={18} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => { setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }}>
-                <Settings size={14} className="mr-2" /> הגדרות
+                <Settings size={14} className="mr-2" /> {t('nav.settings')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleSignOut}>
-                <LogOut size={14} className="mr-2" /> יציאה
+                <LogOut size={14} className="mr-2" /> {t('nav.signOut')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -339,7 +348,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
         <SheetContent side="left" className="px-0 w-72 overscroll-contain">
           <SheetHeader className="px-6 pb-4 border-b border-border">
             <SheetTitle className="text-left flex items-center gap-2">
-              <Compass size={18} /> Triptomat
+              <Compass size={18} /> {t('nav.triptomat')}
             </SheetTitle>
           </SheetHeader>
 
@@ -347,7 +356,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
             {/* Trip list — 3 most recent */}
             {trips.length > 0 && (
               <div className="py-3">
-                <p className="px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Trips</p>
+                <p className="px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{t('nav.trips')}</p>
                 {recentTrips.map(trip => (
                   <button
                     key={trip.id}
@@ -358,7 +367,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                       <div className="flex items-center gap-1.5">
                         <p className="font-medium">{trip.name}</p>
                         {trip.myRole === 'editor' && (
-                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 font-normal">shared</Badge>
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 font-normal">{t('tripsPage.shared')}</Badge>
                         )}
                       </div>
                       {trip.countries.length > 0 && (
@@ -372,7 +381,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                   onClick={() => { setHamburgerOpen(false); navigate('/trips'); }}
                   className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-primary hover:bg-muted transition-colors"
                 >
-                  <ListIcon size={16} /> הצג טיולים
+                  <ListIcon size={16} /> {t('nav.showTrips')}
                 </button>
               </div>
             )}
@@ -381,33 +390,33 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
 
             {/* Trip actions */}
             <div className="py-3">
-              <p className="px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Trip</p>
+              <p className="px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{t('nav.trips')}</p>
               <button
                 onClick={openEditDialog}
                 disabled={!activeTrip}
                 className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40"
               >
-                <Pencil size={16} /> Edit Trip
+                <Pencil size={16} /> {t('editTrip.editTrip')}
               </button>
               <button
                 onClick={() => { setHamburgerOpen(false); setLocationTreeOpen(true); }}
                 disabled={!activeTrip}
                 className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40"
               >
-                <Network size={16} /> Location Tree
+                <Network size={16} /> {t('locationTree.title')}
               </button>
               <button
                 onClick={() => { setHamburgerOpen(false); setShareOpen(true); }}
                 disabled={!activeTrip}
                 className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-40"
               >
-                <Share2 size={16} /> Share Trip
+                <Share2 size={16} /> {t('shareTrip.title')}
               </button>
               <button
                 onClick={() => { setHamburgerOpen(false); setNewTripOpen(true); }}
                 className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
               >
-                <Plus size={16} /> New Trip
+                <Plus size={16} /> {t('createTrip.newTrip')}
               </button>
               {myRole === 'owner' && (
                 <button
@@ -415,7 +424,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                   disabled={!activeTrip}
                   className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-destructive hover:bg-muted transition-colors disabled:opacity-40"
                 >
-                  <Trash2 size={16} /> Delete Trip
+                  <Trash2 size={16} /> {t('deleteTrip.button')}
                 </button>
               )}
             </div>
@@ -431,18 +440,18 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Trip?</AlertDialogTitle>
+            <AlertDialogTitle>{t('deleteTrip.title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete "{activeTrip?.name}" and all its data. This action cannot be undone.
+              {t('deleteTrip.message', { name: activeTrip?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => { deleteCurrentTrip(); setDeleteDialogOpen(false); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete Trip
+              {t('deleteTrip.button')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -478,12 +487,12 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
       <Dialog open={prefsOpen} onOpenChange={setPrefsOpen}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>User Preferences</DialogTitle>
+            <DialogTitle>{t('preferences.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-1.5">
-              <label htmlFor="display-currency" className="text-sm font-medium">Display Currency</label>
-              <p className="text-xs text-muted-foreground">All costs will be shown converted to this currency.</p>
+              <label htmlFor="display-currency" className="text-sm font-medium">{t('preferences.displayCurrency')}</label>
+              <p className="text-xs text-muted-foreground">{t('preferences.currencyDescription')}</p>
               <Select value={prefsCurrency} onValueChange={setPrefsCurrency}>
                 <SelectTrigger id="display-currency">
                   <SelectValue />
@@ -495,9 +504,23 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-1.5">
+              <label htmlFor="display-language" className="text-sm font-medium">{t('preferences.language')}</label>
+              <p className="text-xs text-muted-foreground">{t('preferences.languageDescription')}</p>
+              <Select value={language} onValueChange={(val) => setLanguage(val as 'he' | 'en')}>
+                <SelectTrigger id="display-language">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LANGUAGE_OPTIONS.map(opt => (
+                    <SelectItem key={opt.code} value={opt.code}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex justify-end gap-2 pt-1">
-              <Button variant="outline" size="sm" onClick={() => setPrefsOpen(false)}>Cancel</Button>
-              <Button size="sm" onClick={handleSavePrefs}>Save</Button>
+              <Button variant="outline" size="sm" onClick={() => setPrefsOpen(false)}>{t('common.cancel')}</Button>
+              <Button size="sm" onClick={handleSavePrefs}>{t('common.save')}</Button>
             </div>
           </div>
         </DialogContent>

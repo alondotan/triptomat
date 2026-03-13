@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ interface MapListItem {
 }
 
 export function MapListManager() {
+  const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
   const { toast } = useToast();
   const tripId = activeTrip?.id;
@@ -108,15 +110,15 @@ export function MapListManager() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Sync failed');
       toast({
-        title: `Synced "${list.name}"`,
+        title: t('recsPage.synced', { name: list.name }),
         description: data.new_places > 0
-          ? `${data.new_places} new places sent for analysis. ${data.total_places} total.`
-          : `No new places found (${data.total_places} already synced).`,
+          ? t('recsPage.newPlacesFound', { count: data.new_places })
+          : t('recsPage.noNewPlaces'),
       });
       await fetchLists();
       if (expanded[list.id]) loadItems(list.id);
     } catch (e: any) {
-      toast({ title: 'Sync failed', description: e.message, variant: 'destructive' });
+      toast({ title: t('recsPage.syncFailed'), description: e.message, variant: 'destructive' });
     }
     setSyncing(prev => ({ ...prev, [list.id]: false }));
   };
@@ -133,31 +135,31 @@ export function MapListManager() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Map size={16} className="text-muted-foreground" aria-hidden="true" />
-          <h2 className="font-semibold text-sm">Google Maps Lists</h2>
+          <h2 className="font-semibold text-sm">{t('mapListManager.title')}</h2>
         </div>
         <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => setShowAdd(v => !v)}>
-          <Plus size={13} /> Add List
+          <Plus size={13} /> {t('mapListManager.addList')}
         </Button>
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Link a public Google Maps saved list. Places will be imported as recommendations.
+        {t('mapListManager.addDescription')}
       </p>
 
       {showAdd && (
         <div className="space-y-2 border rounded-md p-3 bg-muted/30">
-          <Input placeholder="Google Maps list URL" aria-label="הזן כתובת URL" name="url" type="url" autoComplete="off" value={newUrl} onChange={e => setNewUrl(e.target.value)} className="text-sm h-8" />
+          <Input placeholder={t('mapListManager.urlPlaceholder')} aria-label={t('mapListManager.urlPlaceholder')} name="url" type="url" autoComplete="off" value={newUrl} onChange={e => setNewUrl(e.target.value)} className="text-sm h-8" />
           <div className="flex gap-2 justify-end">
-            <Button variant="outline" size="sm" onClick={() => setShowAdd(false)}>Cancel</Button>
+            <Button variant="outline" size="sm" onClick={() => setShowAdd(false)}>{t('common.cancel')}</Button>
             <Button size="sm" onClick={handleAdd} disabled={adding || !newUrl.trim()}>
-              {adding ? 'Adding…' : 'Add'}
+              {adding ? t('mapListManager.adding') : t('common.add')}
             </Button>
           </div>
         </div>
       )}
 
       {lists.length === 0 && !showAdd && (
-        <p className="text-xs text-muted-foreground text-center py-2">No lists yet.</p>
+        <p className="text-xs text-muted-foreground text-center py-2">{t('mapListManager.noLists')}</p>
       )}
 
       <div className="space-y-2">
@@ -177,7 +179,7 @@ export function MapListManager() {
                 className="h-6 w-6 shrink-0"
                 onClick={() => handleSync(list)}
                 disabled={syncing[list.id] || !webhookToken}
-                title={list.last_synced_at ? 'Sync again' : 'Syncing...'}
+                title={list.last_synced_at ? t('mapListManager.syncAgain') : t('mapListManager.syncing')}
               >
                 <RefreshCw size={13} className={syncing[list.id] || !list.last_synced_at ? 'animate-spin' : ''} aria-hidden="true" />
               </Button>
@@ -186,7 +188,7 @@ export function MapListManager() {
                 aria-label="מחק"
                 className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
                 onClick={() => { if (window.confirm('האם למחוק?')) handleDelete(list.id); }}
-                title="Remove list"
+                title={t('mapListManager.removeList')}
               >
                 <Trash2 size={13} aria-hidden="true" />
               </Button>
@@ -196,8 +198,8 @@ export function MapListManager() {
               <div className="px-3 py-2 space-y-1 border-t">
                 <p className="text-xs text-muted-foreground">
                   {list.last_synced_at
-                    ? `Last synced: ${new Date(list.last_synced_at).toLocaleString()}`
-                    : 'Not synced yet — click ↻ to import.'}
+                    ? t('mapListManager.lastSynced', { date: new Date(list.last_synced_at).toLocaleString() })
+                    : t('mapListManager.notSyncedYet')}
                 </p>
                 {(items[list.id] || []).map(item => (
                   <div key={item.id} className="text-xs text-foreground py-0.5 flex items-center gap-1">
@@ -205,7 +207,7 @@ export function MapListManager() {
                   </div>
                 ))}
                 {(items[list.id] || []).length === 0 && list.last_synced_at && (
-                  <p className="text-xs text-muted-foreground">No items recorded.</p>
+                  <p className="text-xs text-muted-foreground">{t('mapListManager.noItemsRecorded')}</p>
                 )}
               </div>
             )}

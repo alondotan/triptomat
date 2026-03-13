@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Badge } from '@/components/ui/badge';
@@ -57,38 +58,16 @@ export interface DaySectionProps {
 
 
 const ACCOMMODATION_SUBCATEGORIES = ['hotel', 'hostel', 'apartment', 'resort', 'guesthouse', 'other'];
-const POI_CATEGORIES = [
-  { value: 'attraction', label: 'אטרקציה' },
-  { value: 'eatery', label: 'מסעדה/בית קפה' },
-  { value: 'service', label: 'שירות' },
+const POI_CATEGORY_KEYS = [
+  { value: 'attraction', key: 'poiCategory.attraction' },
+  { value: 'eatery', key: 'poiCategory.eatery' },
+  { value: 'service', key: 'poiCategory.service' },
 ];
-const TRANSPORT_CATEGORIES = [
-  { value: 'airplane',            label: 'מטוס' },
-  { value: 'domesticFlight',      label: 'טיסה פנימית' },
-  { value: 'internationalFlight', label: 'טיסה בינלאומית' },
-  { value: 'train',               label: 'רכבת' },
-  { value: 'nightTrain',          label: 'רכבת לילה' },
-  { value: 'highSpeedTrain',      label: 'רכבת מהירה' },
-  { value: 'bus',                 label: 'אוטובוס' },
-  { value: 'subway',              label: 'מטרו' },
-  { value: 'tram',                label: 'טראם' },
-  { value: 'ferry',               label: 'מעבורת' },
-  { value: 'cruise',              label: 'שייט' },
-  { value: 'cruiseShip',          label: 'ספינת שייט' },
-  { value: 'taxi',                label: 'מונית' },
-  { value: 'carRental',           label: 'השכרת רכב' },
-  { value: 'rideshare',           label: 'שיתוף נסיעה' },
-  { value: 'privateTransfer',     label: 'הסעה פרטית' },
-  { value: 'car',                 label: 'רכב' },
-  { value: 'walk',                label: 'הליכה ברגל' },
-  { value: 'bicycle',             label: 'אופניים' },
-  { value: 'motorcycle',          label: 'אופנוע' },
-  { value: 'scooter',             label: 'קורקינט' },
-  { value: 'boatTaxi',            label: 'מונית ימית' },
-  { value: 'cableCar',            label: 'רכבל' },
-  { value: 'funicular',           label: 'פוניקולר' },
-  { value: 'rv',                  label: 'קרוואן' },
-  { value: 'otherTransportation', label: 'אחר' },
+const TRANSPORT_CATEGORY_KEYS = [
+  'airplane', 'domesticFlight', 'internationalFlight', 'train', 'nightTrain',
+  'highSpeedTrain', 'bus', 'subway', 'tram', 'ferry', 'cruise', 'cruiseShip',
+  'taxi', 'carRental', 'rideshare', 'privateTransfer', 'car', 'walk', 'bicycle',
+  'motorcycle', 'scooter', 'boatTaxi', 'cableCar', 'funicular', 'rv', 'otherTransportation',
 ];
 
 export function DaySection({
@@ -97,6 +76,7 @@ export function DaySection({
   showBookingMissionOption, locationContext, countries,
   hideHeader, hideEmptyState, onMoveToSchedule, onMoveToDay, tripDays, selectedDayNum, onOpen,
 }: DaySectionProps) {
+  const { t } = useTranslation();
   const [showPicker, setShowPicker] = useState(false);
   const [nights, setNights] = useState(1);
   const [createBookingMission, setCreateBookingMission] = useState(false);
@@ -134,7 +114,7 @@ export function DaySection({
       {!hideHeader && <h4 className="text-sm font-semibold flex items-center gap-2">{icon} {title}</h4>}
 
       {!hideEmptyState && items.length === 0 && (
-        <p className="text-xs text-muted-foreground mr-0 sm:mr-6">אין פריטים</p>
+        <p className="text-xs text-muted-foreground mr-0 sm:mr-6">{t('timeline.noItems')}</p>
       )}
 
       {items.map(item => (
@@ -143,8 +123,8 @@ export function DaySection({
             <button
               onClick={() => onToggleSelected(item.id, !item.isSelected)}
               className={`shrink-0 transition-colors ${item.isSelected ? 'text-yellow-500' : 'text-muted-foreground/40 hover:text-yellow-400'}`}
-              aria-label="סמן כמועדף"
-              title={item.isSelected ? 'נבחר' : 'סמן כנבחר'}
+              aria-label={t('timeline.markAsFavorite')}
+              title={item.isSelected ? t('timeline.selected') : t('timeline.markAsSelected')}
             >
               <Star size={16} fill={item.isSelected ? 'currentColor' : 'none'} />
             </button>
@@ -167,8 +147,8 @@ export function DaySection({
           {onMoveToSchedule && (
             <button
               onClick={() => onMoveToSchedule(item.id)}
-              aria-label="העבר ללוח זמנים"
-              title="העבר ללו״ז"
+              aria-label={t('timeline.schedule')}
+              title={t('timeline.schedule')}
               className="shrink-0 p-1 rounded text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
             >
               <ArrowRight size={13} />
@@ -179,8 +159,8 @@ export function DaySection({
             <select
               className="shrink-0 appearance-none bg-transparent text-muted-foreground hover:text-primary cursor-pointer p-1 text-[10px] rounded hover:bg-primary/10 transition-colors"
               value=""
-              aria-label="בחר יום"
-              title="העבר ליום אחר"
+              aria-label={t('timeline.schedule')}
+              title={t('timeline.schedule')}
               onChange={e => {
                 const targetDay = parseInt(e.target.value);
                 if (targetDay) onMoveToDay(item.id, targetDay);
@@ -192,13 +172,13 @@ export function DaySection({
                 if (dayNum === selectedDayNum) return null;
                 return (
                   <option key={dayNum} value={dayNum}>
-                    יום {dayNum} — {format(day, 'MMM d')}
+                    {t('transportPage.day', { num: dayNum })} — {format(day, 'MMM d')}
                   </option>
                 );
               })}
             </select>
           )}
-          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" aria-label="הסר" onClick={() => onRemove(item.id)}>
+          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0" aria-label={t('timeline.remove')} onClick={() => onRemove(item.id)}>
             <X size={14} />
           </Button>
         </div>
@@ -216,15 +196,15 @@ export function DaySection({
           </DialogHeader>
           <Tabs defaultValue={availableItems.length > 0 ? "existing" : "new"}>
             <TabsList className="w-full">
-              <TabsTrigger value="existing" className="flex-1">בחר קיים</TabsTrigger>
-              {onCreateNew && <TabsTrigger value="new" className="flex-1">צור חדש</TabsTrigger>}
+              <TabsTrigger value="existing" className="flex-1">{t('timeline.chooseExisting')}</TabsTrigger>
+              {onCreateNew && <TabsTrigger value="new" className="flex-1">{t('timeline.createNew')}</TabsTrigger>}
             </TabsList>
 
             <TabsContent value="existing">
               {entityType === 'accommodation' && maxNights && maxNights > 1 && (
                 <div className="flex items-center gap-2 mb-3 pb-3 border-b">
                   <Moon size={14} className="text-muted-foreground" />
-                  <Label className="text-xs">מספר לילות:</Label>
+                  <Label className="text-xs">{t('timeline.nightsCount')}</Label>
                   <Input
                     type="number"
                     name="nights"
@@ -237,7 +217,7 @@ export function DaySection({
                 </div>
               )}
               {availableItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">אין פריטים זמינים</p>
+                <p className="text-sm text-muted-foreground text-center py-4">{t('timeline.noItemsAvailable')}</p>
               ) : (
                 <div className="space-y-1 max-h-64 overflow-y-auto">
                   {localItems.length > 0 && (
@@ -262,7 +242,7 @@ export function DaySection({
                     <div className="border-t my-1" />
                   )}
                   {otherItems.length > 0 && locationContext && localItems.length > 0 && (
-                    <p className="text-xs font-semibold text-muted-foreground px-3 pt-1">מקומות אחרים</p>
+                    <p className="text-xs font-semibold text-muted-foreground px-3 pt-1">{t('timeline.otherPlaces')}</p>
                   )}
                   {otherItems.map(item => (
                     <button
@@ -282,7 +262,7 @@ export function DaySection({
               {showBookingMissionOption && (
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t">
                   <Checkbox id="booking-existing" checked={createBookingMission} onCheckedChange={(v) => setCreateBookingMission(!!v)} />
-                  <Label htmlFor="booking-existing" className="text-xs cursor-pointer">צור משימת הזמנה</Label>
+                  <Label htmlFor="booking-existing" className="text-xs cursor-pointer">{t('timeline.createBookingTask')}</Label>
                 </div>
               )}
             </TabsContent>
@@ -292,7 +272,7 @@ export function DaySection({
                 {entityType === 'accommodation' && maxNights && maxNights > 1 && (
                   <div className="flex items-center gap-2 mb-3 pb-3 border-b">
                     <Moon size={14} className="text-muted-foreground" />
-                    <Label className="text-xs">מספר לילות:</Label>
+                    <Label className="text-xs">{t('timeline.nightsCount')}</Label>
                     <Input
                       type="number"
                       name="nights-new"
@@ -375,6 +355,7 @@ function LocationInput({ value, onChange, placeholder, suggestions }: {
 }
 
 function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookingMissionOption, countries }: QuickCreateFormProps) {
+  const { t } = useTranslation();
   // LocationSelector now reads from context directly
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
@@ -403,32 +384,32 @@ function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookin
     return (
       <form onSubmit={handleSubmit} className="space-y-3 pt-2">
         <div className="space-y-1">
-          <Label className="text-xs">סוג</Label>
+          <Label className="text-xs">{t('timeline.type')}</Label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {TRANSPORT_CATEGORIES.map(c => (
-                <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+              {TRANSPORT_CATEGORY_KEYS.map(key => (
+                <SelectItem key={key} value={key}>{t(`transportCategory.${key}`)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">מוצא *</Label>
-          <LocationInput value={fromName} onChange={setFromName} placeholder="תל אביב" suggestions={locationSuggestions} />
+          <Label className="text-xs">{t('timeline.origin')}</Label>
+          <LocationInput value={fromName} onChange={setFromName} placeholder="" suggestions={locationSuggestions} />
         </div>
         <div className="space-y-1">
-          <Label className="text-xs">יעד *</Label>
-          <LocationInput value={toName} onChange={setToName} placeholder="מנילה" suggestions={locationSuggestions} />
+          <Label className="text-xs">{t('timeline.destination')}</Label>
+          <LocationInput value={toName} onChange={setToName} placeholder="" suggestions={locationSuggestions} />
         </div>
         {showBookingMissionOption && (
           <div className="flex items-center gap-2 mt-1">
             <Checkbox id="booking-new-transport" checked={createBookingMission} onCheckedChange={(v) => setCreateBookingMission(!!v)} />
-            <Label htmlFor="booking-new-transport" className="text-xs cursor-pointer">צור משימת הזמנה</Label>
+            <Label htmlFor="booking-new-transport" className="text-xs cursor-pointer">{t('timeline.createBookingTask')}</Label>
           </div>
         )}
         <Button type="submit" className="w-full" size="sm" disabled={submitting}>
-          {submitting ? 'יוצר...' : 'צור והוסף'}
+          {submitting ? t('createTrip.creating') : t('timeline.createAndAdd')}
         </Button>
       </form>
     );
@@ -438,39 +419,39 @@ function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookin
     <form onSubmit={handleSubmit} className="space-y-3 pt-2">
       {entityType === 'activity' && (
         <div className="space-y-1">
-          <Label className="text-xs">קטגוריה</Label>
+          <Label className="text-xs">{t('poiDetail.category')}</Label>
           <Select value={category} onValueChange={setCategory}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {POI_CATEGORIES.map(c => (
-                <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+              {POI_CATEGORY_KEYS.map(c => (
+                <SelectItem key={c.value} value={c.value}>{t(c.key)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       )}
       <div className="space-y-1">
-        <Label className="text-xs">שם *</Label>
-        <Input name="item-name" value={name} onChange={e => setName(e.target.value)} required placeholder={entityType === 'accommodation' ? 'שם המלון' : 'שם המקום'} />
+        <Label className="text-xs">{t('timeline.name')}</Label>
+        <Input name="item-name" value={name} onChange={e => setName(e.target.value)} required placeholder="" />
       </div>
       {entityType === 'accommodation' && (
         <div className="space-y-1">
-          <Label className="text-xs">סוג</Label>
-          <SubCategorySelector categoryFilter="accommodation" value={subCategory} onChange={setSubCategory} placeholder="בחר סוג..." />
+          <Label className="text-xs">{t('timeline.type')}</Label>
+          <SubCategorySelector categoryFilter="accommodation" value={subCategory} onChange={setSubCategory} placeholder={t('timeline.chooseType')} />
         </div>
       )}
       <div className="space-y-1">
-        <Label className="text-xs">מיקום</Label>
-        <LocationSelector value={city} onChange={setCity} placeholder="בחר מיקום..." />
+        <Label className="text-xs">{t('timeline.locationLabel')}</Label>
+        <LocationSelector value={city} onChange={setCity} placeholder={t('locationSelector.chooseLocation')} />
       </div>
       {showBookingMissionOption && (
         <div className="flex items-center gap-2 mt-1">
           <Checkbox id="booking-new-poi" checked={createBookingMission} onCheckedChange={(v) => setCreateBookingMission(!!v)} />
-          <Label htmlFor="booking-new-poi" className="text-xs cursor-pointer">צור משימת הזמנה</Label>
+          <Label htmlFor="booking-new-poi" className="text-xs cursor-pointer">{t('timeline.createBookingTask')}</Label>
         </div>
       )}
       <Button type="submit" className="w-full" size="sm" disabled={submitting}>
-        {submitting ? 'יוצר...' : 'צור והוסף'}
+        {submitting ? t('createTrip.creating') : t('timeline.createAndAdd')}
       </Button>
     </form>
   );

@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import i18next from 'i18next';
 
 interface Props {
   children: ReactNode;
@@ -27,13 +28,13 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return this.props.fallback || (
         <div role="alert" className="flex flex-col items-center justify-center h-screen gap-4">
-          <h1 className="text-xl font-bold">Something went wrong</h1>
+          <h1 className="text-xl font-bold">{i18next.t('common.somethingWentWrong')}</h1>
           <p className="text-muted-foreground">{this.state.error?.message}</p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
             className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           >
-            Try Again
+            {i18next.t('common.tryAgain')}
           </button>
         </div>
       );

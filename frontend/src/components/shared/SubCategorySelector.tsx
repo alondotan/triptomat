@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,9 @@ interface SubCategorySelectorProps {
   placeholder?: string;
 }
 
-export function SubCategorySelector({ categoryFilter, value, onChange, placeholder = 'בחר סוג...' }: SubCategorySelectorProps) {
+export function SubCategorySelector({ categoryFilter, value, onChange, placeholder }: SubCategorySelectorProps) {
+  const { t } = useTranslation();
+  const effectivePlaceholder = placeholder ?? t('subCategorySelector.chooseType');
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [entries, setEntries] = useState<SubCategoryEntry[]>([]);
@@ -49,7 +52,7 @@ export function SubCategorySelector({ categoryFilter, value, onChange, placehold
         <Button variant="outline" className="w-full justify-between font-normal h-10" type="button">
           <span className="flex items-center gap-2 truncate">
             {CurrentIcon && <CurrentIcon size={14} className="shrink-0 text-muted-foreground" />}
-            {value || <span className="text-muted-foreground">{placeholder}</span>}
+            {value || <span className="text-muted-foreground">{effectivePlaceholder}</span>}
           </span>
           <ChevronDown size={14} className="shrink-0 opacity-50" aria-hidden="true" />
         </Button>
@@ -58,10 +61,10 @@ export function SubCategorySelector({ categoryFilter, value, onChange, placehold
         <Input
           value={search}
           onChange={e => setSearch(e.target.value)}
-          placeholder="חפש..."
+          placeholder={t('subCategorySelector.search')}
           className="mb-2 h-8 text-sm"
           autoFocus
-          aria-label="חיפוש קטגוריה"
+          aria-label={t('subCategorySelector.search')}
           name="subcategory-search"
           autoComplete="off"
         />
@@ -72,7 +75,7 @@ export function SubCategorySelector({ categoryFilter, value, onChange, placehold
             className="w-full text-right px-2 py-1.5 text-sm rounded hover:bg-muted transition-colors text-muted-foreground"
             onClick={() => { onChange(''); setOpen(false); setSearch(''); }}
           >
-            — ללא —
+            {t('subCategorySelector.none')}
           </button>
           {filtered.map(entry => {
             const Icon = getLucideIcon(entry.icon);
@@ -89,7 +92,7 @@ export function SubCategorySelector({ categoryFilter, value, onChange, placehold
             );
           })}
           {filtered.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-2">אין תוצאות</p>
+            <p className="text-xs text-muted-foreground text-center py-2">{t('subCategorySelector.noResults')}</p>
           )}
         </div>
       </PopoverContent>
