@@ -111,13 +111,20 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
   const [inboxUnread, setInboxUnread] = useState<number>(() => {
     try { return parseInt(localStorage.getItem('inbox_unread_count') || '0', 10); } catch { return 0; }
   });
-  const { trips } = useTripList();
+  const { trips, isLoading: tripsLoading } = useTripList();
   const { activeTrip, setActiveTrip, deleteCurrentTrip, updateCurrentTrip, tripLocationTree, myRole } = useActiveTrip();
   const [locationTreeOpen, setLocationTreeOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Auto-open create trip dialog when no trips exist
+  useEffect(() => {
+    if (!tripsLoading && trips.length === 0) {
+      setNewTripOpen(true);
+    }
+  }, [tripsLoading, trips.length]);
 
   // 3 most recently opened trips for the dropdown menus
   const recentTrips = (() => {

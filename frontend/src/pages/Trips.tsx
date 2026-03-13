@@ -6,7 +6,8 @@ import { useActiveTrip } from '@/context/ActiveTripContext';
 import { useWorldTree, type WorldTreeNode } from '@/hooks/useWorldTree';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, MapPin, Check, Settings, LogOut, MoreVertical } from 'lucide-react';
+import { CalendarDays, MapPin, Check, Settings, LogOut, MoreVertical, Plus } from 'lucide-react';
+import { CreateTripForm } from '@/components/forms/CreateTripForm';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -176,6 +177,7 @@ const TripsPage = () => {
   const { toast } = useToast();
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [prefsCurrency, setPrefsCurrency] = useState('');
+  const [newTripOpen, setNewTripOpen] = useState(false);
 
   // Build country name → flag URL map
   const flagMap = useMemo(() => {
@@ -248,7 +250,11 @@ const TripsPage = () => {
         {sortedTrips.length === 0 ? (
           <div className="text-center py-20 text-muted-foreground">
             <MapPin size={48} className="mx-auto mb-4 opacity-40" />
-            <p className="text-lg">{t('tripsPage.noTrips')}</p>
+            <p className="text-lg mb-4">{t('tripsPage.noTrips')}</p>
+            <Button className="gap-2" onClick={() => setNewTripOpen(true)}>
+              <Plus size={18} />
+              {t('createTrip.newTrip')}
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -263,9 +269,22 @@ const TripsPage = () => {
                 t={t}
               />
             ))}
+            {/* New trip card */}
+            <button
+              onClick={() => setNewTripOpen(true)}
+              className="group relative overflow-hidden rounded-xl border border-dashed border-border text-left transition-all hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/40"
+            >
+              <div className="flex flex-col items-center justify-center h-full min-h-[220px] gap-3 text-muted-foreground group-hover:text-primary transition-colors">
+                <Plus size={36} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+                <span className="font-medium">{t('createTrip.newTrip')}</span>
+              </div>
+            </button>
           </div>
         )}
       </div>
+
+      {/* New Trip Form */}
+      <CreateTripForm open={newTripOpen} onOpenChange={setNewTripOpen} />
 
       {/* Preferences dialog */}
       <Dialog open={prefsOpen} onOpenChange={setPrefsOpen}>
