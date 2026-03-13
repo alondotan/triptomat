@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
@@ -9,6 +10,9 @@ import { useCountryMapData } from '@/hooks/useCountryMapData';
 import { BoundaryLayer } from '@/components/map/BoundaryLayer';
 import { MapBreadcrumb } from '@/components/map/MapBreadcrumb';
 import { AppLayout } from '@/components/layout';
+import { Badge } from '@/components/ui/badge';
+import type { POIStatus } from '@/types/trip';
+import { getSubCategoryLabel, getCategoryLabel } from '@/lib/subCategoryConfig';
 import 'leaflet/dist/leaflet.css';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -44,6 +48,8 @@ const TRANSPORT_COLORS: Record<string, string> = {
   default: '#64748b',
 };
 
+const ALL_STATUSES: POIStatus[] = ['suggested', 'interested', 'planned', 'scheduled', 'booked', 'visited', 'skipped'];
+
 function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
@@ -60,6 +66,8 @@ const MapPage = () => {
   const { activeTrip } = useActiveTrip();
   const { pois } = usePOI();
   const { transportation } = useTransport();
+  const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
+  const [legendOpen, setLegendOpen] = useState(false);
 
   const countries = activeTrip?.countries || [];
   const mapData = useCountryMapData(countries);
@@ -74,20 +82,41 @@ const MapPage = () => {
     { color: '#e94560', label: t('mapPage.legendTopAttraction'), star: true },
   ];
 
+  const toggleStatusFilter = (s: POIStatus | 'all') => {
+    setStatusFilters(prev => {
+      const next = new Set(prev);
+      if (s === 'all') return new Set(['all']);
+      next.delete('all');
+      if (next.has(s)) next.delete(s); else next.add(s);
+      return next.size === 0 ? new Set(['all']) : next;
+    });
+  };
+
   if (!activeTrip) {
     return <AppLayout hideHero><div className="text-center py-12 text-muted-foreground">{t('common.noTripSelected')}</div></AppLayout>;
   }
 
   // ── POI markers ──────────────────────────────────────────────
-  const poiMarkers = pois
+  const allPoiMarkers = pois
     .filter(p => p.location.coordinates?.lat && p.location.coordinates?.lng)
     .map(p => ({
       position: [p.location.coordinates!.lat, p.location.coordinates!.lng] as [number, number],
       name: p.name,
-      sub: [p.subCategory || p.category, p.location.city].filter(Boolean).join(' · '),
+      sub: [p.subCategory ? getSubCategoryLabel(p.subCategory) : getCategoryLabel(p.category), p.location.city].filter(Boolean).join(' · '),
       status: p.status,
       color: POI_COLORS[p.category] ?? '#64748b',
     }));
+
+  const poiMarkers = statusFilters.has('all')
+    ? allPoiMarkers
+    : allPoiMarkers.filter(m => statusFilters.has(m.status));
+
+  // Status counts for filter badges
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: allPoiMarkers.length };
+    allPoiMarkers.forEach(m => { counts[m.status] = (counts[m.status] || 0) + 1; });
+    return counts;
+  }, [allPoiMarkers]);
 
   // ── Transport markers & route lines ──────────────────────────
   type TransportStop = {
@@ -134,14 +163,39 @@ const MapPage = () => {
   const totalOnMap = poiMarkers.length + transportStops.length;
 
   return (
-    <AppLayout hideHero>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">{t('mapPage.title')}</h2>
+    <AppLayout hideHero fillHeight>
+      <div className="flex flex-col flex-1 min-h-0 gap-2 md:gap-4">
+        {/* Header row */}
+        <div className="flex items-center justify-between shrink-0">
+          <h2 className="text-xl md:text-2xl font-bold">{t('mapPage.title')}</h2>
           <span className="text-sm text-muted-foreground">{t('mapPage.itemsOnMap', { count: totalOnMap })}</span>
         </div>
 
-        <div className="relative rounded-xl overflow-hidden border shadow-sm" style={{ height: 520, isolation: 'isolate' }}>
+        {/* Status filter chips */}
+        <div className="flex gap-1.5 flex-wrap shrink-0">
+          <Badge
+            variant={statusFilters.has('all') ? 'default' : 'outline'}
+            className="cursor-pointer text-xs"
+            onClick={() => toggleStatusFilter('all')}
+          >
+            {t('common.all')} ({statusCounts.all || 0})
+          </Badge>
+          {ALL_STATUSES.map(s =>
+            statusCounts[s] ? (
+              <Badge
+                key={s}
+                variant={statusFilters.has(s) ? 'default' : 'outline'}
+                className="cursor-pointer text-xs"
+                onClick={() => toggleStatusFilter(s)}
+              >
+                {t(`status.${s}`)} ({statusCounts[s]})
+              </Badge>
+            ) : null
+          )}
+        </div>
+
+        {/* Map container: fixed 520px on desktop, fill remaining space on mobile */}
+        <div className="relative rounded-xl overflow-hidden border shadow-sm flex-1 min-h-0 md:flex-none md:h-[520px]" style={{ isolation: 'isolate' }}>
           <MapContainer center={defaultCenter} zoom={5} className="h-full w-full" scrollWheelZoom>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -209,31 +263,42 @@ const MapPage = () => {
             />
           )}
 
-          {/* Legend */}
-          <div className="absolute bottom-4 right-4 z-[1000] bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow text-xs space-y-1.5">
-            {LEGEND_ITEMS.map(item => (
-              <div key={item.label} className="flex items-center gap-2">
-                <div style={{
-                  background: (item as any).outline ? 'transparent' : (item as any).star ? '#e94560' : item.color,
-                  width: (item as any).star ? 16 : item.square ? 12 : 14,
-                  height: (item as any).star ? 16 : item.square ? 12 : 14,
-                  borderRadius: item.square ? 3 : (item as any).outline ? 3 : '50%',
-                  border: (item as any).outline ? `2px solid ${item.color}` : '2px solid white',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
-                  flexShrink: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'white', fontSize: 10,
-                }}>
-                  {(item as any).star ? '★' : ''}
-                </div>
-                <span className="text-gray-700">{item.label}</span>
+          {/* Collapsible Legend */}
+          <div className="absolute bottom-4 right-4 z-[1000] bg-white/90 backdrop-blur-sm rounded-lg shadow text-xs">
+            <button
+              onClick={() => setLegendOpen(o => !o)}
+              className="flex items-center gap-1.5 px-3 py-2 w-full font-medium text-gray-700"
+            >
+              <span>{t('mapPage.legend')}</span>
+              {legendOpen ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
+            </button>
+            {legendOpen && (
+              <div className="px-3 pb-2.5 space-y-1.5">
+                {LEGEND_ITEMS.map(item => (
+                  <div key={item.label} className="flex items-center gap-2">
+                    <div style={{
+                      background: (item as any).outline ? 'transparent' : (item as any).star ? '#e94560' : item.color,
+                      width: (item as any).star ? 16 : item.square ? 12 : 14,
+                      height: (item as any).star ? 16 : item.square ? 12 : 14,
+                      borderRadius: item.square ? 3 : (item as any).outline ? 3 : '50%',
+                      border: (item as any).outline ? `2px solid ${item.color}` : '2px solid white',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+                      flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'white', fontSize: 10,
+                    }}>
+                      {(item as any).star ? '★' : ''}
+                    </div>
+                    <span className="text-gray-700">{item.label}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         </div>
 
         {totalOnMap === 0 && !hasBoundaryNav && (
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="text-sm text-muted-foreground text-center shrink-0">
             {t('mapPage.noItems')}
           </p>
         )}

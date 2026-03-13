@@ -16,7 +16,7 @@ import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
 import type { PointOfInterest, POIStatus, POICategory } from '@/types/trip';
 import { flattenTripLocations } from '@/services/tripLocationService';
 import { POICard } from '@/components/poi/POICard';
-import { getCategoryIcon, getCategoryLabel, getPOICategories } from '@/lib/subCategoryConfig';
+import { getCategoryIcon, getCategoryLabel, getSubCategoryLabel, getPOICategories } from '@/lib/subCategoryConfig';
 
 type GroupBy = 'category' | 'location' | 'status';
 type SortBy = 'name' | 'updated_at' | 'created_at';
@@ -230,7 +230,7 @@ const POIsPage = () => {
     const baseLabel = groupBy === 'category' ? getCategoryLabel(primary)
       : groupBy === 'status' ? (t(`status.${primary}`, primary))
       : primary;
-    return sub ? `${baseLabel} | ${sub}` : baseLabel;
+    return sub ? `${baseLabel} | ${getSubCategoryLabel(sub)}` : baseLabel;
   };
 
   const getGroupIcon = (key: string): React.ReactNode => {

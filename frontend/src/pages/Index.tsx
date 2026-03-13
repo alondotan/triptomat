@@ -9,6 +9,7 @@ import { AppLayout } from '@/components/layout';
 import { CreateTripForm } from '@/components/forms/CreateTripForm';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { CalendarDays, Pencil } from 'lucide-react';
+import { getSubCategoryLabel } from '@/lib/subCategoryConfig';
 import { format, eachDayOfInterval, parseISO } from 'date-fns';
 import { createItineraryDay, updateItineraryDay } from '@/services/itineraryService';
 import { rebuildPOIBookingsFromDays } from '@/services/poiService';
@@ -286,7 +287,7 @@ const Index = () => {
       time: a.time_window?.start,
       endTime: a.time_window?.end,
       label: a.poi.name,
-      sublabel: [a.poi.subCategory, a.poi.location?.city].filter(Boolean).join(' · '),
+      sublabel: [a.poi.subCategory ? getSubCategoryLabel(a.poi.subCategory) : '', a.poi.location?.city].filter(Boolean).join(' · '),
       category: a.poi.subCategory,
       activityId: a.id,
       duration: a.poi.details?.activity_details?.duration,

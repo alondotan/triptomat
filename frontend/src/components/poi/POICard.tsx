@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Clock, Heart, Pencil } from 'lucide-react';
 import { SubCategoryIcon } from '../shared/SubCategoryIcon';
 import { POIDetailDialog } from './POIDetailDialog';
-import { getSubCategoryEntry } from '@/lib/subCategoryConfig';
+import { getSubCategoryEntry, getSubCategoryLabel } from '@/lib/subCategoryConfig';
 import { usePOI } from '@/context/POIContext';
 import type { PointOfInterest, POIStatus } from '@/types/trip';
 
@@ -336,7 +336,7 @@ export function POICard({
           {poi.subCategory && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
               <SubCategoryIcon type={poi.subCategory} size={11} />
-              <span className="truncate">{poi.subCategory}</span>
+              <span className="truncate">{getSubCategoryLabel(poi.subCategory)}</span>
             </div>
           )}
         </div>

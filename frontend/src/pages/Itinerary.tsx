@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { AppLayout } from '@/components/layout';
 import { Building2, MapPin, Plane, CalendarDays } from 'lucide-react';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
+import { getSubCategoryLabel } from '@/lib/subCategoryConfig';
 import { useTripDays } from '@/hooks/useTripDays';
 
 const ItineraryPage = () => {
@@ -120,7 +121,7 @@ const ItineraryPage = () => {
                               <MapPin size={13} className="text-primary shrink-0" />
                             )}
                             <span className="truncate">{poi!.name}</span>
-                            {poi!.subCategory && <span className="text-xs text-muted-foreground">({poi!.subCategory})</span>}
+                            {poi!.subCategory && <span className="text-xs text-muted-foreground">({getSubCategoryLabel(poi!.subCategory)})</span>}
                             <Badge variant={poi!.status === 'booked' ? 'default' : 'secondary'} className="text-[10px] shrink-0">{poi!.status}</Badge>
                           </div>
                         ))}

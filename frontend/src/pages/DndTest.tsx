@@ -46,7 +46,7 @@ import { useToast } from '@/hooks/use-toast';
 import { transitionToDetailedPlanning } from '@/services/tripStatusTransition';
 import { useTripList } from '@/context/TripListContext';
 import { DaySection } from '@/components/DaySection';
-import { getSubCategoryEntry } from '@/lib/subCategoryConfig';
+import { getSubCategoryEntry, getSubCategoryLabel } from '@/lib/subCategoryConfig';
 import { useRouteCalculation } from '@/hooks/useRouteCalculation';
 import { RouteMapPanel } from '@/components/route/RouteMapPanel';
 import { TravelLegRow } from '@/components/route/TravelLegRow';
@@ -1416,7 +1416,7 @@ export default function DndTestPage() {
           label: poi.name,
           emoji: getSubCategoryEntry(poi.subCategory)?.icon || categoryEmoji(poi.category),
           time,
-          sublabel: [poi.subCategory, poi.location?.city].filter(Boolean).join(' · '),
+          sublabel: [poi.subCategory ? getSubCategoryLabel(poi.subCategory) : '', poi.location?.city].filter(Boolean).join(' · '),
           remark: poi.details?.notes?.user_summary,
           poi,
         };

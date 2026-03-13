@@ -10,7 +10,7 @@ import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
 import { Heart, ArrowRight, MapPin, Clock, CalendarDays, ExternalLink } from 'lucide-react';
 import { flattenTripLocations } from '@/services/tripLocationService';
-import { getCategoryIcon, getCategoryLabel } from '@/lib/subCategoryConfig';
+import { getCategoryIcon, getCategoryLabel, getSubCategoryLabel } from '@/lib/subCategoryConfig';
 import { supabase } from '@/integrations/supabase/client';
 import type { PointOfInterest, POIStatus } from '@/types/trip';
 
@@ -193,7 +193,7 @@ const POIGroupPage = () => {
     const baseLabel = groupBy === 'category' ? getCategoryLabel(primaryKey)
       : groupBy === 'status' ? (statusLabels[primaryKey] || primaryKey)
       : primaryKey;
-    return subKey ? `${baseLabel} | ${subKey}` : baseLabel;
+    return subKey ? `${baseLabel} | ${getSubCategoryLabel(subKey)}` : baseLabel;
   };
 
   const getIcon = (): React.ReactNode => {
@@ -284,7 +284,7 @@ const POIGroupPage = () => {
                       {poi.subCategory && (
                         <span className="flex items-center gap-1">
                           <SubCategoryIcon type={poi.subCategory} size={13} />
-                          {poi.subCategory}
+                          {getSubCategoryLabel(poi.subCategory)}
                         </span>
                       )}
                       {location && (

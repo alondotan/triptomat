@@ -117,10 +117,12 @@ export function useCountryMapData(countries: string[]) {
     const entries = Object.values(countryDataMap);
     if (entries.length === 0) return null;
 
+    const isHe = document.documentElement.lang === 'he';
+
     function toNavNode(node: CountryLocationNode): NavigationNode {
       return {
         id: node.id,
-        name: node.name,
+        name: (isHe && node.name_he) ? node.name_he : node.name,
         type: node.type,
         coordinates: node.coordinates,
         topAttractions: node.topAttractions,
@@ -133,7 +135,7 @@ export function useCountryMapData(countries: string[]) {
       const data = entries[0];
       return {
         id: data.id,
-        name: data.data.name,
+        name: (isHe && data.data.name_he) ? data.data.name_he : data.data.name,
         type: 'country',
         topAttractions: data.topAttractions,
         children: data.locations.map(toNavNode),
@@ -147,7 +149,7 @@ export function useCountryMapData(countries: string[]) {
       type: 'root',
       children: entries.map((data) => ({
         id: data.id,
-        name: data.data.name,
+        name: (isHe && data.data.name_he) ? data.data.name_he : data.data.name,
         type: 'country',
         topAttractions: data.topAttractions,
         children: data.locations.map(toNavNode),
