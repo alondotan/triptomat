@@ -10,7 +10,9 @@ import { componentTagger } from "lovable-tagger";
  *  2. supabase/functions/_shared/categories.ts — edge functions import
  */
 function syncConfig(): Plugin {
-  const src = path.resolve(__dirname, "../config.json");
+  const parentSrc = path.resolve(__dirname, "../config.json");
+  const localSrc = path.resolve(__dirname, "config.json");
+  const src = fs.existsSync(parentSrc) ? parentSrc : localSrc;
   const subCatDest = path.resolve(__dirname, "public/data/sub-categories.json");
   const categoriesDest = path.resolve(
     __dirname,
