@@ -507,6 +507,7 @@ const he = {
     legendTransportStop: 'תחנת תחבורה',
     legendRegionBoundary: 'גבול אזור',
     legendTopAttraction: 'אטרקציה מובילה',
+    legend: 'מקרא',
   },
 
   // ── Itinerary Page ──

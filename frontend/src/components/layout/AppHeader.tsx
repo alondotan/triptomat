@@ -504,7 +504,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                 <SelectTrigger id="display-currency">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="z-[200]">
+                <SelectContent className="z-[1200]">
                   {COMMON_CURRENCIES.map(c => (
                     <SelectItem key={c.code} value={c.code}>{c.label}</SelectItem>
                   ))}
@@ -518,7 +518,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                 <SelectTrigger id="display-language">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="z-[200]">
+                <SelectContent className="z-[1200]">
                   {LANGUAGE_OPTIONS.map(opt => (
                     <SelectItem key={opt.code} value={opt.code}>{opt.label}</SelectItem>
                   ))}

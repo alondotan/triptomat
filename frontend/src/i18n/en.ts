@@ -509,6 +509,7 @@ const en = {
     legendTransportStop: 'Transport stop',
     legendRegionBoundary: 'Region boundary',
     legendTopAttraction: 'Top attraction',
+    legend: 'Legend',
   },
 
   // ── Itinerary Page ──

@@ -7,6 +7,8 @@ import { useTripList } from '@/context/TripListContext';
 interface AppLayoutProps {
   children: ReactNode;
   hideHero?: boolean;
+  /** When true, children fill all available height (no scroll on mobile) */
+  fillHeight?: boolean;
 }
 
 // Persists across page navigations (AppLayout remounts per page)
@@ -17,7 +19,7 @@ function getHeroHeight() {
   return window.innerWidth >= 768 ? HERO_HEIGHT : HERO_HEIGHT_MOBILE;
 }
 
-export function AppLayout({ children, hideHero = false }: AppLayoutProps) {
+export function AppLayout({ children, hideHero = false, fillHeight = false }: AppLayoutProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSnappingRef = useRef(false);
@@ -113,10 +115,10 @@ export function AppLayout({ children, hideHero = false }: AppLayoutProps) {
 
   return (
     <div className="h-[100dvh] flex flex-col">
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
+      <div ref={scrollRef} className={`flex-1 min-h-0 ${fillHeight ? 'overflow-hidden flex flex-col md:overflow-y-auto' : 'overflow-y-auto'}`}>
         {!hideHero && <DestinationHero />}
         <AppHeader heroScrolledPast={hideHero ? true : heroScrolledPast} hasHero={hasHero} />
-        <main className="container px-1.5 sm:px-6 py-4 sm:py-6 pb-4 md:pb-6 min-h-screen">
+        <main className={`container px-1.5 sm:px-6 py-4 sm:py-6 pb-4 md:pb-6 ${fillHeight ? 'flex flex-col min-h-0 flex-1' : 'min-h-screen'}`}>
           {children}
         </main>
       </div>
