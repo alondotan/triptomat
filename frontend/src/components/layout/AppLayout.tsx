@@ -95,7 +95,7 @@ export function AppLayout({ children, hideHero = false }: AppLayoutProps) {
 
   // On mount: snap to collapsed or open (with RAF backup for lazy-loaded content)
   useEffect(() => {
-    const target = snappedCollapsed ? heroH : 0;
+    const target = snappedCollapsed && !hideHero ? heroH : 0;
     const apply = () => {
       if (scrollRef.current) scrollRef.current.scrollTop = target;
     };
