@@ -180,7 +180,7 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px]" preventAutoFocus>
           <DialogHeader>
             <DialogTitle>{t('editTrip.editTrip')}</DialogTitle>
           </DialogHeader>

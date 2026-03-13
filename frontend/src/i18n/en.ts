@@ -243,6 +243,7 @@ const en = {
     categoryLabel: 'Category:',
     noPoiYet: 'No points of interest yet. Add one to get started!',
     noFilterResults: 'No results for the current filter.',
+    newOnly: 'New',
   },
 
   // ── Create POI Form ──

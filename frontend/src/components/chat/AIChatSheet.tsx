@@ -352,6 +352,9 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
               rows={1}
               className="flex-1 resize-none rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 max-h-[120px] min-h-[40px]"
               style={{ height: 'auto', overflow: 'auto' }}
+              onFocus={e => {
+                setTimeout(() => e.target.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 300);
+              }}
               onInput={e => {
                 const t = e.currentTarget;
                 t.style.height = 'auto';

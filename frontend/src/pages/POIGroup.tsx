@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
@@ -8,11 +9,15 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/badge';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
-import { Heart, ArrowRight, MapPin, Clock, CalendarDays, ExternalLink } from 'lucide-react';
+import { Heart, ArrowRight, MapPin, Clock, CalendarDays, ExternalLink, Search, ArrowUpDown, SlidersHorizontal, ChevronUp, ChevronDown, Sparkles } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { flattenTripLocations } from '@/services/tripLocationService';
 import { getCategoryIcon, getCategoryLabel, getSubCategoryLabel } from '@/lib/subCategoryConfig';
 import { supabase } from '@/integrations/supabase/client';
 import type { PointOfInterest, POIStatus } from '@/types/trip';
+
+type SortBy = 'name' | 'updated_at' | 'created_at';
 
 const statusLabels: Record<string, string> = {
   suggested: 'מוצע',
@@ -48,8 +53,14 @@ const POIGroupPage = () => {
   const { pois, updatePOI } = usePOI();
   const { itineraryDays } = useItinerary();
   const { formatDualCurrency } = useFinance();
+  const { t } = useTranslation();
   const [dialogPoi, setDialogPoi] = useState<PointOfInterest | null>(null);
   const [quotesMap, setQuotesMap] = useState<Record<string, QuoteData[]>>({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortBy>('name');
+  const [statusFilter, setStatusFilter] = useState<POIStatus | 'all'>('all');
+  const [showNewOnly, setShowNewOnly] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const sites = useMemo(() => flattenTripLocations(tripLocations), [tripLocations]);
 
@@ -123,6 +134,48 @@ const POIGroupPage = () => {
       return (poi.location.city || poi.location.country || '—') === subKey;
     });
   }, [nonAccommodationPois, groupBy, groupKey, cityRegionMap]);
+
+  const NEW_THRESHOLD_MS = 90 * 60 * 1000;
+
+  const newCount = useMemo(() => {
+    const now = Date.now();
+    return groupPois.filter(p => now - new Date(p.createdAt).getTime() < NEW_THRESHOLD_MS).length;
+  }, [groupPois]);
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of groupPois) counts[p.status] = (counts[p.status] || 0) + 1;
+    return counts;
+  }, [groupPois]);
+
+  const filteredSortedPois = useMemo(() => {
+    let result = [...groupPois];
+    if (statusFilter !== 'all') {
+      result = result.filter(p => p.status === statusFilter);
+    }
+    if (showNewOnly) {
+      const now = Date.now();
+      result = result.filter(p => now - new Date(p.createdAt).getTime() < NEW_THRESHOLD_MS);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.location.city || '').toLowerCase().includes(q) ||
+        (p.location.address || '').toLowerCase().includes(q) ||
+        (p.subCategory || '').toLowerCase().includes(q) ||
+        (p.details.notes?.user_summary || '').toLowerCase().includes(q)
+      );
+    }
+    if (sortBy === 'updated_at') {
+      result.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    } else if (sortBy === 'created_at') {
+      result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return result;
+  }, [groupPois, statusFilter, showNewOnly, searchQuery, sortBy]);
 
   // Fetch recommendation quotes for all POIs in group
   useEffect(() => {
@@ -228,13 +281,103 @@ const POIGroupPage = () => {
           <div className="flex items-center gap-2">
             {getIcon()}
             <h2 className="text-xl font-bold">{getLabel()}</h2>
-            <Badge variant="secondary" className="text-xs">{groupPois.length}</Badge>
+            <Badge variant="secondary" className="text-xs">
+              {filteredSortedPois.length !== groupPois.length
+                ? `${filteredSortedPois.length} / ${groupPois.length}`
+                : groupPois.length}
+            </Badge>
           </div>
+        </div>
+
+        {/* Filter/Sort Panel */}
+        <div className="border rounded-lg overflow-hidden">
+          <button
+            onClick={() => setFiltersOpen(prev => !prev)}
+            className="flex items-center justify-between w-full px-3 py-2 bg-muted/30 hover:bg-muted/50 transition-colors"
+          >
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <SlidersHorizontal size={16} />
+              <span>{t('poisPage.filterSortSearch')}</span>
+              {(statusFilter !== 'all' || showNewOnly || searchQuery) && (
+                <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-[10px]">
+                  {(statusFilter !== 'all' ? 1 : 0) + (showNewOnly ? 1 : 0) + (searchQuery ? 1 : 0)}
+                </span>
+              )}
+            </div>
+            {filtersOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+
+          {filtersOpen && (
+            <div className="p-3 space-y-3 border-t">
+              {/* Search */}
+              <div className="relative">
+                <Search size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder={t('poisPage.searchPlaceholder')}
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pr-8 h-9 text-sm"
+                />
+              </div>
+
+              {/* Sort */}
+              <div className="flex items-center gap-1">
+                <ArrowUpDown size={14} className="text-muted-foreground" />
+                <Select value={sortBy} onValueChange={v => setSortBy(v as SortBy)}>
+                  <SelectTrigger className="h-8 w-[120px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">{t('poisPage.byName')}</SelectItem>
+                    <SelectItem value="updated_at">{t('poisPage.byUpdated')}</SelectItem>
+                    <SelectItem value="created_at">{t('poisPage.byCreated')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Status filter */}
+              <div className="flex gap-1 flex-wrap">
+                <Badge
+                  variant={statusFilter === 'all' ? 'default' : 'outline'}
+                  className="cursor-pointer text-xs"
+                  onClick={() => setStatusFilter('all')}
+                >
+                  {t('common.all')} ({groupPois.length})
+                </Badge>
+                {(['suggested', 'interested', 'planned', 'scheduled', 'booked', 'visited', 'skipped'] as POIStatus[]).map(s => (
+                  statusCounts[s] ? (
+                    <Badge
+                      key={s}
+                      variant={statusFilter === s ? 'default' : 'outline'}
+                      className="cursor-pointer text-xs"
+                      onClick={() => setStatusFilter(prev => prev === s ? 'all' : s)}
+                    >
+                      {t(`status.${s}`)} ({statusCounts[s]})
+                    </Badge>
+                  ) : null
+                ))}
+              </div>
+
+              {/* New filter */}
+              {newCount > 0 && (
+                <div>
+                  <Badge
+                    variant={showNewOnly ? 'default' : 'outline'}
+                    className="cursor-pointer text-xs gap-1"
+                    onClick={() => setShowNewOnly(prev => !prev)}
+                  >
+                    <Sparkles size={12} />
+                    {t('poisPage.newOnly')} ({newCount})
+                  </Badge>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Vertical list */}
         <div className="space-y-5">
-          {groupPois.map(poi => {
+          {filteredSortedPois.map(poi => {
             const quotes = quotesMap[poi.id] || [];
             const duration = poi.details.activity_details?.duration;
             const cost = poi.details.cost;
@@ -353,8 +496,10 @@ const POIGroupPage = () => {
           })}
         </div>
 
-        {groupPois.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">אין פריטים בקבוצה זו.</div>
+        {filteredSortedPois.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            {groupPois.length === 0 ? t('poisPage.noPoiYet') : t('poisPage.noFilterResults')}
+          </div>
         )}
       </div>
 

@@ -217,7 +217,7 @@ function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeing
         <GripVertical size={14} />
       </button>
       {item.poi ? (
-        <POICard poi={item.poi} level={2} editable />
+        <POICard poi={item.poi} level={2} />
       ) : (
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <span className="material-symbols-outlined">{item.emoji}</span>
@@ -2385,7 +2385,7 @@ export default function DndTestPage() {
           </div>
           {/* end scrollable content area */}
 
-          <DragOverlay dropAnimation={null}>
+          <DragOverlay dropAnimation={null} style={{ zIndex: 9999 }}>
             {activeItem && (
               <div className="flex items-center gap-2.5 bg-card border border-primary/50 rounded-xl px-3 py-2.5 shadow-lg rotate-1 cursor-grabbing">
                 <GripVertical size={14} className="text-muted-foreground/50 shrink-0" />

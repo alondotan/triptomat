@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { MapPin, LayoutGrid, Search, Merge, ChevronLeft, ChevronDown, ChevronUp, ArrowUpDown, SlidersHorizontal } from 'lucide-react';
+import { MapPin, LayoutGrid, Search, Merge, ChevronLeft, ChevronDown, ChevronUp, ArrowUpDown, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,7 @@ const POIsPage = () => {
   const [sortBy, setSortBy] = useState<SortBy>('name');
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showNewOnly, setShowNewOnly] = useState(false);
 
   // Merge mode
   const [mergeMode, setMergeMode] = useState(false);
@@ -97,11 +98,22 @@ const POIsPage = () => {
 
   const nonAccommodationPois = useMemo(() => pois.filter(p => p.category !== 'accommodation'), [pois]);
 
+  const NEW_THRESHOLD_MS = 90 * 60 * 1000;
+
+  const newCount = useMemo(() => {
+    const now = Date.now();
+    return nonAccommodationPois.filter(p => now - new Date(p.createdAt).getTime() < NEW_THRESHOLD_MS).length;
+  }, [nonAccommodationPois]);
+
   const filteredPois = useMemo(() => {
     if (!activeTrip) return [];
     let pois = statusFilters.has('all') ? nonAccommodationPois : nonAccommodationPois.filter(p => statusFilters.has(p.status));
     if (!categoryFilters.has('all')) {
       pois = pois.filter(p => categoryFilters.has(p.category));
+    }
+    if (showNewOnly) {
+      const now = Date.now();
+      pois = pois.filter(p => now - new Date(p.createdAt).getTime() < NEW_THRESHOLD_MS);
     }
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
@@ -115,7 +127,7 @@ const POIsPage = () => {
       );
     }
     return pois;
-  }, [nonAccommodationPois, statusFilters, categoryFilters, searchQuery, activeTrip]);
+  }, [nonAccommodationPois, statusFilters, categoryFilters, showNewOnly, searchQuery, activeTrip]);
 
   const grouped = useMemo(() => {
     // First pass: group by primary key
@@ -293,9 +305,9 @@ const POIsPage = () => {
             <div className="flex items-center gap-2 text-sm font-medium">
               <SlidersHorizontal size={16} />
               <span>{t('poisPage.filterSortSearch')}</span>
-              {(!statusFilters.has('all') || !categoryFilters.has('all') || searchQuery) && (
+              {(!statusFilters.has('all') || !categoryFilters.has('all') || showNewOnly || searchQuery) && (
                 <span className="bg-primary text-primary-foreground rounded-full w-5 h-5 flex items-center justify-center text-[10px]">
-                  {(statusFilters.has('all') ? 0 : statusFilters.size) + (categoryFilters.has('all') ? 0 : categoryFilters.size) + (searchQuery ? 1 : 0)}
+                  {(statusFilters.has('all') ? 0 : statusFilters.size) + (categoryFilters.has('all') ? 0 : categoryFilters.size) + (showNewOnly ? 1 : 0) + (searchQuery ? 1 : 0)}
                 </span>
               )}
             </div>
@@ -370,6 +382,20 @@ const POIsPage = () => {
                   ))}
                 </div>
               </div>
+
+              {/* New filter */}
+              {newCount > 0 && (
+                <div>
+                  <Badge
+                    variant={showNewOnly ? 'default' : 'outline'}
+                    className="cursor-pointer text-xs gap-1"
+                    onClick={() => setShowNewOnly(prev => !prev)}
+                  >
+                    <Sparkles size={12} />
+                    {t('poisPage.newOnly')} ({newCount})
+                  </Badge>
+                </div>
+              )}
 
               {/* Category Filters */}
               <div className="space-y-1.5">

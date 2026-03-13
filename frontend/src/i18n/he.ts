@@ -241,6 +241,7 @@ const he = {
     categoryLabel: 'קטגוריה:',
     noPoiYet: 'אין נקודות עניין עדיין. הוסף אחת כדי להתחיל!',
     noFilterResults: 'אין תוצאות לפילטר הנוכחי.',
+    newOnly: 'חדשים',
   },
 
   // ── Create POI Form ──

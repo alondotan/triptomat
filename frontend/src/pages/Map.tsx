@@ -116,23 +116,25 @@ const MapPage = () => {
   }, [allPoiMarkers]);
 
   // ── Map-attraction like (heart) ────────────────────────────
-  // Build a set of CountryPlace IDs that already exist as POIs (matched by name)
+  const LIKED_STATUSES = ['interested', 'planned', 'scheduled', 'booked', 'visited'];
   const likedPlaceIds = useMemo(() => {
-    const poiNames = new Set(pois.map(p => p.name.toLowerCase()));
+    const likedNames = new Set(
+      pois.filter(p => LIKED_STATUSES.includes(p.status)).map(p => p.name.toLowerCase()),
+    );
     return new Set(
-      mapData.topAttractions.filter(a => poiNames.has(a.name.toLowerCase())).map(a => a.id),
+      mapData.topAttractions.filter(a => likedNames.has(a.name.toLowerCase())).map(a => a.id),
     );
   }, [pois, mapData.topAttractions]);
 
   const handleToggleAttractionLike = useCallback(async (place: CountryPlace) => {
     if (!activeTrip) return;
-    // If already exists as POI, toggle between suggested <-> interested
     const existingPoi = pois.find(p => p.name.toLowerCase() === place.name.toLowerCase());
     if (existingPoi) {
+      // Same logic as POICard: toggle suggested <-> interested, ignore higher statuses
+      if (['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(existingPoi.status)) return;
       const newStatus = existingPoi.status === 'interested' ? 'suggested' : 'interested';
       await updatePOI({ ...existingPoi, status: newStatus });
     } else {
-      // Create a new POI from the attraction
       await addPOI({
         tripId: activeTrip.id,
         category: 'attraction',

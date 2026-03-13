@@ -109,7 +109,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {triggerEl && <DialogTrigger asChild>{triggerEl}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" preventAutoFocus>
         <DialogHeader>
           <DialogTitle>{t('createTrip.newTrip')}</DialogTitle>
         </DialogHeader>
