@@ -92,12 +92,8 @@ const MapPage = () => {
     });
   };
 
-  if (!activeTrip) {
-    return <AppLayout hideHero><div className="text-center py-12 text-muted-foreground">{t('common.noTripSelected')}</div></AppLayout>;
-  }
-
   // ── POI markers ──────────────────────────────────────────────
-  const allPoiMarkers = pois
+  const allPoiMarkers = useMemo(() => pois
     .filter(p => p.location.coordinates?.lat && p.location.coordinates?.lng)
     .map(p => ({
       position: [p.location.coordinates!.lat, p.location.coordinates!.lng] as [number, number],
@@ -105,7 +101,7 @@ const MapPage = () => {
       sub: [p.subCategory ? getSubCategoryLabel(p.subCategory) : getCategoryLabel(p.category), p.location.city].filter(Boolean).join(' · '),
       status: p.status,
       color: POI_COLORS[p.category] ?? '#64748b',
-    }));
+    })), [pois]);
 
   const poiMarkers = statusFilters.has('all')
     ? allPoiMarkers
@@ -117,6 +113,10 @@ const MapPage = () => {
     allPoiMarkers.forEach(m => { counts[m.status] = (counts[m.status] || 0) + 1; });
     return counts;
   }, [allPoiMarkers]);
+
+  if (!activeTrip) {
+    return <AppLayout hideHero><div className="text-center py-12 text-muted-foreground">{t('common.noTripSelected')}</div></AppLayout>;
+  }
 
   // ── Transport markers & route lines ──────────────────────────
   type TransportStop = {
