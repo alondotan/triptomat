@@ -143,26 +143,23 @@ export function BoundaryLayer({
                   />
                 )}
                 <div style={{ padding: '10px 12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'start', justifyContent: 'space-between', gap: 6 }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 3 }}>{place.name}</div>
-                    {onToggleLike && (() => {
-                      const isLiked = likedPlaceIds?.has(place.id);
-                      return (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); e.preventDefault(); L.DomEvent.stopPropagation(e.nativeEvent); onToggleLike(place); }}
-                          style={{
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            padding: 2, flexShrink: 0, marginTop: 1,
-                            color: isLiked ? '#ef4444' : 'rgba(255,255,255,0.45)',
-                            transition: 'color 0.2s',
-                          }}
-                        >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                          </svg>
-                        </button>
-                      );
-                    })()}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 3, flex: 1 }}>{place.name}</div>
+                    {onToggleLike && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); L.DomEvent.stopPropagation(e.nativeEvent); onToggleLike(place); }}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          padding: 2, flexShrink: 0, marginTop: 1, lineHeight: 0,
+                          color: likedPlaceIds?.has(place.id) ? '#ef4444' : 'rgba(255,255,255,0.45)',
+                          transition: 'color 0.2s',
+                        }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={likedPlaceIds?.has(place.id) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                   {place.subCategory && (
                     <span style={{
