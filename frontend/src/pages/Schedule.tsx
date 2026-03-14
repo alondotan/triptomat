@@ -1885,7 +1885,7 @@ export default function SchedulePage() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col gap-3 w-full px-1 sm:px-4 h-full" dir="rtl">
+      <div className="flex flex-col gap-3 w-full px-1 sm:px-4 md:h-full" dir="rtl">
 
         <DndContext
           sensors={sensors}
@@ -2061,7 +2061,7 @@ export default function SchedulePage() {
           </div>
 
           {/* ── Scrollable content area ─────────────────────── */}
-          <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden flex flex-col">
+          <div className="md:flex-1 md:min-h-0 md:overflow-hidden flex flex-col">
 
           {/* Mobile: potential list + timeline toggle (schedule tab only) */}
           {isMobile && mobileTab === 'schedule' && (
@@ -2111,7 +2111,7 @@ export default function SchedulePage() {
             </div>
           )}
 
-          <div className={`grid grid-cols-1 md:grid-cols-[3fr_5fr_4fr] gap-3 md:h-full md:[grid-template-rows:minmax(0,1fr)] ${isMobile ? 'flex-1 min-h-0' : ''}`}>
+          <div className="grid grid-cols-1 md:grid-cols-[3fr_5fr_4fr] gap-3 md:h-full md:[grid-template-rows:minmax(0,1fr)]">
 
             {/* ── Column 1: Potential + Add activity (desktop only) ──────────── */}
             {!isMobile && <div className="space-y-3 md:overflow-y-auto md:min-h-0">
