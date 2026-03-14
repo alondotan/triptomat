@@ -37,7 +37,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Building2, CalendarDays, Check, ChevronDown, ChevronUp, Clock, GripVertical, Moon, Pencil, Sun, Trash2, X } from 'lucide-react';
+import { Building2, CalendarDays, Check, Clock, GripVertical, Moon, Pencil, Sun, Trash2, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -777,7 +777,6 @@ export default function DndTestPage() {
   // ── Mobile layout ──────────────────────────────────────────────────────────
   const isMobile = useIsMobile();
   const [mobileTab, setMobileTab] = useState<'schedule' | 'map'>('schedule');
-  const [timelineOpen, setTimelineOpen] = useState(false);
 
   // Research mode inline form state
   const [researchLevel, setResearchLevel] = useState<PlanningLevel>('research');
@@ -1688,9 +1687,8 @@ export default function DndTestPage() {
       : potential.find(i => i.id === id);
     setActiveDragItem(item ?? null);
     setSelectedItemId(null);
-    if (isMobile) setTimelineOpen(true);
     addLog(`🟡 start: "${id}"`);
-  }, [isMobile, potential, scheduled]);
+  }, [potential, scheduled]);
 
   const handleDragEnd = useCallback((e: DragEndEvent) => {
     const { active, over } = e;
@@ -2116,7 +2114,7 @@ export default function DndTestPage() {
           <div className={`grid grid-cols-1 md:grid-cols-[3fr_5fr_4fr] gap-3 md:h-full md:[grid-template-rows:minmax(0,1fr)] ${isMobile ? 'flex-1 min-h-0' : ''}`}>
 
             {/* ── Column 1: Potential + Add activity (desktop only) ──────────── */}
-            <div className="hidden md:block space-y-3 md:overflow-y-auto md:min-h-0">
+            {!isMobile && <div className="space-y-3 md:overflow-y-auto md:min-h-0">
               <p className="text-xs font-bold uppercase tracking-widest text-amber-600">
                 פוטנציאל ({potential.length})
               </p>
@@ -2158,24 +2156,13 @@ export default function DndTestPage() {
 
                 showBookingMissionOption
               />
-            </div>
+            </div>}
 
             {/* ── Left column: Timeline (wake up → schedule → sleep) — scrolls independently on desktop */}
             <div className={`space-y-3 md:overflow-y-auto md:min-h-0 pb-4 ${isMobile && mobileTab !== 'schedule' ? 'hidden' : ''}`}>
 
-              {/* Mobile: timeline open/close toggle */}
-              {isMobile && (
-                <button
-                  className="flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-primary/10 text-primary text-xs font-semibold md:hidden"
-                  onClick={() => setTimelineOpen(prev => !prev)}
-                >
-                  {timelineOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  {timelineOpen ? 'סגור לו"ז' : 'הצג לו"ז'}
-                </button>
-              )}
-
-              {/* Timeline content — collapsible on mobile */}
-              <div className={isMobile && !timelineOpen ? 'hidden' : ''}>
+              {/* Timeline content */}
+              <div>
 
               {/* Where I wake up */}
               <div className="space-y-1.5">
@@ -2351,7 +2338,7 @@ export default function DndTestPage() {
                 />
               </div>
 
-              </div>{/* end collapsible timeline content */}
+              </div>{/* end timeline content */}
             </div>
             {/* end timeline column */}
 
@@ -2390,7 +2377,7 @@ export default function DndTestPage() {
           </div>
           {/* end scrollable content area */}
 
-          <DragOverlay dropAnimation={null} style={{ zIndex: 9999 }}>
+          <DragOverlay dropAnimation={null}>
             {activeItem && (
               <div className="flex items-center gap-2.5 bg-card border border-primary/50 rounded-xl px-3 py-2.5 shadow-lg rotate-1 cursor-grabbing">
                 <GripVertical size={14} className="text-muted-foreground/50 shrink-0" />
