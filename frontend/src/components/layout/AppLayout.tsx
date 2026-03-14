@@ -22,8 +22,6 @@ function getHeroHeight() {
 
 export function AppLayout({ children, hideHero = false, fillHeight = false }: AppLayoutProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isSnappingRef = useRef(false);
   const { activeTripId } = useTripList();
   const destinationImageUrl = useDestinationImageUrl();
   const hasHero = !hideHero && !!destinationImageUrl;
@@ -45,70 +43,33 @@ export function AppLayout({ children, hideHero = false, fillHeight = false }: Ap
   const snappedCollapsed = !isNewTrip && persistedScrollTop > heroH / 2;
   const [heroScrolledPast, setHeroScrolledPast] = useState(snappedCollapsed);
 
-  // Smooth-snap to a target scroll position within the hero zone
-  const snapTo = useCallback((target: number) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    isSnappingRef.current = true;
-    el.scrollTo({ top: target, behavior: 'smooth' });
-    // Reset snapping flag after animation completes
-    const resetTimer = setTimeout(() => { isSnappingRef.current = false; }, 350);
-    return () => clearTimeout(resetTimer);
-  }, []);
-
   const onScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    // On hideHero pages, keep persistedScrollTop pinned to heroH
-    // so navigating away stays collapsed
     if (!hideHero) persistedScrollTop = el.scrollTop;
     const h = getHeroHeight();
     const past = el.scrollTop > h - 40;
     setHeroScrolledPast(past);
-
-    // Don't trigger snap while we're already snapping
-    if (isSnappingRef.current) return;
-
-    // Only snap when scroll is within the hero zone (partial state)
-    if (el.scrollTop > 0 && el.scrollTop < h) {
-      // Debounce: wait for scroll to stop, then snap
-      if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
-      snapTimerRef.current = setTimeout(() => {
-        const currentH = getHeroHeight();
-        if (!scrollRef.current) return;
-        const pos = scrollRef.current.scrollTop;
-        // Only snap if still in the partial zone
-        if (pos > 0 && pos < currentH) {
-          const target = pos > currentH / 2 ? currentH : 0;
-          snapTo(target);
-        }
-      }, 150);
-    }
-  }, [snapTo]);
+  }, [hideHero]);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
     el.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      el.removeEventListener('scroll', onScroll);
-      if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
-    };
+    return () => el.removeEventListener('scroll', onScroll);
   }, [onScroll]);
 
-  // On mount: snap to collapsed or open (with RAF backup for lazy-loaded content)
+  // On mount: restore scroll to collapsed or open (with RAF backup for lazy-loaded content)
   useEffect(() => {
     const target = snappedCollapsed && !hideHero ? heroH : 0;
     const apply = () => {
       if (scrollRef.current) scrollRef.current.scrollTop = target;
     };
     apply();
-    // Backup: content may not be rendered yet (lazy loading)
     const id1 = requestAnimationFrame(() => {
       apply();
       requestAnimationFrame(apply);
     });
-    // Extra backup for slow lazy loads
     const id2 = setTimeout(apply, 50);
     return () => { cancelAnimationFrame(id1); clearTimeout(id2); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -116,8 +77,10 @@ export function AppLayout({ children, hideHero = false, fillHeight = false }: Ap
 
   return (
     <div className="h-[100dvh] flex flex-col">
-      <div ref={scrollRef} className={`flex-1 min-h-0 ${fillHeight ? 'overflow-hidden flex flex-col md:overflow-y-auto' : 'overflow-y-auto'}`}>
+      <div ref={scrollRef} className={`flex-1 min-h-0 overscroll-y-contain ${hasHero ? 'snap-y snap-proximity' : ''} ${fillHeight ? 'overflow-hidden flex flex-col md:overflow-y-auto' : 'overflow-y-auto'}`}>
         {!hideHero && <DestinationHero />}
+        {/* Snap anchor: browser snaps to here (hero hidden) or to top (hero visible) */}
+        {hasHero && <div className="snap-start" />}
         <AppHeader heroScrolledPast={hideHero ? true : heroScrolledPast} hasHero={hasHero} />
         <main className={`container px-1.5 sm:px-6 py-4 sm:py-6 pb-4 md:pb-6 ${fillHeight ? 'flex flex-col min-h-0 flex-1' : 'min-h-screen'}`}>
           {children}
