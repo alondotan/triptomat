@@ -920,14 +920,14 @@
     {
       "type": "vineyard",
       "icon": "wine_bar",
-      "category": "Activities",
+      "category": "Eateries",
       "is_geo_location": false,
       "name": "Vineyard"
     },
     {
       "type": "brewery",
       "icon": "local_drink",
-      "category": "Activities",
+      "category": "Eateries",
       "is_geo_location": false,
       "name": "Brewery"
     },
