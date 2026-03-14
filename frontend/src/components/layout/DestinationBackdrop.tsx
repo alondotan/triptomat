@@ -62,7 +62,7 @@ export function DestinationHero() {
     <>
       {/* Desktop hero */}
       <div
-        className="hidden md:block relative shrink-0 overflow-hidden snap-start"
+        className="hidden md:block relative shrink-0 overflow-hidden"
         style={{ height: HERO_HEIGHT }}
       >
         <img
@@ -88,7 +88,7 @@ export function DestinationHero() {
 
       {/* Mobile hero — compact */}
       <div
-        className="md:hidden relative shrink-0 overflow-hidden snap-start"
+        className="md:hidden relative shrink-0 overflow-hidden"
         style={{ height: HERO_HEIGHT_MOBILE }}
       >
         <img

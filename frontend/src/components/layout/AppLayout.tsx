@@ -77,10 +77,8 @@ export function AppLayout({ children, hideHero = false, fillHeight = false }: Ap
 
   return (
     <div className="h-[100dvh] flex flex-col">
-      <div ref={scrollRef} className={`flex-1 min-h-0 overscroll-y-contain ${hasHero ? 'snap-y snap-proximity' : ''} ${fillHeight ? 'overflow-hidden flex flex-col md:overflow-y-auto' : 'overflow-y-auto'}`}>
+      <div ref={scrollRef} className={`flex-1 min-h-0 overscroll-y-contain touch-manipulation ${fillHeight ? 'overflow-hidden flex flex-col md:overflow-y-auto' : 'overflow-y-auto'}`}>
         {!hideHero && <DestinationHero />}
-        {/* Snap anchor: browser snaps to here (hero hidden) or to top (hero visible) */}
-        {hasHero && <div className="snap-start" />}
         <AppHeader heroScrolledPast={hideHero ? true : heroScrolledPast} hasHero={hasHero} />
         <main className={`container px-1.5 sm:px-6 py-4 sm:py-6 pb-4 md:pb-6 ${fillHeight ? 'flex flex-col min-h-0 flex-1' : 'min-h-screen'}`}>
           {children}
