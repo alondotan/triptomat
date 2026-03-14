@@ -93,6 +93,7 @@
 
   html {
     color-scheme: dark;
+    overscroll-behavior-y: none;
   }
 
   body {

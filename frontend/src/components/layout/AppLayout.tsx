@@ -1,4 +1,4 @@
-import { ReactNode, useRef, useState, useEffect, useCallback } from 'react';
+import { ReactNode, useState, useEffect, useLayoutEffect } from 'react';
 import { AppHeader } from './AppHeader';
 import { MobileBottomNav } from './MobileBottomNav';
 import { MobileFAB } from './MobileFAB';
@@ -21,7 +21,6 @@ function getHeroHeight() {
 }
 
 export function AppLayout({ children, hideHero = false, fillHeight = false }: AppLayoutProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
   const { activeTripId } = useTripList();
   const destinationImageUrl = useDestinationImageUrl();
   const hasHero = !hideHero && !!destinationImageUrl;
@@ -43,49 +42,64 @@ export function AppLayout({ children, hideHero = false, fillHeight = false }: Ap
   const snappedCollapsed = !isNewTrip && persistedScrollTop > heroH / 2;
   const [heroScrolledPast, setHeroScrolledPast] = useState(snappedCollapsed);
 
-  const onScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    if (!hideHero) persistedScrollTop = el.scrollTop;
-    const h = getHeroHeight();
-    const past = el.scrollTop > h - 40;
-    setHeroScrolledPast(past);
-  }, [hideHero]);
-
+  // Track window scroll for hero visibility (non-fillHeight pages use native document scroll)
   useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener('scroll', onScroll, { passive: true });
-    return () => el.removeEventListener('scroll', onScroll);
-  }, [onScroll]);
+    if (fillHeight) return;
+    const onScroll = () => {
+      if (!hideHero) persistedScrollTop = window.scrollY;
+      const h = getHeroHeight();
+      setHeroScrolledPast(window.scrollY > h - 40);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [hideHero, fillHeight]);
 
-  // On mount: restore persisted scroll position after first paint
-  useEffect(() => {
+  // Restore scroll position before first paint
+  useLayoutEffect(() => {
+    if (fillHeight) return;
     const target = snappedCollapsed && !hideHero ? heroH : 0;
-    // Wait for paint before setting scroll — avoids breaking iOS touch-scroll init
-    requestAnimationFrame(() => {
-      if (scrollRef.current) scrollRef.current.scrollTop = target;
-    });
+    window.scrollTo(0, target);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Use overflow-y-scroll (not auto) so iOS always considers this scrollable,
-  // even before async content loads. Prevents intermittent touch-scroll failures.
-  const scrollClass = fillHeight
-    ? 'overflow-hidden flex flex-col md:overflow-y-scroll'
-    : 'overflow-y-scroll';
+  // fillHeight pages: lock document scroll
+  useEffect(() => {
+    if (!fillHeight) return;
+    window.scrollTo(0, 0);
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [fillHeight]);
 
-  return (
-    <div className="h-[100dvh] flex flex-col">
-      <div ref={scrollRef} className={`flex-1 min-h-0 overscroll-y-contain ${scrollClass}`}>
-        {!hideHero && <DestinationHero />}
-        <AppHeader heroScrolledPast={hideHero ? true : heroScrolledPast} hasHero={hasHero} />
-        <main className={`container px-1.5 sm:px-6 py-4 sm:py-6 pb-4 md:pb-6 ${fillHeight ? 'flex flex-col min-h-0 flex-1' : 'min-h-screen'}`}>
+  // fillHeight mode (Map): fixed layout, no document scroll
+  if (fillHeight) {
+    return (
+      <div className="h-[100dvh] flex flex-col">
+        <AppHeader heroScrolledPast={true} hasHero={false} />
+        <main className="flex-1 min-h-0 flex flex-col container px-1.5 sm:px-6 py-4 sm:py-6 pb-4 md:pb-6">
           {children}
         </main>
+        {/* Spacer for fixed bottom nav on mobile */}
+        <div className="md:hidden shrink-0 h-[calc(4rem+env(safe-area-inset-bottom))]" />
+        <MobileFAB />
+        <MobileBottomNav />
       </div>
+    );
+  }
+
+  // Normal pages: native document scroll (most reliable on mobile)
+  return (
+    <>
+      {!hideHero && <DestinationHero />}
+      <AppHeader heroScrolledPast={hideHero ? true : heroScrolledPast} hasHero={hasHero} />
+      <main className="container px-1.5 sm:px-6 py-4 sm:py-6 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-6 min-h-screen">
+        {children}
+      </main>
       <MobileFAB />
       <MobileBottomNav />
-    </div>
+    </>
   );
 }

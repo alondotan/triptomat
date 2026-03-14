@@ -42,7 +42,7 @@ export function MobileBottomNav() {
 
   return (
     <>
-      <nav className="shrink-0 md:hidden border-t border-border bg-background pb-[env(safe-area-inset-bottom)]">
+      <nav className="fixed bottom-0 inset-x-0 z-40 md:hidden border-t border-border bg-background pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-stretch h-16">
           {primaryItems.map((item) => {
             const Icon = item.icon;
