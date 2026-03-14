@@ -226,6 +226,12 @@ const en = {
     currencySet: 'Currency set to {{currency}}',
     language: 'Language',
     languageDescription: 'Choose the display language.',
+    notifications: 'Push Notifications',
+    notificationsDescription: 'Get notified when you\'re added to a trip or a recommendation is ready.',
+    notificationsEnabled: 'Notifications enabled',
+    notificationsDisabled: 'Notifications disabled',
+    notificationsDenied: 'Notifications blocked — enable in browser settings.',
+    notificationsUnsupported: 'Notifications are not supported in this browser.',
   },
 
   // ── POIs Page ──
@@ -477,6 +483,15 @@ const en = {
     extractedItems: 'Extracted items:',
     contactsMentioned: 'Contacts mentioned:',
     objectsCreated: 'Objects created:',
+    placesAdded_one: '{{count}} place added',
+    placesAdded_other: '{{count}} places added',
+    contactsAdded_one: '{{count}} contact',
+    contactsAdded_other: '{{count}} contacts',
+    nothingAdded: 'No items added',
+    details: 'Details',
+    resend: 'Resend',
+    resent: 'Resent for analysis',
+    resendFailed: 'Resend failed',
     added: 'Added:',
     recDeleted: 'Recommendation deleted',
     deleteError: 'Cannot delete.',
@@ -587,6 +602,7 @@ const en = {
     contentNotFound: 'Content not found',
     from: 'From: {{sender}}',
     date: 'Date: {{date}}',
+    openInApp: 'Open in Gmail',
   },
 
   // ── URL Submit ──

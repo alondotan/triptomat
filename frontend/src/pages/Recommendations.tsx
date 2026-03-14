@@ -8,10 +8,11 @@ import { AppLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExternalLink, ThumbsUp, ThumbsDown, Star, Trash2, ChevronDown, ChevronUp, Users, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { ExternalLink, ThumbsUp, ThumbsDown, Star, Trash2, ChevronDown, ChevronUp, Users, Loader2, AlertTriangle, RefreshCw, RotateCw } from 'lucide-react';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
-import type { PointOfInterest } from '@/types/trip';
+import { ContactEditDialog } from '@/components/shared/ContactEditDialog';
+import type { PointOfInterest, Contact } from '@/types/trip';
 import { SourceRecommendation } from '@/types/webhook';
 import { fetchTripRecommendations, deleteRecommendation } from '@/services/recommendationService';
 import { useToast } from '@/hooks/use-toast';
@@ -25,12 +26,13 @@ const Recommendations = () => {
   const { activeTrip } = useActiveTrip();
   const { pois } = usePOI();
   const { transportation } = useTransport();
-  const { contacts } = useContacts();
+  const { contacts, updateContact, deleteContact } = useContacts();
   const { toast } = useToast();
   const [recommendations, setRecommendations] = useState<SourceRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedPoi, setSelectedPoi] = useState<PointOfInterest | null>(null);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [syncing, setSyncing] = useState<Record<string, boolean>>({});
 
   const handleRefreshMapList = async (rec: SourceRecommendation) => {
@@ -67,6 +69,53 @@ const Recommendations = () => {
     } catch {
       toast({ title: t('recsPage.deleteError'), variant: 'destructive' });
     }
+  };
+
+  const handleResend = async (rec: SourceRecommendation) => {
+    if (!rec.sourceUrl || !activeTrip) return;
+    setSyncing(prev => ({ ...prev, [rec.id]: true }));
+    try {
+      const { data: tokenData } = await supabase.from('webhook_tokens').select('token').single();
+      if (!tokenData?.token) throw new Error('No webhook token');
+
+      // Delete old recommendation first
+      await deleteRecommendation(rec.id);
+
+      // Re-submit to gateway
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 30_000);
+      const res = await fetch(import.meta.env.VITE_GATEWAY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: rec.sourceUrl, webhook_token: tokenData.token, overwrite: true }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      const data = await res.json();
+
+      if (res.status === 202) {
+        const jobId = data.job_id;
+        const meta = data.source_metadata || {};
+        await supabase.from('source_recommendations').insert([{
+          recommendation_id: jobId,
+          trip_id: activeTrip.id,
+          source_url: rec.sourceUrl,
+          source_title: meta.title || rec.sourceTitle || null,
+          source_image: meta.image || rec.sourceImage || null,
+          status: 'processing',
+          analysis: {},
+          linked_entities: [],
+        }]);
+        toast({ title: t('recsPage.resent') });
+      } else {
+        toast({ title: t('recsPage.resendFailed'), variant: 'destructive' });
+      }
+      // Re-fetch to update UI
+      fetchTripRecommendations(activeTrip.id).then(setRecommendations).catch(console.error);
+    } catch (e: any) {
+      toast({ title: t('recsPage.resendFailed'), description: e.message, variant: 'destructive' });
+    }
+    setSyncing(prev => ({ ...prev, [rec.id]: false }));
   };
 
   useEffect(() => {
@@ -219,6 +268,7 @@ const Recommendations = () => {
           const linkedTransport = transportation.filter(t => linkedTransportIds.includes(t.id));
           const linkedContacts = contacts.filter(c => linkedContactIds.includes(c.id));
           const hasLinkedEntities = linkedPois.length > 0 || linkedTransport.length > 0 || linkedContacts.length > 0;
+          const placesCount = linkedPois.length + linkedTransport.length;
 
           return (
             <Card key={rec.id} className="overflow-hidden">
@@ -237,16 +287,37 @@ const Recommendations = () => {
                 onClick={() => setExpandedId(isExpanded ? null : rec.id)}
               >
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <Star size={16} className="text-primary" />
-                    {rec.sourceTitle || rec.analysis.main_site || t('recsPage.title')}
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={rec.status === 'linked' ? 'default' : 'secondary'}>{rec.status}</Badge>
-                    {hasLinkedEntities && (
-                      isExpanded
-                        ? <ChevronUp size={16} className="text-muted-foreground" />
-                        : <ChevronDown size={16} className="text-muted-foreground" />
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Star size={16} className="text-primary shrink-0" />
+                      {rec.sourceTitle || rec.analysis.main_site || t('recsPage.title')}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1 ms-6">
+                      {hasLinkedEntities ? (
+                        <>
+                          {placesCount > 0 && t('recsPage.placesAdded', { count: placesCount })}
+                          {placesCount > 0 && linkedContacts.length > 0 && ', '}
+                          {linkedContacts.length > 0 && t('recsPage.contactsAdded', { count: linkedContacts.length })}
+                        </>
+                      ) : (
+                        t('recsPage.nothingAdded')
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {hasLinkedEntities ? (
+                      <Badge variant="outline" className="text-xs flex items-center gap-1 cursor-pointer">
+                        {t('recsPage.details')}
+                        {isExpanded
+                          ? <ChevronUp size={14} />
+                          : <ChevronDown size={14} />
+                        }
+                      </Badge>
+                    ) : rec.sourceUrl && (
+                      <Button size="sm" variant="outline" className="text-xs gap-1" onClick={(e) => { e.stopPropagation(); handleResend(rec); }} disabled={syncing[rec.id]}>
+                        <RotateCw className={`h-3.5 w-3.5 ${syncing[rec.id] ? 'animate-spin' : ''}`} />
+                        {t('recsPage.resend')}
+                      </Button>
                     )}
                     {rec.analysis.map_list_id && (
                       <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleRefreshMapList(rec); }} disabled={syncing[rec.id]}>
@@ -312,32 +383,6 @@ const Recommendations = () => {
                   </div>
                 )}
 
-                {/* Extracted contacts */}
-                {rec.analysis.contacts && rec.analysis.contacts.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">{t('recsPage.contactsMentioned')}</p>
-                    <div className="space-y-1.5">
-                      {rec.analysis.contacts.map((contact, i) => (
-                        <div key={i} className="flex items-start gap-2 p-2 rounded bg-muted/50">
-                          <Users size={14} className="text-teal-500 mt-0.5 shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{contact.name}</span>
-                              {contact.role && (
-                                <Badge variant="outline" className="text-xs capitalize">{contact.role}</Badge>
-                              )}
-                              {contact.site && <span className="text-xs text-muted-foreground">@ {contact.site}</span>}
-                            </div>
-                            {contact.paragraph && (
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{contact.paragraph}</p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Linked entities — shown when expanded */}
                 {isExpanded && hasLinkedEntities && (
                   <div className="pt-3 border-t">
@@ -374,13 +419,17 @@ const Recommendations = () => {
                         </div>
                       ))}
                       {linkedContacts.map(c => (
-                        <div key={c.id} className="flex items-center gap-2 p-2 rounded bg-primary/5 border border-primary/10">
+                        <button
+                          key={c.id}
+                          className="flex items-center gap-2 p-2 rounded bg-primary/5 border border-primary/10 w-full text-left hover:bg-primary/10 transition-colors"
+                          onClick={() => setSelectedContact(c)}
+                        >
                           <Users size={14} className="text-teal-500 shrink-0" />
                           <div className="flex-1 min-w-0">
                             <span className="font-medium">{c.name}</span>
-                            <span className="text-xs text-muted-foreground ml-1 capitalize">({c.role})</span>
+                            <span className="text-xs text-muted-foreground ml-1 capitalize">({t(`contactRole.${c.role}`, c.role)})</span>
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -402,6 +451,23 @@ const Recommendations = () => {
             onOpenChange={(open) => { if (!open) setSelectedPoi(null); }}
           />
         )}
+
+        {/* Contact Edit Dialog */}
+        <ContactEditDialog
+          contact={selectedContact}
+          open={!!selectedContact}
+          onOpenChange={(open: boolean) => { if (!open) setSelectedContact(null); }}
+          onSave={async (data) => {
+            if (selectedContact) {
+              await updateContact(selectedContact.id, data);
+              setSelectedContact(null);
+            }
+          }}
+          onDelete={async (id) => {
+            await deleteContact(id);
+            setSelectedContact(null);
+          }}
+        />
       </div>
     </AppLayout>
   );

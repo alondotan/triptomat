@@ -36,7 +36,7 @@ export async function fetchTripMembers(tripId: string): Promise<TripMember[]> {
   }));
 }
 
-export async function addTripMember(tripId: string, email: string): Promise<TripMember> {
+export async function addTripMember(tripId: string, email: string, tripName?: string): Promise<TripMember> {
   const { data: userData, error: lookupError } = await supabase
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .rpc('get_user_id_by_email' as any, { lookup_email: email });
@@ -64,6 +64,17 @@ export async function addTripMember(tripId: string, email: string): Promise<Trip
     if (error.code === '23505') throw new Error('User is already a member of this trip.');
     throw error;
   }
+
+  // Send push notification to the invited user (fire-and-forget)
+  supabase.functions.invoke('send-notification', {
+    body: {
+      user_ids: [userId],
+      title: tripName ? `You've been added to "${tripName}"` : 'You\'ve been added to a trip',
+      body: `${user?.email || 'Someone'} invited you to collaborate.`,
+      url: '/',
+      tag: `trip-invite-${tripId}`,
+    },
+  }).catch(() => { /* notification is best-effort */ });
 
   return {
     id: data.id,

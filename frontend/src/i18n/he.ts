@@ -224,6 +224,12 @@ const he = {
     currencySet: 'המטבע הוגדר ל-{{currency}}',
     language: 'שפה',
     languageDescription: 'בחר שפת תצוגה.',
+    notifications: 'התראות Push',
+    notificationsDescription: 'קבל התראה כשמוסיפים אותך לטיול או כשהמלצה מוכנה.',
+    notificationsEnabled: 'התראות הופעלו',
+    notificationsDisabled: 'התראות כובו',
+    notificationsDenied: 'התראות חסומות — יש לאפשר בהגדרות הדפדפן.',
+    notificationsUnsupported: 'הדפדפן לא תומך בהתראות.',
   },
 
   // ── POIs Page ──
@@ -475,6 +481,15 @@ const he = {
     extractedItems: 'פריטים שחולצו:',
     contactsMentioned: 'אנשי קשר שהוזכרו:',
     objectsCreated: 'אובייקטים שנוצרו:',
+    placesAdded_one: 'מקום {{count}} נוסף',
+    placesAdded_other: '{{count}} מקומות נוספו',
+    contactsAdded_one: 'איש קשר {{count}}',
+    contactsAdded_other: '{{count}} אנשי קשר',
+    nothingAdded: 'לא נוספו פריטים',
+    details: 'פרטים',
+    resend: 'שלח שוב',
+    resent: 'נשלח מחדש לניתוח',
+    resendFailed: 'השליחה מחדש נכשלה',
     added: 'נוסף:',
     recDeleted: 'המלצה נמחקה',
     deleteError: 'לא ניתן למחוק.',
@@ -585,6 +600,7 @@ const he = {
     contentNotFound: 'לא נמצא תוכן',
     from: 'מאת: {{sender}}',
     date: 'תאריך: {{date}}',
+    openInApp: 'פתח ב-Gmail',
   },
 
   // ── URL Submit ──

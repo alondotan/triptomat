@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Users, Plus, Trash2, Phone, Mail, Globe, Search, Smartphone, Pencil, MapPin } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
+import { ContactEditDialog } from '@/components/shared/ContactEditDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -51,44 +52,48 @@ function ContactForm({ contact, onSubmit, onCancel }: {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label>{t('contactsPage.nameLabel')}</Label>
-        <Input value={name} onChange={e => setName(e.target.value)} required />
+      <div className="rounded-xl bg-secondary/40 p-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">{t('contactsPage.nameLabel')}</Label>
+          <Input value={name} onChange={e => setName(e.target.value)} required />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">{t('contactsPage.roleLabel')}</Label>
+          <Select value={role} onValueChange={v => setRole(v as ContactRole)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ROLE_VALUES.map(r => (
+                <SelectItem key={r} value={r}>{t(`contactRole.${r}`)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-      <div className="space-y-2">
-        <Label>{t('contactsPage.roleLabel')}</Label>
-        <Select value={role} onValueChange={v => setRole(v as ContactRole)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {ROLE_VALUES.map(r => (
-              <SelectItem key={r} value={r}>{t(`contactRole.${r}`)}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="rounded-xl bg-secondary/40 p-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">{t('contactsPage.phoneLabel')}</Label>
+          <Input value={phone} onChange={e => setPhone(e.target.value)} type="tel" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">{t('contactsPage.emailLabel')}</Label>
+          <Input value={email} onChange={e => setEmail(e.target.value)} type="email" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">{t('contactsPage.websiteLabel')}</Label>
+          <Input value={website} onChange={e => setWebsite(e.target.value)} type="url" placeholder="https://" />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">{t('contactsPage.addressLabel')}</Label>
+          <Input value={address} onChange={e => setAddress(e.target.value)} />
+        </div>
       </div>
-      <div className="space-y-2">
-        <Label>{t('contactsPage.phoneLabel')}</Label>
-        <Input value={phone} onChange={e => setPhone(e.target.value)} type="tel" />
-      </div>
-      <div className="space-y-2">
-        <Label>{t('contactsPage.emailLabel')}</Label>
-        <Input value={email} onChange={e => setEmail(e.target.value)} type="email" />
-      </div>
-      <div className="space-y-2">
-        <Label>{t('contactsPage.websiteLabel')}</Label>
-        <Input value={website} onChange={e => setWebsite(e.target.value)} type="url" placeholder="https://" />
-      </div>
-      <div className="space-y-2">
-        <Label>{t('contactsPage.addressLabel')}</Label>
-        <Input value={address} onChange={e => setAddress(e.target.value)} />
-      </div>
-      <div className="space-y-2">
-        <Label>{t('contactsPage.notesLabel')}</Label>
-        <Textarea value={notes} onChange={e => setNotes(e.target.value)} />
+      <div className="rounded-xl bg-secondary/40 p-3 space-y-1">
+        <Label className="text-xs text-muted-foreground">{t('contactsPage.notesLabel')}</Label>
+        <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
       </div>
       <div className="flex gap-2">
-        <Button type="submit">{contact ? t('common.save') : t('contactsPage.addContact')}</Button>
-        <Button type="button" variant="outline" onClick={onCancel}>{t('common.cancel')}</Button>
+        <Button type="submit" className="flex-1">{contact ? t('common.save') : t('contactsPage.addContact')}</Button>
+        <Button type="button" variant="outline" className="flex-1" onClick={onCancel}>{t('common.cancel')}</Button>
       </div>
     </form>
   );
@@ -169,7 +174,7 @@ const ContactsPage = () => {
               <DialogTrigger asChild>
                 <Button className="gap-1"><Plus size={16} /> {t('common.add')}</Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md sm:max-w-xl">
                 <DialogHeader><DialogTitle>{t('contactsPage.addContact')}</DialogTitle></DialogHeader>
                 <ContactForm onSubmit={handleCreate} onCancel={() => setCreateOpen(false)} />
               </DialogContent>
@@ -252,18 +257,13 @@ const ContactsPage = () => {
       </div>
 
       {/* Edit dialog */}
-      <Dialog open={!!editingContact} onOpenChange={open => { if (!open) setEditingContact(null); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>{t('contactsPage.editContact')}</DialogTitle></DialogHeader>
-          {editingContact && (
-            <ContactForm
-              contact={editingContact}
-              onSubmit={handleUpdate}
-              onCancel={() => setEditingContact(null)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      <ContactEditDialog
+        contact={editingContact}
+        open={!!editingContact}
+        onOpenChange={(open) => { if (!open) setEditingContact(null); }}
+        onSave={(data) => { handleUpdate(data); }}
+        onDelete={(id) => { deleteContact(id); setEditingContact(null); }}
+      />
     </AppLayout>
   );
 };

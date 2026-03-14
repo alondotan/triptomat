@@ -41,7 +41,7 @@ export function ShareTripDialog({ open, onOpenChange }: ShareTripDialogProps) {
     if (!activeTrip || !email.trim()) return;
     setIsAdding(true);
     try {
-      const member = await addTripMember(activeTrip.id, email.trim());
+      const member = await addTripMember(activeTrip.id, email.trim(), activeTrip.name);
       setMembers(prev => [...prev, member]);
       setEmail('');
       toast({ title: 'Member added', description: `${email.trim()} can now access this trip.` });

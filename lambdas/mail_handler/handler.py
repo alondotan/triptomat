@@ -167,10 +167,20 @@ def lambda_handler(event, context):
                     record_histogram(ai_analysis_duration_hist, ai_duration)
 
                 if travel_data:
+                    # Build Gmail permalink from Message-ID header
+                    message_id = msg.get('message-id', '')
+                    if message_id:
+                        # Strip angle brackets: "<abc@mail.com>" -> "abc@mail.com"
+                        mid = message_id.strip().strip('<>')
+                        email_permalink = f"https://mail.google.com/mail/u/0/#search/rfc822msgid%3A{urllib.parse.quote(mid, safe='')}"
+                    else:
+                        email_permalink = None
+
                     travel_data["source_email_info"] = {
                         "subject": fwd_headers.get("subject", msg['subject']),
                         "sender": fwd_headers.get("from", msg['from']),
                         "date_sent": fwd_headers.get("date", msg['date']),
+                        "email_permalink": email_permalink,
                     }
                     travel_data["user_email"] = user_email
 

@@ -482,6 +482,30 @@ Deno.serve(async (req)=>{
           linked_entities: linkedEntities
         }).eq('id', sourceRecId);
       }
+
+      // Send push notification to all trip members (fire-and-forget)
+      const { data: members } = await supabase
+        .from('trip_members')
+        .select('user_id')
+        .eq('trip_id', matchedTripId);
+      if (members?.length) {
+        const newCount = linkedEntities.filter(e => !e.matched_existing).length;
+        const sourceTitle = payload.source_title || payload.source_url || 'a link';
+        fetch(new URL('/functions/v1/send-notification', Deno.env.get('SUPABASE_URL')!).toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!}`,
+          },
+          body: JSON.stringify({
+            user_ids: members.map(m => m.user_id),
+            title: 'Recommendation ready',
+            body: `${newCount} new item${newCount !== 1 ? 's' : ''} from "${sourceTitle}"`,
+            url: '/recommendations',
+            tag: `rec-${sourceRecId}`,
+          }),
+        }).catch(e => console.error('Push notification failed:', e));
+      }
     }
     return new Response(JSON.stringify({
       success: true,

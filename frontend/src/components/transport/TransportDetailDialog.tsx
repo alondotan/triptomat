@@ -12,6 +12,7 @@ import { Save, Plus, Trash2, ArrowDown } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import type { Transportation, TransportStatus } from '@/types/trip';
 import { useTripMode } from '@/hooks/useTripMode';
+import { TransportMiniMap } from '@/components/transport/TransportMiniMap';
 
 const statusLabels: Record<string, string> = {
   suggested: 'מוצע',
@@ -157,14 +158,14 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card sm:max-w-4xl !flex !flex-col overflow-hidden sm:max-h-[85vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0">
+      <DialogContent className="bg-card sm:max-w-6xl !flex !flex-col overflow-hidden sm:max-h-[85vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0">
         <DialogHeader className="shrink-0">
           <DialogTitle>עריכת תחבורה</DialogTitle>
         </DialogHeader>
-        <div className="overflow-y-auto min-h-0 flex-1 pr-1 max-sm:pb-4">
-          <div className="sm:grid sm:grid-cols-[2fr_auto_3fr] sm:gap-5">
-            {/* Left column: segments */}
-            <div className="space-y-2">
+        <div className="min-h-0 flex-1 sm:flex sm:flex-col max-sm:overflow-y-auto max-sm:pb-4">
+          <div className="sm:grid sm:grid-cols-[2fr_auto_3fr_3fr] sm:gap-5 sm:flex-1 sm:min-h-0">
+            {/* Left column: segments (scrollable) */}
+            <div className="space-y-2 sm:overflow-y-auto sm:min-h-0 sm:pr-1">
               {segments.map((seg, i) => (
                 <div key={i}>
                   <div className="rounded-xl bg-secondary/50 p-3 space-y-2">
@@ -277,15 +278,34 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                 </div>
               </div>
 
+              <Button onClick={handleSave} className="w-full h-9 gap-1.5 sm:hidden">
+                <Save size={16} /> שמור שינויים
+              </Button>
+            </div>
+
+            {/* Right column: map + notes + save (desktop only) */}
+            <div className="max-sm:hidden flex flex-col gap-3 min-h-0">
+              <TransportMiniMap
+                points={segments.flatMap(s => [
+                  { name: s.fromName, code: s.fromCode },
+                  { name: s.toName, code: s.toCode },
+                ])}
+                className="flex-1 min-h-[200px]"
+              />
               <div className="space-y-1">
                 <Label htmlFor="detail-transport-notes" className="text-xs text-muted-foreground">הערות</Label>
                 <Textarea id="detail-transport-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="text-sm resize-none" autoComplete="off" />
               </div>
-
               <Button onClick={handleSave} className="w-full h-9 gap-1.5">
                 <Save size={16} /> שמור שינויים
               </Button>
             </div>
+          </div>
+
+          {/* Notes on mobile (below the grid) */}
+          <div className="sm:hidden mt-4 space-y-1">
+            <Label htmlFor="detail-transport-notes-mobile" className="text-xs text-muted-foreground">הערות</Label>
+            <Textarea id="detail-transport-notes-mobile" name="notes" value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="text-sm resize-none" autoComplete="off" />
           </div>
         </div>
       </DialogContent>

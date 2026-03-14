@@ -60,6 +60,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Bell } from 'lucide-react';
+import { subscribeToPush, unsubscribeFromPush, isSubscribed, getPushPermissionState } from '@/services/pushNotificationService';
 
 const navItems = [
   { path: '/', labelKey: 'nav.timeline', icon: CalendarDays },
@@ -108,6 +111,8 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
   const [hamburgerOpen, setHamburgerOpen] = useState(false);
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [prefsCurrency, setPrefsCurrency] = useState('');
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushPermission, setPushPermission] = useState<ReturnType<typeof getPushPermissionState>>('default');
   const [inboxUnread, setInboxUnread] = useState<number>(() => {
     try { return parseInt(localStorage.getItem('inbox_unread_count') || '0', 10); } catch { return 0; }
   });
@@ -146,6 +151,27 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
   const openEditDialog = () => {
     setHamburgerOpen(false);
     setEditDialogOpen(true);
+  };
+
+  // Check push subscription state when prefs dialog opens
+  useEffect(() => {
+    if (prefsOpen) {
+      setPushPermission(getPushPermissionState());
+      isSubscribed().then(setPushEnabled).catch(() => setPushEnabled(false));
+    }
+  }, [prefsOpen]);
+
+  const handlePushToggle = async (enabled: boolean) => {
+    if (enabled) {
+      const success = await subscribeToPush();
+      setPushEnabled(success);
+      setPushPermission(getPushPermissionState());
+      toast({ title: success ? t('preferences.notificationsEnabled') : t('preferences.notificationsDenied') });
+    } else {
+      await unsubscribeFromPush();
+      setPushEnabled(false);
+      toast({ title: t('preferences.notificationsDisabled') });
+    }
   };
 
   const handleSavePrefs = async () => {
@@ -525,6 +551,25 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                 </SelectContent>
               </Select>
             </div>
+            {pushPermission !== 'unsupported' && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-4 w-4" />
+                    <label htmlFor="push-notifications" className="text-sm font-medium">{t('preferences.notifications')}</label>
+                  </div>
+                  <Switch
+                    id="push-notifications"
+                    checked={pushEnabled}
+                    onCheckedChange={handlePushToggle}
+                    disabled={pushPermission === 'denied'}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {pushPermission === 'denied' ? t('preferences.notificationsDenied') : t('preferences.notificationsDescription')}
+                </p>
+              </div>
+            )}
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="outline" size="sm" onClick={() => setPrefsOpen(false)}>{t('common.cancel')}</Button>
               <Button size="sm" onClick={handleSavePrefs}>{t('common.save')}</Button>
