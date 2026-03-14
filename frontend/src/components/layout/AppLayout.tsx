@@ -59,25 +59,25 @@ export function AppLayout({ children, hideHero = false, fillHeight = false }: Ap
     return () => el.removeEventListener('scroll', onScroll);
   }, [onScroll]);
 
-  // On mount: restore scroll to collapsed or open (with RAF backup for lazy-loaded content)
+  // On mount: restore persisted scroll position after first paint
   useEffect(() => {
     const target = snappedCollapsed && !hideHero ? heroH : 0;
-    const apply = () => {
+    // Wait for paint before setting scroll — avoids breaking iOS touch-scroll init
+    requestAnimationFrame(() => {
       if (scrollRef.current) scrollRef.current.scrollTop = target;
-    };
-    apply();
-    const id1 = requestAnimationFrame(() => {
-      apply();
-      requestAnimationFrame(apply);
     });
-    const id2 = setTimeout(apply, 50);
-    return () => { cancelAnimationFrame(id1); clearTimeout(id2); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Use overflow-y-scroll (not auto) so iOS always considers this scrollable,
+  // even before async content loads. Prevents intermittent touch-scroll failures.
+  const scrollClass = fillHeight
+    ? 'overflow-hidden flex flex-col md:overflow-y-scroll'
+    : 'overflow-y-scroll';
+
   return (
     <div className="h-[100dvh] flex flex-col">
-      <div ref={scrollRef} className={`flex-1 min-h-0 overscroll-y-contain touch-manipulation ${fillHeight ? 'overflow-hidden flex flex-col md:overflow-y-auto' : 'overflow-y-auto'}`}>
+      <div ref={scrollRef} className={`flex-1 min-h-0 overscroll-y-contain ${scrollClass}`}>
         {!hideHero && <DestinationHero />}
         <AppHeader heroScrolledPast={hideHero ? true : heroScrolledPast} hasHero={hasHero} />
         <main className={`container px-1.5 sm:px-6 py-4 sm:py-6 pb-4 md:pb-6 ${fillHeight ? 'flex flex-col min-h-0 flex-1' : 'min-h-screen'}`}>

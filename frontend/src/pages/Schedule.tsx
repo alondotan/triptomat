@@ -7,7 +7,6 @@ import { useItinerary } from '@/context/ItineraryContext';
 import { updateItineraryDay, createItineraryDay } from '@/services/itineraryService';
 import { rebuildPOIBookingsFromDays } from '@/services/poiService';
 import { LocationContextPicker } from '@/components/shared/LocationContextPicker';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { parseISO, format } from 'date-fns';
 import { useTripDays, tripDayDate } from '@/hooks/useTripDays';
 import type { ItineraryActivity, PointOfInterest } from '@/types/trip';
@@ -1956,7 +1955,7 @@ export default function SchedulePage() {
               </div>
             </div>
           ) : tripDays.length > 0 ? (
-            <ScrollArea className="w-full shrink-0 pb-1">
+            <div className="w-full shrink-0 pb-1 overflow-x-auto">
               <div className="flex gap-2 pb-1">
                 {tripDays.map((td) => {
                   const itDay = itineraryDays.find(d => d.dayNumber === td.dayNum);
@@ -2014,9 +2013,7 @@ export default function SchedulePage() {
                   </button>
                 )}
               </div>
-
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
+            </div>
           ) : (
             <p className="text-xs text-muted-foreground">No active trip</p>
           )}
