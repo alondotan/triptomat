@@ -170,7 +170,7 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
           <Button className="gap-1"><Plus size={16} /> {t('createTransport.newTransport')}</Button>
         </DialogTrigger>
       )}
-      <DialogContent className="bg-card sm:max-w-6xl !flex !flex-col overflow-hidden sm:max-h-[85vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0">
+      <DialogContent preventAutoFocus className="bg-card sm:max-w-6xl !flex !flex-col overflow-hidden sm:max-h-[85vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0">
         <DialogHeader className="shrink-0"><DialogTitle>{t('createTransport.title')}</DialogTitle></DialogHeader>
         <form onSubmit={handleSubmit} className="min-h-0 flex-1 sm:flex sm:flex-col max-sm:overflow-y-auto max-sm:pb-4">
           <div className="sm:grid sm:grid-cols-[2fr_auto_3fr_3fr] sm:gap-5 sm:flex-1 sm:min-h-0">
@@ -195,8 +195,8 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
                       <Input value={seg.toName} onChange={e => updateSegment(i, 'toName', e.target.value)} required placeholder={t('createTransport.to')} className="h-7 text-sm bg-background/50" aria-label={t('createTransport.to')} name={`segment-${i}-toName`} autoComplete="off" />
                       <Input value={seg.toCode} onChange={e => updateSegment(i, 'toCode', e.target.value)} placeholder="CDG" className="h-7 text-sm w-14 bg-background/50 text-center" aria-label={t('createTransport.to')} name={`segment-${i}-toCode`} autoComplete="off" />
                     </div>
-                    {!isResearch && (
-                      <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
+                    {!isResearch && (<>
+                      <div className="grid grid-cols-2 gap-1.5 items-end">
                         <div>
                           <Label className="text-[10px] text-muted-foreground">{isPlanning ? t('createTransport.departureDay') : t('createTransport.departure')}</Label>
                           {isPlanning ? (
@@ -219,9 +219,9 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
                             <Input type="datetime-local" value={seg.arrivalTime} onChange={e => updateSegment(i, 'arrivalTime', e.target.value)} className="h-7 text-[11px] bg-background/50" aria-label={t('createTransport.arrivalTime')} name={`segment-${i}-arrivalTime`} autoComplete="off" />
                           )}
                         </div>
-                        <Input value={seg.flightNumber} onChange={e => updateSegment(i, 'flightNumber', e.target.value)} placeholder={t('createTransport.flightNumber')} className="h-7 text-sm w-20 bg-background/50" aria-label={t('createTransport.flightNumber')} name={`segment-${i}-flightNumber`} autoComplete="off" />
                       </div>
-                    )}
+                      <Input value={seg.flightNumber} onChange={e => updateSegment(i, 'flightNumber', e.target.value)} placeholder={t('createTransport.flightNumber')} className="h-7 text-sm bg-background/50 w-28" aria-label={t('createTransport.flightNumber')} name={`segment-${i}-flightNumber`} autoComplete="off" />
+                    </>)}
                   </div>
                   {i < segments.length - 1 && (
                     <div className="flex justify-center py-0.5">

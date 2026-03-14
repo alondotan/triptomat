@@ -790,6 +790,24 @@ const he = {
     cabin: 'תא',
     checked: 'משקל',
   },
+
+  // ── Mobile FAB ──
+  fab: {
+    add: 'הוסף',
+    external: 'המלצה חיצונית',
+    poi: 'נקודת עניין',
+    transport: 'תחבורה',
+    accommodation: 'מקום לינה',
+  },
+
+  // ── External Recommendation Form ──
+  externalRec: {
+    title: 'הוסף המלצה ממקור חיצוני',
+    urlTab: 'קישור',
+    textTab: 'טקסט',
+    urlLabel: 'כתובת URL',
+    textLabel: 'טקסט',
+  },
 };
 
 export default he;

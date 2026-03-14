@@ -792,6 +792,24 @@ const en = {
     cabin: 'Cabin',
     checked: 'Checked',
   },
+
+  // ── Mobile FAB ──
+  fab: {
+    add: 'Add',
+    external: 'External recommendation',
+    poi: 'Point of interest',
+    transport: 'Transport',
+    accommodation: 'Accommodation',
+  },
+
+  // ── External Recommendation Form ──
+  externalRec: {
+    title: 'Add external recommendation',
+    urlTab: 'Link',
+    textTab: 'Text',
+    urlLabel: 'URL',
+    textLabel: 'Text',
+  },
 };
 
 export default en;

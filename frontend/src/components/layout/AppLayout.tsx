@@ -1,6 +1,7 @@
 import { ReactNode, useRef, useState, useEffect, useCallback } from 'react';
 import { AppHeader } from './AppHeader';
 import { MobileBottomNav } from './MobileBottomNav';
+import { MobileFAB } from './MobileFAB';
 import { DestinationHero, HERO_HEIGHT, HERO_HEIGHT_MOBILE, useDestinationImageUrl } from './DestinationBackdrop';
 import { useTripList } from '@/context/TripListContext';
 
@@ -122,6 +123,7 @@ export function AppLayout({ children, hideHero = false, fillHeight = false }: Ap
           {children}
         </main>
       </div>
+      <MobileFAB />
       <MobileBottomNav />
     </div>
   );

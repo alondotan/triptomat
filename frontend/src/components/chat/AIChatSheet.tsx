@@ -38,7 +38,10 @@ const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
 // In-memory store for per-trip conversation sessions
 const tripSessions = new Map<string, Message[]>();
 
-const SUMMARIZE_PROMPT = `Based on our conversation, please create a concise summary of all the specific travel recommendations, places, restaurants, activities, and tips you mentioned. Format it as a clear list with location names, what they are, and why they're recommended. Include addresses or areas if you mentioned them. Write it as a travel recommendation text that someone could use to plan their trip.`;
+const SUMMARIZE_PROMPT = `List ONLY the specific place names (restaurants, attractions, activities, hotels, neighborhoods) you recommended in this conversation. Reply in the SAME LANGUAGE the user used. Format: one place per line, with its type in parentheses. Example:
+- Casco Viejo (neighborhood)
+- Mercado de Mariscos (restaurant)
+No descriptions, no tips, no extra text — just the place names.`;
 
 export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProps) {
   const { t } = useTranslation();
@@ -69,12 +72,13 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
     }
   }, [tripId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Persist session on message changes
+  // Persist session on message changes (tripId intentionally excluded —
+  // the trip-switch effect above already saves before switching)
   useEffect(() => {
     if (tripId && messages.length > 0) {
       tripSessions.set(tripId, messages);
     }
-  }, [tripId, messages]);
+  }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -208,7 +212,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
           }]);
         }
 
-        // Show the summary in chat so the user sees what was sent
+        // Show concise confirmation in chat
         const confirmationMsg: Message = {
           role: 'assistant',
           content: `${t('aiChat.integrationConfirmation')}\n\n${summaryText}`,

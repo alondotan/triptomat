@@ -17,14 +17,25 @@ import { createPOISchema } from '@/schemas/poi.schema';
 import type { POICategory, POIStatus } from '@/types/trip';
 import { getPOICategories, getCategoryLabel } from '@/lib/subCategoryConfig';
 
-export function CreatePOIForm() {
+interface CreatePOIFormProps {
+  /** Controlled mode: when provided, hides the trigger button and uses external state */
+  open?: boolean;
+  onOpenChange?: (v: boolean) => void;
+  /** Pre-fill the category (e.g. 'accommodation') */
+  initialCategory?: POICategory;
+}
+
+export function CreatePOIForm({ open: openProp, onOpenChange, initialCategory }: CreatePOIFormProps = {}) {
   const { t } = useTranslation();
+  const isControlled = openProp !== undefined;
   const { activeTrip } = useActiveTrip();
   const { addPOI } = usePOI();
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = isControlled ? openProp! : openInternal;
+  const setOpen = (v: boolean) => { if (isControlled) { onOpenChange?.(v); } else { setOpenInternal(v); } };
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<POICategory>('attraction');
+  const [category, setCategory] = useState<POICategory>(initialCategory || 'attraction');
   const [subCategory, setSubCategory] = useState('');
   const status: POIStatus = 'suggested';
   const [city, setCity] = useState('');
@@ -40,7 +51,7 @@ export function CreatePOIForm() {
 
   const resetForm = () => {
     setName('');
-    setCategory('attraction');
+    setCategory(initialCategory || 'attraction');
     setSubCategory('');
     setCity('');
     setCountry('');
@@ -102,12 +113,14 @@ export function CreatePOIForm() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="gap-1"><Plus size={16} /> {t('createPOI.newPOI')}</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader><DialogTitle>{t('createPOI.title')}</DialogTitle></DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-5">
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button className="gap-1"><Plus size={16} /> {t('createPOI.newPOI')}</Button>
+        </DialogTrigger>
+      )}
+      <DialogContent preventAutoFocus className="max-w-md max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0 !flex !flex-col overflow-hidden">
+        <DialogHeader className="shrink-0"><DialogTitle>{t('createPOI.title')}</DialogTitle></DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-5 flex-1 min-h-0 overflow-y-auto max-sm:pb-4">
           {/* Basic Info */}
           <div className="rounded-xl bg-secondary/40 p-4 space-y-3">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t('createPOI.basicInfo')}</span>
