@@ -205,7 +205,7 @@ function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeing
   return (
     <div
       ref={setNodeRef}
-      className={`flex items-start gap-2.5 bg-card border rounded-xl px-3 py-2.5 select-none transition-opacity ${
+      className={`flex items-start gap-2.5 bg-card border rounded-xl px-3 py-2.5 select-none transition-opacity touch-manipulation ${
         isBeingDragged ? 'opacity-30' : 'hover:border-primary/40'
       }`}
     >
@@ -286,7 +286,7 @@ function SortableScheduledItem({
           transform: transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
           transition,
         }}
-        className={`flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1.5 transition-opacity ${isDragging ? 'opacity-40' : ''}`}
+        className={`flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1.5 transition-opacity touch-manipulation ${isDragging ? 'opacity-40' : ''}`}
       >
         <button
           {...attributes}
@@ -355,7 +355,7 @@ function SortableScheduledItem({
         transform: transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
         transition,
       }}
-      className={`flex items-start gap-1.5 sm:gap-2.5 bg-card border rounded-lg px-1.5 sm:px-3 py-2 sm:py-2.5 transition-opacity ${
+      className={`flex items-start gap-1.5 sm:gap-2.5 bg-card border rounded-lg px-1.5 sm:px-3 py-2 sm:py-2.5 transition-opacity touch-manipulation ${
         isLocked ? 'opacity-70' : ''
       } ${isDragging ? 'opacity-40' : ''} ${isSelected ? 'ring-2 ring-primary' : ''}`}
     >
@@ -2176,7 +2176,7 @@ export default function DndTestPage() {
                   </div>
                 ) : morningAccom ? (
                   <div
-                    className="flex items-center gap-2.5 bg-muted/40 rounded-xl px-3 py-2.5 border border-border/40 cursor-pointer hover:border-primary/30 transition-colors"
+                    className="flex items-center gap-2.5 bg-muted/40 rounded-xl px-3 py-2.5 border border-border/40 cursor-pointer hover:border-primary/30 transition-colors touch-manipulation"
                     onClick={() => setOpenedPoiId(morningAccom.poi.id)}
                   >
                     <Building2 size={15} className="text-primary shrink-0" />

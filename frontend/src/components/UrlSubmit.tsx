@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Link, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { Link, Loader2, CheckCircle, AlertCircle, ClipboardPaste } from 'lucide-react';
 import { urlSchema } from '@/schemas/url.schema';
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
@@ -149,6 +149,22 @@ export function UrlSubmit() {
           type="url"
           autoComplete="off"
         />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          disabled={status === 'loading' || !webhookToken}
+          onClick={async () => {
+            try {
+              const clip = await navigator.clipboard.readText();
+              if (clip) setUrl(clip.trim());
+            } catch { /* clipboard permission denied */ }
+          }}
+          title={t('common_paste')}
+          className="shrink-0"
+        >
+          <ClipboardPaste size={14} />
+        </Button>
         <Button
           type="submit"
           disabled={!url.trim() || status === 'loading' || !webhookToken}

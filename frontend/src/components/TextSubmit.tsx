@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, Loader2, CheckCircle, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, Loader2, CheckCircle, AlertCircle, ChevronDown, ChevronUp, ClipboardPaste } from 'lucide-react';
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
 
@@ -105,7 +105,22 @@ export function TextSubmit() {
               aria-label="הזן טקסט"
               name="text"
             />
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={status === 'loading' || !webhookToken}
+                onClick={async () => {
+                  try {
+                    const clip = await navigator.clipboard.readText();
+                    if (clip) setText(clip.trim());
+                  } catch { /* clipboard permission denied */ }
+                }}
+              >
+                <ClipboardPaste size={14} className="me-1.5" />
+                {t('common_paste')}
+              </Button>
               <Button
                 type="submit"
                 disabled={!text.trim() || status === 'loading' || !webhookToken}

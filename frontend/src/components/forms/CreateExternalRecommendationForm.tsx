@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, CheckCircle, AlertCircle, Link, FileText } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, Link, FileText, ClipboardPaste } from 'lucide-react';
 import { urlSchema } from '@/schemas/url.schema';
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
@@ -204,7 +204,7 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent preventAutoFocus className="max-w-md max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0">
+      <DialogContent preventAutoFocus className="max-w-md max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0 bg-background/95 backdrop-blur-sm">
         <DialogHeader>
           <DialogTitle>{t('externalRec.title')}</DialogTitle>
         </DialogHeader>
@@ -241,16 +241,34 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
           {mode === 'url' ? (
             <div className="space-y-2">
               <Label htmlFor="ext-url">{t('externalRec.urlLabel')}</Label>
-              <Input
-                id="ext-url"
-                placeholder={t('urlSubmit.placeholder')}
-                value={url}
-                onChange={e => setUrl(e.target.value)}
-                disabled={isDisabled}
-                type="url"
-                autoComplete="off"
-                dir="ltr"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="ext-url"
+                  placeholder={t('urlSubmit.placeholder')}
+                  value={url}
+                  onChange={e => setUrl(e.target.value)}
+                  disabled={isDisabled}
+                  type="url"
+                  autoComplete="off"
+                  dir="ltr"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  disabled={isDisabled}
+                  onClick={async () => {
+                    try {
+                      const clip = await navigator.clipboard.readText();
+                      if (clip) setUrl(clip.trim());
+                    } catch { /* clipboard permission denied */ }
+                  }}
+                  title={t('common_paste')}
+                >
+                  <ClipboardPaste size={16} />
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-2">
@@ -264,6 +282,23 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
                 className="min-h-[120px]"
                 dir="auto"
               />
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isDisabled}
+                  onClick={async () => {
+                    try {
+                      const clip = await navigator.clipboard.readText();
+                      if (clip) setText(clip.trim());
+                    } catch { /* clipboard permission denied */ }
+                  }}
+                >
+                  <ClipboardPaste size={14} className="me-1.5" />
+                  {t('common_paste')}
+                </Button>
+              </div>
             </div>
           )}
 

@@ -809,6 +809,8 @@ const he = {
     urlLabel: 'כתובת URL',
     textLabel: 'טקסט',
   },
+
+  common_paste: 'הדבק',
 };
 
 export default he;

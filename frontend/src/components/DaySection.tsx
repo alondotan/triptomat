@@ -118,7 +118,7 @@ export function DaySection({
       )}
 
       {items.map(item => (
-        <div key={item.id} className="flex items-center gap-2 mr-0 sm:mr-6 bg-muted/50 rounded-lg px-2 sm:px-3 py-2">
+        <div key={item.id} className="flex items-center gap-2 mr-0 sm:mr-6 bg-muted/50 rounded-lg px-2 sm:px-3 py-2 touch-manipulation">
           {entityType === 'accommodation' && onToggleSelected && (
             <button
               onClick={() => onToggleSelected(item.id, !item.isSelected)}
