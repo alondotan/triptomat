@@ -8,6 +8,15 @@ We mock the problematic modules in sys.modules before any handler is imported.
 import sys
 from unittest.mock import MagicMock
 
+# ── Mock boto3 (not installed in CI) ──────────────────────────────────────
+if "boto3" not in sys.modules:
+    mock_boto3 = MagicMock()
+    sys.modules["boto3"] = mock_boto3
+    sys.modules["botocore"] = MagicMock()
+    _mock_botocore_exc = MagicMock()
+    _mock_botocore_exc.ClientError = type("ClientError", (Exception,), {})
+    sys.modules["botocore.exceptions"] = _mock_botocore_exc
+
 # ── Mock youtube_transcript_api (not installed locally) ────────────────────
 if "youtube_transcript_api" not in sys.modules:
     mock_yt_transcript = MagicMock()
