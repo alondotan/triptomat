@@ -635,8 +635,8 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   // --- Mobile Layout (all POI types) ---
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto overscroll-contain" onOpenAutoFocus={e => e.preventDefault()}>
-        <DialogHeader>
+      <DialogContent className="max-w-lg max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0 !flex !flex-col overflow-hidden" onOpenAutoFocus={e => e.preventDefault()}>
+        <DialogHeader className="pe-8">
           {editingName ? (
             <Input
               value={name}
@@ -654,15 +654,14 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           )}
         </DialogHeader>
 
-        {poi.imageUrl && (
-          <div className="w-full h-48 overflow-hidden rounded-lg -mt-2">
-            <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" />
-          </div>
-        )}
+        <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pb-4">
+          {poi.imageUrl && (
+            <div className="w-full h-48 overflow-hidden rounded-lg">
+              <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" />
+            </div>
+          )}
 
-        {quotesSection}
-
-        <div className="space-y-5">
+          {quotesSection}
           {detailsSection}
           {locationSection}
 
@@ -677,30 +676,30 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           {notesSection}
 
           <div className="flex gap-2">
-            <Button onClick={handleSave} className="flex-1 gap-1.5">
-              <Save size={16} /> {t('common.save')}
+            <Button onClick={handleSave} size="sm" className="flex-1 gap-1">
+              <Save size={14} /> {t('common.save')}
             </Button>
-            <Button variant="outline" onClick={handleCancel} className="flex-1">
+            <Button variant="outline" size="sm" onClick={handleCancel} className="flex-1">
               {t('common.cancel')}
             </Button>
+            <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="flex-1 gap-1 text-destructive border-destructive/30 hover:text-destructive hover:bg-destructive/10">
+                  <Trash2 size={14} /> {t('common.delete')}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t('poiDetail.deleteConfirm', { name: poi.name })}</AlertDialogTitle>
+                  <AlertDialogDescription>{t('poiDetail.cannotUndo')}</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('common.delete')}</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
-          <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" className="w-full gap-1.5 text-destructive hover:text-destructive">
-                <Trash2 size={16} /> {t('common.delete')}
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{t('poiDetail.deleteConfirm', { name: poi.name })}</AlertDialogTitle>
-                <AlertDialogDescription>{t('poiDetail.cannotUndo')}</AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('common.delete')}</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </DialogContent>
     </Dialog>

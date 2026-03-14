@@ -789,6 +789,7 @@ const he = {
     baggage: 'מטען',
     cabin: 'תא',
     checked: 'משקל',
+    deleteConfirm: 'למחוק את התחבורה הזו?',
   },
 
   // ── Mobile FAB ──

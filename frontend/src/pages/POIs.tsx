@@ -292,7 +292,7 @@ const POIsPage = () => {
               <Merge size={14} />
               {mergeMode ? t('common.cancelMerge') : t('common.merge')}
             </Button>
-            {!mergeMode && <CreatePOIForm />}
+            {!mergeMode && <div className="max-sm:hidden"><CreatePOIForm /></div>}
           </div>
         </div>
 

@@ -219,7 +219,10 @@ export function CreatePOIForm({ open: openProp, onOpenChange, initialCategory }:
             <Textarea id="poi-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('createPOI.notesPlaceholder')} autoComplete="off" />
           </div>
 
-          <Button type="submit" className="w-full">{t('createPOI.addPOI')}</Button>
+          <div className="flex gap-2">
+            <Button type="submit" className="flex-1">{t('createPOI.addPOI')}</Button>
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

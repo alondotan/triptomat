@@ -267,13 +267,16 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
             </div>
           )}
 
-          <Button type="submit" className="w-full" disabled={isEmpty || isDisabled}>
-            {status === 'loading' ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              mode === 'url' ? t('urlSubmit.analyze') : t('textSubmit.analyze')
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button type="submit" className="flex-1" disabled={isEmpty || isDisabled}>
+              {status === 'loading' ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                mode === 'url' ? t('urlSubmit.analyze') : t('textSubmit.analyze')
+              )}
+            </Button>
+            <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
+          </div>
         </form>
 
         <div aria-live="polite">

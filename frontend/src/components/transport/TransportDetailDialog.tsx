@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTransport } from '@/context/TransportContext';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -10,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Save, Plus, Trash2, ArrowDown } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import type { Transportation, TransportStatus } from '@/types/trip';
 import { useTripMode } from '@/hooks/useTripMode';
 import { TransportMiniMap } from '@/components/transport/TransportMiniMap';
@@ -87,9 +89,11 @@ function segmentsToForm(transport: Transportation): SegmentFormData[] {
 }
 
 export function TransportDetailDialog({ transport, open, onOpenChange }: TransportDetailDialogProps) {
-  const { updateTransportation } = useTransport();
+  const { t } = useTranslation();
+  const { updateTransportation, deleteTransportation } = useTransport();
   const { activeTrip } = useActiveTrip();
   const { isResearch } = useTripMode();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const [category, setCategory] = useState(transport.category);
   const [isBooked, setIsBooked] = useState(transport.status === 'booked');
@@ -156,6 +160,24 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
     onOpenChange(false);
   };
 
+  const handleCancel = () => {
+    setCategory(transport.category);
+    setIsBooked(transport.status === 'booked');
+    setCostAmount(transport.cost.total_amount?.toString() || '');
+    setCostCurrency(transport.cost.currency || activeTrip?.currency || 'ILS');
+    setIsPaid(transport.isPaid);
+    setOrderNumber(transport.booking.order_number || '');
+    setCarrierName(transport.booking.carrier_name || '');
+    setNotes(transport.additionalInfo.notes || '');
+    setSegments(segmentsToForm(transport));
+    onOpenChange(false);
+  };
+
+  const handleDelete = async () => {
+    await deleteTransportation(transport.id);
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card sm:max-w-6xl !flex !flex-col overflow-hidden sm:max-h-[85vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0">
@@ -185,19 +207,19 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                       <Input value={seg.toName} onChange={e => updateSegment(i, 'toName', e.target.value)} placeholder="יעד" className="h-7 text-sm bg-background/50" aria-label="שם יעד" name={`detail-segment-${i}-toName`} autoComplete="off" />
                       <Input value={seg.toCode} onChange={e => updateSegment(i, 'toCode', e.target.value)} placeholder="קוד" className="h-7 text-sm w-14 bg-background/50 text-center" aria-label="קוד יעד" name={`detail-segment-${i}-toCode`} autoComplete="off" />
                     </div>
-                    {!isResearch && (
-                      <div className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
+                    {!isResearch && (<>
+                      <div className="grid grid-cols-2 gap-1.5 items-end">
                         <div>
-                          <Label className="text-[10px] text-muted-foreground">יציאה</Label>
-                          <Input type="datetime-local" value={seg.departureTime} onChange={e => updateSegment(i, 'departureTime', e.target.value)} className="h-7 text-[11px] bg-background/50" aria-label="זמן יציאה" name={`detail-segment-${i}-departureTime`} autoComplete="off" />
+                          <Label className="text-[10px] text-muted-foreground">{t('createTransport.departure')}</Label>
+                          <Input type="datetime-local" value={seg.departureTime} onChange={e => updateSegment(i, 'departureTime', e.target.value)} className="h-7 text-[11px] bg-background/50" aria-label={t('createTransport.departureTime')} name={`detail-segment-${i}-departureTime`} autoComplete="off" />
                         </div>
                         <div>
-                          <Label className="text-[10px] text-muted-foreground">הגעה</Label>
-                          <Input type="datetime-local" value={seg.arrivalTime} onChange={e => updateSegment(i, 'arrivalTime', e.target.value)} className="h-7 text-[11px] bg-background/50" aria-label="זמן הגעה" name={`detail-segment-${i}-arrivalTime`} autoComplete="off" />
+                          <Label className="text-[10px] text-muted-foreground">{t('createTransport.arrival')}</Label>
+                          <Input type="datetime-local" value={seg.arrivalTime} onChange={e => updateSegment(i, 'arrivalTime', e.target.value)} className="h-7 text-[11px] bg-background/50" aria-label={t('createTransport.arrivalTime')} name={`detail-segment-${i}-arrivalTime`} autoComplete="off" />
                         </div>
-                        <Input value={seg.flightNumber} onChange={e => updateSegment(i, 'flightNumber', e.target.value)} placeholder="טיסה #" className="h-7 text-sm w-20 bg-background/50" aria-label="מספר טיסה" name={`detail-segment-${i}-flightNumber`} autoComplete="off" />
                       </div>
-                    )}
+                      <Input value={seg.flightNumber} onChange={e => updateSegment(i, 'flightNumber', e.target.value)} placeholder={t('createTransport.flightNumber')} className="h-7 text-sm bg-background/50 w-28" aria-label={t('createTransport.flightNumber')} name={`detail-segment-${i}-flightNumber`} autoComplete="off" />
+                    </>)}
                   </div>
                   {i < segments.length - 1 && (
                     <div className="flex justify-center py-0.5">
@@ -278,12 +300,9 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                 </div>
               </div>
 
-              <Button onClick={handleSave} className="w-full h-9 gap-1.5 sm:hidden">
-                <Save size={16} /> שמור שינויים
-              </Button>
             </div>
 
-            {/* Right column: map + notes + save (desktop only) */}
+            {/* Right column: map + notes + buttons (desktop only) */}
             <div className="max-sm:hidden flex flex-col gap-3 min-h-0">
               <TransportMiniMap
                 points={segments.flatMap(s => [
@@ -293,19 +312,75 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                 className="flex-1 min-h-[200px]"
               />
               <div className="space-y-1">
-                <Label htmlFor="detail-transport-notes" className="text-xs text-muted-foreground">הערות</Label>
+                <Label htmlFor="detail-transport-notes" className="text-xs text-muted-foreground">{t('createTransport.notes')}</Label>
                 <Textarea id="detail-transport-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="text-sm resize-none" autoComplete="off" />
               </div>
-              <Button onClick={handleSave} className="w-full h-9 gap-1.5">
-                <Save size={16} /> שמור שינויים
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleSave} size="sm" className="flex-1 gap-1">
+                  <Save size={14} /> {t('common.save')}
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleCancel} className="flex-1">
+                  {t('common.cancel')}
+                </Button>
+                <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex-1 gap-1 text-destructive border-destructive/30 hover:text-destructive hover:bg-destructive/10">
+                      <Trash2 size={14} /> {t('common.delete')}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{t('transportDetail.deleteConfirm')}</AlertDialogTitle>
+                      <AlertDialogDescription>{t('poiDetail.cannotUndo')}</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('common.delete')}</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           </div>
 
-          {/* Notes on mobile (below the grid) */}
-          <div className="sm:hidden mt-4 space-y-1">
-            <Label htmlFor="detail-transport-notes-mobile" className="text-xs text-muted-foreground">הערות</Label>
-            <Textarea id="detail-transport-notes-mobile" name="notes" value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="text-sm resize-none" autoComplete="off" />
+          {/* Mobile: map + notes + buttons (below the grid) */}
+          <div className="sm:hidden mt-4 space-y-3">
+            <TransportMiniMap
+              points={segments.flatMap(s => [
+                { name: s.fromName, code: s.fromCode },
+                { name: s.toName, code: s.toCode },
+              ])}
+              className="w-full h-40"
+            />
+            <div className="space-y-1">
+              <Label htmlFor="detail-transport-notes-mobile" className="text-xs text-muted-foreground">{t('createTransport.notes')}</Label>
+              <Textarea id="detail-transport-notes-mobile" name="notes" value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="text-sm resize-none" autoComplete="off" />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleSave} size="sm" className="flex-1 gap-1">
+                <Save size={14} /> {t('common.save')}
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleCancel} className="flex-1">
+                {t('common.cancel')}
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex-1 gap-1 text-destructive border-destructive/30 hover:text-destructive hover:bg-destructive/10">
+                    <Trash2 size={14} /> {t('common.delete')}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t('transportDetail.deleteConfirm')}</AlertDialogTitle>
+                    <AlertDialogDescription>{t('poiDetail.cannotUndo')}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('common.delete')}</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </div>
       </DialogContent>

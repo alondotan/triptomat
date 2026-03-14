@@ -791,6 +791,7 @@ const en = {
     baggage: 'Baggage',
     cabin: 'Cabin',
     checked: 'Checked',
+    deleteConfirm: 'Delete this transport?',
   },
 
   // ── Mobile FAB ──

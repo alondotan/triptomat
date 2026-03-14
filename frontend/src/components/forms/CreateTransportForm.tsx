@@ -288,7 +288,6 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-9 sm:hidden">{t('createTransport.addTransportation')}</Button>
             </div>
 
             {/* Right column: map + notes + submit (desktop only) */}
@@ -304,14 +303,23 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
                 <Label htmlFor="transport-notes" className="text-xs text-muted-foreground">{t('createTransport.notes')}</Label>
                 <Textarea id="transport-notes" name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('createTransport.notesPlaceholder')} rows={2} className="text-sm resize-none" autoComplete="off" />
               </div>
-              <Button type="submit" className="w-full h-9">{t('createTransport.addTransportation')}</Button>
+              <div className="flex gap-2">
+                <Button type="submit" className="flex-1 h-9">{t('createTransport.addTransportation')}</Button>
+                <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
+              </div>
             </div>
           </div>
 
-          {/* Notes on mobile (below the grid) */}
-          <div className="sm:hidden mt-4 space-y-1">
-            <Label htmlFor="transport-notes-mobile" className="text-xs text-muted-foreground">{t('createTransport.notes')}</Label>
-            <Textarea id="transport-notes-mobile" name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('createTransport.notesPlaceholder')} rows={2} className="text-sm resize-none" autoComplete="off" />
+          {/* Mobile: notes + buttons (below the grid) */}
+          <div className="sm:hidden mt-4 space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="transport-notes-mobile" className="text-xs text-muted-foreground">{t('createTransport.notes')}</Label>
+              <Textarea id="transport-notes-mobile" name="notes" value={notes} onChange={e => setNotes(e.target.value)} placeholder={t('createTransport.notesPlaceholder')} rows={2} className="text-sm resize-none" autoComplete="off" />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1 h-9">{t('createTransport.addTransportation')}</Button>
+              <Button type="button" variant="outline" className="flex-1 h-9" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
+            </div>
           </div>
         </form>
       </DialogContent>

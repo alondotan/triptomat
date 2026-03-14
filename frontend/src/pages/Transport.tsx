@@ -152,7 +152,7 @@ const TransportPage = () => {
               <Merge size={14} />
               {mergeMode ? t('common.cancelMerge') : t('common.merge')}
             </Button>
-            {!mergeMode && <CreateTransportForm />}
+            {!mergeMode && <div className="max-sm:hidden"><CreateTransportForm /></div>}
           </div>
         </div>
 
