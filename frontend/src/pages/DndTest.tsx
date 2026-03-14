@@ -843,6 +843,7 @@ export default function DndTestPage() {
   const [scheduled, setScheduled] = useState<Item[]>([]);
   const [lockedIds, setLockedIds] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeDragItem, setActiveDragItem] = useState<Item | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [resetKey, setResetKey] = useState(0);
 
@@ -1522,12 +1523,8 @@ export default function DndTestPage() {
   const isPotentialDrag = activeId !== null && !isScheduledDrag;
   const isAnyDragging = activeId !== null;
 
-  const activeItem =
-    isPotentialDrag
-      ? potential.find(i => i.id === activeId)
-      : isScheduledDrag
-        ? scheduled.find(i => `sched-${i.id}` === activeId)
-        : null;
+  // activeDragItem is captured in handleDragStart — immune to potential/scheduled array changes mid-drag
+  const activeItem = activeDragItem;
 
   const addLog = (msg: string) => setLog(prev => [msg, ...prev].slice(0, 10));
 
@@ -1682,15 +1679,23 @@ export default function DndTestPage() {
   }, []);
 
   const handleDragStart = useCallback((e: DragStartEvent) => {
-    setActiveId(e.active.id as string);
+    const id = e.active.id as string;
+    setActiveId(id);
+    // Capture the dragged item immediately so the overlay survives potential/scheduled array changes
+    const isSchedDrag = id.startsWith('sched-');
+    const item = isSchedDrag
+      ? scheduled.find(i => `sched-${i.id}` === id)
+      : potential.find(i => i.id === id);
+    setActiveDragItem(item ?? null);
     setSelectedItemId(null);
     if (isMobile) setTimelineOpen(true);
-    addLog(`🟡 start: "${e.active.id}"`);
-  }, [isMobile]);
+    addLog(`🟡 start: "${id}"`);
+  }, [isMobile, potential, scheduled]);
 
   const handleDragEnd = useCallback((e: DragEndEvent) => {
     const { active, over } = e;
     setActiveId(null);
+    setActiveDragItem(null);
 
     if (!over) { addLog(`🔴 end: no target`); return; }
 

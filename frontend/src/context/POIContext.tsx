@@ -87,6 +87,14 @@ export function POIProvider({ children }: { children: ReactNode }) {
       } else {
         dispatch({ type: 'ADD_POI', payload: result });
       }
+
+      // Fire-and-forget: fetch image from Pexels if POI has no image
+      if (!result.imageUrl) {
+        supabase.functions.invoke('fetch-poi-image', {
+          body: { poiId: result.id, name: result.name, country: result.location?.country },
+        }).catch(err => console.warn('Image fetch failed:', err));
+      }
+
       return result;
     } catch (error) {
       console.error('Failed to add POI:', error);

@@ -410,7 +410,31 @@ Deno.serve(async (req)=>{
                 description: item.name,
                 matched_existing: false
               });
-            }
+
+              // Fetch image from Pexels if no image was provided
+              if (!item.image_url && !payload.source_image) {
+                const pexelsKey = Deno.env.get('PEXELS_API_KEY');
+                if (pexelsKey) {
+                  const country = siteToCountry[(item.site || '').toLowerCase()] || '';
+                  const query = country ? `${item.name} ${country}` : item.name;
+                  try {
+                    const pexelsRes = await fetch(
+                      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape`,
+                      { headers: { Authorization: pexelsKey } },
+                    );
+                    if (pexelsRes.ok) {
+                      const pexelsData = await pexelsRes.json();
+                      const pexelsImage = pexelsData.photos?.[0]?.src?.landscape;
+                      if (pexelsImage) {
+                        await supabase.from('points_of_interest').update({ image_url: pexelsImage }).eq('id', newPoi.id);
+                        console.log(`[image] Set Pexels image for POI ${newPoi.id}`);
+                      }
+                    }
+                  } catch (e) {
+                    console.warn(`[image] Pexels fetch failed for "${item.name}":`, e);
+                  }
+                }
+              }
           }
         }
       }
