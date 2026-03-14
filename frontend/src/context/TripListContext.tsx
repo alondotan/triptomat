@@ -39,7 +39,9 @@ function tripListReducer(state: TripListState, action: TripListAction): TripList
     case 'SET_ERROR':
       return { ...state, error: action.payload };
     case 'LOAD_TRIPS': {
-      const firstId = action.payload.length > 0 ? action.payload[0].id : null;
+      const savedId = localStorage.getItem('activeTripId');
+      const validSavedId = savedId && action.payload.some(t => t.id === savedId) ? savedId : null;
+      const firstId = validSavedId || (action.payload.length > 0 ? action.payload[0].id : null);
       return { ...state, trips: action.payload, activeTripId: firstId, isLoading: false };
     }
     case 'SET_ACTIVE_TRIP_ID':
@@ -99,6 +101,7 @@ export function TripListProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setActiveTripId = useCallback((id: string) => {
+    localStorage.setItem('activeTripId', id);
     dispatch({ type: 'SET_ACTIVE_TRIP_ID', payload: id });
   }, []);
 
@@ -114,6 +117,7 @@ export function TripListProvider({ children }: { children: ReactNode }) {
         startDate: data.startDate,
         endDate: data.endDate,
       });
+      localStorage.setItem('activeTripId', newTrip.id);
       dispatch({ type: 'ADD_TRIP', payload: newTrip });
       toast({ title: 'Trip Created', description: `"${data.name}" has been created.` });
     } catch (error) {
