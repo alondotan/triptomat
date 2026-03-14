@@ -51,7 +51,6 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
   const [integrating, setIntegrating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSentAt, setLastSentAt] = useState(0);
-  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const prevTripIdRef = useRef<string | null>(tripId);
@@ -83,25 +82,6 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, loading]);
-
-  // Resize sheet when mobile keyboard opens/closes
-  useEffect(() => {
-    if (!open) {
-      setViewportHeight(null);
-      return;
-    }
-    const vv = window.visualViewport;
-    if (!vv) return;
-
-    const handleResize = () => {
-      // Only apply when keyboard shrinks the viewport significantly (>50px diff)
-      const diff = window.innerHeight - vv.height;
-      setViewportHeight(diff > 50 ? vv.height : null);
-    };
-
-    vv.addEventListener('resize', handleResize);
-    return () => vv.removeEventListener('resize', handleResize);
-  }, [open]);
 
   // Focus input when sheet opens
   useEffect(() => {
@@ -264,7 +244,6 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
       <SheetContent
         side="right"
         className="w-full sm:w-[420px] sm:max-w-[420px] p-0 flex flex-col"
-        style={viewportHeight ? { height: viewportHeight, bottom: 0, top: 'auto' } : undefined}
       >
         <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
           <div className="flex items-center justify-between pr-6">
