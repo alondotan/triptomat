@@ -23,7 +23,7 @@ const BudgetPage = lazy(() => import("./pages/Budget"));
 const TasksPage = lazy(() => import("./pages/Tasks"));
 const InboxPage = lazy(() => import("./pages/Inbox"));
 const AccommodationPage = lazy(() => import("./pages/Accommodation"));
-const DndTestPage = lazy(() => import("./pages/DndTest"));
+const SchedulePage = lazy(() => import("./pages/Schedule"));
 const ShareTargetPage = lazy(() => import("./pages/ShareTarget"));
 const ContactsPage = lazy(() => import("./pages/Contacts"));
 const TripsPage = lazy(() => import("./pages/Trips"));
@@ -75,7 +75,7 @@ const App = () => (
                 <AuthGuard>
                   <TripProvider>
                     <Routes>
-                      <Route path="/" element={<ErrorBoundary><DndTestPage /></ErrorBoundary>} />
+                      <Route path="/" element={<ErrorBoundary><SchedulePage /></ErrorBoundary>} />
                       <Route path="/itinerary" element={<ErrorBoundary><ItineraryPage /></ErrorBoundary>} />
                       <Route path="/pois" element={<ErrorBoundary><POIsPage /></ErrorBoundary>} />
                       <Route path="/pois/group" element={<ErrorBoundary><POIGroupPage /></ErrorBoundary>} />

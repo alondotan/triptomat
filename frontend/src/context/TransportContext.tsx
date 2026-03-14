@@ -120,10 +120,10 @@ export function TransportProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'UPDATE_TRANSPORTATION', payload: merged });
       dispatch({ type: 'DELETE_TRANSPORTATION', payload: secondaryId });
       // Itinerary realtime subscription will auto-sync
-      toast({ title: 'מוזג בהצלחה', description: 'פריטי התחבורה מוזגו.' });
+      toast({ title: 'Merged successfully', description: 'Transport items merged.' });
     } catch (error) {
       console.error('Failed to merge transportation:', error);
-      toast({ title: 'שגיאה', description: 'המיזוג נכשל.', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Merge failed.', variant: 'destructive' });
     }
   }, [state.transportation, activeTrip, toast]);
 

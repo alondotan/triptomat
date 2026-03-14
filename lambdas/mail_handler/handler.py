@@ -324,7 +324,8 @@ def call_openai(html_text, allowed_types, geo_types):
             - Set `true` if the email confirms payment was already made (e.g., flight bookings, ticket purchases, "payment confirmed", "thank you for your payment", "amount charged").
             - Set `false` if payment is deferred (e.g., hotel with "pay at hotel", "pay on arrival", "free cancellation", "payment due at check-in", Booking.com-style reservations without prepayment).
             - Default: `true` for transportation (flights/trains/ferries usually require upfront payment), `false` for accommodation and eateries.
-            12. Free Cancellation Deadline (`free_cancellation_until` in accommodation_details):
+            12. Free Cancellation Deadline (`free_cancellation_until`):
+            - Applies to ALL categories: accommodation_details, attraction_details, eatery_details, and transportation_details.
             - If the email mentions a free-cancellation cutoff (e.g., "free cancellation until March 5", "cancel by 18:00 on Apr 2 for no charge", "cancel by..."), set `free_cancellation_until` to that datetime in ISO 8601 format (YYYY-MM-DDTHH:mm:ss).
             - If no time is mentioned, use T00:00:00.
             - If no free-cancellation deadline exists, set to null.
@@ -363,12 +364,16 @@ def call_openai(html_text, allowed_types, geo_types):
                                         }},
             "eatery_details": {{ "establishment_name": "",
                                 "reservation_date":"","reservation_hour":"",
-                                "location_details": {{ "street": null, "city": null, "country": null }} }},
+                                "location_details": {{ "street": null, "city": null, "country": null }},
+                                "free_cancellation_until": "ISO8601|null"
+                                }},
             "attraction_details": {{ "attraction_name": "",
                                     "attraction_type":"",
                                     "cost": {{ "amount": 0, "currency": "" }},
                                 "reservation_date":"","reservation_hour":"",
-                                "location_details": {{ "street": null, "city": null, "country": null }} }},
+                                "location_details": {{ "street": null, "city": null, "country": null }},
+                                "free_cancellation_until": "ISO8601|null"
+                                }},
             "transportation_details": {{
                                 "cost": {{ "amount": 0, "currency": "" }},
                                 "segments": [
@@ -380,7 +385,8 @@ def call_openai(html_text, allowed_types, geo_types):
                                 "arrival_time": "ISO8601"
                                 }}
                                 ],
-                                "baggage_allowance": {{ "cabin_bag": "", "checked_bag": "" }}
+                                "baggage_allowance": {{ "cabin_bag": "", "checked_bag": "" }},
+                                "free_cancellation_until": "ISO8601|null"
                             }},
             "additional_info": {{ "summary": "", "raw_notes": "" }}
             }}"""

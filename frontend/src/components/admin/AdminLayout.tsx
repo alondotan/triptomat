@@ -31,7 +31,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <h1 className="text-lg font-bold text-foreground">Admin Dashboard</h1>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">{email}</span>
-            <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign out" aria-label="התנתק">
+            <Button variant="ghost" size="icon" onClick={handleSignOut} title="Sign out" aria-label="Sign out">
               <LogOut size={18} />
             </Button>
           </div>

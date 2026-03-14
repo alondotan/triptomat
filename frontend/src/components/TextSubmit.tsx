@@ -102,7 +102,7 @@ export function TextSubmit() {
               disabled={status === 'loading' || !webhookToken}
               className="min-h-[100px] text-sm"
               dir="auto"
-              aria-label="הזן טקסט"
+              aria-label="Enter text"
               name="text"
             />
             <div className="flex justify-end gap-2">

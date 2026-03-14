@@ -15,13 +15,13 @@ interface CountrySelectorProps {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  continent: 'יבשת',
-  region: 'אזור',
-  country: 'מדינה',
-  tourism_region: 'אזור תיירותי',
+  continent: 'Continent',
+  region: 'Region',
+  country: 'Country',
+  tourism_region: 'Tourism region',
 };
 
-export function CountrySelector({ value, onChange, placeholder = 'בחר יעדים...', className }: CountrySelectorProps) {
+export function CountrySelector({ value, onChange, placeholder = 'Choose destinations...', className }: CountrySelectorProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const { tree, loading, allCountries } = useWorldTree();
@@ -136,8 +136,8 @@ export function CountrySelector({ value, onChange, placeholder = 'בחר יעד�
           </div>
           {!isCountry && (
             <span className="text-xs text-muted-foreground">
-              {TYPE_LABELS[node.type] || node.type} · {countryCount} מדינות
-              {selectedCount > 0 && ` · ${selectedCount} נבחרו`}
+              {TYPE_LABELS[node.type] || node.type} · {countryCount} countries
+              {selectedCount > 0 && ` · ${selectedCount} selected`}
             </span>
           )}
         </div>
@@ -191,7 +191,7 @@ export function CountrySelector({ value, onChange, placeholder = 'בחר יעד�
           </div>
           <span className="text-xs text-muted-foreground">
             {TYPE_LABELS[node.type] || node.type}
-            {!isCountry && ` · ${countryCount} מדינות`}
+            {!isCountry && ` · ${countryCount} countries`}
           </span>
         </div>
       </CommandItem>
@@ -211,7 +211,7 @@ export function CountrySelector({ value, onChange, placeholder = 'בחר יעד�
             {value.length === 0 ? (
               <span className="text-muted-foreground">{placeholder}</span>
             ) : (
-              <span>{value.length} מדינ{value.length === 1 ? 'ה' : 'ות'} נבחרו</span>
+              <span>{value.length} {value.length === 1 ? 'country' : 'countries'} selected</span>
             )}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
@@ -219,7 +219,7 @@ export function CountrySelector({ value, onChange, placeholder = 'בחר יעד�
         <PopoverContent className="w-[340px] p-0 z-[1200]" align="start">
           <Command>
             <CommandInput
-              placeholder="חפש מדינה או אזור..."
+              placeholder="Search country or region..."
               value={search}
               onValueChange={setSearch}
             />
@@ -232,7 +232,7 @@ export function CountrySelector({ value, onChange, placeholder = 'בחר יעד�
                   onClick={goToRoot}
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  העולם
+                  World
                 </button>
                 {navPath.map((node, i) => (
                   <span key={node.name} className="flex items-center gap-1">
@@ -256,7 +256,7 @@ export function CountrySelector({ value, onChange, placeholder = 'בחר יעד�
             )}
 
             <CommandList>
-              <CommandEmpty>לא נמצאו תוצאות.</CommandEmpty>
+              <CommandEmpty>No results found.</CommandEmpty>
 
               {isSearching ? (
                 <CommandGroup className="max-h-[280px] overflow-auto">
@@ -268,7 +268,7 @@ export function CountrySelector({ value, onChange, placeholder = 'בחר יעד�
                   {navPath.length > 0 && (
                     <CommandItem onSelect={goBack} className="text-muted-foreground">
                       <ChevronRight className="h-4 w-4 ml-0 mr-2" />
-                      חזור
+                      Back
                     </CommandItem>
                   )}
 
@@ -279,7 +279,7 @@ export function CountrySelector({ value, onChange, placeholder = 'בחר יעד�
                       className="text-primary font-medium"
                     >
                       <Check className="h-4 w-4 ml-0 mr-2" />
-                      בחר הכל ({getCountryCount(currentNode!)} מדינות)
+                      Select all ({getCountryCount(currentNode!)} countries)
                     </CommandItem>
                   )}
 
@@ -300,7 +300,7 @@ export function CountrySelector({ value, onChange, placeholder = 'בחר יעד�
                 type="button"
                 onClick={() => removeCountry(country)}
                 className="ml-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-secondary-foreground/20"
-                aria-label="הסר מדינה"
+                aria-label="Remove country"
               >
                 <X className="h-3 w-3" />
               </button>

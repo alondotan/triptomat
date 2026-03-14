@@ -6,9 +6,9 @@ export interface TripDay {
   dayNum: number;        // 1-indexed
   date?: Date;           // Real date (detailed_planning only)
   dateStr?: string;      // "YYYY-MM-DD" (detailed_planning only)
-  label: string;         // "יום 1" or "Mon 15 Mar"
+  label: string;         // "Day 1" or "Mon 15 Mar"
   shortLabel: {
-    line1: string;       // "EEE" or "יום"
+    line1: string;       // "EEE" or "Day"
     line2: string;       // "d" or dayNum
     line3: string;       // "MMM" or ""
   };
@@ -46,9 +46,9 @@ export function useTripDays(): TripDay[] {
     if (status === 'planning' && activeTrip.numberOfDays) {
       return Array.from({ length: activeTrip.numberOfDays }, (_, i) => ({
         dayNum: i + 1,
-        label: `יום ${i + 1}`,
+        label: `Day ${i + 1}`,
         shortLabel: {
-          line1: 'יום',
+          line1: 'Day',
           line2: String(i + 1),
           line3: '',
         },

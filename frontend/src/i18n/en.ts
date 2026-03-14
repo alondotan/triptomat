@@ -540,7 +540,7 @@ const en = {
     days: '{{count}} days',
   },
 
-  // ── DndTest / Timeline ──
+  // ── Schedule / Timeline ──
   timeline: {
     wakeUp: 'Where I wake up',
     potentialActivities: 'Potential activities',

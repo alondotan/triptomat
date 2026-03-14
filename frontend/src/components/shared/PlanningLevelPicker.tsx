@@ -3,9 +3,9 @@ import { Search, CalendarDays, Calendar } from 'lucide-react';
 export type PlanningLevel = 'research' | 'planning' | 'detailed_planning';
 
 const options: { value: PlanningLevel; icon: React.ReactNode; title: string; desc: string }[] = [
-  { value: 'research', icon: <Search size={20} aria-hidden="true" />, title: 'מחקר', desc: 'אוסף מידע על יעד, בלי תאריכים' },
-  { value: 'planning', icon: <CalendarDays size={20} aria-hidden="true" />, title: 'תכנון', desc: 'יודע כמה ימים, בלי תאריכים מדויקים' },
-  { value: 'detailed_planning', icon: <Calendar size={20} aria-hidden="true" />, title: 'תכנון מפורט', desc: 'יש תאריכים מדויקים' },
+  { value: 'research', icon: <Search size={20} aria-hidden="true" />, title: 'Research', desc: 'Gathering info about a destination, no dates yet' },
+  { value: 'planning', icon: <CalendarDays size={20} aria-hidden="true" />, title: 'Planning', desc: 'Know how many days, no exact dates' },
+  { value: 'detailed_planning', icon: <Calendar size={20} aria-hidden="true" />, title: 'Detailed planning', desc: 'Have exact dates' },
 ];
 
 interface PlanningLevelPickerProps {

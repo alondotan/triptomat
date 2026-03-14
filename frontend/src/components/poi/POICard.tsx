@@ -11,7 +11,7 @@ function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes}'`;
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return m === 0 ? `${h}ש'` : `${h}:${m.toString().padStart(2, '0')}`;
+  return m === 0 ? `${h}h` : `${h}:${m.toString().padStart(2, '0')}`;
 }
 
 const STATUS_KEYS: Record<string, string> = {
@@ -29,7 +29,7 @@ interface POICardProps {
   level: 1 | 2 | 3;
   /** Level 2: enables inline editing of notes/duration */
   editable?: boolean;
-  /** Level 2 only: when provided, shows "הוסף תחבורה" button at bottom */
+  /** Level 2 only: when provided, shows "Add transport" button at bottom */
   onAddTransport?: () => void;
   /** Level 2: called when the card body is clicked (for map highlight). If provided, body click no longer opens the dialog. */
   onSelect?: () => void;

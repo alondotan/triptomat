@@ -31,6 +31,7 @@ interface WebhookPayload {
     reservation_date?: string;
     reservation_hour?: string;
     location_details: { street?: string | null; city?: string | null; country?: string | null };
+    free_cancellation_until?: string | null;
   };
   attraction_details?: {
     attraction_name: string;
@@ -39,6 +40,7 @@ interface WebhookPayload {
     reservation_date?: string;
     reservation_hour?: string;
     location_details: { street?: string | null; city?: string | null; country?: string | null };
+    free_cancellation_until?: string | null;
   };
   transportation_details?: {
     cost?: { amount: number; currency: string };
@@ -51,6 +53,7 @@ interface WebhookPayload {
       arrival_time: string;
     }>;
     baggage_allowance?: { cabin_bag?: string; checked_bag?: string };
+    free_cancellation_until?: string | null;
   };
   additional_info?: { summary?: string; raw_notes?: string };
   source_email_info?: {
@@ -513,6 +516,7 @@ Deno.serve(async (req) => {
               order_number: orderNumber,
               carrier_name: transport.segments?.[0]?.carrier,
               baggage_allowance: transport.baggage_allowance,
+              free_cancellation_until: transport.free_cancellation_until ?? null,
             },
             segments: builtSegments,
             additional_info: {},
@@ -577,6 +581,7 @@ Deno.serve(async (req) => {
               details: {
                 cost: cost ? { amount: cost.amount, currency: cost.currency } : undefined,
                 order_number: orderNumber,
+                free_cancellation_until: (details as any).free_cancellation_until ?? null,
                 booking: {
                   reservation_date: (details as any).reservation_date,
                   reservation_hour: (details as any).reservation_hour,

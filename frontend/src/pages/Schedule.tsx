@@ -63,7 +63,7 @@ interface Item {
   emoji: string;
   time?: string;   // time_window.start for timed activities
   sublabel?: string; // city / subCategory
-  remark?: string;   // e.g. "הזמין כרטיסים מראש"
+  remark?: string;   // e.g. "Book tickets in advance"
   poi?: PointOfInterest; // original POI object when item represents a POI
   isTimeBlock?: boolean; // named section divider
 }
@@ -134,10 +134,10 @@ function timeToMinutes(t: string): number {
 }
 
 function slotLabel(minutes: number): string {
-  if (minutes < 12 * 60) return 'בוקר';
-  if (minutes < 17 * 60) return 'צהריים';
-  if (minutes < 21 * 60) return 'ערב';
-  return 'לילה';
+  if (minutes < 12 * 60) return 'Morning';
+  if (minutes < 17 * 60) return 'Afternoon';
+  if (minutes < 21 * 60) return 'Evening';
+  return 'Night';
 }
 
 // Compute display label for a group given its position in the groups array
@@ -162,7 +162,7 @@ function groupLabel(groups: Group[], index: number): string {
 
   // Unlocked group: find surrounding locked neighbours
   const anyLocked = groups.some(g => g.isLocked);
-  if (!anyLocked) return 'זמן חופשי';
+  if (!anyLocked) return 'Free time';
 
   let prevTime: string | null = null;
   let nextTime: string | null = null;
@@ -182,7 +182,7 @@ function groupLabel(groups: Group[], index: number): string {
   } else if (prevTime && !nextTime) {
     mid = (timeToMinutes(prevTime) + 24 * 60) / 2; // slot ends at midnight
   } else {
-    return 'זמן חופשי';
+    return 'Free time';
   }
   return slotLabel(mid);
 }
@@ -229,7 +229,7 @@ function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeing
         <button
           onClick={onRemove}
           className="shrink-0 p-1.5 rounded-md text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
-          title="הסר מהלו״ז"
+          title="Remove from schedule"
         >
           <X size={14} />
         </button>
@@ -604,7 +604,7 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
       >
         <div className={`space-y-1 ${contentItems.length > 0 ? 'mt-0.5' : ''}`}>
           {contentItems.length === 0 && isOver && (
-            <p className="text-xs text-center py-2 text-primary/60">שחרר כאן</p>
+            <p className="text-xs text-center py-2 text-primary/60">Drop here</p>
           )}
           {contentItems.map((item, i) => {
             // Extract transport id from "trans_<transportId>_<segmentId>"
@@ -693,7 +693,7 @@ function DropGap({ index, active }: { index: number; active: boolean }) {
             : 'h-1'
       }`}
     >
-      {isOver && <p className="text-xs font-medium text-primary/80">שחרר כאן</p>}
+      {isOver && <p className="text-xs font-medium text-primary/80">Drop here</p>}
     </div>
   );
 }
@@ -718,7 +718,7 @@ function PotentialZone({ children, isScheduledDragging }: {
     >
       {isScheduledDragging && (
         <p className={`text-xs text-center py-1 ${isOver ? 'text-amber-500 font-medium' : 'text-muted-foreground/60'}`}>
-          {isOver ? '↩ שחרר להחזרה לפוטנציאל' : '↩ גרור לכאן להחזרה לפוטנציאל'}
+          {isOver ? '↩ Drop to return to potential' : '↩ Drag here to return to potential'}
         </p>
       )}
       {children}
@@ -752,7 +752,7 @@ function ScheduleZone({ children, activePotentialDrag, isEmpty }: {
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
-export default function DndTestPage() {
+export default function SchedulePage() {
   const { activeTrip, updateCurrentTrip } = useActiveTrip();
   const { updateTripInList } = useTripList();
   const { pois, addPOI, updatePOI } = usePOI();
@@ -788,16 +788,16 @@ export default function DndTestPage() {
   const handleResearchSubmit = async () => {
     if (!activeTrip) return;
     if (researchLevel === 'planning' && (!researchDays || Number(researchDays) < 1)) {
-      toast({ title: 'יש להזין מספר ימים', variant: 'destructive' });
+      toast({ title: 'Please enter number of days', variant: 'destructive' });
       return;
     }
     if (researchLevel === 'detailed_planning') {
       if (!researchStartDate || !researchEndDate) {
-        toast({ title: 'יש להזין תאריך התחלה וסיום', variant: 'destructive' });
+        toast({ title: 'Please enter start and end dates', variant: 'destructive' });
         return;
       }
       if (researchEndDate < researchStartDate) {
-        toast({ title: 'תאריך סיום חייב להיות אחרי תאריך התחלה', variant: 'destructive' });
+        toast({ title: 'End date must be after start date', variant: 'destructive' });
         return;
       }
     }
@@ -814,7 +814,7 @@ export default function DndTestPage() {
         updateTripInList({ id: activeTrip.id, ...updates } as typeof activeTrip & { id: string });
       }
     } catch {
-      toast({ title: 'שגיאה בעדכון', variant: 'destructive' });
+      toast({ title: 'Update failed', variant: 'destructive' });
     } finally {
       setResearchSubmitting(false);
     }
@@ -1307,7 +1307,7 @@ export default function DndTestPage() {
       if (createBookingMission) {
         await addMission({
           tripId: activeTrip.id,
-          title: `להזמין: ${data.name}`,
+          title: `Book: ${data.name}`,
           description: 'accommodation',
           status: 'pending',
           contextLinks: [],
@@ -1375,7 +1375,7 @@ export default function DndTestPage() {
       if (createBookingMission) {
         await addMission({
           tripId: activeTrip.id,
-          title: `להזמין: ${data.name}`,
+          title: `Book: ${data.name}`,
           description: data.category,
           status: 'pending',
           contextLinks: [],
@@ -1434,7 +1434,7 @@ export default function DndTestPage() {
       const itemId = `tblock_${a.id}`;
       const item: Item = {
         id: itemId,
-        label: a.label || 'חלון זמן',
+        label: a.label || 'Time window',
         emoji: '⏰',
         time: a.time_window?.start,
         isTimeBlock: true,
@@ -1467,7 +1467,7 @@ export default function DndTestPage() {
           time: timeLabel,
           sublabel: [transport.booking?.carrier_name, seg.flight_or_vessel_number]
             .filter(Boolean).join(' '),
-          remark: transport.booking ? 'הזמין מראש' : undefined,
+          remark: transport.booking ? 'Pre-booked' : undefined,
         };
         newScheduled.push(item);
         if (timeLabel) newLocked.add(itemId); // lock only if has a departure time
@@ -1711,7 +1711,7 @@ export default function DndTestPage() {
 
       // Transport segments cannot be moved across days
       if (itemId.startsWith('trans_')) {
-        addLog(`  ❌ סגמנט תחבורה לא ניתן להזזה`);
+        addLog(`  ❌ Transport segment cannot be moved`);
         return;
       }
 
@@ -1720,7 +1720,7 @@ export default function DndTestPage() {
 
       const sourceDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
       const targetDay = itineraryDays.find(d => d.dayNumber === targetDayNum);
-      if (!sourceDay || !targetDay) { addLog(`  ❌ יום לא נמצא`); return; }
+      if (!sourceDay || !targetDay) { addLog(`  ❌ Day not found`); return; }
 
       const newSourceActivities = sourceDay.activities.filter(a => a.id !== itemId);
       const nextOrder = targetDay.activities.length > 0
@@ -1745,10 +1745,10 @@ export default function DndTestPage() {
         updateItineraryDay(sourceDay.id, { activities: newSourceActivities }),
         updateItineraryDay(targetDay.id, { activities: newTargetActivities }),
       ]).then(() => {
-        addLog(`  📅 "${item.label}" → יום ${targetDayNum} ✓`);
+        addLog(`  📅 "${item.label}" → day ${targetDayNum} ✓`);
       }).catch(err => {
         console.error('Failed to move activity:', err);
-        addLog(`  ❌ שגיאה בשמירה`);
+        addLog(`  ❌ Save failed`);
       });
       return;
     }
@@ -1898,9 +1898,9 @@ export default function DndTestPage() {
             <div className="flex flex-col items-center justify-center py-8 gap-4 text-center max-w-md mx-auto">
               <CalendarDays size={40} className="text-muted-foreground/50" />
               <div className="space-y-1">
-                <h3 className="text-lg font-semibold">הגדרת ימי הטיול</h3>
+                <h3 className="text-lg font-semibold">Set trip days</h3>
                 <p className="text-sm text-muted-foreground">
-                  כדי לתכנן את לוח הזמנים, יש להגדיר את משך הטיול או תאריכים מדויקים.
+                  To plan the schedule, please set the trip duration or exact dates.
                 </p>
               </div>
               <div className="w-full space-y-4">
@@ -1908,7 +1908,7 @@ export default function DndTestPage() {
 
                 {researchLevel === 'planning' && (
                   <div className="flex items-center justify-center gap-3">
-                    <Label htmlFor="resDays" className="text-sm shrink-0">מספר ימים:</Label>
+                    <Label htmlFor="resDays" className="text-sm shrink-0">Number of days:</Label>
                     <Input
                       id="resDays"
                       type="number"
@@ -1920,7 +1920,7 @@ export default function DndTestPage() {
                       className="h-9 w-24"
                     />
                     <Button size="sm" onClick={handleResearchSubmit} disabled={researchSubmitting || !researchDays}>
-                      אישור
+                      Confirm
                     </Button>
                   </div>
                 )}
@@ -1928,7 +1928,7 @@ export default function DndTestPage() {
                 {researchLevel === 'detailed_planning' && (
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="resStart" className="text-sm shrink-0">מתאריך:</Label>
+                      <Label htmlFor="resStart" className="text-sm shrink-0">From:</Label>
                       <Input
                         id="resStart"
                         type="date"
@@ -1938,7 +1938,7 @@ export default function DndTestPage() {
                       />
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="resEnd" className="text-sm shrink-0">עד:</Label>
+                      <Label htmlFor="resEnd" className="text-sm shrink-0">To:</Label>
                       <Input
                         id="resEnd"
                         type="date"
@@ -1949,7 +1949,7 @@ export default function DndTestPage() {
                       />
                     </div>
                     <Button size="sm" onClick={handleResearchSubmit} disabled={researchSubmitting || !researchStartDate || !researchEndDate}>
-                      אישור
+                      Confirm
                     </Button>
                   </div>
                 )}
@@ -2010,7 +2010,7 @@ export default function DndTestPage() {
                     className="absolute top-0 h-full border border-dashed border-primary/40 rounded-md flex items-center justify-center px-2 text-[11px] text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                     style={{ left: `${selectedIdx * locationDayWidth}px`, width: `${locationDayWidth - 8}px` }}
                   >
-                    + מיקום
+                    + Location
                   </button>
                 )}
               </div>
@@ -2018,7 +2018,7 @@ export default function DndTestPage() {
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
           ) : (
-            <p className="text-xs text-muted-foreground">אין נסיעה פעילה</p>
+            <p className="text-xs text-muted-foreground">No active trip</p>
           )}
 
           {/* Location picker */}
@@ -2046,7 +2046,7 @@ export default function DndTestPage() {
               }`}
               onClick={() => setMobileTab('schedule')}
             >
-              לו&quot;ז
+              Schedule
             </button>
             <button
               className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
@@ -2056,7 +2056,7 @@ export default function DndTestPage() {
               }`}
               onClick={() => setMobileTab('map')}
             >
-              מפה
+              Map
             </button>
           </div>
 
@@ -2067,11 +2067,11 @@ export default function DndTestPage() {
           {isMobile && mobileTab === 'schedule' && (
             <div className="md:hidden shrink-0 mb-2">
               <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">
-                פוטנציאל ({potential.length})
+                Potential ({potential.length})
               </p>
               <PotentialZone isScheduledDragging={isScheduledDrag}>
                 {potential.length === 0 && !isScheduledDrag ? (
-                  <p className="text-xs text-muted-foreground py-2 text-center">כל הפריטים בלו"ז</p>
+                  <p className="text-xs text-muted-foreground py-2 text-center">All items are scheduled</p>
                 ) : (
                   <div className="space-y-1.5">
                     {potential.map(item => (
@@ -2102,7 +2102,7 @@ export default function DndTestPage() {
                 }))}
                 onAdd={addActivity}
                 onCreateNew={createNewActivity}
-                addLabel="הוסף פעילות"
+                addLabel="Add activity"
                 locationContext={currentDayLocation}
                 countries={activeTrip?.countries}
 
@@ -2116,11 +2116,11 @@ export default function DndTestPage() {
             {/* ── Column 1: Potential + Add activity (desktop only) ──────────── */}
             {!isMobile && <div className="space-y-3 md:overflow-y-auto md:min-h-0">
               <p className="text-xs font-bold uppercase tracking-widest text-amber-600">
-                פוטנציאל ({potential.length})
+                Potential ({potential.length})
               </p>
               <PotentialZone isScheduledDragging={isScheduledDrag}>
                 {potential.length === 0 && !isScheduledDrag && (
-                  <p className="text-xs text-muted-foreground py-4 text-center">כל הפריטים בלו"ז</p>
+                  <p className="text-xs text-muted-foreground py-4 text-center">All items are scheduled</p>
                 )}
                 {potential.map(item => (
                   <DraggableItem
@@ -2150,7 +2150,7 @@ export default function DndTestPage() {
                 }))}
                 onAdd={addActivity}
                 onCreateNew={createNewActivity}
-                addLabel="הוסף פעילות"
+                addLabel="Add activity"
                 locationContext={currentDayLocation}
                 countries={activeTrip?.countries}
 
@@ -2168,11 +2168,11 @@ export default function DndTestPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
                   <Sun size={13} className="text-warning shrink-0" />
-                  <p className="text-xs font-semibold text-warning">איפה אני קם</p>
+                  <p className="text-xs font-semibold text-warning">Where I wake up</p>
                 </div>
                 {selectedDayNum === 1 ? (
                   <div className="px-3 py-2.5 text-xs text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border/40">
-                    יום ראשון — נקודת הזינוק
+                    Day 1 — Starting point
                   </div>
                 ) : morningAccom ? (
                   <div
@@ -2189,7 +2189,7 @@ export default function DndTestPage() {
                   </div>
                 ) : (
                   <div className="px-3 py-2.5 text-xs text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border/40">
-                    לא הוגדרה לינה ליום {selectedDayNum - 1}
+                    No accommodation set for day {selectedDayNum - 1}
                   </div>
                 )}
               </div>
@@ -2204,11 +2204,11 @@ export default function DndTestPage() {
               {/* Scheduled itinerary */}
               <div className="space-y-1.5">
                 <p className="text-xs font-bold uppercase tracking-widest text-primary">
-                  לו"ז מסודר ({scheduled.length})
+                  Schedule ({scheduled.length})
                 </p>
                 <ScheduleZone activePotentialDrag={isPotentialDrag} isEmpty={scheduled.length === 0}>
                   {scheduled.length === 0 && !isPotentialDrag && (
-                    <p className="text-xs text-muted-foreground py-4 text-center">גרור פריט לכאן</p>
+                    <p className="text-xs text-muted-foreground py-4 text-center">Drag an item here</p>
                   )}
 
                   <div className="relative space-y-0.5">
@@ -2259,7 +2259,7 @@ export default function DndTestPage() {
                 {addingTimeBlock ? (
                   <div className="flex gap-1.5 items-center mt-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
                     <Input
-                      placeholder="שם החלון (למשל: ביקור בעיר)"
+                      placeholder="Window name (e.g. City tour)"
                       value={newTbLabel}
                       onChange={e => setNewTbLabel(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleAddTimeBlock(); if (e.key === 'Escape') { setAddingTimeBlock(false); setNewTbLabel(''); setNewTbTime(''); } }}
@@ -2286,7 +2286,7 @@ export default function DndTestPage() {
                     className="mt-2 w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground/60 hover:text-primary hover:bg-primary/5 border border-dashed border-primary/20 hover:border-primary/40 rounded-lg py-1.5 transition-colors"
                   >
                     <Clock size={12} />
-                    הוסף חלון זמן
+                    Add time window
                   </button>
                 )}
               </div>
@@ -2302,10 +2302,10 @@ export default function DndTestPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
                   <Moon size={13} className="text-info shrink-0" />
-                  <p className="text-xs font-semibold text-info">איפה אני ישן</p>
+                  <p className="text-xs font-semibold text-info">Where I sleep</p>
                 </div>
                 <DaySection
-                  title="איפה אני ישן"
+                  title="Where I sleep"
                   icon={<Moon size={12} />}
                   hideHeader
                   entityType="accommodation"
@@ -2329,7 +2329,7 @@ export default function DndTestPage() {
                   onCreateNew={createNewAccommodation}
                   onToggleSelected={toggleAccommodationSelected}
                   onOpen={setOpenedPoiId}
-                  addLabel="הוסף לינה"
+                  addLabel="Add accommodation"
                   maxNights={tripDays.length - selectedDayNum + 1}
                   showBookingMissionOption
                   locationContext={currentDayLocation}

@@ -72,6 +72,7 @@ export interface ActivityDetails {
 export interface POIDetails {
   cost?: POICost;
   order_number?: string;
+  free_cancellation_until?: string | null;
   bookings?: POIBooking[];
   accommodation_details?: AccommodationDetails;
   activity_details?: ActivityDetails;
@@ -107,6 +108,7 @@ export interface TransportBooking {
   order_number?: string;
   carrier_name?: string;
   baggage_allowance?: { cabin_bag?: string; checked_bag?: string };
+  free_cancellation_until?: string | null;
 }
 
 export interface TransportSegment {

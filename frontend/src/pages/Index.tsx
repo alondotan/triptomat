@@ -36,20 +36,20 @@ import { arrayMove } from '@dnd-kit/sortable';
 // ─── Smart label for untimed activity groups ──────────────────────────────────
 
 function getSmartLabel(prevTime?: string, nextTime?: string): string {
-  if (!prevTime && !nextTime) return 'זמן גמיש';
+  if (!prevTime && !nextTime) return 'Flexible time';
   if (!prevTime) {
     const h = parseInt(nextTime!.split(':')[0]);
-    return h <= 11 ? 'בוקר' : 'שעות היום';
+    return h <= 11 ? 'Morning' : 'Daytime';
   }
   if (!nextTime) {
     const h = parseInt(prevTime.split(':')[0]);
-    return h >= 19 ? 'לילה' : 'ערב';
+    return h >= 19 ? 'Night' : 'Evening';
   }
   const h1 = parseInt(prevTime.split(':')[0]);
   const h2 = parseInt(nextTime.split(':')[0]);
-  if (h1 < 12 && h2 >= 13) return 'צהריים';
-  if (h1 >= 13 && h1 < 17) return 'אחה"צ';
-  return 'הבא בתור';
+  if (h1 < 12 && h2 >= 13) return 'Afternoon';
+  if (h1 >= 13 && h1 < 17) return 'Late afternoon';
+  return 'Up next';
 }
 
 // ─── Droppable day pill ───────────────────────────────────────────────────────
@@ -702,7 +702,7 @@ const Index = () => {
       if (createBookingMission) {
         await addMission({
           tripId: activeTrip.id,
-          title: `להזמין: ${data.name}`,
+          title: `Book: ${data.name}`,
           description: data.category,
           status: 'pending',
           contextLinks: [],
@@ -737,7 +737,7 @@ const Index = () => {
       const label = `${data.fromName} → ${data.toName}`;
       await addMission({
         tripId: activeTrip.id,
-        title: `להזמין: ${label}`,
+        title: `Book: ${label}`,
         description: `${data.category || 'flight'}`,
         status: 'pending',
         contextLinks: [],
@@ -950,7 +950,7 @@ const Index = () => {
                   className="absolute top-0 h-full border border-dashed border-primary/40 rounded-md flex items-center justify-center px-2 text-[11px] text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                   style={{ left: `${selectedIdx * locationDayWidth}px`, width: `${locationDayWidth - 8}px` }}
                 >
-                  + מיקום
+                  + Location
                 </button>
               )}
             </div>
@@ -1004,7 +1004,7 @@ const Index = () => {
                   const poi = pois.find(p => p.id === id);
                   await addMission({
                     tripId: activeTrip.id,
-                    title: `להזמין: ${poi?.name || 'פעילות'}`,
+                    title: `Book: ${poi?.name || 'Activity'}`,
                     description: poi?.category || 'activity',
                     status: 'pending',
                     contextLinks: [],
@@ -1031,10 +1031,10 @@ const Index = () => {
                   const t = transportation.find(tr => tr.id === id);
                   const label = t && t.segments.length > 0
                     ? `${t.segments[0].from.name} → ${t.segments[t.segments.length - 1].to.name}`
-                    : t?.category || 'תחבורה';
+                    : t?.category || 'Transport';
                   await addMission({
                     tripId: activeTrip.id,
-                    title: `להזמין: ${label}`,
+                    title: `Book: ${label}`,
                     description: t?.category || 'transport',
                     status: 'pending',
                     contextLinks: [],
@@ -1061,7 +1061,7 @@ const Index = () => {
                   const poi = pois.find(p => p.id === id);
                   await addMission({
                     tripId: activeTrip.id,
-                    title: `להזמין: ${poi?.name || 'לינה'}`,
+                    title: `Book: ${poi?.name || 'Accommodation'}`,
                     description: 'accommodation',
                     status: 'pending',
                     contextLinks: [],

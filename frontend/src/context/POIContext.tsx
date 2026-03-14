@@ -83,7 +83,7 @@ export function POIProvider({ children }: { children: ReactNode }) {
       const { poi: result, merged } = await createOrMergePOI(poi);
       if (merged) {
         dispatch({ type: 'UPDATE_POI', payload: result });
-        toast({ title: 'מוזג עם מקום קיים', description: `"${result.name}" כבר קיים — המידע שהוספת שולב עמו.` });
+        toast({ title: 'Merged with existing item', description: `"${result.name}" already exists — your data was merged into it.` });
       } else {
         dispatch({ type: 'ADD_POI', payload: result });
       }
@@ -133,10 +133,10 @@ export function POIProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'UPDATE_POI', payload: merged });
       dispatch({ type: 'DELETE_POI', payload: secondaryId });
       // Itinerary realtime subscription will auto-sync
-      toast({ title: 'מוזג בהצלחה', description: `"${secondary.name}" מוזג לתוך "${primary.name}"` });
+      toast({ title: 'Merged successfully', description: `"${secondary.name}" merged into "${primary.name}"` });
     } catch (error) {
       console.error('Failed to merge POIs:', error);
-      toast({ title: 'שגיאה', description: 'המיזוג נכשל.', variant: 'destructive' });
+      toast({ title: 'Error', description: 'Merge failed.', variant: 'destructive' });
     }
   }, [state.pois, activeTrip, toast]);
 

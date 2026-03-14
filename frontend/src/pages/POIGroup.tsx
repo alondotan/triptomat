@@ -20,20 +20,20 @@ import type { PointOfInterest, POIStatus } from '@/types/trip';
 type SortBy = 'name' | 'updated_at' | 'created_at';
 
 const statusLabels: Record<string, string> = {
-  suggested: 'מוצע',
-  interested: 'מעניין',
-  planned: 'מתוכנן',
-  scheduled: 'בלו״ז',
-  booked: 'הוזמן',
-  visited: 'בוקר',
-  skipped: 'דילגתי',
+  suggested: 'Suggested',
+  interested: 'Interested',
+  planned: 'Planned',
+  scheduled: 'Scheduled',
+  booked: 'Booked',
+  visited: 'Visited',
+  skipped: 'Skipped',
 };
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes}'`;
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return m === 0 ? `${h}ש'` : `${h}:${m.toString().padStart(2, '0')}`;
+  return m === 0 ? `${h}h` : `${h}:${m.toString().padStart(2, '0')}`;
 }
 
 interface QuoteData {
@@ -100,7 +100,7 @@ const POIGroupPage = () => {
         poiPrimaryKey = poi.category;
       } else if (groupBy === 'location') {
         const city = poi.location.city?.toLowerCase() || '';
-        poiPrimaryKey = cityRegionMap[city] || poi.location.country || 'לא ידוע';
+        poiPrimaryKey = cityRegionMap[city] || poi.location.country || 'Unknown';
       } else {
         poiPrimaryKey = poi.status;
       }
@@ -108,12 +108,12 @@ const POIGroupPage = () => {
 
       if (!subKey) return true;
 
-      if (subKey === 'כללי') {
+      if (subKey === 'General') {
         const allInPrimary = nonAccommodationPois.filter(p => {
           if (groupBy === 'category') return p.category === primaryKey;
           if (groupBy === 'location') {
             const c = p.location.city?.toLowerCase() || '';
-            return (cityRegionMap[c] || p.location.country || 'לא ידוע') === primaryKey;
+            return (cityRegionMap[c] || p.location.country || 'Unknown') === primaryKey;
           }
           return p.status === primaryKey;
         });
@@ -457,7 +457,7 @@ const POIGroupPage = () => {
                         <span className="flex items-center gap-1">
                           <CalendarDays size={12} className="text-muted-foreground" />
                           {days.map(d => (
-                            <Badge key={d} variant="outline" className="text-[10px] px-1.5 py-0">יום {d}</Badge>
+                            <Badge key={d} variant="outline" className="text-[10px] px-1.5 py-0">Day {d}</Badge>
                           ))}
                         </span>
                       )}
@@ -483,7 +483,7 @@ const POIGroupPage = () => {
                               className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1"
                               onClick={e => e.stopPropagation()}
                             >
-                              <ExternalLink size={11} /> מקור
+                              <ExternalLink size={11} /> Source
                             </a>
                           )}
                         </div>

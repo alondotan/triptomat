@@ -192,20 +192,20 @@ export async function fetchTripWeather(
 }
 
 /**
- * Map WMO weather code to a human-readable description (Hebrew).
+ * Map WMO weather code to a human-readable description.
  * See: https://open-meteo.com/en/docs#weathervariables
  */
 export function weatherCodeToDescription(code: number): string {
-  if (code === 0) return 'שמיים בהירים';
-  if (code <= 3) return 'מעונן חלקית';
-  if (code <= 48) return 'ערפל';
-  if (code <= 57) return 'טפטוף';
-  if (code <= 67) return 'גשם';
-  if (code <= 77) return 'שלג';
-  if (code <= 82) return 'ממטרים';
-  if (code <= 86) return 'ממטרי שלג';
-  if (code >= 95) return 'סופת רעמים';
-  return 'לא ידוע';
+  if (code === 0) return 'Clear sky';
+  if (code <= 3) return 'Partly cloudy';
+  if (code <= 48) return 'Fog';
+  if (code <= 57) return 'Drizzle';
+  if (code <= 67) return 'Rain';
+  if (code <= 77) return 'Snow';
+  if (code <= 82) return 'Showers';
+  if (code <= 86) return 'Snow showers';
+  if (code >= 95) return 'Thunderstorm';
+  return 'Unknown';
 }
 
 /**

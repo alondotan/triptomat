@@ -17,13 +17,13 @@ import { useTripMode } from '@/hooks/useTripMode';
 import { TransportMiniMap } from '@/components/transport/TransportMiniMap';
 
 const statusLabels: Record<string, string> = {
-  suggested: 'מוצע',
-  interested: 'מעניין',
-  planned: 'מתוכנן',
-  scheduled: 'בלו״ז',
-  booked: 'הוזמן',
-  visited: 'בוקר',
-  skipped: 'דילגתי',
+  suggested: 'Suggested',
+  interested: 'Interested',
+  planned: 'Planned',
+  scheduled: 'Scheduled',
+  booked: 'Booked',
+  visited: 'Visited',
+  skipped: 'Skipped',
 };
 
 const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
@@ -103,6 +103,9 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
   const [orderNumber, setOrderNumber] = useState(transport.booking.order_number || '');
   const [carrierName, setCarrierName] = useState(transport.booking.carrier_name || '');
   const [notes, setNotes] = useState(transport.additionalInfo.notes || '');
+  const [freeCancellationUntil, setFreeCancellationUntil] = useState(
+    transport.booking.free_cancellation_until ? transport.booking.free_cancellation_until.slice(0, 16) : ''
+  );
   const [segments, setSegments] = useState<SegmentFormData[]>(segmentsToForm(transport));
 
   useEffect(() => {
@@ -114,6 +117,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
     setOrderNumber(transport.booking.order_number || '');
     setCarrierName(transport.booking.carrier_name || '');
     setNotes(transport.additionalInfo.notes || '');
+    setFreeCancellationUntil(transport.booking.free_cancellation_until ? transport.booking.free_cancellation_until.slice(0, 16) : '');
     setSegments(segmentsToForm(transport));
   }, [transport]);
 
@@ -151,7 +155,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
       category,
       status: isBooked ? 'booked' : (['visited', 'skipped'].includes(transport.status) ? transport.status : transport.status === 'booked' ? 'suggested' : transport.status),
       cost: { total_amount: costAmount ? parseFloat(costAmount) : 0, currency: costCurrency },
-      booking: { ...transport.booking, order_number: orderNumber || undefined, carrier_name: carrierName || undefined },
+      booking: { ...transport.booking, order_number: orderNumber || undefined, carrier_name: carrierName || undefined, free_cancellation_until: freeCancellationUntil ? `${freeCancellationUntil}:00` : null },
       segments: updatedSegments,
       additionalInfo: { ...transport.additionalInfo, notes: notes || undefined },
     };
@@ -169,6 +173,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
     setOrderNumber(transport.booking.order_number || '');
     setCarrierName(transport.booking.carrier_name || '');
     setNotes(transport.additionalInfo.notes || '');
+    setFreeCancellationUntil(transport.booking.free_cancellation_until ? transport.booking.free_cancellation_until.slice(0, 16) : '');
     setSegments(segmentsToForm(transport));
     onOpenChange(false);
   };
@@ -182,7 +187,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-card sm:max-w-6xl !flex !flex-col overflow-hidden sm:max-h-[85vh] max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0">
         <DialogHeader className="shrink-0">
-          <DialogTitle>עריכת תחבורה</DialogTitle>
+          <DialogTitle>Edit transport</DialogTitle>
         </DialogHeader>
         <div className="min-h-0 flex-1 sm:flex sm:flex-col max-sm:overflow-y-auto max-sm:pb-4">
           <div className="sm:grid sm:grid-cols-[2fr_auto_3fr_3fr] sm:gap-5 sm:flex-1 sm:min-h-0">
@@ -192,20 +197,20 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                 <div key={i}>
                   <div className="rounded-xl bg-secondary/50 p-3 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground">קטע {i + 1}</span>
+                      <span className="text-xs font-medium text-muted-foreground">Segment {i + 1}</span>
                       {segments.length > 1 && (
-                        <button type="button" onClick={() => removeSegment(i)} className="text-destructive/70 hover:text-destructive transition-colors p-0.5" aria-label="הסר מקטע">
+                        <button type="button" onClick={() => removeSegment(i)} className="text-destructive/70 hover:text-destructive transition-colors p-0.5" aria-label="Remove segment">
                           <Trash2 size={13} />
                         </button>
                       )}
                     </div>
                     <div className="grid grid-cols-[1fr_auto] gap-1.5">
-                      <Input value={seg.fromName} onChange={e => updateSegment(i, 'fromName', e.target.value)} placeholder="מוצא" className="h-7 text-sm bg-background/50" aria-label="שם מוצא" name={`detail-segment-${i}-fromName`} autoComplete="off" />
-                      <Input value={seg.fromCode} onChange={e => updateSegment(i, 'fromCode', e.target.value)} placeholder="קוד" className="h-7 text-sm w-14 bg-background/50 text-center" aria-label="קוד מוצא" name={`detail-segment-${i}-fromCode`} autoComplete="off" />
+                      <Input value={seg.fromName} onChange={e => updateSegment(i, 'fromName', e.target.value)} placeholder="Origin" className="h-7 text-sm bg-background/50" aria-label="Origin name" name={`detail-segment-${i}-fromName`} autoComplete="off" />
+                      <Input value={seg.fromCode} onChange={e => updateSegment(i, 'fromCode', e.target.value)} placeholder="Code" className="h-7 text-sm w-14 bg-background/50 text-center" aria-label="Origin code" name={`detail-segment-${i}-fromCode`} autoComplete="off" />
                     </div>
                     <div className="grid grid-cols-[1fr_auto] gap-1.5">
-                      <Input value={seg.toName} onChange={e => updateSegment(i, 'toName', e.target.value)} placeholder="יעד" className="h-7 text-sm bg-background/50" aria-label="שם יעד" name={`detail-segment-${i}-toName`} autoComplete="off" />
-                      <Input value={seg.toCode} onChange={e => updateSegment(i, 'toCode', e.target.value)} placeholder="קוד" className="h-7 text-sm w-14 bg-background/50 text-center" aria-label="קוד יעד" name={`detail-segment-${i}-toCode`} autoComplete="off" />
+                      <Input value={seg.toName} onChange={e => updateSegment(i, 'toName', e.target.value)} placeholder="Destination" className="h-7 text-sm bg-background/50" aria-label="Destination name" name={`detail-segment-${i}-toName`} autoComplete="off" />
+                      <Input value={seg.toCode} onChange={e => updateSegment(i, 'toCode', e.target.value)} placeholder="Code" className="h-7 text-sm w-14 bg-background/50 text-center" aria-label="Destination code" name={`detail-segment-${i}-toCode`} autoComplete="off" />
                     </div>
                     {!isResearch && (<>
                       <div className="grid grid-cols-2 gap-1.5 items-end">
@@ -229,7 +234,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                 </div>
               ))}
               <Button type="button" variant="ghost" size="sm" className="w-full gap-1 text-xs text-muted-foreground hover:text-foreground h-7" onClick={addSegment}>
-                <Plus size={13} /> הוסף קטע
+                <Plus size={13} /> Add segment
               </Button>
             </div>
 
@@ -243,7 +248,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Details</span>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label htmlFor="detail-transport-type" className="text-xs text-muted-foreground">סוג</Label>
+                    <Label htmlFor="detail-transport-type" className="text-xs text-muted-foreground">Type</Label>
                     <Select value={category} onValueChange={setCategory}>
                       <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -254,7 +259,7 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">סטטוס</Label>
+                    <Label className="text-xs text-muted-foreground">Status</Label>
                     <div className="h-8 flex items-center">
                       <Badge variant={transport.status === 'booked' ? 'default' : 'secondary'} className="text-xs">
                         {statusLabels[transport.status] || transport.status}
@@ -264,11 +269,11 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="space-y-1">
-                    <Label htmlFor="detail-transport-carrier" className="text-xs text-muted-foreground">מוביל</Label>
+                    <Label htmlFor="detail-transport-carrier" className="text-xs text-muted-foreground">Carrier</Label>
                     <Input id="detail-transport-carrier" name="carrierName" value={carrierName} onChange={e => setCarrierName(e.target.value)} className="h-8" autoComplete="off" />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="detail-transport-order" className="text-xs text-muted-foreground">מספר הזמנה</Label>
+                    <Label htmlFor="detail-transport-order" className="text-xs text-muted-foreground">Order number</Label>
                     <Input id="detail-transport-order" name="orderNumber" value={orderNumber} onChange={e => setOrderNumber(e.target.value)} className="h-8" autoComplete="off" />
                   </div>
                 </div>
@@ -291,12 +296,16 @@ export function TransportDetailDialog({ transport, open, onOpenChange }: Transpo
                   </div>
                 </div>
                 <div className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2.5">
-                  <Label htmlFor="transport-detail-is-booked" className="text-sm">הוזמן?</Label>
+                  <Label htmlFor="transport-detail-is-booked" className="text-sm">Booked?</Label>
                   <Switch id="transport-detail-is-booked" checked={isBooked} onCheckedChange={setIsBooked} />
                 </div>
                 <div className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2.5">
-                  <Label htmlFor="transport-detail-is-paid" className="text-sm">שולם?</Label>
+                  <Label htmlFor="transport-detail-is-paid" className="text-sm">Paid?</Label>
                   <Switch id="transport-detail-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="transport-detail-free-cancel" className="text-xs text-muted-foreground">{t('poiDetail.freeCancellationUntil')}</Label>
+                  <Input id="transport-detail-free-cancel" name="freeCancellationUntil" type="datetime-local" value={freeCancellationUntil} onChange={e => setFreeCancellationUntil(e.target.value)} className="h-8" />
                 </div>
               </div>
 

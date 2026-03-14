@@ -8,7 +8,7 @@ interface TripDaySelectProps {
   className?: string;
 }
 
-export function TripDaySelect({ value, onChange, placeholder = 'בחר יום...', className }: TripDaySelectProps) {
+export function TripDaySelect({ value, onChange, placeholder = 'Choose day...', className }: TripDaySelectProps) {
   const { activeTrip } = useActiveTrip();
   const numDays = activeTrip?.numberOfDays || 0;
 
@@ -18,7 +18,7 @@ export function TripDaySelect({ value, onChange, placeholder = 'בחר יום...
     <Select
       value={value ? String(value) : ''}
       onValueChange={(v) => onChange(v ? parseInt(v) : '')}
-      aria-label="בחר יום"
+      aria-label="Choose day"
     >
       <SelectTrigger className={className}>
         <SelectValue placeholder={placeholder} />
@@ -26,7 +26,7 @@ export function TripDaySelect({ value, onChange, placeholder = 'בחר יום...
       <SelectContent>
         {Array.from({ length: numDays }, (_, i) => i + 1).map((day) => (
           <SelectItem key={day} value={String(day)}>
-            יום {day}
+            Day {day}
           </SelectItem>
         ))}
       </SelectContent>

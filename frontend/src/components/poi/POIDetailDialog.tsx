@@ -75,11 +75,11 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const [checkoutHour, setCheckoutHour] = useState(poi.details.accommodation_details?.checkout?.hour || '');
   const [roomType, setRoomType] = useState(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
   const [occupancy, setOccupancy] = useState(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
-  const [freeCancellationUntil, setFreeCancellationUntil] = useState(
-    poi.details.accommodation_details?.free_cancellation_until
-      ? poi.details.accommodation_details.free_cancellation_until.slice(0, 16)
-      : ''
-  );
+  const [freeCancellationUntil, setFreeCancellationUntil] = useState(() => {
+    const val = poi.details.accommodation_details?.free_cancellation_until
+      || poi.details.free_cancellation_until;
+    return val ? val.slice(0, 16) : '';
+  });
 
   // Booking fields (multiple time slots)
   const [bookings, setBookings] = useState<Array<{ date: string; hour: string }>>(
@@ -120,6 +120,9 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
       hour: b.reservation_hour || '',
     })));
     setOrderNumber(poi.details.order_number || '');
+    const fcVal = poi.details.accommodation_details?.free_cancellation_until
+      || poi.details.free_cancellation_until;
+    setFreeCancellationUntil(fcVal ? fcVal.slice(0, 16) : '');
     const dur = poi.details.activity_details?.duration?.toString() || '';
     setDuration(dur);
     setIsCustomDuration(dur !== '' && !DURATION_PRESETS.includes(dur));
@@ -211,6 +214,9 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
         cost: costAmount ? { amount: parseFloat(costAmount), currency: costCurrency } : poi.details.cost,
         notes: notes ? { ...poi.details.notes, user_summary: notes } : poi.details.notes,
         order_number: orderNumber || poi.details.order_number,
+        free_cancellation_until: category !== 'accommodation'
+          ? (freeCancellationUntil ? `${freeCancellationUntil}:00` : null)
+          : poi.details.free_cancellation_until,
         bookings: bookings.filter(b => b.date).map(b => ({
           reservation_date: b.date,
           reservation_hour: b.hour || undefined,
@@ -360,6 +366,10 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
         <Label htmlFor="poi-detail-is-paid">{t('poiDetail.paid')}</Label>
         <Switch id="poi-detail-is-paid" checked={isPaid} onCheckedChange={setIsPaid} />
       </div>
+      <div className="space-y-1">
+        <Label>{t('poiDetail.freeCancellationUntil')}</Label>
+        <Input name="freeCancellationUntil" type="datetime-local" value={freeCancellationUntil} onChange={e => setFreeCancellationUntil(e.target.value)} />
+      </div>
     </div>
   );
 
@@ -402,10 +412,6 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           <Label>{t('poiDetail.occupancy')}</Label>
           <Input name="occupancy" value={occupancy} onChange={e => setOccupancy(e.target.value)} placeholder={t('poiDetail.occupancyPlaceholder')} />
         </div>
-      </div>
-      <div className="space-y-1">
-        <Label>{t('poiDetail.freeCancellationUntil')}</Label>
-        <Input name="freeCancellationUntil" type="datetime-local" value={freeCancellationUntil} onChange={e => setFreeCancellationUntil(e.target.value)} />
       </div>
     </div>
   );

@@ -538,7 +538,7 @@ const he = {
     days: '{{count}} ימים',
   },
 
-  // ── DndTest / Timeline ──
+  // ── Schedule / Timeline ──
   timeline: {
     wakeUp: 'איפה אני קם',
     potentialActivities: 'פעילויות פוטנציאליות',

@@ -114,7 +114,7 @@ export function TransportMiniMap({ points, className = '' }: TransportMiniMapPro
   if (markers.length === 0) {
     return (
       <div className={`rounded-xl bg-secondary/30 flex items-center justify-center text-xs text-muted-foreground ${className}`}>
-        הזן מיקומים כדי לראות מפה
+        Enter locations to see map
       </div>
     );
   }

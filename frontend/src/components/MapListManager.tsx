@@ -166,7 +166,7 @@ export function MapListManager() {
         {lists.map(list => (
           <div key={list.id} className="border rounded-md overflow-hidden">
             <div className="flex items-center gap-2 px-3 py-2 bg-muted/20">
-              <button type="button" className="flex items-center gap-1 flex-1 min-w-0 text-left bg-transparent border-0 p-0" aria-label={expanded[list.id] ? 'כווץ רשימה' : 'הרחב רשימה'} aria-expanded={!!expanded[list.id]} onClick={() => toggleExpand(list.id)}>
+              <button type="button" className="flex items-center gap-1 flex-1 min-w-0 text-left bg-transparent border-0 p-0" aria-label={expanded[list.id] ? 'Collapse list' : 'Expand list'} aria-expanded={!!expanded[list.id]} onClick={() => toggleExpand(list.id)}>
                 {expanded[list.id] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                 <span className="text-sm font-medium truncate">{list.name}</span>
                 <span className="text-xs text-muted-foreground ml-1 shrink-0">
@@ -175,7 +175,7 @@ export function MapListManager() {
               </button>
               <Button
                 variant="ghost" size="icon"
-                aria-label="סנכרן"
+                aria-label="Sync"
                 className="h-6 w-6 shrink-0"
                 onClick={() => handleSync(list)}
                 disabled={syncing[list.id] || !webhookToken}
@@ -185,9 +185,9 @@ export function MapListManager() {
               </Button>
               <Button
                 variant="ghost" size="icon"
-                aria-label="מחק"
+                aria-label="Delete"
                 className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
-                onClick={() => { if (window.confirm('האם למחוק?')) handleDelete(list.id); }}
+                onClick={() => { if (window.confirm('Delete this list?')) handleDelete(list.id); }}
                 title={t('mapListManager.removeList')}
               >
                 <Trash2 size={13} aria-hidden="true" />

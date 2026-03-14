@@ -55,12 +55,12 @@ export function LocationTreeDialog({ open, onOpenChange, hierarchy }: LocationTr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col" dir="rtl">
         <DialogHeader>
-          <DialogTitle>עץ מיקומים</DialogTitle>
+          <DialogTitle>Location tree</DialogTitle>
         </DialogHeader>
         <div className="overflow-y-auto flex-1 -mx-2 px-2">
           {hierarchy.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">
-              אין מיקומים עדיין. מיקומים יופיעו כאן לאחר עיבוד המלצות ומיילים.
+              No locations yet. Locations will appear here after processing recommendations and emails.
             </p>
           ) : (
             hierarchy.map((node) => (

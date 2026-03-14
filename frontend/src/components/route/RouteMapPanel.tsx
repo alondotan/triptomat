@@ -170,7 +170,7 @@ export function RouteMapPanel({
           <Button
             variant={defaultMode === 'car' ? 'default' : 'ghost'}
             size="sm"
-            aria-label="נהיגה"
+            aria-label="Driving"
             className="h-6 px-1.5 text-[11px]"
             onClick={() => onModeChange('car')}
           >
@@ -179,7 +179,7 @@ export function RouteMapPanel({
           <Button
             variant={defaultMode === 'walk' ? 'default' : 'ghost'}
             size="sm"
-            aria-label="הליכה"
+            aria-label="Walking"
             className="h-6 px-1.5 text-[11px]"
             onClick={() => onModeChange('walk')}
           >
@@ -204,7 +204,7 @@ export function RouteMapPanel({
           <Button
             variant="ghost"
             size="sm"
-            aria-label="איפוס"
+            aria-label="Reset"
             className="h-6 px-1.5 text-[11px] text-muted-foreground hover:text-destructive"
             onClick={onReset}
           >

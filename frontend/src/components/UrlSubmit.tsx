@@ -144,7 +144,7 @@ export function UrlSubmit() {
           onChange={e => setUrl(e.target.value)}
           disabled={status === 'loading' || !webhookToken}
           className="flex-1 text-sm"
-          aria-label="הזן כתובת URL"
+          aria-label="Enter URL"
           name="url"
           type="url"
           autoComplete="off"
