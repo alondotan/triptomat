@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
@@ -65,7 +65,7 @@ function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
 const MapPage = () => {
   const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
-  const { pois, addPOI, updatePOI } = usePOI();
+  const { pois, addPOI, updatePOI, deletePOI } = usePOI();
   const { transportation } = useTransport();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [legendOpen, setLegendOpen] = useState(false);
@@ -97,6 +97,7 @@ const MapPage = () => {
   const allPoiMarkers = useMemo(() => pois
     .filter(p => p.location.coordinates?.lat && p.location.coordinates?.lng)
     .map(p => ({
+      id: p.id,
       position: [p.location.coordinates!.lat, p.location.coordinates!.lng] as [number, number],
       name: p.name,
       sub: [p.subCategory ? getSubCategoryLabel(p.subCategory) : getCategoryLabel(p.category), p.location.city].filter(Boolean).join(' · '),
@@ -108,13 +109,6 @@ const MapPage = () => {
     ? allPoiMarkers
     : allPoiMarkers.filter(m => statusFilters.has(m.status));
 
-  // Status counts for filter badges
-  const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: allPoiMarkers.length };
-    allPoiMarkers.forEach(m => { counts[m.status] = (counts[m.status] || 0) + 1; });
-    return counts;
-  }, [allPoiMarkers]);
-
   // ── Map-attraction like (heart) ────────────────────────────
   const LIKED_STATUSES = ['interested', 'planned', 'scheduled', 'booked', 'visited'];
   const likedPlaceIds = useMemo(() => {
@@ -125,6 +119,52 @@ const MapPage = () => {
       mapData.topAttractions.filter(a => likedNames.has(a.name.toLowerCase())).map(a => a.id),
     );
   }, [pois, mapData.topAttractions]);
+
+  // Map top-attraction place IDs to their POI status (for filtering)
+  const placeIdToPoiStatus = useMemo(() => {
+    const map = new Map<string, POIStatus>();
+    for (const a of mapData.topAttractions) {
+      const poi = pois.find(p => p.name.toLowerCase() === a.name.toLowerCase());
+      if (poi) map.set(a.id, poi.status);
+    }
+    return map;
+  }, [pois, mapData.topAttractions]);
+
+  // Status counts for filter badges (POI markers + top attractions with POI status)
+  const statusCounts = useMemo(() => {
+    const counted = new Set<string>();
+    const counts: Record<string, number> = { all: 0 };
+    allPoiMarkers.forEach(m => {
+      counts[m.status] = (counts[m.status] || 0) + 1;
+      counts.all++;
+      counted.add(m.name.toLowerCase());
+    });
+    // Count top attractions that have a POI status but aren't already counted as POI markers
+    for (const a of mapData.topAttractions) {
+      if (counted.has(a.name.toLowerCase())) continue;
+      const poiStatus = placeIdToPoiStatus.get(a.id);
+      if (poiStatus) {
+        counts[poiStatus] = (counts[poiStatus] || 0) + 1;
+        counts.all++;
+      }
+    }
+    return counts;
+  }, [allPoiMarkers, mapData.topAttractions, placeIdToPoiStatus]);
+
+  // Filter top attractions based on status filter
+  const filteredTopAttractions = useMemo(() => {
+    if (statusFilters.has('all')) return mapData.topAttractions;
+    return mapData.topAttractions.filter(a => {
+      const poiStatus = placeIdToPoiStatus.get(a.id);
+      if (!poiStatus) return false;
+      return statusFilters.has(poiStatus);
+    });
+  }, [mapData.topAttractions, statusFilters, placeIdToPoiStatus]);
+
+  const handleDeleteAttractionPoi = useCallback(async (place: CountryPlace) => {
+    const existingPoi = pois.find(p => p.name.toLowerCase() === place.name.toLowerCase());
+    if (existingPoi) await deletePOI(existingPoi.id);
+  }, [pois, deletePOI]);
 
   const handleToggleAttractionLike = useCallback(async (place: CountryPlace) => {
     if (!activeTrip) return;
@@ -250,11 +290,12 @@ const MapPage = () => {
               currentNode={mapData.currentNode}
               currentBoundary={mapData.currentBoundary}
               childRegions={mapData.childRegions}
-              topAttractions={mapData.topAttractions}
+              topAttractions={filteredTopAttractions}
               typeIconMap={mapData.typeIconMap}
               navigateTo={mapData.navigateTo}
               likedPlaceIds={likedPlaceIds}
               onToggleLike={handleToggleAttractionLike}
+              onDeletePlace={handleDeleteAttractionPoi}
             />
 
             {/* Route lines */}
@@ -270,13 +311,22 @@ const MapPage = () => {
             ))}
 
             {/* POI markers */}
-            {poiMarkers.map((m, i) => (
-              <Marker key={`poi-${i}`} position={m.position} icon={createDotIcon(m.color)}>
+            {poiMarkers.map((m) => (
+              <Marker key={`poi-${m.id}`} position={m.position} icon={createDotIcon(m.color)}>
                 <Popup>
                   <div className="text-sm space-y-0.5">
-                    <div className="font-semibold">{m.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
+                      <div className="font-semibold">{m.name}</div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); deletePOI(m.id); }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, flexShrink: 0, color: '#ef4444', lineHeight: 0 }}
+                        title={t('common.delete')}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                     <div className="text-muted-foreground text-xs">{m.sub}</div>
-                    <div className="text-xs capitalize" style={{ color: m.color }}>{m.status}</div>
+                    <div className="text-xs capitalize" style={{ color: m.color }}>{t(`status.${m.status}`)}</div>
                   </div>
                 </Popup>
               </Marker>
