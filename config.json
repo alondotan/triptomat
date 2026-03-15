@@ -5,2926 +5,5098 @@
       "icon": "public",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Continent"
+      "spatial_type": "area",
+      "names": {
+        "en": "Continent",
+        "he": "יבשת"
+      }
     },
     {
       "type": "country",
       "icon": "flag",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Country"
+      "spatial_type": "area",
+      "names": {
+        "en": "Country",
+        "he": "מדינה"
+      }
     },
     {
       "type": "square",
       "icon": "crop_square",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Square"
+      "spatial_type": "area",
+      "names": {
+        "en": "Square",
+        "he": "כיכר"
+      }
     },
     {
       "type": "plaza",
       "icon": "crop_square",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Plaza"
+      "spatial_type": "area",
+      "names": {
+        "en": "Plaza",
+        "he": "פלזה"
+      }
     },
     {
       "type": "street",
       "icon": "signpost",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Street"
+      "spatial_type": "area",
+      "names": {
+        "en": "Street",
+        "he": "רחוב"
+      }
     },
     {
       "type": "avenue",
       "icon": "signpost",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Avenue"
+      "spatial_type": "area",
+      "names": {
+        "en": "Avenue",
+        "he": "שדרה"
+      }
     },
     {
       "type": "boulevard",
       "icon": "signpost",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Boulevard"
+      "spatial_type": "area",
+      "names": {
+        "en": "Boulevard",
+        "he": "שדרה"
+      }
     },
     {
       "type": "alley",
       "icon": "turn_right",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Alley"
+      "spatial_type": "area",
+      "names": {
+        "en": "Alley",
+        "he": "סמטה"
+      }
     },
     {
       "type": "lane",
       "icon": "turn_slight_right",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Lane"
+      "spatial_type": "area",
+      "names": {
+        "en": "Lane",
+        "he": "סמטה"
+      }
     },
     {
       "type": "promenade",
       "icon": "directions_walk",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Promenade"
+      "spatial_type": "area",
+      "names": {
+        "en": "Promenade",
+        "he": "טיילת"
+      }
     },
     {
       "type": "waterfront",
       "icon": "waves",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Waterfront"
+      "spatial_type": "area",
+      "names": {
+        "en": "Waterfront",
+        "he": "קו חוף"
+      }
     },
     {
       "type": "esplanade",
       "icon": "directions_walk",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Esplanade"
+      "spatial_type": "area",
+      "names": {
+        "en": "Esplanade",
+        "he": "טיילת"
+      }
     },
     {
       "type": "roundabout",
       "icon": "roundabout_right",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Roundabout"
+      "spatial_type": "point",
+      "names": {
+        "en": "Roundabout",
+        "he": "כיכר"
+      }
     },
     {
       "type": "intersection",
       "icon": "alt_route",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Intersection"
+      "spatial_type": "point",
+      "names": {
+        "en": "Intersection",
+        "he": "צומת"
+      }
     },
     {
       "type": "bridge",
       "icon": "castle",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Bridge"
+      "spatial_type": "point",
+      "names": {
+        "en": "Bridge",
+        "he": "גשר"
+      }
     },
     {
       "type": "tunnel",
       "icon": "subway",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Tunnel"
+      "spatial_type": "point",
+      "names": {
+        "en": "Tunnel",
+        "he": "מנהרה"
+      }
     },
     {
       "type": "overpass",
       "icon": "north",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Overpass"
+      "spatial_type": "point",
+      "names": {
+        "en": "Overpass",
+        "he": "גשר עילי"
+      }
     },
     {
       "type": "underpass",
       "icon": "south",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Underpass"
+      "spatial_type": "point",
+      "names": {
+        "en": "Underpass",
+        "he": "מעבר תת קרקעי"
+      }
     },
     {
       "type": "stairs",
       "icon": "stairs",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Stairs"
+      "spatial_type": "point",
+      "names": {
+        "en": "Stairs",
+        "he": "מדרגות"
+      }
     },
     {
       "type": "path",
       "icon": "hiking",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Path"
+      "spatial_type": "point",
+      "names": {
+        "en": "Path",
+        "he": "דרך"
+      }
     },
     {
       "type": "walkway",
       "icon": "directions_walk",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Walkway"
+      "spatial_type": "point",
+      "names": {
+        "en": "Walkway",
+        "he": "שביל הליכה"
+      }
     },
     {
       "type": "pier",
       "icon": "directions_boat",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Pier"
+      "spatial_type": "point",
+      "names": {
+        "en": "Pier",
+        "he": "מזח"
+      }
     },
     {
       "type": "quay",
       "icon": "anchor",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Quay"
+      "spatial_type": "point",
+      "names": {
+        "en": "Quay",
+        "he": "רציף"
+      }
     },
     {
       "type": "embankment",
       "icon": "waves",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Embankment"
+      "spatial_type": "area",
+      "names": {
+        "en": "Embankment",
+        "he": "טיילת נהר"
+      }
     },
     {
       "type": "county",
       "icon": "map",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "County"
+      "spatial_type": "area",
+      "names": {
+        "en": "County",
+        "he": "מחוז"
+      }
     },
     {
       "type": "republic",
       "icon": "public",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Republic"
+      "spatial_type": "area",
+      "names": {
+        "en": "Republic",
+        "he": "רפובליקה"
+      }
     },
     {
       "type": "oblast",
       "icon": "domain",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Oblast"
+      "spatial_type": "area",
+      "names": {
+        "en": "Oblast",
+        "he": "אובלסט"
+      }
     },
     {
       "type": "borough",
       "icon": "location_city",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Borough"
+      "spatial_type": "area",
+      "names": {
+        "en": "Borough",
+        "he": "רובע"
+      }
+    },
+    {
+      "type": "quarter",
+      "icon": "location_city",
+      "category": "Geography",
+      "is_geo_location": true,
+      "spatial_type": "area",
+      "names": {
+        "en": "Quarter",
+        "he": "רובע"
+      }
     },
     {
       "type": "federal_entity",
       "icon": "account_balance",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Federal Entity"
+      "spatial_type": "area",
+      "names": {
+        "en": "Federal Entity",
+        "he": "ישות פדרלית"
+      }
     },
     {
       "type": "autonomous_community",
       "icon": "groups",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Autonomous Community"
+      "spatial_type": "area",
+      "names": {
+        "en": "Autonomous Community",
+        "he": "קהילה אוטונומית"
+      }
     },
     {
       "type": "canton",
       "icon": "map",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Canton"
+      "spatial_type": "area",
+      "names": {
+        "en": "Canton",
+        "he": "קנטון"
+      }
     },
     {
       "type": "voivodeship",
       "icon": "terrain",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Voivodeship"
+      "spatial_type": "area",
+      "names": {
+        "en": "Voivodeship",
+        "he": "וויבודשיפ"
+      }
     },
     {
       "type": "capital_city",
       "icon": "location_city",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Capital City"
+      "spatial_type": "area",
+      "names": {
+        "en": "Capital City",
+        "he": "עיר בירה"
+      }
     },
     {
       "type": "entity",
       "icon": "category",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Entity"
+      "spatial_type": "area",
+      "names": {
+        "en": "Entity",
+        "he": "ישות"
+      }
     },
     {
       "type": "federal_city",
       "icon": "apartment",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Federal City"
+      "spatial_type": "area",
+      "names": {
+        "en": "Federal City",
+        "he": "עיר פדרלית"
+      }
     },
     {
       "type": "state",
       "icon": "map",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "State"
+      "spatial_type": "area",
+      "names": {
+        "en": "State",
+        "he": "מדינה"
+      }
     },
     {
       "type": "province",
       "icon": "architecture",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Province"
+      "spatial_type": "area",
+      "names": {
+        "en": "Province",
+        "he": "פרובינציה"
+      }
     },
     {
       "type": "territory",
       "icon": "terrain",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Territory"
+      "spatial_type": "area",
+      "names": {
+        "en": "Territory",
+        "he": "טריטוריה"
+      }
     },
     {
       "type": "region",
       "icon": "explore",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Region"
+      "spatial_type": "area",
+      "names": {
+        "en": "Region",
+        "he": "אזור"
+      }
     },
     {
       "type": "tourism_region",
       "icon": "travel",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Tourism Region"
+      "spatial_type": "area",
+      "names": {
+        "en": "Tourism Region",
+        "he": "אזור תיירות"
+      }
     },
     {
       "type": "metropolitan_area",
       "icon": "location_city",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Metropolitan Area"
+      "spatial_type": "area",
+      "names": {
+        "en": "Metropolitan Area",
+        "he": "אזור מטרופוליטני"
+      }
     },
     {
       "type": "municipality",
       "icon": "account_balance",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Municipality"
+      "spatial_type": "area",
+      "names": {
+        "en": "Municipality",
+        "he": "רשות מוניציפלית"
+      }
     },
     {
       "type": "city",
       "icon": "location_city",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "City"
+      "spatial_type": "area",
+      "names": {
+        "en": "City",
+        "he": "עיר"
+      }
     },
     {
       "type": "town",
       "icon": "home",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Town"
+      "spatial_type": "area",
+      "names": {
+        "en": "Town",
+        "he": "עיירה"
+      }
     },
     {
       "type": "village",
       "icon": "holiday_village",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Village"
+      "spatial_type": "area",
+      "names": {
+        "en": "Village",
+        "he": "כפר"
+      }
     },
     {
       "type": "suburb",
       "icon": "home_work",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Suburb"
+      "spatial_type": "area",
+      "names": {
+        "en": "Suburb",
+        "he": "פרבר"
+      }
     },
     {
       "type": "district",
       "icon": "grid_view",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "District"
+      "spatial_type": "area",
+      "names": {
+        "en": "District",
+        "he": "מחוז"
+      }
     },
     {
       "type": "neighborhood",
       "icon": "reorder",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Neighborhood"
+      "spatial_type": "area",
+      "names": {
+        "en": "Neighborhood",
+        "he": "שכונה"
+      }
     },
     {
       "type": "pedestrian_zone",
       "icon": "directions_walk",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Pedestrian Zone"
+      "spatial_type": "area",
+      "names": {
+        "en": "Pedestrian Zone",
+        "he": "אזור הולכי רגל"
+      }
     },
     {
       "type": "historic_district",
       "icon": "location_city",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Historic District"
+      "spatial_type": "area",
+      "names": {
+        "en": "Historic District",
+        "he": "רובע היסטורי"
+      }
     },
     {
       "type": "department",
       "icon": "business_center",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Department"
+      "spatial_type": "area",
+      "names": {
+        "en": "Department",
+        "he": "מחוז"
+      }
     },
     {
       "type": "township",
       "icon": "location_city",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Township"
+      "spatial_type": "area",
+      "names": {
+        "en": "Township",
+        "he": "יישוב"
+      }
     },
     {
       "type": "governorate",
       "icon": "gavel",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Governorate"
+      "spatial_type": "area",
+      "names": {
+        "en": "Governorate",
+        "he": "מחוז"
+      }
     },
     {
       "type": "metropolis",
       "icon": "location_city",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Metropolis"
+      "spatial_type": "area",
+      "names": {
+        "en": "Metropolis",
+        "he": "מטרופולין"
+      }
     },
     {
       "type": "prefecture",
       "icon": "map",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Prefecture"
+      "spatial_type": "area",
+      "names": {
+        "en": "Prefecture",
+        "he": "מחוז"
+      }
     },
     {
       "type": "area",
       "icon": "place",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Area"
+      "spatial_type": "area",
+      "names": {
+        "en": "Area",
+        "he": "אזור"
+      }
     },
     {
       "type": "atoll",
       "icon": "waves",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Atoll"
+      "spatial_type": "area",
+      "names": {
+        "en": "Atoll",
+        "he": "אטול"
+      }
     },
     {
       "type": "other_geography",
       "icon": "more_horiz",
       "category": "Geography",
       "is_geo_location": true,
-      "name": "Other Geography"
+      "spatial_type": "area",
+      "names": {
+        "en": "Other Geography",
+        "he": "גיאוגרפיה אחרת"
+      }
     },
     {
       "type": "river",
       "icon": "water",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "River"
+      "spatial_type": "area",
+      "names": {
+        "en": "River",
+        "he": "נהר"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "delta",
       "icon": "waves",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Delta"
+      "spatial_type": "area",
+      "names": {
+        "en": "Delta",
+        "he": "דלתא"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "fjord",
       "icon": "landscape",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Fjord"
+      "spatial_type": "area",
+      "names": {
+        "en": "Fjord",
+        "he": "פיורד"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "plateau",
       "icon": "terrain",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Plateau"
+      "spatial_type": "area",
+      "names": {
+        "en": "Plateau",
+        "he": "רמה"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "desert",
       "icon": "wb_sunny",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Desert"
+      "spatial_type": "area",
+      "names": {
+        "en": "Desert",
+        "he": "מדבר"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "glacier",
       "icon": "ac_unit",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Glacier"
+      "spatial_type": "area",
+      "names": {
+        "en": "Glacier",
+        "he": "קרחון"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "reef",
       "icon": "waves",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Reef"
+      "spatial_type": "area",
+      "names": {
+        "en": "Reef",
+        "he": "ריף"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "peninsula",
       "icon": "explore",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Peninsula"
+      "spatial_type": "area",
+      "names": {
+        "en": "Peninsula",
+        "he": "חצי אי"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "harbor",
       "icon": "anchor",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Harbor"
+      "spatial_type": "point",
+      "names": {
+        "en": "Harbor",
+        "he": "נמל"
+      },
+      "categoryGroup": "landmarks"
     },
     {
       "type": "old_town",
       "icon": "account_balance",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Old Town"
+      "spatial_type": "area",
+      "names": {
+        "en": "Old Town",
+        "he": "עיר עתיקה"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "monastery",
       "icon": "church",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Monastery"
+      "spatial_type": "point",
+      "names": {
+        "en": "Monastery",
+        "he": "מנזר"
+      },
+      "categoryGroup": "religious"
+    },
+    {
+      "type": "church",
+      "icon": "church",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Church",
+        "he": "כנסיה"
+      },
+      "categoryGroup": "religious"
+    },
+    {
+      "type": "synagogue",
+      "icon": "synagogue",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Synagogue",
+        "he": "בית כנסת"
+      },
+      "categoryGroup": "religious"
+    },
+    {
+      "type": "mosque",
+      "icon": "mosque",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Mosque",
+        "he": "מסגד"
+      },
+      "categoryGroup": "religious"
+    },
+    {
+      "type": "shrine",
+      "icon": "temple_buddhist",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Shrine",
+        "he": "מקדש קטן"
+      },
+      "categoryGroup": "religious"
+    },
+    {
+      "type": "pagoda",
+      "icon": "temple_hindu",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Pagoda",
+        "he": "פגודה"
+      },
+      "categoryGroup": "religious"
     },
     {
       "type": "mountain_range",
       "icon": "terrain",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Mountain Range"
+      "spatial_type": "area",
+      "names": {
+        "en": "Mountain Range",
+        "he": "רכס הרים"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "valley",
       "icon": "layers",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Valley"
+      "spatial_type": "area",
+      "names": {
+        "en": "Valley",
+        "he": "עמק"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "canyon",
       "icon": "landscape",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Canyon"
+      "spatial_type": "area",
+      "names": {
+        "en": "Canyon",
+        "he": "קניון"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "volcano",
       "icon": "whatshot",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Volcano"
+      "spatial_type": "point",
+      "names": {
+        "en": "Volcano",
+        "he": "הר געש"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "waterfall",
       "icon": "waterfall_chart",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Waterfall"
+      "spatial_type": "point",
+      "names": {
+        "en": "Waterfall",
+        "he": "מפל"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "lagoon",
       "icon": "water",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Lagoon"
+      "spatial_type": "area",
+      "names": {
+        "en": "Lagoon",
+        "he": "לגונה"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "bay",
       "icon": "water",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Bay"
+      "spatial_type": "area",
+      "names": {
+        "en": "Bay",
+        "he": "מפרץ"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "lake",
       "icon": "water",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Lake"
+      "spatial_type": "area",
+      "names": {
+        "en": "Lake",
+        "he": "אגם"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "coastline",
       "icon": "beach_access",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Coastline"
+      "spatial_type": "area",
+      "names": {
+        "en": "Coastline",
+        "he": "חוף"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "national_park_area",
       "icon": "park",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "National Park Area"
+      "spatial_type": "area",
+      "names": {
+        "en": "National Park Area",
+        "he": "אזור פארק לאומי"
+      },
+      "categoryGroup": "parks_gardens"
     },
     {
       "type": "nature_reserve_area",
       "icon": "nature",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Nature Reserve Area"
+      "spatial_type": "area",
+      "names": {
+        "en": "Nature Reserve Area",
+        "he": "אזור שמורת טבע"
+      },
+      "categoryGroup": "parks_gardens"
     },
     {
       "type": "transit_hub_area",
       "icon": "hub",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Transit Hub Area"
+      "spatial_type": "point",
+      "names": {
+        "en": "Transit Hub Area",
+        "he": "אזור מרכז תחבורה"
+      },
+      "categoryGroup": "landmarks"
     },
     {
       "type": "resort_complex",
       "icon": "apartment",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Resort Complex"
+      "spatial_type": "area",
+      "names": {
+        "en": "Resort Complex",
+        "he": "ריזורט"
+      },
+      "categoryGroup": "landmarks"
     },
     {
       "type": "itinerary_route",
       "icon": "moving",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Itinerary Route"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Itinerary Route",
+        "he": "מסלול תכנון"
+      },
+      "categoryGroup": "landmarks"
     },
     {
       "type": "border_crossing",
       "icon": "door_front",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Border Crossing"
+      "spatial_type": "point",
+      "names": {
+        "en": "Border Crossing",
+        "he": "מעבר גבול"
+      },
+      "categoryGroup": "landmarks"
     },
     {
       "type": "point_of_interest",
       "icon": "location_on",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Point Of Interest"
+      "spatial_type": "point",
+      "names": {
+        "en": "Point Of Interest",
+        "he": "נקודת עניין"
+      },
+      "categoryGroup": "urban"
     },
     {
       "type": "reserve_area",
       "icon": "nature_people",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Reserve Area"
+      "spatial_type": "area",
+      "names": {
+        "en": "Reserve Area",
+        "he": "אזור מוגן"
+      },
+      "categoryGroup": "parks_gardens"
     },
     {
       "type": "forest_area",
       "icon": "park",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Forest Area"
+      "spatial_type": "area",
+      "names": {
+        "en": "Forest Area",
+        "he": "אזור יער"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "cave_area",
       "icon": "alt_route",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Cave Area"
+      "spatial_type": "area",
+      "names": {
+        "en": "Cave Area",
+        "he": "אזור מערות"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "market",
       "icon": "storefront",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Market"
+      "spatial_type": "point",
+      "names": {
+        "en": "Market",
+        "he": "שוק"
+      },
+      "categoryGroup": "urban"
+    },
+    {
+      "type": "night market",
+      "icon": "store",
+      "category": "Geography",
+      "is_geo_location": true,
+      "hebrew": "שוק לילה"
     },
     {
       "type": "park",
       "icon": "park",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Park"
+      "spatial_type": "area",
+      "names": {
+        "en": "Park",
+        "he": "פארק"
+      },
+      "categoryGroup": "parks_gardens"
     },
     {
       "type": "landmark",
       "icon": "landscape",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Landmark"
+      "spatial_type": "point",
+      "names": {
+        "en": "Landmark",
+        "he": "נקודת ציון"
+      },
+      "categoryGroup": "landmarks"
     },
     {
       "type": "natural",
       "icon": "eco",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Natural"
+      "spatial_type": "point",
+      "names": {
+        "en": "Natural",
+        "he": "טבע"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "historical",
       "icon": "history",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Historical"
+      "spatial_type": "point",
+      "names": {
+        "en": "Historical",
+        "he": "היסטורי"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "cultural",
       "icon": "palette",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Cultural"
+      "spatial_type": "point",
+      "names": {
+        "en": "Cultural",
+        "he": "תרבות"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "amusement",
       "icon": "emoji_objects",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Amusement"
+      "spatial_type": "point",
+      "names": {
+        "en": "Amusement",
+        "he": "שעשועים"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "beach",
       "icon": "beach_access",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Beach"
+      "spatial_type": "area",
+      "names": {
+        "en": "Beach",
+        "he": "חוף"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "mountain",
       "icon": "landscape",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Mountain"
+      "spatial_type": "point",
+      "names": {
+        "en": "Mountain",
+        "he": "הר"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "wildlife",
       "icon": "pets",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Wildlife"
+      "spatial_type": "point",
+      "names": {
+        "en": "Wildlife",
+        "he": "חיות בר"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "adventure",
       "icon": "directions_bike",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Adventure"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Adventure",
+        "he": "הרפתקה"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "religious",
       "icon": "star",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Religious"
+      "spatial_type": "point",
+      "names": {
+        "en": "Religious",
+        "he": "דתי"
+      },
+      "categoryGroup": "religious"
     },
     {
       "type": "architectural",
       "icon": "architecture",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Architectural"
+      "spatial_type": "point",
+      "names": {
+        "en": "Architectural",
+        "he": "אדריכלות"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "underwater",
       "icon": "scuba_diving",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Underwater"
+      "spatial_type": "point",
+      "names": {
+        "en": "Underwater",
+        "he": "תת ימי"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "national_park",
       "icon": "nature",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "National Park"
+      "spatial_type": "area",
+      "names": {
+        "en": "National Park",
+        "he": "פארק לאומי"
+      },
+      "categoryGroup": "parks_gardens"
     },
     {
       "type": "scenic",
       "icon": "panorama",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Scenic"
+      "spatial_type": "point",
+      "names": {
+        "en": "Scenic",
+        "he": "נוף"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "museum",
       "icon": "museum",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Museum"
+      "spatial_type": "point",
+      "names": {
+        "en": "Museum",
+        "he": "מוזיאון"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "shopping",
       "icon": "shopping_basket",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Shopping"
+      "spatial_type": "point",
+      "names": {
+        "en": "Shopping",
+        "he": "קניות"
+      },
+      "categoryGroup": "urban"
     },
     {
       "type": "zoo",
       "icon": "pets",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Zoo"
+      "spatial_type": "point",
+      "names": {
+        "en": "Zoo",
+        "he": "גן חיות"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "theme_park",
       "icon": "roller_skating",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Theme Park"
+      "spatial_type": "point",
+      "names": {
+        "en": "Theme Park",
+        "he": "פארק שעשועים"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "botanical_garden",
       "icon": "nature_people",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Botanical Garden"
+      "spatial_type": "area",
+      "names": {
+        "en": "Botanical Garden",
+        "he": "גן בוטני"
+      },
+      "categoryGroup": "parks_gardens"
     },
     {
       "type": "sports",
       "icon": "sports_basketball",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Sports"
+      "spatial_type": "point",
+      "names": {
+        "en": "Sports",
+        "he": "ספורט"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "music",
       "icon": "music_note",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Music"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Music",
+        "he": "מוזיקה"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "art",
       "icon": "brush",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Art"
+      "spatial_type": "point",
+      "names": {
+        "en": "Art",
+        "he": "אומנות"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "nightlife",
       "icon": "nights_stay",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Nightlife"
+      "spatial_type": "point",
+      "names": {
+        "en": "Nightlife",
+        "he": "חיי לילה"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "spa",
       "icon": "spa",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Spa"
+      "spatial_type": "point",
+      "names": {
+        "en": "Spa",
+        "he": "ספא"
+      },
+      "categoryGroup": "wellness"
     },
     {
       "type": "casino",
       "icon": "casino",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Casino"
+      "spatial_type": "point",
+      "names": {
+        "en": "Casino",
+        "he": "קזינו"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "viewpoint",
       "icon": "visibility",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Viewpoint"
+      "spatial_type": "point",
+      "names": {
+        "en": "Viewpoint",
+        "he": "נקודת תצפית"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "hiking_trail",
       "icon": "terrain",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Hiking Trail"
+      "spatial_type": "area",
+      "names": {
+        "en": "Hiking Trail",
+        "he": "שביל הליכה"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "extreme_sports",
       "icon": "kayaking",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Extreme Sports"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Extreme Sports",
+        "he": "ספורט אקסטרים"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "hidden_gem",
       "icon": "auto_awesome",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Hidden Gem"
+      "spatial_type": "point",
+      "names": {
+        "en": "Hidden Gem",
+        "he": "אוצר נסתר"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "beach_club",
       "icon": "umbrella",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Beach Club"
+      "spatial_type": "point",
+      "names": {
+        "en": "Beach Club",
+        "he": "מועדון חוף"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "stargazing",
       "icon": "auto_awesome",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Stargazing"
+      "spatial_type": "point",
+      "names": {
+        "en": "Stargazing",
+        "he": "תצפית בכוכבים"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "street_art",
       "icon": "format_paint",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Street Art"
+      "spatial_type": "point",
+      "names": {
+        "en": "Street Art",
+        "he": "אמנות רחוב"
+      },
+      "categoryGroup": "urban"
     },
     {
       "type": "photography_spot",
       "icon": "photo_camera",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Photography Spot"
+      "spatial_type": "point",
+      "names": {
+        "en": "Photography Spot",
+        "he": "נקודת צילום"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "temple",
       "icon": "temple_hindu",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Temple"
+      "spatial_type": "point",
+      "names": {
+        "en": "Temple",
+        "he": "מקדש"
+      },
+      "categoryGroup": "religious"
     },
     {
       "type": "boat_tour",
       "icon": "directions_boat",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Boat Tour"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Boat Tour",
+        "he": "סיור בסירה"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "playground",
       "icon": "child_care",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Playground"
+      "spatial_type": "point",
+      "names": {
+        "en": "Playground",
+        "he": "גן משחקים"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "walking_tour",
       "icon": "directions_walk",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Walking Tour"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Walking Tour",
+        "he": "סיור רגלי"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "shopping_mall",
       "icon": "local_mall",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Shopping Mall"
+      "spatial_type": "area",
+      "names": {
+        "en": "Shopping Mall",
+        "he": "קניון"
+      },
+      "categoryGroup": "urban"
     },
     {
       "type": "historic_site",
       "icon": "history_edu",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Historic Site"
+      "spatial_type": "point",
+      "names": {
+        "en": "Historic Site",
+        "he": "אתר היסטורי"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "water_park",
       "icon": "pool",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Water Park"
+      "spatial_type": "point",
+      "names": {
+        "en": "Water Park",
+        "he": "פארק מים"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "ski_resort",
       "icon": "ac_unit",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Ski Resort"
+      "spatial_type": "area",
+      "names": {
+        "en": "Ski Resort",
+        "he": "אתר סקי"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "vineyard",
       "icon": "wine_bar",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Vineyard"
+      "spatial_type": "area",
+      "names": {
+        "en": "Vineyard",
+        "he": "יקב"
+      }
     },
     {
       "type": "brewery",
       "icon": "local_drink",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Brewery"
+      "spatial_type": "point",
+      "names": {
+        "en": "Brewery",
+        "he": "מבשלת בירה"
+      }
     },
     {
       "type": "movie_theater",
       "icon": "theaters",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Movie Theater"
+      "spatial_type": "point",
+      "names": {
+        "en": "Movie Theater",
+        "he": "קולנוע"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "concert_hall",
       "icon": "music_note",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Concert Hall"
+      "spatial_type": "point",
+      "names": {
+        "en": "Concert Hall",
+        "he": "אולם קונצרטים"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "botanical_park",
       "icon": "nature",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Botanical Park"
+      "spatial_type": "area",
+      "names": {
+        "en": "Botanical Park",
+        "he": "פארק בוטני"
+      },
+      "categoryGroup": "parks_gardens"
     },
     {
       "type": "fishing_spot",
       "icon": "local_parking",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Fishing Spot"
+      "spatial_type": "point",
+      "names": {
+        "en": "Fishing Spot",
+        "he": "נקודת דיג"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "bird_sanctuary",
       "icon": "flight",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Bird Sanctuary"
+      "spatial_type": "area",
+      "names": {
+        "en": "Bird Sanctuary",
+        "he": "תצפית ציפורים"
+      },
+      "categoryGroup": "parks_gardens"
     },
     {
       "type": "zip_line",
       "icon": "flight_takeoff",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Zip Line"
+      "spatial_type": "point",
+      "names": {
+        "en": "Zip Line",
+        "he": "זיפ ליין"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "hot_spring",
       "icon": "hot_tub",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Hot Spring"
+      "spatial_type": "point",
+      "names": {
+        "en": "Hot Spring",
+        "he": "מעיין חם"
+      },
+      "categoryGroup": "wellness"
+    },
+    {
+      "type": "gym",
+      "icon": "fitness_center",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Gym",
+        "he": "חדר כושר"
+      },
+      "categoryGroup": "wellness"
+    },
+    {
+      "type": "massage",
+      "icon": "self_improvement",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Massage",
+        "he": "מסאז'"
+      },
+      "categoryGroup": "wellness"
+    },
+    {
+      "type": "yoga_studio",
+      "icon": "self_improvement",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Yoga Studio",
+        "he": "סטודיו יוגה"
+      },
+      "categoryGroup": "wellness"
+    },
+    {
+      "type": "meditation_center",
+      "icon": "self_improvement",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Meditation Center",
+        "he": "מרכז מדיטציה"
+      },
+      "categoryGroup": "wellness"
+    },
+    {
+      "type": "thermal_bath",
+      "icon": "hot_tub",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Thermal Bath",
+        "he": "מרחץ תרמי"
+      },
+      "categoryGroup": "wellness"
     },
     {
       "type": "canyon_activity",
       "icon": "landscape",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Canyon Activity"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Canyon Activity",
+        "he": "קניונינג"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "volcano_activity",
       "icon": "whatshot",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Volcano Activity"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Volcano Activity",
+        "he": "פעילות וולקנית"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "observatory",
       "icon": "visibility",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Observatory"
+      "spatial_type": "point",
+      "names": {
+        "en": "Observatory",
+        "he": "תצפית"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "lighthouse",
       "icon": "navigation",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Lighthouse"
+      "spatial_type": "point",
+      "names": {
+        "en": "Lighthouse",
+        "he": "מגדל אור"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "art_gallery",
       "icon": "art_track",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Art Gallery"
+      "spatial_type": "point",
+      "names": {
+        "en": "Art Gallery",
+        "he": "גלריה"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "aquarium",
       "icon": "water",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Aquarium"
+      "spatial_type": "point",
+      "names": {
+        "en": "Aquarium",
+        "he": "אקווריום"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "cave",
       "icon": "alt_route",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Cave"
+      "spatial_type": "point",
+      "names": {
+        "en": "Cave",
+        "he": "מערה"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "snorkeling",
       "icon": "scuba_diving",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Snorkeling"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Snorkeling",
+        "he": "שנורקלינג"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "diving_activity",
       "icon": "scuba_diving",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Diving Activity"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Diving Activity",
+        "he": "צלילה"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "surfing",
       "icon": "surfing",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Surfing"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Surfing",
+        "he": "גלישה"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "kayaking_activity",
       "icon": "kayaking",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Kayaking Activity"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Kayaking Activity",
+        "he": "קייקים"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "rafting",
       "icon": "water",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Rafting"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Rafting",
+        "he": "רפטינג"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "climbing",
       "icon": "terrain",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Climbing"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Climbing",
+        "he": "טיפוס"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "trekking",
       "icon": "hiking",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Trekking"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Trekking",
+        "he": "טרקינג"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "jeep_tour",
       "icon": "directions_car",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Jeep Tour"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Jeep Tour",
+        "he": "סיור גיפים"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "safari",
       "icon": "pets",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Safari"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Safari",
+        "he": "ספארי"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "food_tour",
       "icon": "restaurant",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Food Tour"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Food Tour",
+        "he": "סיור אוכל"
+      },
+      "categoryGroup": "food_drink"
     },
     {
       "type": "street_market_tour",
       "icon": "storefront",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Street Market Tour"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Street Market Tour",
+        "he": "סיור שווקים"
+      },
+      "categoryGroup": "food_drink"
     },
     {
       "type": "cooking_class",
       "icon": "restaurant_menu",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Cooking Class"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Cooking  Class",
+        "he": "שיעור בישול"
+      },
+      "categoryGroup": "food_drink"
     },
     {
       "type": "wine_tasting",
       "icon": "wine_bar",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Wine Tasting"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Wine Tasting",
+        "he": "טעימות יין"
+      },
+      "categoryGroup": "food_drink"
     },
     {
       "type": "brewery_tour",
       "icon": "local_drink",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Brewery Tour"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Brewery Tour",
+        "he": "סיור בירה"
+      },
+      "categoryGroup": "food_drink"
     },
     {
       "type": "kids_attraction",
       "icon": "child_friendly",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Kids Attraction"
+      "spatial_type": "point",
+      "names": {
+        "en": "Kids Attraction",
+        "he": "פעילות ילדים"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "castle",
       "icon": "castle",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Castle"
+      "spatial_type": "point",
+      "names": {
+        "en": "Castle",
+        "he": "טירה"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "fortress",
       "icon": "fort",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Fortress"
+      "spatial_type": "point",
+      "names": {
+        "en": "Fortress",
+        "he": "מבצר"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "palace",
       "icon": "villa",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Palace"
+      "spatial_type": "point",
+      "names": {
+        "en": "Palace",
+        "he": "ארמון"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "ruins",
       "icon": "architecture",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Ruins"
+      "spatial_type": "point",
+      "names": {
+        "en": "Ruins",
+        "he": "חרבות"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "archaeological_site",
       "icon": "travel_explore",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Archaeological Site"
+      "spatial_type": "point",
+      "names": {
+        "en": "Archaeological Site",
+        "he": " אתר ארכאולוגי"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "memorial",
       "icon": "account_balance",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Memorial"
+      "spatial_type": "point",
+      "names": {
+        "en": "Memorial",
+        "he": "אתר זכרון"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "statue",
       "icon": "park",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Statue"
+      "spatial_type": "point",
+      "names": {
+        "en": "Statue",
+        "he": "פסל"
+      },
+      "categoryGroup": "entertainment_culture"
     },
     {
       "type": "monument",
       "icon": "architecture",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Monument"
+      "spatial_type": "point",
+      "names": {
+        "en": "Monument",
+        "he": "מונומנט"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "fountain",
       "icon": "water_drop",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Fountain"
+      "spatial_type": "point",
+      "names": {
+        "en": "Fountain",
+        "he": "מזרקה"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "garden",
       "icon": "yard",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Garden"
+      "spatial_type": "area",
+      "names": {
+        "en": "Garden",
+        "he": "גן"
+      },
+      "categoryGroup": "parks_gardens"
     },
     {
       "type": "arboretum",
       "icon": "forest",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Arboretum"
+      "spatial_type": "area",
+      "names": {
+        "en": "Arboretum",
+        "he": "יער"
+      },
+      "categoryGroup": "parks_gardens"
     },
     {
       "type": "heritage_site",
       "icon": "history_edu",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Heritage Site"
+      "spatial_type": "point",
+      "names": {
+        "en": "Heritage Site",
+        "he": "אתר מורשת"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "unesco_site",
       "icon": "public",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Unesco Site"
+      "spatial_type": "point",
+      "names": {
+        "en": "Unesco Site",
+        "he": "אתר אונסקו"
+      },
+      "categoryGroup": "history_culture"
     },
     {
       "type": "sunset_spot",
       "icon": "wb_twilight",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Sunset Spot"
+      "spatial_type": "point",
+      "names": {
+        "en": "Sunset Spot",
+        "he": "תצפית שקיעה"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "sunrise_spot",
       "icon": "wb_sunny",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Sunrise Spot"
+      "spatial_type": "point",
+      "names": {
+        "en": "Sunrise Spot",
+        "he": "תצפית זריחה"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "panoramic_view",
       "icon": "panorama",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Panoramic View"
+      "spatial_type": "point",
+      "names": {
+        "en": "Panoramic View",
+        "he": "תצפית פנורמית"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "romantic_spot",
       "icon": "favorite",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Romantic Spot"
+      "spatial_type": "point",
+      "names": {
+        "en": "Romantic Spot",
+        "he": "תצפית רומנטית"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "instagram_spot",
       "icon": "camera_alt",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Instagram Spot"
+      "spatial_type": "point",
+      "names": {
+        "en": "Instagram Spot",
+        "he": "תצפית אינסטגרם"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "picnic_area",
       "icon": "outdoor_grill",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Picnic Area"
+      "spatial_type": "area",
+      "names": {
+        "en": "Picnic Area",
+        "he": "אזור פיקניק"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "campfire_site",
       "icon": "local_fire_department",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Campfire Site"
-    },
-    {
-      "type": "peninsula",
-      "icon": "explore",
-      "category": "Activities",
-      "is_geo_location": true,
-      "name": "Peninsula"
+      "spatial_type": "point",
+      "names": {
+        "en": "Campfire Site",
+        "he": "אתר קמפינג"
+      },
+      "categoryGroup": "scenic_spots"
     },
     {
       "type": "cape",
       "icon": "explore",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Cape"
+      "spatial_type": "area",
+      "names": {
+        "en": "Cape",
+        "he": "כף"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "strait",
       "icon": "waves",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Strait"
+      "spatial_type": "area",
+      "names": {
+        "en": "Strait",
+        "he": "מפרץ"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "basin",
       "icon": "waves",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Basin"
+      "spatial_type": "area",
+      "names": {
+        "en": "Basin",
+        "he": "מערה"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "cliff",
       "icon": "landscape",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Cliff"
+      "spatial_type": "point",
+      "names": {
+        "en": "Cliff",
+        "he": "מצוק"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "ridge",
       "icon": "terrain",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Ridge"
+      "spatial_type": "area",
+      "names": {
+        "en": "Ridge",
+        "he": "רכס"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "wetland",
       "icon": "water_drop",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Wetland"
+      "spatial_type": "area",
+      "names": {
+        "en": "Wetland",
+        "he": "אזור ביצות"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "marsh",
       "icon": "water_drop",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Marsh"
+      "spatial_type": "area",
+      "names": {
+        "en": "Marsh",
+        "he": "ביצה"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "savanna",
       "icon": "grass",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Savanna"
+      "spatial_type": "area",
+      "names": {
+        "en": "Savanna",
+        "he": "סבנה"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "steppe",
       "icon": "grass",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Steppe"
+      "spatial_type": "area",
+      "names": {
+        "en": "Steppe",
+        "he": "ערבה"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "tundra",
       "icon": "ac_unit",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Tundra"
+      "spatial_type": "area",
+      "names": {
+        "en": "Tundra",
+        "he": "טונדרה"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "oasis",
       "icon": "local_florist",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Oasis"
+      "spatial_type": "area",
+      "names": {
+        "en": "Oasis",
+        "he": "נווה מדבר"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "gorge",
       "icon": "landscape",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Gorge"
+      "spatial_type": "area",
+      "names": {
+        "en": "Gorge",
+        "he": "ערוץ"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "sand_dune",
       "icon": "waves",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Sand Dune"
+      "spatial_type": "area",
+      "names": {
+        "en": "Sand Dune",
+        "he": "דיונות"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "hot_desert_spring",
       "icon": "hot_tub",
       "category": "Activities",
       "is_geo_location": true,
-      "name": "Hot Desert Spring"
+      "spatial_type": "point",
+      "names": {
+        "en": "Hot Desert Spring",
+        "he": "מעיין"
+      },
+      "categoryGroup": "nature"
     },
     {
       "type": "street_food_lane",
       "icon": "fastfood",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Street Food Lane"
+      "spatial_type": "area",
+      "names": {
+        "en": "Street Food Lane",
+        "he": "סמטת אוכל רחוב"
+      },
+      "categoryGroup": "food_drink"
     },
     {
       "type": "craft_market",
       "icon": "storefront",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Craft Market"
+      "spatial_type": "point",
+      "names": {
+        "en": "Craft Market",
+        "he": "שוק אומנים"
+      },
+      "categoryGroup": "urban"
     },
     {
       "type": "local_farm_visit",
       "icon": "agriculture",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Local Farm Visit"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Local Farm Visit",
+        "he": "ביקור בחווה מקומית"
+      },
+      "categoryGroup": "food_drink"
     },
     {
       "type": "cooking_workshop",
       "icon": "restaurant_menu",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Cooking Workshop"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Cooking Workshop",
+        "he": "סדנה לבישול"
+      },
+      "categoryGroup": "food_drink"
     },
     {
       "type": "photo_tour",
       "icon": "photo_camera",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Photo Tour"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Photo Tour",
+        "he": "סיור צילום"
+      },
+      "categoryGroup": "landmarks"
     },
     {
       "type": "wine_route",
       "icon": "wine_bar",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Wine Route"
+      "spatial_type": "area",
+      "names": {
+        "en": "Wine Route",
+        "he": "מסלול יין"
+      },
+      "categoryGroup": "food_drink"
     },
     {
       "type": "cycling_route",
       "icon": "directions_bike",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Cycling Route"
+      "spatial_type": "area",
+      "names": {
+        "en": "Cycling Route",
+        "he": "מסלול אופניים"
+      },
+      "categoryGroup": "outdoor_sports"
     },
     {
       "type": "pilgrimage_route",
       "icon": "temple_hindu",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Pilgrimage Route"
+      "spatial_type": "area",
+      "names": {
+        "en": "Pilgrimage Route",
+        "he": "מסלול עלייה לרגל"
+      },
+      "categoryGroup": "religious"
     },
     {
       "type": "other_activity",
       "icon": "more_horiz",
       "category": "Activities",
       "is_geo_location": false,
-      "name": "Other Activity"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Other Activity",
+        "he": "פעילות אחרת"
+      },
+      "categoryGroup": "landmarks"
     },
     {
       "type": "festival",
       "icon": "festival",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Festival"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Festival",
+        "he": "פסטיבל"
+      }
     },
     {
       "type": "music_festival",
       "icon": "music_note",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Music Festival"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Music Festival",
+        "he": "פסטיבל מוזיקה"
+      }
     },
     {
       "type": "carnival",
       "icon": "celebration",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Carnival"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Carnival",
+        "he": "קרנבל"
+      }
     },
     {
       "type": "cultural_parade",
       "icon": "celebration",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Cultural Parade"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Cultural Parade",
+        "he": "תהלוכה"
+      }
     },
     {
       "type": "food_festival",
       "icon": "restaurant",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Food Festival"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Food Festival",
+        "he": "פסטיבל אוכל"
+      }
     },
     {
       "type": "art_exhibition",
       "icon": "brush",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Art Exhibition"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Art Exhibition",
+        "he": "תערוכת אומנות"
+      }
     },
     {
       "type": "fireworks",
       "icon": "celebration",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Fireworks"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Fireworks",
+        "he": "זיקוקים"
+      }
     },
     {
       "type": "sporting_event",
       "icon": "sports_soccer",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Sporting Event"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Sporting Event",
+        "he": "אירוע ספורט"
+      }
     },
     {
       "type": "local_festival",
       "icon": "festival",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Local Festival"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Local Festival",
+        "he": "פסטיבל מקומי"
+      }
     },
     {
       "type": "religious_festival",
       "icon": "temple_hindu",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Religious Festival"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Religious Festival",
+        "he": "פסטיבל רוחני"
+      }
     },
     {
       "type": "street_parade",
       "icon": "celebration",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Street Parade"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Street Parade",
+        "he": "תהלוכה רחוב"
+      }
     },
     {
       "type": "sports_match",
       "icon": "sports_soccer",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Sports Match"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Sports Match",
+        "he": "משחק ספורט"
+      }
     },
     {
       "type": "marathon",
       "icon": "directions_run",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Marathon"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Marathon",
+        "he": "מרתון"
+      }
     },
     {
       "type": "concert",
       "icon": "music_note",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Concert"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Concert",
+        "he": "קונצרט"
+      }
     },
     {
       "type": "theater_show",
       "icon": "theaters",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Theater Show"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Theater Show",
+        "he": "הצגה"
+      }
     },
     {
       "type": "food_fair",
       "icon": "restaurant",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Food Fair"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Food Fair",
+        "he": "יריד אוכל"
+      }
     },
     {
       "type": "film_festival",
       "icon": "movie",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Film Festival"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Film Festival",
+        "he": "פסטיבל קולנוע"
+      }
     },
     {
       "type": "fashion_show",
       "icon": "checkroom",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Fashion Show"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Fashion Show",
+        "he": "תצוגת אופנה"
+      }
     },
     {
       "type": "food_truck_fair",
       "icon": "emoji_food_beverage",
       "category": "Events",
       "is_geo_location": false,
-      "name": "Food Truck Fair"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Food Truck Fair",
+        "he": "יריד פודטראק"
+      }
     },
     {
       "type": "hotel",
       "icon": "hotel",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Hotel"
+      "spatial_type": "point",
+      "names": {
+        "en": "Hotel",
+        "he": "מלון"
+      }
     },
     {
       "type": "glamping",
       "icon": "festival",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Glamping"
+      "spatial_type": "point",
+      "names": {
+        "en": "Glamping",
+        "he": "גלמפינג"
+      }
     },
     {
       "type": "hostel",
       "icon": "king_bed",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Hostel"
+      "spatial_type": "point",
+      "names": {
+        "en": "Hostel",
+        "he": "הוסטל"
+      }
     },
     {
       "type": "villa",
       "icon": "gite",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Villa"
+      "spatial_type": "point",
+      "names": {
+        "en": "Villa",
+        "he": "וילה"
+      }
     },
     {
       "type": "resort",
       "icon": "beach_access",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Resort"
+      "spatial_type": "point",
+      "names": {
+        "en": "Resort",
+        "he": "ריזורט"
+      }
     },
     {
       "type": "apartment_stay",
       "icon": "apartment",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Apartment Stay"
+      "spatial_type": "point",
+      "names": {
+        "en": "Apartment Stay",
+        "he": "דירת נופש"
+      }
     },
     {
       "type": "guesthouse",
       "icon": "home",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Guesthouse"
+      "spatial_type": "point",
+      "names": {
+        "en": "Guesthouse",
+        "he": "בית הארחה"
+      }
     },
     {
       "type": "bed_and_breakfast",
       "icon": "free_breakfast",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Bed And Breakfast"
+      "spatial_type": "point",
+      "names": {
+        "en": "Bed And Breakfast",
+        "he": "בד אנד בריקפסט"
+      }
     },
     {
       "type": "motel",
       "icon": "hotel",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Motel"
+      "spatial_type": "point",
+      "names": {
+        "en": "Motel",
+        "he": "מוטל"
+      }
     },
     {
       "type": "lodge",
       "icon": "cabin",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Lodge"
+      "spatial_type": "point",
+      "names": {
+        "en": "Lodge",
+        "he": "בקתה"
+      }
     },
     {
       "type": "eco_lodge",
       "icon": "eco",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Eco Lodge"
+      "spatial_type": "point",
+      "names": {
+        "en": "Eco Lodge",
+        "he": "בקתה אקולוגית"
+      }
     },
     {
       "type": "boutique_hotel",
       "icon": "stars",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Boutique Hotel"
+      "spatial_type": "point",
+      "names": {
+        "en": "Boutique Hotel",
+        "he": "מלון בוטיק"
+      }
     },
     {
       "type": "capsule_hotel",
       "icon": "view_compact",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Capsule Hotel"
+      "spatial_type": "point",
+      "names": {
+        "en": "Capsule Hotel",
+        "he": "מלון קפסולה"
+      }
     },
     {
       "type": "ryokan",
       "icon": "hotel_class",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Ryokan"
+      "spatial_type": "point",
+      "names": {
+        "en": "Ryokan",
+        "he": "ריוקן"
+      }
     },
     {
       "type": "homestay",
       "icon": "family_restroom",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Homestay"
+      "spatial_type": "point",
+      "names": {
+        "en": "Homestay",
+        "he": "הומסטיי"
+      }
     },
     {
       "type": "farm_stay",
       "icon": "agriculture",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Farm Stay"
+      "spatial_type": "point",
+      "names": {
+        "en": "Farm Stay",
+        "he": "שהייה בחווה"
+      }
     },
     {
       "type": "cottage",
       "icon": "cottage",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Cottage"
+      "spatial_type": "point",
+      "names": {
+        "en": "Cottage",
+        "he": "קוטג'"
+      }
     },
     {
       "type": "chalet",
       "icon": "holiday_village",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Chalet"
+      "spatial_type": "point",
+      "names": {
+        "en": "Chalet",
+        "he": "שאלט"
+      }
     },
     {
       "type": "bungalow",
       "icon": "house",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Bungalow"
+      "spatial_type": "point",
+      "names": {
+        "en": "Bungalow",
+        "he": "בונגלו"
+      }
     },
     {
       "type": "treehouse",
       "icon": "park",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Treehouse"
+      "spatial_type": "point",
+      "names": {
+        "en": "Treehouse",
+        "he": "בית עץ"
+      }
     },
     {
       "type": "houseboat",
       "icon": "directions_boat",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Houseboat"
+      "spatial_type": "point",
+      "names": {
+        "en": "Houseboat",
+        "he": "בית ספינה"
+      }
     },
     {
       "type": "campground",
       "icon": "festival",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Campground"
+      "spatial_type": "point",
+      "names": {
+        "en": "Campground",
+        "he": "חניון קמפינג"
+      }
     },
     {
       "type": "camping_tent",
       "icon": "festival",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Camping Tent"
+      "spatial_type": "point",
+      "names": {
+        "en": "Camping Tent",
+        "he": "אוהל קמפינג"
+      }
     },
     {
       "type": "rv_park",
       "icon": "rv_hookup",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Rv Park"
+      "spatial_type": "point",
+      "names": {
+        "en": "Rv Park",
+        "he": "חניון רכב"
+      }
     },
     {
       "type": "serviced_apartment",
       "icon": "apartment",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Serviced Apartment"
+      "spatial_type": "point",
+      "names": {
+        "en": "Serviced Apartment",
+        "he": "דירת שירות"
+      }
     },
     {
       "type": "long_stay_hotel",
       "icon": "calendar_month",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Long Stay Hotel"
+      "spatial_type": "point",
+      "names": {
+        "en": "Long Stay Hotel",
+        "he": "מלון שהייה ארוכה"
+      }
     },
     {
       "type": "luxury_hotel",
       "icon": "diamond",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Luxury Hotel"
+      "spatial_type": "point",
+      "names": {
+        "en": "Luxury Hotel",
+        "he": "מלון יוקרה"
+      }
     },
     {
       "type": "budget_hotel",
       "icon": "savings",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Budget Hotel"
+      "spatial_type": "point",
+      "names": {
+        "en": "Budget Hotel",
+        "he": "מלון פשוט"
+      }
     },
     {
       "type": "other_accommodation",
       "icon": "more_horiz",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Other Accommodation"
+      "spatial_type": "point",
+      "names": {
+        "en": "Other Accommodation",
+        "he": "לינה אחרת"
+      }
     },
     {
       "type": "mountain_hut",
       "icon": "cabin",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Mountain Hut"
+      "spatial_type": "point",
+      "names": {
+        "en": "Mountain Hut",
+        "he": "בקתת הרים"
+      }
     },
     {
       "type": "desert_camp",
       "icon": "camping",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Desert Camp"
+      "spatial_type": "point",
+      "names": {
+        "en": "Desert Camp",
+        "he": "מחנה במדבר"
+      }
     },
     {
       "type": "surf_hostel",
       "icon": "surfing",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Surf Hostel"
+      "spatial_type": "point",
+      "names": {
+        "en": "Surf Hostel",
+        "he": "הוסטיל גלישה"
+      }
     },
     {
       "type": "diving_resort",
       "icon": "scuba_diving",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Diving Resort"
+      "spatial_type": "point",
+      "names": {
+        "en": "Diving Resort",
+        "he": "ריזורט צלילה"
+      }
     },
     {
       "type": "ski_lodge",
       "icon": "ac_unit",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Ski Lodge"
+      "spatial_type": "point",
+      "names": {
+        "en": "Ski Lodge",
+        "he": "בית סקי"
+      }
     },
     {
       "type": "wellness_resort",
       "icon": "spa",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Wellness Resort"
+      "spatial_type": "point",
+      "names": {
+        "en": "Wellness Resort",
+        "he": "ריזורט בריאות"
+      }
     },
     {
       "type": "business_hotel",
       "icon": "business_center",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Business Hotel"
+      "spatial_type": "point",
+      "names": {
+        "en": "Business Hotel",
+        "he": "מלון עסקים"
+      }
     },
     {
       "type": "airport_hotel",
       "icon": "flight",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "Airport Hotel"
+      "spatial_type": "point",
+      "names": {
+        "en": "Airport Hotel",
+        "he": "מלון בשדה תעופה"
+      }
     },
     {
       "type": "city_aparthotel",
       "icon": "apartment",
       "category": "Accommodations",
       "is_geo_location": false,
-      "name": "City Aparthotel"
+      "spatial_type": "point",
+      "names": {
+        "en": "City Aparthotel",
+        "he": "אפרט-מלון עירוני"
+      }
     },
     {
       "type": "restaurant",
       "icon": "restaurant",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Restaurant"
+      "spatial_type": "point",
+      "names": {
+        "en": "Restaurant",
+        "he": "מסעדה"
+      }
     },
     {
       "type": "cafe",
       "icon": "local_cafe",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Cafe"
+      "spatial_type": "point",
+      "names": {
+        "en": "Cafe",
+        "he": "בית קפה"
+      }
     },
     {
       "type": "bakery",
       "icon": "local_dining",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Bakery"
+      "spatial_type": "point",
+      "names": {
+        "en": "Bakery",
+        "he": "מאפייה"
+      }
     },
     {
       "type": "deli",
       "icon": "local_dining",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Deli"
+      "spatial_type": "point",
+      "names": {
+        "en": "Deli",
+        "he": "דלי"
+      }
     },
     {
       "type": "bistro",
       "icon": "restaurant",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Bistro"
+      "spatial_type": "point",
+      "names": {
+        "en": "Bistro",
+        "he": "ביסטרו"
+      }
     },
     {
       "type": "diner",
       "icon": "restaurant",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Diner"
+      "spatial_type": "point",
+      "names": {
+        "en": "Diner",
+        "he": "דינר"
+      }
     },
     {
       "type": "food_truck",
       "icon": "emoji_food_beverage",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Food Truck"
+      "spatial_type": "point",
+      "names": {
+        "en": "Food Truck",
+        "he": "פודטראק"
+      }
     },
     {
       "type": "food_court",
       "icon": "local_dining",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Food Court"
+      "spatial_type": "point",
+      "names": {
+        "en": "Food Court",
+        "he": "מרכז אוכל"
+      }
     },
     {
       "type": "buffet",
       "icon": "restaurant",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Buffet"
+      "spatial_type": "point",
+      "names": {
+        "en": "Buffet",
+        "he": "בופט"
+      }
     },
     {
       "type": "ice_cream_parlor",
       "icon": "icecream",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Ice Cream Parlor"
+      "spatial_type": "point",
+      "names": {
+        "en": "Ice Cream Parlor",
+        "he": "גלידריה"
+      }
     },
     {
       "type": "juice_bar",
       "icon": "emoji_food_beverage",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Juice Bar"
+      "spatial_type": "point",
+      "names": {
+        "en": "Juice Bar",
+        "he": "בר מיצים"
+      }
     },
     {
       "type": "pub",
       "icon": "local_bar",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Pub"
+      "spatial_type": "point",
+      "names": {
+        "en": "Pub",
+        "he": "פאב"
+      }
     },
     {
       "type": "bar",
       "icon": "local_bar",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Bar"
+      "spatial_type": "point",
+      "names": {
+        "en": "Bar",
+        "he": "בר"
+      }
     },
     {
       "type": "tavern",
       "icon": "local_bar",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Tavern"
+      "spatial_type": "point",
+      "names": {
+        "en": "Tavern",
+        "he": "טברנה"
+      }
     },
     {
       "type": "wine_bar_eatery",
       "icon": "wine_bar",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Wine Bar Eatery"
+      "spatial_type": "point",
+      "names": {
+        "en": "Wine Bar",
+        "he": "בר יין"
+      }
     },
     {
       "type": "brewpub",
       "icon": "local_drink",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Brewpub"
+      "spatial_type": "point",
+      "names": {
+        "en": "Brewpub",
+        "he": "בר מבשלה"
+      }
     },
     {
       "type": "sushi_bar",
       "icon": "emoji_food_beverage",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Sushi Bar"
+      "spatial_type": "point",
+      "names": {
+        "en": "Sushi Bar",
+        "he": "בר סושי"
+      }
     },
     {
       "type": "teahouse",
       "icon": "local_cafe",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Teahouse"
+      "spatial_type": "point",
+      "names": {
+        "en": "Teahouse",
+        "he": "בית תה"
+      }
     },
     {
       "type": "steakhouse",
       "icon": "restaurant",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Steakhouse"
+      "spatial_type": "point",
+      "names": {
+        "en": "Steakhouse",
+        "he": "סטיקהוס"
+      }
     },
     {
       "type": "tapas_bar",
       "icon": "restaurant",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Tapas Bar"
+      "spatial_type": "point",
+      "names": {
+        "en": "Tapas Bar",
+        "he": "בר טפס"
+      }
     },
     {
       "type": "doughnut_shop",
       "icon": "local_dining",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Doughnut Shop"
+      "spatial_type": "point",
+      "names": {
+        "en": "Doughnut Shop",
+        "he": "חנות דונאט"
+      }
     },
     {
       "type": "dessert_bar",
       "icon": "local_cafe",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Dessert Bar"
+      "spatial_type": "point",
+      "names": {
+        "en": "Dessert Bar",
+        "he": "בר קינוחים"
+      }
     },
     {
       "type": "street_food",
       "icon": "fastfood",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Street Food"
+      "spatial_type": "point",
+      "names": {
+        "en": "Street Food",
+        "he": "אוכל רחוב"
+      }
     },
     {
       "type": "rooftop_bar",
       "icon": "nightlife",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Rooftop Bar"
+      "spatial_type": "point",
+      "names": {
+        "en": "Rooftop Bar",
+        "he": "רופטופ בר"
+      }
     },
     {
       "type": "brunch_spot",
       "icon": "egg_alt",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Brunch Spot"
+      "spatial_type": "point",
+      "names": {
+        "en": "Brunch Spot",
+        "he": "מקום בראנץ'"
+      }
     },
     {
       "type": "speakeasy",
       "icon": "local_bar",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Speakeasy"
+      "spatial_type": "point",
+      "names": {
+        "en": "Speakeasy",
+        "he": "ספריקסי"
+      }
     },
     {
       "type": "fine_dining",
       "icon": "stars",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Fine Dining"
+      "spatial_type": "point",
+      "names": {
+        "en": "Fine Dining",
+        "he": "אוכל גורמה"
+      }
     },
     {
       "type": "local_cuisine",
       "icon": "restaurant_menu",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Local Cuisine"
+      "spatial_type": "point",
+      "names": {
+        "en": "Local Cuisine",
+        "he": "מטבח מקומי"
+      }
     },
     {
       "type": "vegan_restaurant",
       "icon": "eco",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Vegan Restaurant"
+      "spatial_type": "point",
+      "names": {
+        "en": "Vegan Restaurant",
+        "he": "מסעדה טבעונית"
+      }
     },
     {
       "type": "vegetarian_restaurant",
       "icon": "spa",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Vegetarian Restaurant"
+      "spatial_type": "point",
+      "names": {
+        "en": "Vegetarian Restaurant",
+        "he": "מסעדה צמחונית"
+      }
     },
     {
       "type": "seafood_restaurant",
       "icon": "set_meal",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Seafood Restaurant"
+      "spatial_type": "point",
+      "names": {
+        "en": "Seafood Restaurant",
+        "he": "מסעדת פירות ים"
+      }
     },
     {
       "type": "family_restaurant",
       "icon": "family_restroom",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Family Restaurant"
+      "spatial_type": "point",
+      "names": {
+        "en": "Family Restaurant",
+        "he": "מסעדה משפחתית"
+      }
     },
     {
       "type": "other_eatery",
       "icon": "more_horiz",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Other Eatery"
+      "spatial_type": "point",
+      "names": {
+        "en": "Other Eatery",
+        "he": "אוכל אחר"
+      }
     },
     {
       "type": "ramen_shop",
       "icon": "ramen_dining",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Ramen Shop"
+      "spatial_type": "point",
+      "names": {
+        "en": "Ramen Shop",
+        "he": "חנות רמן"
+      }
     },
     {
       "type": "burger_joint",
       "icon": "lunch_dining",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Burger Joint"
+      "spatial_type": "point",
+      "names": {
+        "en": "Burger Joint",
+        "he": "בורגר"
+      }
     },
     {
       "type": "pizza_place",
       "icon": "local_pizza",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Pizza Place"
+      "spatial_type": "point",
+      "names": {
+        "en": "Pizza Place",
+        "he": "פיצריה"
+      }
     },
     {
       "type": "patisserie",
       "icon": "cake",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Patisserie"
+      "spatial_type": "point",
+      "names": {
+        "en": "Patisserie",
+        "he": "פיטיסרי"
+      }
     },
     {
       "type": "gelato_shop",
       "icon": "icecream",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Gelato Shop"
+      "spatial_type": "point",
+      "names": {
+        "en": "Gelato Shop",
+        "he": "חנות גלאטו"
+      }
     },
     {
       "type": "cocktail_bar",
       "icon": "local_bar",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Cocktail Bar"
+      "spatial_type": "point",
+      "names": {
+        "en": "Cocktail Bar",
+        "he": "בר קוקטיילים"
+      }
     },
     {
       "type": "food_hall",
       "icon": "restaurant",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Food Hall"
+      "spatial_type": "area",
+      "names": {
+        "en": "Food Hall",
+        "he": "אולם אוכל"
+      }
     },
     {
       "type": "local_bakery_cafe",
       "icon": "local_cafe",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Local Bakery Cafe"
+      "spatial_type": "point",
+      "names": {
+        "en": "Local Bakery Cafe",
+        "he": "קפה מטבח מקומי"
+      }
     },
     {
       "type": "gelato_stand",
       "icon": "icecream",
       "category": "Eateries",
       "is_geo_location": false,
-      "name": "Gelato Stand"
+      "spatial_type": "point",
+      "names": {
+        "en": "Gelato Stand",
+        "he": "דוכן גלידה"
+      }
     },
     {
       "type": "car",
       "icon": "directions_car",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Car"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Car",
+        "he": "רכב"
+      }
     },
     {
       "type": "bus",
       "icon": "directions_bus",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Bus"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Bus",
+        "he": "אוטובוס"
+      }
     },
     {
       "type": "train",
       "icon": "train",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Train"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Train",
+        "he": "רכבת"
+      }
     },
     {
       "type": "subway",
       "icon": "subway",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Subway"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Subway",
+        "he": "רכבת תחתית"
+      }
     },
     {
       "type": "bicycle",
       "icon": "directions_bike",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Bicycle"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Bicycle",
+        "he": "אופניים"
+      }
     },
     {
       "type": "motorcycle",
       "icon": "two_wheeler",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Motorcycle"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Motorcycle",
+        "he": "אופנוע"
+      }
     },
     {
       "type": "taxi",
       "icon": "taxi_alert",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Taxi"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Taxi",
+        "he": "מונית"
+      }
     },
     {
       "type": "ferry",
       "icon": "directions_boat",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Ferry"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Ferry",
+        "he": "מעבורת"
+      }
     },
     {
       "type": "airplane",
       "icon": "airplanemode_active",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Airplane"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Airplane",
+        "he": "מטוס"
+      }
     },
     {
       "type": "scooter",
       "icon": "electric_scooter",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Scooter"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Scooter",
+        "he": "קורקינט"
+      }
     },
     {
       "type": "cruise",
       "icon": "directions_boat",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Cruise"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Cruise",
+        "he": "קרוז"
+      }
     },
     {
       "type": "tram",
       "icon": "tram",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Tram"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Tram",
+        "he": "חשמלית"
+      }
     },
     {
       "type": "cruise_ship",
       "icon": "directions_boat",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Cruise Ship"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Cruise Ship",
+        "he": "אוניית קרוז"
+      }
     },
     {
       "type": "car_rental",
       "icon": "car_rental",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Car Rental"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Car Rental",
+        "he": "שכירת רכב"
+      }
     },
     {
       "type": "domestic_flight",
       "icon": "flight",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Domestic Flight"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Domestic Flight",
+        "he": "טיסה פנימית"
+      }
     },
     {
       "type": "international_flight",
       "icon": "flight_takeoff",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "International Flight"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "International Flight",
+        "he": "טיסה בין-לאומית"
+      }
     },
     {
       "type": "night_train",
       "icon": "hotel",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Night Train"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Night Train",
+        "he": "רכבת לילה"
+      }
     },
     {
       "type": "high_speed_train",
       "icon": "train",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "High Speed Train"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "High Speed Train",
+        "he": "רכבת מהירה"
+      }
     },
     {
       "type": "cable_car",
       "icon": "tram",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Cable Car"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Cable Car",
+        "he": "רכבל"
+      }
     },
     {
       "type": "funicular",
       "icon": "tram",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Funicular"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Funicular",
+        "he": "רכבל הר"
+      }
     },
     {
       "type": "boat_taxi_transport",
       "icon": "directions_boat",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Boat Taxi Transport"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Boat Taxi Transport",
+        "he": "סירת מונית"
+      }
     },
     {
       "type": "rideshare",
       "icon": "local_taxi",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Rideshare"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Rideshare",
+        "he": "נסיעה שיתופית"
+      }
     },
     {
       "type": "private_transfer",
       "icon": "airport_shuttle",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Private Transfer"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Private Transfer",
+        "he": "הסעה פרטית"
+      }
     },
     {
       "type": "rv",
       "icon": "rv_hookup",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Rv"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Rv",
+        "he": "קראוון"
+      }
     },
     {
       "type": "bus_stop",
       "icon": "directions_bus",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Bus Stop"
+      "spatial_type": "point",
+      "names": {
+        "en": "Bus Stop",
+        "he": "תחנת אוטובוס"
+      }
     },
     {
       "type": "bus_station",
       "icon": "directions_bus_filled",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Bus Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Bus Station",
+        "he": "תחנת אוטובוס"
+      }
     },
     {
       "type": "train_station",
       "icon": "train",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Train Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Train Station",
+        "he": "תחנת רכבת"
+      }
     },
     {
       "type": "railway_station",
       "icon": "train",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Railway Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Railway Station",
+        "he": "תחנת רכבת"
+      }
     },
     {
       "type": "subway_station",
       "icon": "subway",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Subway Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Subway Station",
+        "he": "תחנת רכבת תחתית"
+      }
     },
     {
       "type": "metro_station",
       "icon": "subway",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Metro Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Metro Station",
+        "he": "תחנת מטרו"
+      }
     },
     {
       "type": "tram_stop",
       "icon": "tram",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Tram Stop"
+      "spatial_type": "point",
+      "names": {
+        "en": "Tram Stop",
+        "he": "תחנת חשמלית"
+      }
     },
     {
       "type": "tram_station",
       "icon": "tram",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Tram Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Tram Station",
+        "he": "תחנת חשמלית"
+      }
     },
     {
       "type": "light_rail_station",
       "icon": "train",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Light Rail Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Light Rail Station",
+        "he": "תחנת רכבת קלה"
+      }
     },
     {
       "type": "ferry_terminal",
       "icon": "directions_boat",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Ferry Terminal"
+      "spatial_type": "point",
+      "names": {
+        "en": "Ferry Terminal",
+        "he": "תחנת מעבורת"
+      }
     },
     {
       "type": "harbor_terminal",
       "icon": "anchor",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Harbor Terminal"
+      "spatial_type": "point",
+      "names": {
+        "en": "Harbor Terminal",
+        "he": "תחנת נמל"
+      }
     },
     {
       "type": "port",
       "icon": "anchor",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Port"
+      "spatial_type": "area",
+      "names": {
+        "en": "Port",
+        "he": "נמל"
+      }
     },
     {
       "type": "airport",
       "icon": "flight",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Airport"
+      "spatial_type": "point",
+      "names": {
+        "en": "Airport",
+        "he": "נמל תעופה"
+      }
     },
     {
       "type": "airport_terminal",
       "icon": "flight_takeoff",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Airport Terminal"
+      "spatial_type": "point",
+      "names": {
+        "en": "Airport Terminal",
+        "he": "טרמינל נמל תעופה"
+      }
     },
     {
       "type": "heliport",
       "icon": "flight",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Heliport"
+      "spatial_type": "point",
+      "names": {
+        "en": "Heliport",
+        "he": "מנחת מסוקים"
+      }
     },
     {
       "type": "cable_car_station",
       "icon": "tram",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Cable Car Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Cable Car Station",
+        "he": "תחנת רכבל"
+      }
     },
     {
       "type": "funicular_station",
       "icon": "tram",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Funicular Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Funicular Station",
+        "he": "תחנת רכבת הרים"
+      }
     },
     {
       "type": "park_and_ride",
       "icon": "local_parking",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Park And Ride"
+      "spatial_type": "point",
+      "names": {
+        "en": "Park And Ride",
+        "he": "חנה וסע"
+      }
     },
     {
       "type": "taxi_stand",
       "icon": "local_taxi",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Taxi Stand"
+      "spatial_type": "point",
+      "names": {
+        "en": "Taxi Stand",
+        "he": "תחנת מוניות"
+      }
     },
     {
       "type": "ride_share_pickup",
       "icon": "location_on",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Ride Share Pickup"
+      "spatial_type": "point",
+      "names": {
+        "en": "Ride Share Pickup",
+        "he": "נקודת איסוף"
+      }
     },
     {
       "type": "transport_hub",
       "icon": "hub",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Transport Hub"
+      "spatial_type": "point",
+      "names": {
+        "en": "Transport Hub",
+        "he": "מרכז תחבורה"
+      }
     },
     {
       "type": "intermodal_terminal",
       "icon": "hub",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Intermodal Terminal"
+      "spatial_type": "point",
+      "names": {
+        "en": "Intermodal Terminal",
+        "he": "טרמינל"
+      }
     },
     {
       "type": "other_transportation",
       "icon": "more_horiz",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Other Transportation"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Other Transportation",
+        "he": "תחבורה אחרת"
+      }
     },
     {
       "type": "border_terminal",
       "icon": "flag_circle",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Border Terminal"
+      "spatial_type": "point",
+      "names": {
+        "en": "Border Terminal",
+        "he": "תחנת גבול"
+      }
     },
     {
       "type": "toll_station",
       "icon": "paid",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Toll Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Toll Station",
+        "he": "תחנת גבייה"
+      }
     },
     {
       "type": "highway_rest_area",
       "icon": "local_gas_station",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Highway Rest Area"
+      "spatial_type": "point",
+      "names": {
+        "en": "Highway Rest Area",
+        "he": "אזור מנוחה בכביש"
+      }
     },
     {
       "type": "gas_station",
       "icon": "local_gas_station",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Gas Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Gas Station",
+        "he": "תחנת דלק"
+      }
     },
     {
       "type": "parking_garage",
       "icon": "local_parking",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Parking Garage"
+      "spatial_type": "point",
+      "names": {
+        "en": "Parking Garage",
+        "he": "חניון"
+      }
     },
     {
       "type": "ev_charging_station",
       "icon": "ev_station",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Ev Charging Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Ev Charging Station",
+        "he": "תחנת טעינה לרכב חשמלי"
+      }
     },
     {
       "type": "bike_station",
       "icon": "pedal_bike",
       "category": "Transportation",
       "is_geo_location": true,
-      "name": "Bike Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Bike Station",
+        "he": "תחנת אופניים"
+      }
     },
     {
       "type": "shuttle_bus",
       "icon": "directions_bus",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Shuttle Bus"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Shuttle Bus",
+        "he": "שאטל"
+      }
     },
     {
       "type": "airport_shuttle_bus",
       "icon": "airport_shuttle",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Airport Shuttle Bus"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Airport Shuttle Bus",
+        "he": "שאטל לשדה תעופה"
+      }
     },
     {
       "type": "harbor_shuttle_boat",
       "icon": "directions_boat",
       "category": "Transportation",
       "is_geo_location": false,
-      "name": "Harbor Shuttle Boat"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Harbor Shuttle Boat",
+        "he": "שאטל לנמל"
+      }
     },
     {
       "type": "atm",
       "icon": "atm",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Atm"
+      "spatial_type": "point",
+      "names": {
+        "en": "Atm",
+        "he": "כספומט"
+      }
     },
     {
       "type": "travel_agency",
       "icon": "travel_explore",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Travel Agency"
+      "spatial_type": "point",
+      "names": {
+        "en": "Travel Agency",
+        "he": "סוכנות נסיעות"
+      }
     },
     {
       "type": "laundry",
       "icon": "local_laundry_service",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Laundry"
+      "spatial_type": "point",
+      "names": {
+        "en": "Laundry",
+        "he": "מכבסה"
+      }
     },
     {
       "type": "sim_card",
       "icon": "sim_card",
       "category": "Services",
       "is_geo_location": false,
-      "name": "Sim Card"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Sim Card",
+        "he": "כרטיס סים"
+      }
     },
     {
       "type": "hospital",
       "icon": "local_hospital",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Hospital"
+      "spatial_type": "point",
+      "names": {
+        "en": "Hospital",
+        "he": "בית חולים"
+      }
     },
     {
       "type": "pharmacy",
       "icon": "local_pharmacy",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Pharmacy"
+      "spatial_type": "point",
+      "names": {
+        "en": "Pharmacy",
+        "he": "בית מרקחת"
+      }
     },
     {
       "type": "currency_exchange",
       "icon": "currency_exchange",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Currency Exchange"
+      "spatial_type": "point",
+      "names": {
+        "en": "Currency Exchange",
+        "he": "המרת מטבע"
+      }
     },
     {
       "type": "luggage_storage",
       "icon": "luggage",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Luggage Storage"
+      "spatial_type": "point",
+      "names": {
+        "en": "Luggage Storage",
+        "he": "אחסון מזוודות"
+      }
     },
     {
       "type": "tourist_info",
       "icon": "info",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Tourist Info"
+      "spatial_type": "point",
+      "names": {
+        "en": "Tourist Info",
+        "he": "מידע לתיירים"
+      }
     },
     {
       "type": "supermarket",
       "icon": "shopping_cart",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Supermarket"
+      "spatial_type": "point",
+      "names": {
+        "en": "Supermarket",
+        "he": "סופרמרקט"
+      }
     },
     {
       "type": "tour_guide",
       "icon": "record_voice_over",
       "category": "Services",
       "is_geo_location": false,
-      "name": "Tour Guide"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Tour Guide",
+        "he": "מדריך טיולים"
+      }
     },
     {
       "type": "driver_service",
       "icon": "badge",
       "category": "Services",
       "is_geo_location": false,
-      "name": "Driver Service"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Driver Service",
+        "he": "שירות נהג"
+      }
     },
     {
       "type": "bike_rental",
       "icon": "directions_bike",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Bike Rental"
+      "spatial_type": "point",
+      "names": {
+        "en": "Bike Rental",
+        "he": "שכירת אופניים"
+      }
     },
     {
       "type": "scooter_rental",
       "icon": "two_wheeler",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Scooter Rental"
+      "spatial_type": "point",
+      "names": {
+        "en": "Scooter Rental",
+        "he": "שכירת קורקינט"
+      }
     },
     {
       "type": "equipment_rental",
       "icon": "construction",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Equipment Rental"
+      "spatial_type": "point",
+      "names": {
+        "en": "Equipment Rental",
+        "he": "שכירת ציוד"
+      }
     },
     {
       "type": "locker",
       "icon": "lock",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Locker"
+      "spatial_type": "point",
+      "names": {
+        "en": "Locker",
+        "he": "לוקר"
+      }
     },
     {
       "type": "shower_facility",
       "icon": "shower",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Shower Facility"
+      "spatial_type": "point",
+      "names": {
+        "en": "Shower Facility",
+        "he": "מתקן מקלחות"
+      }
     },
     {
       "type": "wifi_hotspot",
       "icon": "wifi",
       "category": "Services",
       "is_geo_location": false,
-      "name": "Wifi Hotspot"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Wifi Hotspot",
+        "he": "נקודה חמה"
+      }
     },
     {
       "type": "coworking_space",
       "icon": "work",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Coworking Space"
+      "spatial_type": "point",
+      "names": {
+        "en": "Coworking Space",
+        "he": "מרחב עבודה משותף"
+      }
     },
     {
       "type": "embassy",
       "icon": "account_balance",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Embassy"
+      "spatial_type": "point",
+      "names": {
+        "en": "Embassy",
+        "he": "שגרירות"
+      }
     },
     {
       "type": "other_service",
       "icon": "more_horiz",
       "category": "Services",
       "is_geo_location": false,
-      "name": "Other Service"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Other Service",
+        "he": "שירות אחר"
+      }
     },
     {
       "type": "post_office",
       "icon": "local_post_office",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Post Office"
+      "spatial_type": "point",
+      "names": {
+        "en": "Post Office",
+        "he": "דואר"
+      }
     },
     {
       "type": "police_station",
       "icon": "local_police",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Police Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Police Station",
+        "he": "תחנת משטרה"
+      }
     },
     {
       "type": "fire_station",
       "icon": "local_fire_department",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Fire Station"
+      "spatial_type": "point",
+      "names": {
+        "en": "Fire Station",
+        "he": "תחנת כיבוי"
+      }
     },
     {
       "type": "clinic",
       "icon": "local_hospital",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Clinic"
+      "spatial_type": "point",
+      "names": {
+        "en": "Clinic",
+        "he": "קליניקה"
+      }
     },
     {
       "type": "dentist",
       "icon": "medical_services",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Dentist"
+      "spatial_type": "point",
+      "names": {
+        "en": "Dentist",
+        "he": "רופא שיניים"
+      }
     },
     {
       "type": "vet",
       "icon": "pets",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Vet"
+      "spatial_type": "point",
+      "names": {
+        "en": "Vet",
+        "he": "וטרינר"
+      }
     },
     {
       "type": "bank",
       "icon": "account_balance",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Bank"
+      "spatial_type": "point",
+      "names": {
+        "en": "Bank",
+        "he": "בנק"
+      }
     },
     {
       "type": "money_transfer",
       "icon": "sync_alt",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Money Transfer"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Money Transfer",
+        "he": "העברת כסף"
+      }
     },
     {
       "type": "convenience_store",
       "icon": "local_convenience_store",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Convenience Store"
+      "spatial_type": "point",
+      "names": {
+        "en": "Convenience Store",
+        "he": "חנות נוחות"
+      }
     },
     {
       "type": "local_sim_shop",
       "icon": "storefront",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Local Sim Shop"
+      "spatial_type": "point",
+      "names": {
+        "en": "Local Sim Shop",
+        "he": "סימ מקומי"
+      }
     },
     {
       "type": "luggage_repair",
       "icon": "home_repair_service",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Luggage Repair"
+      "spatial_type": "point",
+      "names": {
+        "en": "Luggage Repair",
+        "he": "תיקון מזוודות"
+      }
     },
     {
       "type": "camera_repair",
       "icon": "build",
       "category": "Services",
       "is_geo_location": true,
-      "name": "Camera Repair"
+      "spatial_type": "point",
+      "names": {
+        "en": "Camera Repair",
+        "he": "תיקון מצלמות"
+      }
     },
     {
       "type": "best_time_visit",
       "icon": "event_available",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Best Time Visit"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Best Time Visit",
+        "he": "הזמן הטוב ביותר לביקור"
+      }
     },
     {
       "type": "safety_tip",
       "icon": "gpp_maybe",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Safety Tip"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Safety Tip",
+        "he": "טיפ בטיחות"
+      }
     },
     {
       "type": "packing_tip",
       "icon": "inventory_2",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Packing Tip"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Packing Tip",
+        "he": "טיפ לאריזה"
+      }
     },
     {
       "type": "app_recommendation",
       "icon": "install_mobile",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "App Recommendation"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "App Recommendation",
+        "he": "המלצת אפליקציה"
+      }
     },
     {
       "type": "budget_tip",
       "icon": "payments",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Budget Tip"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Budget Tip",
+        "he": "טיפ תקציב"
+      }
     },
     {
       "type": "transport_tip",
       "icon": "commute",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Transport Tip"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Transport Tip",
+        "he": "טיפ תחבורה"
+      }
     },
     {
       "type": "scam_warning",
       "icon": "report_problem",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Scam Warning"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Scam Warning",
+        "he": "אזהרת הונאה"
+      }
     },
     {
       "type": "weather_tip",
       "icon": "wb_cloudy",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Weather Tip"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Weather Tip",
+        "he": "טיפ מזג אוויר"
+      }
     },
     {
       "type": "health_tip",
       "icon": "health_and_safety",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Health Tip"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Health Tip",
+        "he": "טיפ לבריאות"
+      }
     },
     {
       "type": "visa_tips",
       "icon": "health_and_safety",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Visa Tips"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Visa Tips",
+        "he": "טיפים לויזה"
+      }
     },
     {
       "type": "money_tip",
       "icon": "payments",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Money Tip"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Money Tip",
+        "he": "טיפ כסף"
+      }
     },
     {
       "type": "local_etiquette_tip",
       "icon": "handshake",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Local Etiquette Tip"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Local Etiquette Tip",
+        "he": "טיפ לנימוסים מקומיים"
+      }
     },
     {
       "type": "connectivity_tip",
       "icon": "wifi",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Connectivity Tip"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Connectivity Tip",
+        "he": "טיפ תחבורה"
+      }
     },
     {
       "type": "family_travel_tip",
       "icon": "family_restroom",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Family Travel Tip"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Family Travel Tip",
+        "he": "טיפ לטיול משפחות"
+      }
     },
     {
       "type": "emergency_number_tip",
       "icon": "phone_in_talk",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Emergency Number Tip"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Emergency Number Tip",
+        "he": "טיפ למספר חירום"
+      }
     },
     {
       "type": "other_tip",
       "icon": "more_horiz",
       "category": "Tips",
       "is_geo_location": false,
-      "name": "Other Tip"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Other Tip",
+        "he": "טיפ אחר"
+      }
     },
     {
       "type": "tour_guide_contact",
       "icon": "person",
       "category": "Contacts",
       "is_geo_location": false,
-      "name": "Tour Guide Contact"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Tour Guide Contact",
+        "he": "איש קשר למדריך טיולים"
+      }
     },
     {
       "type": "host_contact",
       "icon": "person",
       "category": "Contacts",
       "is_geo_location": false,
-      "name": "Host Contact"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Host Contact",
+        "he": "איש קשר מארח"
+      }
     },
     {
       "type": "driver_contact",
       "icon": "person",
       "category": "Contacts",
       "is_geo_location": false,
-      "name": "Driver Contact"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Driver Contact",
+        "he": "איש קשר לנהג"
+      }
     },
     {
       "type": "agency_contact",
       "icon": "person",
       "category": "Contacts",
       "is_geo_location": false,
-      "name": "Agency Contact"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Agency Contact",
+        "he": "איש קשר סוכנות"
+      }
     },
     {
       "type": "rental_contact",
       "icon": "person",
       "category": "Contacts",
       "is_geo_location": false,
-      "name": "Rental Contact"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Rental Contact",
+        "he": "איש קשר להשכרה"
+      }
     },
     {
       "type": "restaurant_contact",
       "icon": "person",
       "category": "Contacts",
       "is_geo_location": false,
-      "name": "Restaurant Contact"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Restaurant Contact",
+        "he": "איש קשר למסעדה"
+      }
     },
     {
       "type": "other_contact",
       "icon": "person",
       "category": "Contacts",
       "is_geo_location": false,
-      "name": "Other Contact"
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Other Contact",
+        "he": "איש קשר אחר"
+      }
+    },
+    {
+      "type": "running_track",
+      "icon": "directions_run",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Running Track",
+        "he": "מסלול ריצה"
+      },
+      "categoryGroup": "sports_facilities"
+    },
+    {
+      "type": "race_track",
+      "icon": "emoji_events",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Race Track",
+        "he": "מסלול מרוץ"
+      },
+      "categoryGroup": "sports_facilities"
+    },
+    {
+      "type": "horse_riding",
+      "icon": "pets",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Horse Riding",
+        "he": "רכיבה על סוסים"
+      },
+      "categoryGroup": "sports_facilities"
+    },
+    {
+      "type": "golf_course",
+      "icon": "golf_course",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Golf Course",
+        "he": "מגרש גולף"
+      },
+      "categoryGroup": "sports_facilities"
+    },
+    {
+      "type": "basketball_court",
+      "icon": "sports_basketball",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Basketball Court",
+        "he": "מגרש כדורסל"
+      },
+      "categoryGroup": "sports_facilities"
+    },
+    {
+      "type": "soccer_field",
+      "icon": "sports_soccer",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Soccer Field",
+        "he": "מגרש כדורגל"
+      },
+      "categoryGroup": "sports_facilities"
+    },
+    {
+      "type": "stadium",
+      "icon": "stadium",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Stadium",
+        "he": "אצטדיון"
+      },
+      "categoryGroup": "sports_facilities"
+    },
+    {
+      "type": "tennis_court",
+      "icon": "sports_tennis",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Tennis Court",
+        "he": "מגרש טניס"
+      },
+      "categoryGroup": "sports_facilities"
+    },
+    {
+      "type": "swimming_pool",
+      "icon": "pool",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Swimming Pool",
+        "he": "בריכת שחייה"
+      },
+      "categoryGroup": "sports_facilities"
+    },
+    {
+      "type": "cemetery",
+      "icon": "local_florist",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Cemetery",
+        "he": "בית קברות"
+      },
+      "categoryGroup": "history_culture"
+    },
+    {
+      "type": "library",
+      "icon": "local_library",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Library",
+        "he": "ספרייה"
+      },
+      "categoryGroup": "urban"
+    },
+    {
+      "type": "coffee_shop",
+      "icon": "local_cafe",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Coffee Shop",
+        "he": "בית קפה"
+      },
+      "categoryGroup": "urban"
+    },
+    {
+      "type": "nightclub",
+      "icon": "nightlife",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Nightclub",
+        "he": "מועדון לילה"
+      },
+      "categoryGroup": "entertainment_culture"
+    },
+    {
+      "type": "snooker",
+      "icon": "sports_bar",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Snooker",
+        "he": "סנוקר"
+      },
+      "categoryGroup": "entertainment_culture"
+    },
+    {
+      "type": "bowling",
+      "icon": "sports_bar",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Bowling",
+        "he": "באולינג"
+      },
+      "categoryGroup": "entertainment_culture"
+    },
+    {
+      "type": "escape_room",
+      "icon": "lock",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Escape Room",
+        "he": "חדר בריחה"
+      },
+      "categoryGroup": "entertainment_culture"
+    },
+    {
+      "type": "illusion_museum",
+      "icon": "auto_awesome",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Illusion Museum",
+        "he": "מוזיאון אשליות"
+      },
+      "categoryGroup": "entertainment_culture"
+    },
+    {
+      "type": "arcade",
+      "icon": "sports_esports",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Arcade",
+        "he": "משחקייה"
+      },
+      "categoryGroup": "entertainment_culture"
+    },
+    {
+      "type": "climbing_wall",
+      "icon": "fitness_center",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "point",
+      "names": {
+        "en": "Climbing Wall",
+        "he": "קיר טיפוס"
+      },
+      "categoryGroup": "sports_facilities"
     }
   ],
   "categories": {
@@ -2932,55 +5104,168 @@
       "db_name": "attraction",
       "icon": "zap",
       "color": "text-blue-500",
-      "label_he": "אטרקציות"
+      "labels": [
+        {
+          "he": "אטרקציות"
+        },
+        {
+          "en": "Attractions"
+        }
+      ]
     },
     "Events": {
       "db_name": "attraction",
       "icon": "calendar",
       "color": "text-purple-500",
-      "label_he": "אירועים"
+      "labels": [
+        {
+          "he": "אירועים"
+        },
+        {
+          "en": "Events"
+        }
+      ]
     },
     "Accommodations": {
       "db_name": "accommodation",
       "icon": "bed",
       "color": "text-indigo-500",
-      "label_he": "לינה"
+      "labels": [
+        {
+          "he": "לינה"
+        },
+        {
+          "en": "Accommodations"
+        }
+      ]
     },
     "Eateries": {
       "db_name": "eatery",
       "icon": "utensils",
       "color": "text-orange-500",
-      "label_he": "אוכל"
+      "labels": [
+        {
+          "he": "אוכל"
+        },
+        {
+          "en": "Eateries"
+        }
+      ]
     },
     "Transportation": {
       "db_name": "transportation",
       "icon": "plane",
       "color": "text-cyan-500",
-      "label_he": "תחבורה"
+      "labels": [
+        {
+          "he": "תחבורה"
+        },
+        {
+          "en": "Transportation"
+        }
+      ]
     },
     "Services": {
       "db_name": "service",
       "icon": "wrench",
       "color": "text-slate-500",
-      "label_he": "שירותים"
+      "labels": [
+        {
+          "he": "שירותים"
+        },
+        {
+          "en": "Services"
+        }
+      ]
     },
     "Contacts": {
       "db_name": "contact",
       "icon": "users",
       "color": "text-teal-500",
-      "label_he": "אנשי קשר"
+      "labels": [
+        {
+          "he": "אנשי קשר"
+        },
+        {
+          "en": "Contacts"
+        }
+      ]
     },
     "Tips": {
       "db_name": null,
       "icon": "lightbulb",
       "color": "text-yellow-500",
-      "label_he": "טיפים"
+      "labels": [
+        {
+          "he": "טיפים"
+        },
+        {
+          "en": "Tips"
+        }
+      ]
     },
     "Geography": {
       "db_name": null,
       "icon": "map",
       "color": "text-emerald-500",
-      "label_he": "גיאוגרפיה"
+      "labels": [
+        {
+          "he": "גיאוגרפיה"
+        },
+        {
+          "en": "Geography"
+        }
+      ]
+    }
+  },
+  "categoryGroups": {
+    "nature": {
+      "en": "Nature",
+      "he": "טבע"
+    },
+    "history_culture": {
+      "en": "History & Culture",
+      "he": "היסטוריה ותרבות"
+    },
+    "outdoor_sports": {
+      "en": "Outdoor & Sports",
+      "he": "ספורט ופעילויות"
+    },
+    "food_drink": {
+      "en": "Food & Drink",
+      "he": "אוכל ושתייה"
+    },
+    "urban": {
+      "en": "Urban",
+      "he": "עירוני"
+    },
+    "scenic_spots": {
+      "en": "Scenic Spots",
+      "he": "נקודות תצפית ונוף"
+    },
+    "wellness": {
+      "en": "Wellness",
+      "he": "ספא ובריאות"
+    },
+    "parks_gardens": {
+      "en": "Parks & Gardens",
+      "he": "פארקים וגנים"
+    },
+    "landmarks": {
+      "en": "Landmarks",
+      "he": "נקודות ציון"
+    },
+    "entertainment_culture": {
+      "en": "Entertainment & Culture",
+      "he": "בידור ותרבות"
+    },
+    "religious": {
+      "en": "Religious Sites",
+      "he": "מקומות דת"
+    },
+    "sports_facilities": {
+      "en": "Sports Facilities",
+      "he": "מתקני ספורט"
     }
   }
 }
