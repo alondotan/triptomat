@@ -1900,16 +1900,16 @@ export default function SchedulePage() {
         >
           {/* ── Day pills + Location strip (sticky, never scrolls) ── */}
           {activeTrip?.status === 'research' ? (
-            <div className="flex flex-col items-center justify-center py-8 gap-4 text-center max-w-md mx-auto">
-              <CalendarDays size={40} className="text-muted-foreground/50" />
-              <div className="space-y-1">
-                <h3 className="text-lg font-semibold">{t('timeline.setTripDays')}</h3>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex flex-col items-center justify-center py-4 gap-2.5 text-center max-w-md mx-auto">
+              <CalendarDays size={28} className="text-muted-foreground/50" />
+              <div>
+                <h3 className="text-base font-semibold">{t('timeline.setTripDays')}</h3>
+                <p className="text-xs text-muted-foreground">
                   {t('timeline.setTripDaysDescription')}
                 </p>
               </div>
-              <div className="w-full space-y-4">
-                <PlanningLevelPicker value={researchLevel} onChange={setResearchLevel} />
+              <div className="w-full space-y-3">
+                <PlanningLevelPicker value={researchLevel} onChange={setResearchLevel} compact />
 
                 {researchLevel === 'planning' && (
                   <div className="flex items-center justify-center gap-3">

@@ -11,9 +11,10 @@ const options: { value: PlanningLevel; icon: React.ReactNode; title: string; des
 interface PlanningLevelPickerProps {
   value: PlanningLevel | null;
   onChange: (level: PlanningLevel) => void;
+  compact?: boolean;
 }
 
-export function PlanningLevelPicker({ value, onChange }: PlanningLevelPickerProps) {
+export function PlanningLevelPicker({ value, onChange, compact }: PlanningLevelPickerProps) {
   return (
     <div className="grid grid-cols-3 gap-2">
       {options.map((opt) => (
@@ -22,7 +23,7 @@ export function PlanningLevelPicker({ value, onChange }: PlanningLevelPickerProp
           type="button"
           onClick={() => onChange(opt.value)}
           aria-pressed={value === opt.value}
-          className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors text-center ${
+          className={`flex flex-col items-center gap-1 ${compact ? 'p-2' : 'p-3'} rounded-lg border-2 transition-colors text-center ${
             value === opt.value
               ? 'border-primary bg-primary/10'
               : 'border-border hover:border-primary/40'
@@ -32,7 +33,7 @@ export function PlanningLevelPicker({ value, onChange }: PlanningLevelPickerProp
             {opt.icon}
           </span>
           <span className="text-xs font-medium">{opt.title}</span>
-          <span className="text-[10px] text-muted-foreground leading-tight">{opt.desc}</span>
+          {!compact && <span className="text-[10px] text-muted-foreground leading-tight">{opt.desc}</span>}
         </button>
       ))}
     </div>
