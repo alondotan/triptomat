@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -12,17 +12,19 @@ import { MapBreadcrumb } from '@/components/map/MapBreadcrumb';
 import { AppLayout } from '@/components/layout';
 import { Badge } from '@/components/ui/badge';
 import type { POIStatus } from '@/types/trip';
-import type { CountryPlace } from '@/services/tripLocationService';
+
 import { getSubCategoryLabel, getCategoryLabel } from '@/lib/subCategoryConfig';
 import 'leaflet/dist/leaflet.css';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
-const createDotIcon = (color: string, size = 22) => new L.DivIcon({
+const createPOIIcon = (color: string, materialIcon?: string) => new L.DivIcon({
   className: '',
-  html: `<div style="background:${color};width:${size}px;height:${size}px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.35);"></div>`,
-  iconSize: [size, size],
-  iconAnchor: [size / 2, size / 2],
+  html: `<div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${color};color:white;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white;">
+    <span class="material-symbols-outlined" style="font-size:16px;">${materialIcon || 'location_on'}</span>
+  </div>`,
+  iconSize: [28, 28],
+  iconAnchor: [14, 14],
 });
 
 const createTransportIcon = (color: string) => new L.DivIcon({
@@ -65,12 +67,12 @@ function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
 const MapPage = () => {
   const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
-  const { pois, addPOI, updatePOI } = usePOI();
+  const { pois } = usePOI();
   const { transportation } = useTransport();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [legendOpen, setLegendOpen] = useState(false);
   const [showCities, setShowCities] = useState(true);
-  const [showTopAttractions, setShowTopAttractions] = useState(true);
+
 
   const countries = activeTrip?.countries || [];
   const mapData = useCountryMapData(countries);
@@ -82,7 +84,6 @@ const MapPage = () => {
     { color: POI_COLORS.service, label: t('mapPage.legendService') },
     { color: '#1d4ed8', label: t('mapPage.legendTransportStop'), square: true },
     { color: '#3498db', label: t('mapPage.legendRegionBoundary'), outline: true },
-    { color: '#e94560', label: t('mapPage.legendTopAttraction'), star: true },
   ];
 
   const toggleStatusFilter = (s: POIStatus | 'all') => {
@@ -105,22 +106,12 @@ const MapPage = () => {
       sub: [p.subCategory ? getSubCategoryLabel(p.subCategory) : getCategoryLabel(p.category), p.location.city].filter(Boolean).join(' · '),
       status: p.status,
       color: POI_COLORS[p.category] ?? '#64748b',
-    })), [pois]);
+      materialIcon: p.subCategory ? mapData.typeIconMap[p.subCategory] : undefined,
+    })), [pois, mapData.typeIconMap]);
 
   const poiMarkers = statusFilters.has('all')
     ? allPoiMarkers
     : allPoiMarkers.filter(m => statusFilters.has(m.status));
-
-  // ── Map-attraction like (heart) ────────────────────────────
-  const LIKED_STATUSES = ['interested', 'planned', 'scheduled', 'booked', 'visited'];
-  const likedPlaceIds = useMemo(() => {
-    const likedNames = new Set(
-      pois.filter(p => LIKED_STATUSES.includes(p.status)).map(p => p.name.toLowerCase()),
-    );
-    return new Set(
-      mapData.topAttractions.filter(a => likedNames.has(a.name.toLowerCase())).map(a => a.id),
-    );
-  }, [pois, mapData.topAttractions]);
 
   // Status counts for filter badges
   const statusCounts = useMemo(() => {
@@ -128,34 +119,6 @@ const MapPage = () => {
     allPoiMarkers.forEach(m => { counts[m.status] = (counts[m.status] || 0) + 1; });
     return counts;
   }, [allPoiMarkers]);
-
-  const handleToggleAttractionLike = useCallback(async (place: CountryPlace) => {
-    if (!activeTrip) return;
-    const existingPoi = pois.find(p => p.name.toLowerCase() === place.name.toLowerCase());
-    if (existingPoi) {
-      // Same logic as POICard: toggle suggested <-> interested, ignore higher statuses
-      if (['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(existingPoi.status)) return;
-      const newStatus = existingPoi.status === 'interested' ? 'suggested' : 'interested';
-      await updatePOI({ ...existingPoi, status: newStatus });
-    } else {
-      await addPOI({
-        tripId: activeTrip.id,
-        category: 'attraction',
-        subCategory: place.subCategory || undefined,
-        name: place.name,
-        status: 'interested',
-        location: {
-          address: place.address || undefined,
-          coordinates: place.coordinates,
-        },
-        sourceRefs: { email_ids: [], recommendation_ids: [] },
-        details: place.description ? { notes: { user_summary: place.description } } : {},
-        isCancelled: false,
-        isPaid: false,
-        imageUrl: place.photo_url || place.image || undefined,
-      });
-    }
-  }, [activeTrip, pois, addPOI, updatePOI]);
 
   if (!activeTrip) {
     return <AppLayout hideHero><div className="text-center py-12 text-muted-foreground">{t('common.noTripSelected')}</div></AppLayout>;
@@ -247,14 +210,6 @@ const MapPage = () => {
             {showCities ? <Eye size={12} /> : <EyeOff size={12} />}
             {t('mapPage.showCities')}
           </Badge>
-          <Badge
-            variant={showTopAttractions ? 'default' : 'outline'}
-            className="cursor-pointer text-xs gap-1"
-            onClick={() => setShowTopAttractions(v => !v)}
-          >
-            {showTopAttractions ? <Eye size={12} /> : <EyeOff size={12} />}
-            {t('mapPage.showAttractions')}
-          </Badge>
         </div>
 
         {/* Map container: fixed 520px on desktop, fill remaining space on mobile */}
@@ -273,11 +228,7 @@ const MapPage = () => {
               currentNode={mapData.currentNode}
               currentBoundary={mapData.currentBoundary}
               childRegions={mapData.childRegions}
-              topAttractions={showTopAttractions ? mapData.topAttractions : []}
-              typeIconMap={mapData.typeIconMap}
               navigateTo={mapData.navigateTo}
-              likedPlaceIds={likedPlaceIds}
-              onToggleLike={handleToggleAttractionLike}
               showCities={showCities}
             />
 
@@ -295,7 +246,7 @@ const MapPage = () => {
 
             {/* POI markers */}
             {poiMarkers.map((m) => (
-              <Marker key={`poi-${m.id}`} position={m.position} icon={createDotIcon(m.color)} zIndexOffset={1000}>
+              <Marker key={`poi-${m.id}`} position={m.position} icon={createPOIIcon(m.color, m.materialIcon)} zIndexOffset={1000}>
                 <Popup>
                   <div className="text-sm space-y-0.5">
                     <div className="font-semibold">{m.name}</div>

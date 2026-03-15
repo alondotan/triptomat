@@ -1,34 +1,19 @@
 import { useEffect } from 'react';
-import { GeoJSON, CircleMarker, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
+import { GeoJSON, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { GeoJSON as GeoJSONType } from 'geojson';
 import type { NavigationNode, ChildRegion } from '@/hooks/useCountryMapData';
-import type { CountryPlace } from '@/services/tripLocationService';
 
 interface BoundaryLayerProps {
   currentNode: NavigationNode | null;
   currentBoundary: GeoJSONType.Geometry | null;
   childRegions: ChildRegion[];
-  topAttractions: CountryPlace[];
-  typeIconMap: Record<string, string>;
   navigateTo: (node: NavigationNode) => void;
-  likedPlaceIds?: Set<string>;
-  onToggleLike?: (place: CountryPlace) => void;
   showCities?: boolean;
 }
 
 const REGION_COLOR = '#3498db';
 const OUTLINE_COLOR = '#444';
-
-const createAttractionIcon = (iconName: string = 'location_on') =>
-  new L.DivIcon({
-    className: '',
-    html: `<div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#e94560;color:white;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white;cursor:pointer;">
-      <span class="material-symbols-outlined" style="font-size:16px;">${iconName}</span>
-    </div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-  });
 
 function FitToNode({
   currentBoundary,
@@ -60,11 +45,7 @@ export function BoundaryLayer({
   currentNode,
   currentBoundary,
   childRegions,
-  topAttractions,
-  typeIconMap,
   navigateTo,
-  likedPlaceIds,
-  onToggleLike,
   showCities = true,
 }: BoundaryLayerProps) {
   if (!currentNode) return null;
@@ -126,78 +107,6 @@ export function BoundaryLayer({
         );
       })}
 
-      {/* Top attraction markers */}
-      {topAttractions.map((place) => {
-        if (!place.coordinates) return null;
-        return (
-          <Marker
-            key={`attr-${place.id}`}
-            position={[place.coordinates.lat, place.coordinates.lng]}
-            icon={createAttractionIcon(typeIconMap[place.subCategory] || 'location_on')}
-            zIndexOffset={500}
-          >
-            <Popup maxWidth={300} minWidth={280} className="attraction-popup">
-              <div>
-                {(place.photo_url || place.image) && (
-                  <img
-                    src={place.photo_url || place.image}
-                    alt=""
-                    style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }}
-                  />
-                )}
-                <div style={{ padding: '10px 12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 3, flex: 1 }}>{place.name}</div>
-                    {onToggleLike && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); L.DomEvent.stopPropagation(e.nativeEvent); onToggleLike(place); }}
-                        style={{
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          padding: 2, flexShrink: 0, marginTop: 1, lineHeight: 0,
-                          color: likedPlaceIds?.has(place.id) ? '#ef4444' : '#ffffff',
-                          transition: 'color 0.2s',
-                        }}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={likedPlaceIds?.has(place.id) ? 'currentColor' : 'none'} stroke={likedPlaceIds?.has(place.id) ? 'currentColor' : '#ef4444'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                  {place.subCategory && (
-                    <span style={{
-                      display: 'inline-block', background: '#fce4ec', color: '#e94560',
-                      padding: '1px 6px', borderRadius: 3, fontSize: 11, marginBottom: 6,
-                    }}>
-                      {typeIconMap[place.subCategory] && (
-                        <span className="material-symbols-outlined" style={{ fontSize: 12, verticalAlign: 'middle', marginRight: 2 }}>
-                          {typeIconMap[place.subCategory]}
-                        </span>
-                      )}
-                      {place.subCategory}
-                    </span>
-                  )}
-                  {place.rating && (
-                    <div style={{ color: '#f9a825', fontSize: 12, marginBottom: 4 }}>
-                      {'★'.repeat(Math.round(place.rating))}{'☆'.repeat(5 - Math.round(place.rating))}
-                      <span style={{ color: '#666', fontSize: 11, marginLeft: 4 }}>
-                        {place.rating} ({(place.user_ratings_total || 0).toLocaleString()})
-                      </span>
-                    </div>
-                  )}
-                  {place.description && (
-                    <div style={{ fontSize: 11, color: '#555', lineHeight: 1.4, marginBottom: 4 }}>{place.description}</div>
-                  )}
-                  {place.address && (
-                    <div style={{ fontSize: 11, color: '#888' }}>{place.address}</div>
-                  )}
-                </div>
-              </div>
-            </Popup>
-            <Tooltip direction="top" offset={[0, -14]}>{place.name}</Tooltip>
-          </Marker>
-        );
-      })}
     </>
   );
 }
