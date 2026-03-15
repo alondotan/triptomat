@@ -1955,7 +1955,7 @@ export default function SchedulePage() {
               </div>
             </div>
           ) : tripDays.length > 0 ? (
-            <div className="w-full shrink-0 pb-1 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="w-full shrink-0 pb-1 overflow-x-auto will-change-transform" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)' }}>
               <div className="flex gap-2 pb-1" style={{ minWidth: 'max-content' }}>
                 {tripDays.map((td) => {
                   const itDay = itineraryDays.find(d => d.dayNumber === td.dayNum);

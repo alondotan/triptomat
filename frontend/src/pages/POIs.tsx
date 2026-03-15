@@ -438,7 +438,7 @@ const POIsPage = () => {
               <Badge variant="secondary" className="text-xs ml-1">{pois.length}</Badge>
               <ChevronLeft size={16} className="text-muted-foreground group-hover/header:text-primary transition-colors" />
             </button>
-            <div className="w-full overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="w-full overflow-x-auto will-change-transform" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)' }}>
               <div className="flex gap-3 pb-3" style={{ minWidth: 'max-content' }}>
                 {pois.map(p => (
                   <div key={p.id} className="w-36 shrink-0 relative">
