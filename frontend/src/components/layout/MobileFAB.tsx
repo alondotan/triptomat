@@ -37,7 +37,7 @@ export function MobileFAB() {
       )}
 
       {/* Menu items — positioned above the FAB */}
-      <div className="fixed bottom-[calc(8.5rem+env(safe-area-inset-bottom))] end-4 z-40 md:hidden flex flex-col-reverse items-end gap-2">
+      <div className={cn("fixed bottom-[calc(8.5rem+env(safe-area-inset-bottom))] end-4 z-40 md:hidden flex flex-col-reverse items-end gap-2", !menuOpen && "pointer-events-none")}>
         {menuItems.map((item, i) => {
           const Icon = item.icon;
           return (
