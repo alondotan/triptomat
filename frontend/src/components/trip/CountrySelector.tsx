@@ -4,8 +4,11 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Drawer, DrawerContent, DrawerTitle } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
 import { useWorldTree, collectCountries, type WorldTreeNode } from '@/hooks/useWorldTree';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 interface CountrySelectorProps {
   value: string[];
@@ -25,6 +28,7 @@ export function CountrySelector({ value, onChange, placeholder = 'Choose destina
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const { tree, loading, allCountries } = useWorldTree();
+  const isMobile = useIsMobile();
 
   // Navigation state — path of nodes drilled into
   const [navPath, setNavPath] = useState<WorldTreeNode[]>([]);
@@ -198,98 +202,131 @@ export function CountrySelector({ value, onChange, placeholder = 'Choose destina
     );
   };
 
-  return (
-    <div className={cn('space-y-2', className)}>
-      <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setNavPath([]); setSearch(''); } }} modal={true}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className="w-full justify-between"
-          >
-            {value.length === 0 ? (
-              <span className="text-muted-foreground">{placeholder}</span>
-            ) : (
-              <span>{value.length} {value.length === 1 ? 'country' : 'countries'} selected</span>
-            )}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[340px] p-0 z-[1200]" align="start">
-          <Command>
-            <CommandInput
-              placeholder="Search country or region..."
-              value={search}
-              onValueChange={setSearch}
-            />
+  const handleOpenChange = (v: boolean) => {
+    setOpen(v);
+    if (!v) {
+      setNavPath([]);
+      setSearch('');
+    }
+  };
 
-            {/* Breadcrumb navigation */}
-            {!isSearching && navPath.length > 0 && (
-              <div className="flex items-center gap-1 px-2 py-1.5 border-b text-sm">
+  const triggerButton = (
+    <Button
+      variant="outline"
+      role="combobox"
+      aria-expanded={open}
+      className="w-full justify-between"
+      onClick={isMobile ? () => setOpen(true) : undefined}
+    >
+      {value.length === 0 ? (
+        <span className="text-muted-foreground">{placeholder}</span>
+      ) : (
+        <span>{value.length} {value.length === 1 ? 'country' : 'countries'} selected</span>
+      )}
+      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+    </Button>
+  );
+
+  const commandContent = (
+    <Command>
+      <CommandInput
+        placeholder="Search country or region..."
+        value={search}
+        onValueChange={setSearch}
+      />
+
+      {/* Breadcrumb navigation */}
+      {!isSearching && navPath.length > 0 && (
+        <div className="flex items-center gap-1 px-2 py-1.5 border-b text-sm">
+          <button
+            type="button"
+            onClick={goToRoot}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            World
+          </button>
+          {navPath.map((node, i) => (
+            <span key={node.name} className="flex items-center gap-1">
+              <ChevronLeft className="h-3 w-3 text-muted-foreground" />
+              {i < navPath.length - 1 ? (
                 <button
                   type="button"
-                  onClick={goToRoot}
+                  onClick={() => setNavPath(navPath.slice(0, i + 1))}
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  World
+                  {node.name_he !== node.name ? node.name_he : node.name}
                 </button>
-                {navPath.map((node, i) => (
-                  <span key={node.name} className="flex items-center gap-1">
-                    <ChevronLeft className="h-3 w-3 text-muted-foreground" />
-                    {i < navPath.length - 1 ? (
-                      <button
-                        type="button"
-                        onClick={() => setNavPath(navPath.slice(0, i + 1))}
-                        className="text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {node.name_he !== node.name ? node.name_he : node.name}
-                      </button>
-                    ) : (
-                      <span className="font-medium">
-                        {node.name_he !== node.name ? node.name_he : node.name}
-                      </span>
-                    )}
-                  </span>
-                ))}
-              </div>
+              ) : (
+                <span className="font-medium">
+                  {node.name_he !== node.name ? node.name_he : node.name}
+                </span>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <CommandList className={isMobile ? 'max-h-[50vh]' : undefined}>
+        <CommandEmpty>No results found.</CommandEmpty>
+
+        {isSearching ? (
+          <CommandGroup className={isMobile ? undefined : 'max-h-[280px] overflow-auto'}>
+            {filteredCountries.map(renderSearchItem)}
+          </CommandGroup>
+        ) : (
+          <CommandGroup className={isMobile ? undefined : 'max-h-[280px] overflow-auto'}>
+            {/* Back button when drilled in */}
+            {navPath.length > 0 && (
+              <CommandItem onSelect={goBack} className="text-muted-foreground">
+                <ChevronRight className="h-4 w-4 ml-0 mr-2" />
+                Back
+              </CommandItem>
             )}
 
-            <CommandList>
-              <CommandEmpty>No results found.</CommandEmpty>
+            {/* "Select all in this group" button when inside a non-country node */}
+            {navPath.length > 0 && currentNode && currentNode.type !== 'country' && (
+              <CommandItem
+                onSelect={() => selectNode(currentNode!)}
+                className="text-primary font-medium"
+              >
+                <Check className="h-4 w-4 ml-0 mr-2" />
+                Select all ({getCountryCount(currentNode!)} countries)
+              </CommandItem>
+            )}
 
-              {isSearching ? (
-                <CommandGroup className="max-h-[280px] overflow-auto">
-                  {filteredCountries.map(renderSearchItem)}
-                </CommandGroup>
-              ) : (
-                <CommandGroup className="max-h-[280px] overflow-auto">
-                  {/* Back button when drilled in */}
-                  {navPath.length > 0 && (
-                    <CommandItem onSelect={goBack} className="text-muted-foreground">
-                      <ChevronRight className="h-4 w-4 ml-0 mr-2" />
-                      Back
-                    </CommandItem>
-                  )}
+            {currentChildren.map(renderNodeItem)}
+          </CommandGroup>
+        )}
+      </CommandList>
+    </Command>
+  );
 
-                  {/* "Select all in this group" button when inside a non-country node */}
-                  {navPath.length > 0 && currentNode && currentNode.type !== 'country' && (
-                    <CommandItem
-                      onSelect={() => selectNode(currentNode!)}
-                      className="text-primary font-medium"
-                    >
-                      <Check className="h-4 w-4 ml-0 mr-2" />
-                      Select all ({getCountryCount(currentNode!)} countries)
-                    </CommandItem>
-                  )}
-
-                  {currentChildren.map(renderNodeItem)}
-                </CommandGroup>
-              )}
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+  return (
+    <div className={cn('space-y-2', className)}>
+      {isMobile ? (
+        <>
+          {triggerButton}
+          <Drawer open={open} onOpenChange={handleOpenChange}>
+            <DrawerContent className="z-[1200]">
+              <VisuallyHidden>
+                <DrawerTitle>Choose destinations</DrawerTitle>
+              </VisuallyHidden>
+              <div className="p-2 pb-6">
+                {commandContent}
+              </div>
+            </DrawerContent>
+          </Drawer>
+        </>
+      ) : (
+        <Popover open={open} onOpenChange={handleOpenChange} modal={true}>
+          <PopoverTrigger asChild>
+            {triggerButton}
+          </PopoverTrigger>
+          <PopoverContent className="w-[340px] p-0 z-[1200]" align="start">
+            {commandContent}
+          </PopoverContent>
+        </Popover>
+      )}
 
       {value.length > 0 && (
         <div className="flex flex-wrap gap-1">

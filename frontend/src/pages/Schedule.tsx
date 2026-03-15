@@ -51,6 +51,8 @@ import { RouteMapPanel } from '@/components/route/RouteMapPanel';
 import { TravelLegRow } from '@/components/route/TravelLegRow';
 import { TRANSPORT_CATEGORY_CONFIG, formatDuration, type RouteLeg, type LegOverride } from '@/services/routeService';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/context/LanguageContext';
+import { useTranslation } from 'react-i18next';
 import { useTripWeather } from '@/hooks/useWeather';
 import { weatherCodeToIcon } from '@/services/weatherService';
 
@@ -132,15 +134,15 @@ function timeToMinutes(t: string): number {
   return (h ?? 0) * 60 + (m ?? 0);
 }
 
-function slotLabel(minutes: number): string {
-  if (minutes < 12 * 60) return 'Morning';
-  if (minutes < 17 * 60) return 'Afternoon';
-  if (minutes < 21 * 60) return 'Evening';
-  return 'Night';
+function slotLabelKey(minutes: number): string {
+  if (minutes < 12 * 60) return 'timeline.morning';
+  if (minutes < 17 * 60) return 'timeline.afternoon';
+  if (minutes < 21 * 60) return 'timeline.evening';
+  return 'timeline.night';
 }
 
 // Compute display label for a group given its position in the groups array
-function groupLabel(groups: Group[], index: number): string {
+function groupLabel(groups: Group[], index: number, t: (key: string) => string): string {
   const group = groups[index];
 
   // Locked group: time_block shows its own label; timed POI shows HH:mm
@@ -161,7 +163,7 @@ function groupLabel(groups: Group[], index: number): string {
 
   // Unlocked group: find surrounding locked neighbours
   const anyLocked = groups.some(g => g.isLocked);
-  if (!anyLocked) return 'Free time';
+  if (!anyLocked) return t('timeline.freeTime');
 
   let prevTime: string | null = null;
   let nextTime: string | null = null;
@@ -181,9 +183,9 @@ function groupLabel(groups: Group[], index: number): string {
   } else if (prevTime && !nextTime) {
     mid = (timeToMinutes(prevTime) + 24 * 60) / 2; // slot ends at midnight
   } else {
-    return 'Free time';
+    return t('timeline.freeTime');
   }
-  return slotLabel(mid);
+  return t(slotLabelKey(mid));
 }
 
 // Can this unlocked group be deleted? Only if there's another unlocked group in
@@ -200,6 +202,7 @@ function canDeleteGroup(groups: Group[], index: number): boolean {
 // ─── Draggable potential item ──────────────────────────────────────────────────
 
 function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeingDragged: boolean; onRemove?: () => void }) {
+  const { t } = useTranslation();
   const { attributes, listeners, setNodeRef } = useDraggable({ id: item.id });
   return (
     <div
@@ -228,7 +231,7 @@ function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeing
         <button
           onClick={onRemove}
           className="shrink-0 p-1.5 rounded-md text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-colors"
-          title="Remove from schedule"
+          title={t('timeline.removeFromSchedule')}
         >
           <X size={14} />
         </button>
@@ -703,6 +706,7 @@ function PotentialZone({ children, isScheduledDragging }: {
   children: React.ReactNode;
   isScheduledDragging: boolean;
 }) {
+  const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({ id: 'potential-zone', disabled: !isScheduledDragging });
   return (
     <div
@@ -717,7 +721,7 @@ function PotentialZone({ children, isScheduledDragging }: {
     >
       {isScheduledDragging && (
         <p className={`text-xs text-center py-1 ${isOver ? 'text-amber-500 font-medium' : 'text-muted-foreground/60'}`}>
-          {isOver ? '↩ Drop to return to potential' : '↩ Drag here to return to potential'}
+          {isOver ? `↩ ${t('timeline.releaseToReturn')}` : `↩ ${t('timeline.dragToReturn')}`}
         </p>
       )}
       {children}
@@ -775,6 +779,8 @@ export default function SchedulePage() {
 
   // ── Mobile layout ──────────────────────────────────────────────────────────
   const isMobile = useIsMobile();
+  const { isRTL } = useLanguage();
+  const { t } = useTranslation();
   const [mobileTab, setMobileTab] = useState<'schedule' | 'map'>('schedule');
 
   // Research mode inline form state
@@ -1884,7 +1890,7 @@ export default function SchedulePage() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col gap-3 w-full px-1 sm:px-4 md:h-full" dir="rtl">
+      <div className="flex flex-col gap-3 w-full px-1 sm:px-4 md:h-full" dir={isRTL ? 'rtl' : 'ltr'}>
 
         <DndContext
           sensors={sensors}
@@ -1897,9 +1903,9 @@ export default function SchedulePage() {
             <div className="flex flex-col items-center justify-center py-8 gap-4 text-center max-w-md mx-auto">
               <CalendarDays size={40} className="text-muted-foreground/50" />
               <div className="space-y-1">
-                <h3 className="text-lg font-semibold">Set trip days</h3>
+                <h3 className="text-lg font-semibold">{t('timeline.setTripDays')}</h3>
                 <p className="text-sm text-muted-foreground">
-                  To plan the schedule, please set the trip duration or exact dates.
+                  {t('timeline.setTripDaysDescription')}
                 </p>
               </div>
               <div className="w-full space-y-4">
@@ -1907,7 +1913,7 @@ export default function SchedulePage() {
 
                 {researchLevel === 'planning' && (
                   <div className="flex items-center justify-center gap-3">
-                    <Label htmlFor="resDays" className="text-sm shrink-0">Number of days:</Label>
+                    <Label htmlFor="resDays" className="text-sm shrink-0">{t('timeline.numberOfDays')}</Label>
                     <Input
                       id="resDays"
                       type="number"
@@ -1919,7 +1925,7 @@ export default function SchedulePage() {
                       className="h-9 w-24"
                     />
                     <Button size="sm" onClick={handleResearchSubmit} disabled={researchSubmitting || !researchDays}>
-                      Confirm
+                      {t('common.confirm')}
                     </Button>
                   </div>
                 )}
@@ -1927,7 +1933,7 @@ export default function SchedulePage() {
                 {researchLevel === 'detailed_planning' && (
                   <div className="flex flex-wrap items-center justify-center gap-3">
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="resStart" className="text-sm shrink-0">From:</Label>
+                      <Label htmlFor="resStart" className="text-sm shrink-0">{t('timeline.from')}</Label>
                       <Input
                         id="resStart"
                         type="date"
@@ -1937,7 +1943,7 @@ export default function SchedulePage() {
                       />
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label htmlFor="resEnd" className="text-sm shrink-0">To:</Label>
+                      <Label htmlFor="resEnd" className="text-sm shrink-0">{t('timeline.to')}</Label>
                       <Input
                         id="resEnd"
                         type="date"
@@ -1948,7 +1954,7 @@ export default function SchedulePage() {
                       />
                     </div>
                     <Button size="sm" onClick={handleResearchSubmit} disabled={researchSubmitting || !researchStartDate || !researchEndDate}>
-                      Confirm
+                      {t('common.confirm')}
                     </Button>
                   </div>
                 )}
@@ -2009,15 +2015,16 @@ export default function SchedulePage() {
                     className="absolute top-0 h-full border border-dashed border-primary/40 rounded-md flex items-center justify-center px-2 text-[11px] text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                     style={{ left: `${selectedIdx * locationDayWidth}px`, width: `${locationDayWidth - 8}px` }}
                   >
-                    + Location
+                    {t('timeline.addLocation')}
                   </button>
                 )}
               </div>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground">No active trip</p>
+            <p className="text-xs text-muted-foreground">{t('timeline.noActiveTrip')}</p>
           )}
 
+          {activeTrip?.status !== 'research' && (<>
           {/* Location picker */}
           {activeTrip && editingLocation && (
             <div className="w-full sm:w-80">
@@ -2043,7 +2050,7 @@ export default function SchedulePage() {
               }`}
               onClick={() => setMobileTab('schedule')}
             >
-              Schedule
+              {t('timeline.scheduleTab')}
             </button>
             <button
               className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
@@ -2053,7 +2060,7 @@ export default function SchedulePage() {
               }`}
               onClick={() => setMobileTab('map')}
             >
-              Map
+              {t('timeline.mapTab')}
             </button>
           </div>
 
@@ -2064,11 +2071,11 @@ export default function SchedulePage() {
           {isMobile && mobileTab === 'schedule' && (
             <div className="md:hidden shrink-0 mb-2">
               <p className="text-xs font-bold uppercase tracking-widest text-amber-600 mb-1">
-                Potential ({potential.length})
+                {t('timeline.potential')} ({potential.length})
               </p>
               <PotentialZone isScheduledDragging={isScheduledDrag}>
                 {potential.length === 0 && !isScheduledDrag ? (
-                  <p className="text-xs text-muted-foreground py-2 text-center">All items are scheduled</p>
+                  <p className="text-xs text-muted-foreground py-2 text-center">{t('timeline.allItemsScheduled')}</p>
                 ) : (
                   <div className="space-y-1.5">
                     {potential.map(item => (
@@ -2099,7 +2106,7 @@ export default function SchedulePage() {
                 }))}
                 onAdd={addActivity}
                 onCreateNew={createNewActivity}
-                addLabel="Add activity"
+                addLabel={t('timeline.addActivity')}
                 locationContext={currentDayLocation}
                 countries={activeTrip?.countries}
 
@@ -2113,11 +2120,11 @@ export default function SchedulePage() {
             {/* ── Column 1: Potential + Add activity (desktop only) ──────────── */}
             {!isMobile && <div className="space-y-3 md:overflow-y-auto md:min-h-0">
               <p className="text-xs font-bold uppercase tracking-widest text-amber-600">
-                Potential ({potential.length})
+                {t('timeline.potential')} ({potential.length})
               </p>
               <PotentialZone isScheduledDragging={isScheduledDrag}>
                 {potential.length === 0 && !isScheduledDrag && (
-                  <p className="text-xs text-muted-foreground py-4 text-center">All items are scheduled</p>
+                  <p className="text-xs text-muted-foreground py-4 text-center">{t('timeline.allItemsScheduled')}</p>
                 )}
                 {potential.map(item => (
                   <DraggableItem
@@ -2147,7 +2154,7 @@ export default function SchedulePage() {
                 }))}
                 onAdd={addActivity}
                 onCreateNew={createNewActivity}
-                addLabel="Add activity"
+                addLabel={t('timeline.addActivity')}
                 locationContext={currentDayLocation}
                 countries={activeTrip?.countries}
 
@@ -2165,11 +2172,11 @@ export default function SchedulePage() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
                   <Sun size={13} className="text-warning shrink-0" />
-                  <p className="text-xs font-semibold text-warning">Where I wake up</p>
+                  <p className="text-xs font-semibold text-warning">{t('timeline.wakeUp')}</p>
                 </div>
                 {selectedDayNum === 1 ? (
                   <div className="px-3 py-2.5 text-xs text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border/40">
-                    Day 1 — Starting point
+                    {t('timeline.firstDay')}
                   </div>
                 ) : morningAccom ? (
                   <div
@@ -2186,7 +2193,7 @@ export default function SchedulePage() {
                   </div>
                 ) : (
                   <div className="px-3 py-2.5 text-xs text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-border/40">
-                    No accommodation set for day {selectedDayNum - 1}
+                    {t('timeline.noAccommodationSet', { day: selectedDayNum - 1 })}
                   </div>
                 )}
               </div>
@@ -2201,27 +2208,27 @@ export default function SchedulePage() {
               {/* Scheduled itinerary */}
               <div className="space-y-1.5">
                 <p className="text-xs font-bold uppercase tracking-widest text-primary">
-                  Schedule ({scheduled.length})
+                  {t('timeline.schedule')} ({scheduled.length})
                 </p>
                 <ScheduleZone activePotentialDrag={isPotentialDrag} isEmpty={scheduled.length === 0}>
                   {scheduled.length === 0 && !isPotentialDrag && (
-                    <p className="text-xs text-muted-foreground py-4 text-center">Drag an item here</p>
+                    <p className="text-xs text-muted-foreground py-4 text-center">{t('timeline.dragItemHere')}</p>
                   )}
 
                   <div className="relative space-y-0.5">
                     {/* Vertical timeline line */}
-                    <div className="absolute right-1.5 sm:right-2.5 top-0 bottom-0 w-px bg-border/60 pointer-events-none" />
+                    <div className={`absolute top-0 bottom-0 w-px bg-border/60 pointer-events-none ${isRTL ? 'right-1.5 sm:right-2.5' : 'left-1.5 sm:left-2.5'}`} />
 
                     {/* Gap before first group */}
                     <DropGap index={0} active={isAnyDragging} />
 
                     {groups.map((group, gi) => (
                       <div key={group.id} className="relative space-y-0.5">
-                        <div className="absolute right-0.5 sm:right-1.5 top-[8px] w-2 h-2 rounded-full bg-orange-400 pointer-events-none z-10" />
-                        <div className="pr-4 sm:pr-6">
+                        <div className={`absolute top-[8px] w-2 h-2 rounded-full bg-orange-400 pointer-events-none z-10 ${isRTL ? 'right-0.5 sm:right-1.5' : 'left-0.5 sm:left-1.5'}`} />
+                        <div className={isRTL ? 'pr-4 sm:pr-6' : 'pl-4 sm:pl-6'}>
                           <GroupFrame
                             group={group}
-                            label={groupLabel(groups, gi)}
+                            label={groupLabel(groups, gi, t)}
                             lockedIds={lockedIds}
                             onToggleLock={toggleLock}
                             onAddTransport={handleAddTransport}
@@ -2256,7 +2263,7 @@ export default function SchedulePage() {
                 {addingTimeBlock ? (
                   <div className="flex gap-1.5 items-center mt-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
                     <Input
-                      placeholder="Window name (e.g. City tour)"
+                      placeholder={t('timeline.timeWindowPlaceholder')}
                       value={newTbLabel}
                       onChange={e => setNewTbLabel(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') handleAddTimeBlock(); if (e.key === 'Escape') { setAddingTimeBlock(false); setNewTbLabel(''); setNewTbTime(''); } }}
@@ -2283,7 +2290,7 @@ export default function SchedulePage() {
                     className="mt-2 w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground/60 hover:text-primary hover:bg-primary/5 border border-dashed border-primary/20 hover:border-primary/40 rounded-lg py-1.5 transition-colors"
                   >
                     <Clock size={12} />
-                    Add time window
+                    {t('timeline.addTimeWindow')}
                   </button>
                 )}
               </div>
@@ -2299,10 +2306,10 @@ export default function SchedulePage() {
               <div className="space-y-1.5">
                 <div className="flex items-center gap-1.5">
                   <Moon size={13} className="text-info shrink-0" />
-                  <p className="text-xs font-semibold text-info">Where I sleep</p>
+                  <p className="text-xs font-semibold text-info">{t('timeline.sleepAt')}</p>
                 </div>
                 <DaySection
-                  title="Where I sleep"
+                  title={t('timeline.sleepAt')}
                   icon={<Moon size={12} />}
                   hideHeader
                   entityType="accommodation"
@@ -2326,7 +2333,7 @@ export default function SchedulePage() {
                   onCreateNew={createNewAccommodation}
                   onToggleSelected={toggleAccommodationSelected}
                   onOpen={setOpenedPoiId}
-                  addLabel="Add accommodation"
+                  addLabel={t('timeline.addAccommodation')}
                   maxNights={tripDays.length - selectedDayNum + 1}
                   showBookingMissionOption
                   locationContext={currentDayLocation}
@@ -2389,6 +2396,7 @@ export default function SchedulePage() {
               </div>
             )}
           </DragOverlay>
+          </>)}
         </DndContext>
 
       </div>
