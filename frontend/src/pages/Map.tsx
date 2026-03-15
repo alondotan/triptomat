@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
@@ -65,10 +65,12 @@ function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
 const MapPage = () => {
   const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
-  const { pois, addPOI, updatePOI, deletePOI } = usePOI();
+  const { pois, addPOI, updatePOI } = usePOI();
   const { transportation } = useTransport();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [legendOpen, setLegendOpen] = useState(false);
+  const [showRegions, setShowRegions] = useState(true);
+  const [showTopAttractions, setShowTopAttractions] = useState(true);
 
   const countries = activeTrip?.countries || [];
   const mapData = useCountryMapData(countries);
@@ -120,51 +122,12 @@ const MapPage = () => {
     );
   }, [pois, mapData.topAttractions]);
 
-  // Map top-attraction place IDs to their POI status (for filtering)
-  const placeIdToPoiStatus = useMemo(() => {
-    const map = new Map<string, POIStatus>();
-    for (const a of mapData.topAttractions) {
-      const poi = pois.find(p => p.name.toLowerCase() === a.name.toLowerCase());
-      if (poi) map.set(a.id, poi.status);
-    }
-    return map;
-  }, [pois, mapData.topAttractions]);
-
-  // Status counts for filter badges (POI markers + top attractions with POI status)
+  // Status counts for filter badges
   const statusCounts = useMemo(() => {
-    const counted = new Set<string>();
-    const counts: Record<string, number> = { all: 0 };
-    allPoiMarkers.forEach(m => {
-      counts[m.status] = (counts[m.status] || 0) + 1;
-      counts.all++;
-      counted.add(m.name.toLowerCase());
-    });
-    // Count top attractions that have a POI status but aren't already counted as POI markers
-    for (const a of mapData.topAttractions) {
-      if (counted.has(a.name.toLowerCase())) continue;
-      const poiStatus = placeIdToPoiStatus.get(a.id);
-      if (poiStatus) {
-        counts[poiStatus] = (counts[poiStatus] || 0) + 1;
-        counts.all++;
-      }
-    }
+    const counts: Record<string, number> = { all: allPoiMarkers.length };
+    allPoiMarkers.forEach(m => { counts[m.status] = (counts[m.status] || 0) + 1; });
     return counts;
-  }, [allPoiMarkers, mapData.topAttractions, placeIdToPoiStatus]);
-
-  // Filter top attractions based on status filter
-  const filteredTopAttractions = useMemo(() => {
-    if (statusFilters.has('all')) return mapData.topAttractions;
-    return mapData.topAttractions.filter(a => {
-      const poiStatus = placeIdToPoiStatus.get(a.id);
-      if (!poiStatus) return false;
-      return statusFilters.has(poiStatus);
-    });
-  }, [mapData.topAttractions, statusFilters, placeIdToPoiStatus]);
-
-  const handleDeleteAttractionPoi = useCallback(async (place: CountryPlace) => {
-    const existingPoi = pois.find(p => p.name.toLowerCase() === place.name.toLowerCase());
-    if (existingPoi) await deletePOI(existingPoi.id);
-  }, [pois, deletePOI]);
+  }, [allPoiMarkers]);
 
   const handleToggleAttractionLike = useCallback(async (place: CountryPlace) => {
     if (!activeTrip) return;
@@ -189,7 +152,7 @@ const MapPage = () => {
         details: place.description ? { notes: { user_summary: place.description } } : {},
         isCancelled: false,
         isPaid: false,
-        imageUrl: place.photo_url || undefined,
+        imageUrl: place.photo_url || place.image || undefined,
       });
     }
   }, [activeTrip, pois, addPOI, updatePOI]);
@@ -274,8 +237,28 @@ const MapPage = () => {
           )}
         </div>
 
+        {/* Layer visibility toggles */}
+        <div className="flex gap-1.5 flex-wrap shrink-0">
+          <Badge
+            variant={showRegions ? 'default' : 'outline'}
+            className="cursor-pointer text-xs gap-1"
+            onClick={() => setShowRegions(v => !v)}
+          >
+            {showRegions ? <Eye size={12} /> : <EyeOff size={12} />}
+            {t('mapPage.legendRegionBoundary')}
+          </Badge>
+          <Badge
+            variant={showTopAttractions ? 'default' : 'outline'}
+            className="cursor-pointer text-xs gap-1"
+            onClick={() => setShowTopAttractions(v => !v)}
+          >
+            {showTopAttractions ? <Eye size={12} /> : <EyeOff size={12} />}
+            {t('mapPage.legendTopAttraction')}
+          </Badge>
+        </div>
+
         {/* Map container: fixed 520px on desktop, fill remaining space on mobile */}
-        <div className="relative rounded-xl overflow-hidden border shadow-sm flex-1 min-h-0 md:flex-none md:h-[520px]" style={{ isolation: 'isolate' }}>
+        <div className="relative rounded-xl overflow-hidden border shadow-sm flex-1 min-h-0 md:flex-none md:h-[520px]" style={{ isolation: 'isolate', touchAction: 'none' }}>
           <MapContainer center={defaultCenter} zoom={5} className="h-full w-full" scrollWheelZoom>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -290,12 +273,12 @@ const MapPage = () => {
               currentNode={mapData.currentNode}
               currentBoundary={mapData.currentBoundary}
               childRegions={mapData.childRegions}
-              topAttractions={filteredTopAttractions}
+              topAttractions={showTopAttractions ? mapData.topAttractions : []}
               typeIconMap={mapData.typeIconMap}
               navigateTo={mapData.navigateTo}
               likedPlaceIds={likedPlaceIds}
               onToggleLike={handleToggleAttractionLike}
-              onDeletePlace={handleDeleteAttractionPoi}
+              showRegions={showRegions}
             />
 
             {/* Route lines */}
@@ -312,19 +295,10 @@ const MapPage = () => {
 
             {/* POI markers */}
             {poiMarkers.map((m) => (
-              <Marker key={`poi-${m.id}`} position={m.position} icon={createDotIcon(m.color)}>
+              <Marker key={`poi-${m.id}`} position={m.position} icon={createDotIcon(m.color)} zIndexOffset={1000}>
                 <Popup>
                   <div className="text-sm space-y-0.5">
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
-                      <div className="font-semibold">{m.name}</div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); deletePOI(m.id); }}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, flexShrink: 0, color: '#ef4444', lineHeight: 0 }}
-                        title={t('common.delete')}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+                    <div className="font-semibold">{m.name}</div>
                     <div className="text-muted-foreground text-xs">{m.sub}</div>
                     <div className="text-xs capitalize" style={{ color: m.color }}>{t(`status.${m.status}`)}</div>
                   </div>

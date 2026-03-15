@@ -70,10 +70,20 @@ export function CreateTransportForm({ open: openProp, onOpenChange, onCreated, i
   const status: TransportStatus = 'suggested';
   const [segments, setSegments] = useState<SegmentFormData[]>([emptySegment()]);
 
-  // Pre-fill from/to when the controlled dialog opens
+  // Reset form & pre-fill from/to every time the dialog opens
   useEffect(() => {
-    if (open && (initialFrom || initialTo)) {
-      setSegments([{ ...emptySegment(), fromName: initialFrom || '', toName: initialTo || '' }]);
+    if (open) {
+      resetForm();
+      if (initialFrom || initialTo) {
+        setSegments([{ ...emptySegment(), fromName: initialFrom || '', toName: initialTo || '' }]);
+      }
+      // Prevent focus from landing on an input after the re-render
+      // (the re-render from setSegments can bypass Radix's preventAutoFocus)
+      requestAnimationFrame(() => {
+        if (document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement) {
+          document.activeElement.blur();
+        }
+      });
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   const [orderNumber, setOrderNumber] = useState('');

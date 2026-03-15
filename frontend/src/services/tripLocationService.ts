@@ -29,6 +29,7 @@ export interface CountryPlace {
   rating?: number;
   user_ratings_total?: number;
   photo_url?: string;
+  image?: string;
   locationId?: string;
   locationPath?: string[];
 }
@@ -340,7 +341,7 @@ async function seedTripPOIs(
         details: {},
         isCancelled: false,
         isPaid: false,
-        imageUrl: place.photo_url || undefined,
+        imageUrl: place.photo_url || place.image || undefined,
       };
 
       try {

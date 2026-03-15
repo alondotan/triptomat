@@ -14,7 +14,7 @@ interface BoundaryLayerProps {
   navigateTo: (node: NavigationNode) => void;
   likedPlaceIds?: Set<string>;
   onToggleLike?: (place: CountryPlace) => void;
-  onDeletePlace?: (place: CountryPlace) => void;
+  showRegions?: boolean;
 }
 
 const REGION_COLOR = '#3498db';
@@ -65,7 +65,7 @@ export function BoundaryLayer({
   navigateTo,
   likedPlaceIds,
   onToggleLike,
-  onDeletePlace,
+  showRegions = true,
 }: BoundaryLayerProps) {
   if (!currentNode) return null;
 
@@ -76,7 +76,7 @@ export function BoundaryLayer({
       <FitToNode currentBoundary={currentBoundary} childRegions={childRegions} />
 
       {/* Current node boundary as dashed outline */}
-      {currentBoundary && (
+      {showRegions && currentBoundary && (
         <GeoJSON
           key={`outline-${nodeKey}`}
           data={{ type: 'Feature', geometry: currentBoundary, properties: {} } as GeoJSON.Feature}
@@ -85,7 +85,7 @@ export function BoundaryLayer({
       )}
 
       {/* Child region boundaries */}
-      {childRegions.map((child) => {
+      {showRegions && childRegions.map((child) => {
         const canNavigate = child.node.children.length > 0 || !!child.boundary || (child.node.topAttractions?.length ?? 0) > 0;
 
         return (
@@ -137,9 +137,9 @@ export function BoundaryLayer({
           >
             <Popup maxWidth={300} minWidth={280} className="attraction-popup">
               <div>
-                {place.photo_url && (
+                {(place.photo_url || place.image) && (
                   <img
-                    src={place.photo_url}
+                    src={place.photo_url || place.image}
                     alt=""
                     style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }}
                   />
@@ -147,36 +147,21 @@ export function BoundaryLayer({
                 <div style={{ padding: '10px 12px' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
                     <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 3, flex: 1 }}>{place.name}</div>
-                    <div style={{ display: 'flex', gap: 2, flexShrink: 0, marginTop: 1 }}>
-                      {onToggleLike && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); e.preventDefault(); L.DomEvent.stopPropagation(e.nativeEvent); onToggleLike(place); }}
-                          style={{
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            padding: 2, lineHeight: 0,
-                            color: likedPlaceIds?.has(place.id) ? '#ef4444' : '#ffffff',
-                            transition: 'color 0.2s',
-                          }}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={likedPlaceIds?.has(place.id) ? 'currentColor' : 'none'} stroke={likedPlaceIds?.has(place.id) ? 'currentColor' : '#ef4444'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                          </svg>
-                        </button>
-                      )}
-                      {onDeletePlace && likedPlaceIds?.has(place.id) && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); e.preventDefault(); L.DomEvent.stopPropagation(e.nativeEvent); onDeletePlace(place); }}
-                          style={{
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            padding: 2, lineHeight: 0, color: '#ef4444',
-                          }}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
+                    {onToggleLike && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); L.DomEvent.stopPropagation(e.nativeEvent); onToggleLike(place); }}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          padding: 2, flexShrink: 0, marginTop: 1, lineHeight: 0,
+                          color: likedPlaceIds?.has(place.id) ? '#ef4444' : '#ffffff',
+                          transition: 'color 0.2s',
+                        }}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={likedPlaceIds?.has(place.id) ? 'currentColor' : 'none'} stroke={likedPlaceIds?.has(place.id) ? 'currentColor' : '#ef4444'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                   {place.subCategory && (
                     <span style={{
