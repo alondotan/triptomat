@@ -69,7 +69,7 @@ const MapPage = () => {
   const { transportation } = useTransport();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [legendOpen, setLegendOpen] = useState(false);
-  const [showRegions, setShowRegions] = useState(true);
+  const [showCities, setShowCities] = useState(true);
   const [showTopAttractions, setShowTopAttractions] = useState(true);
 
   const countries = activeTrip?.countries || [];
@@ -240,12 +240,12 @@ const MapPage = () => {
         {/* Layer visibility toggles */}
         <div className="flex gap-1.5 flex-wrap shrink-0">
           <Badge
-            variant={showRegions ? 'default' : 'outline'}
+            variant={showCities ? 'default' : 'outline'}
             className="cursor-pointer text-xs gap-1"
-            onClick={() => setShowRegions(v => !v)}
+            onClick={() => setShowCities(v => !v)}
           >
-            {showRegions ? <Eye size={12} /> : <EyeOff size={12} />}
-            {t('mapPage.legendRegionBoundary')}
+            {showCities ? <Eye size={12} /> : <EyeOff size={12} />}
+            {t('mapPage.showCities')}
           </Badge>
           <Badge
             variant={showTopAttractions ? 'default' : 'outline'}
@@ -253,7 +253,7 @@ const MapPage = () => {
             onClick={() => setShowTopAttractions(v => !v)}
           >
             {showTopAttractions ? <Eye size={12} /> : <EyeOff size={12} />}
-            {t('mapPage.legendTopAttraction')}
+            {t('mapPage.showAttractions')}
           </Badge>
         </div>
 
@@ -278,7 +278,7 @@ const MapPage = () => {
               navigateTo={mapData.navigateTo}
               likedPlaceIds={likedPlaceIds}
               onToggleLike={handleToggleAttractionLike}
-              showRegions={showRegions}
+              showCities={showCities}
             />
 
             {/* Route lines */}

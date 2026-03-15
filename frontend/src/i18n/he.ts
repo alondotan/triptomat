@@ -527,6 +527,8 @@ const he = {
     legendRegionBoundary: 'גבול אזור',
     legendTopAttraction: 'אטרקציה מובילה',
     legend: 'מקרא',
+    showCities: 'ערים',
+    showAttractions: 'אטרקציות מובילות',
   },
 
   // ── Itinerary Page ──

@@ -14,7 +14,7 @@ interface BoundaryLayerProps {
   navigateTo: (node: NavigationNode) => void;
   likedPlaceIds?: Set<string>;
   onToggleLike?: (place: CountryPlace) => void;
-  showRegions?: boolean;
+  showCities?: boolean;
 }
 
 const REGION_COLOR = '#3498db';
@@ -65,7 +65,7 @@ export function BoundaryLayer({
   navigateTo,
   likedPlaceIds,
   onToggleLike,
-  showRegions = true,
+  showCities = true,
 }: BoundaryLayerProps) {
   if (!currentNode) return null;
 
@@ -75,8 +75,8 @@ export function BoundaryLayer({
     <>
       <FitToNode currentBoundary={currentBoundary} childRegions={childRegions} />
 
-      {/* Current node boundary as dashed outline */}
-      {showRegions && currentBoundary && (
+      {/* Current node boundary as dashed outline — always visible */}
+      {currentBoundary && (
         <GeoJSON
           key={`outline-${nodeKey}`}
           data={{ type: 'Feature', geometry: currentBoundary, properties: {} } as GeoJSON.Feature}
@@ -84,8 +84,8 @@ export function BoundaryLayer({
         />
       )}
 
-      {/* Child region boundaries */}
-      {showRegions && childRegions.map((child) => {
+      {/* Child region boundaries — always visible; city center dots toggled by showCities */}
+      {childRegions.map((child) => {
         const canNavigate = child.node.children.length > 0 || !!child.boundary || (child.node.topAttractions?.length ?? 0) > 0;
 
         return (
@@ -107,7 +107,7 @@ export function BoundaryLayer({
               </GeoJSON>
             )}
 
-            {child.center && (
+            {showCities && child.center && (
               <CircleMarker
                 center={child.center}
                 radius={child.boundary ? 4 : 7}
@@ -134,6 +134,7 @@ export function BoundaryLayer({
             key={`attr-${place.id}`}
             position={[place.coordinates.lat, place.coordinates.lng]}
             icon={createAttractionIcon(typeIconMap[place.subCategory] || 'location_on')}
+            zIndexOffset={500}
           >
             <Popup maxWidth={300} minWidth={280} className="attraction-popup">
               <div>

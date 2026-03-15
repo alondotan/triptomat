@@ -529,6 +529,8 @@ const en = {
     legendRegionBoundary: 'Region boundary',
     legendTopAttraction: 'Top attraction',
     legend: 'Legend',
+    showCities: 'Cities',
+    showAttractions: 'Top attractions',
   },
 
   // ── Itinerary Page ──
