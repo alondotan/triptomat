@@ -6,14 +6,16 @@ import { useActiveTrip } from '@/context/ActiveTripContext';
 import { useWorldTree, type WorldTreeNode } from '@/hooks/useWorldTree';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, MapPin, Check, Settings, LogOut, MoreVertical, Plus, Compass } from 'lucide-react';
+import { CalendarDays, MapPin, Check, Settings, LogOut, MoreVertical, Plus, Compass, Trash2 } from 'lucide-react';
 import { CreateTripForm } from '@/components/forms/CreateTripForm';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { deleteTrip } from '@/services/tripService';
 import type { Trip } from '@/types/trip';
 
 const COMMON_CURRENCIES = [
@@ -82,12 +84,13 @@ function getCountryImage(tree: WorldTreeNode | null, countries: string[]): strin
   return null;
 }
 
-function TripCard({ trip, isActive, tree, flagMap, onSelect, t }: {
+function TripCard({ trip, isActive, tree, flagMap, onSelect, onDelete, t }: {
   trip: Trip;
   isActive: boolean;
   tree: WorldTreeNode | null;
   flagMap: Map<string, string>;
   onSelect: () => void;
+  onDelete?: () => void;
   t: (key: string, opts?: Record<string, any>) => string;
 }) {
   const heroImage = getCountryImage(tree, trip.countries);
@@ -120,6 +123,18 @@ function TripCard({ trip, isActive, tree, flagMap, onSelect, t }: {
         {isActive && (
           <div className="absolute top-3 right-3 bg-primary text-primary-foreground rounded-full p-1 shadow">
             <Check size={14} />
+          </div>
+        )}
+
+        {/* Delete button */}
+        {onDelete && (
+          <div
+            className="absolute top-3 left-3 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={e => { e.stopPropagation(); onDelete(); }}
+          >
+            <div className="bg-destructive/90 hover:bg-destructive text-white rounded-full p-1.5 shadow cursor-pointer">
+              <Trash2 size={14} />
+            </div>
           </div>
         )}
 
@@ -171,8 +186,9 @@ function TripCard({ trip, isActive, tree, flagMap, onSelect, t }: {
 const TripsPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { trips } = useTripList();
+  const { trips, removeTrip } = useTripList();
   const { activeTrip, setActiveTrip, updateCurrentTrip } = useActiveTrip();
+  const [deleteTarget, setDeleteTarget] = useState<Trip | null>(null);
   const { tree } = useWorldTree();
   const { toast } = useToast();
   const [prefsOpen, setPrefsOpen] = useState(false);
@@ -205,6 +221,19 @@ const TripsPage = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+  };
+
+  const handleDeleteTrip = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteTrip(deleteTarget.id);
+      removeTrip(deleteTarget.id);
+      toast({ title: t('deleteTrip.button') });
+    } catch (error) {
+      console.error('Failed to delete trip:', error);
+      toast({ title: t('common.error'), description: String(error), variant: 'destructive' });
+    }
+    setDeleteTarget(null);
   };
 
   const handleSavePrefs = async () => {
@@ -267,6 +296,7 @@ const TripsPage = () => {
                 tree={tree}
                 flagMap={flagMap}
                 onSelect={() => handleSelect(trip.id)}
+                onDelete={trip.myRole === 'owner' ? () => setDeleteTarget(trip) : undefined}
                 t={t}
               />
             ))}
@@ -315,6 +345,27 @@ const TripsPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Trip Confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={open => { if (!open) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteTrip.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('deleteTrip.message', { name: deleteTarget?.name })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteTrip}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t('deleteTrip.button')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

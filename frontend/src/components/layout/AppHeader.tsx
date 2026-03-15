@@ -481,7 +481,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
           <AlertDialogFooter>
             <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => { deleteCurrentTrip(); setDeleteDialogOpen(false); }}
+              onClick={() => { deleteCurrentTrip().then(() => navigate('/trips')); setDeleteDialogOpen(false); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {t('deleteTrip.button')}
