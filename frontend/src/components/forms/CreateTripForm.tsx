@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ interface CreateTripFormProps {
 
 export function CreateTripForm({ trigger, open: openProp, onOpenChange }: CreateTripFormProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { createNewTrip } = useTripList();
   const { toast } = useToast();
   const [openInternal, setOpenInternal] = useState(false);
@@ -84,6 +86,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
       });
       setOpen(false);
       resetForm();
+      navigate('/');
     } finally {
       setIsSubmitting(false);
     }
