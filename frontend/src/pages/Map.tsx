@@ -67,7 +67,7 @@ function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
 const MapPage = () => {
   const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
-  const { pois } = usePOI();
+  const { pois, updatePOI } = usePOI();
   const { transportation } = useTransport();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [legendOpen, setLegendOpen] = useState(false);
@@ -107,6 +107,8 @@ const MapPage = () => {
       status: p.status,
       color: POI_COLORS[p.category] ?? '#64748b',
       materialIcon: p.subCategory ? mapData.typeIconMap[p.subCategory] : undefined,
+      imageUrl: p.imageUrl,
+      poiRef: p,
     })), [pois, mapData.typeIconMap]);
 
   const poiMarkers = statusFilters.has('all')
@@ -245,17 +247,47 @@ const MapPage = () => {
             ))}
 
             {/* POI markers */}
-            {poiMarkers.map((m) => (
-              <Marker key={`poi-${m.id}`} position={m.position} icon={createPOIIcon(m.color, m.materialIcon)} zIndexOffset={1000}>
-                <Popup>
-                  <div className="text-sm space-y-0.5">
-                    <div className="font-semibold">{m.name}</div>
-                    <div className="text-muted-foreground text-xs">{m.sub}</div>
-                    <div className="text-xs capitalize" style={{ color: m.color }}>{t(`status.${m.status}`)}</div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+            {poiMarkers.map((m) => {
+              const isLiked = ['interested', 'planned', 'scheduled', 'booked', 'visited'].includes(m.status);
+              const canToggle = !['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(m.status);
+              return (
+                <Marker key={`poi-${m.id}`} position={m.position} icon={createPOIIcon(m.color, m.materialIcon)} zIndexOffset={1000}>
+                  <Popup maxWidth={280} minWidth={240}>
+                    <div>
+                      {m.imageUrl && (
+                        <img src={m.imageUrl} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
+                      )}
+                      <div style={{ padding: '8px 10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
+                          <div style={{ fontSize: 14, fontWeight: 700, flex: 1 }}>{m.name}</div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation(); e.preventDefault();
+                              L.DomEvent.stopPropagation(e.nativeEvent);
+                              if (!canToggle) return;
+                              const newStatus = m.status === 'interested' ? 'suggested' : 'interested';
+                              updatePOI({ ...m.poiRef, status: newStatus });
+                            }}
+                            style={{
+                              background: 'none', border: 'none', cursor: canToggle ? 'pointer' : 'default',
+                              padding: 2, flexShrink: 0, lineHeight: 0,
+                              color: isLiked ? '#ef4444' : '#ccc',
+                              transition: 'color 0.2s',
+                            }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>{m.sub}</div>
+                        <div style={{ fontSize: 11, marginTop: 2, color: m.color, fontWeight: 500 }}>{t(`status.${m.status}`)}</div>
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
 
             {/* Transport stop markers */}
             {transportStops.map((s, i) => (
