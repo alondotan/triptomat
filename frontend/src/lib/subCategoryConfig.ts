@@ -230,6 +230,7 @@ export interface SubCategoryEntry {
   is_geo_location: boolean;
   spatial_type?: string;
   names?: { en?: string; he?: string };
+  categoryGroup?: string;
 }
 
 export interface CategoryMeta {
@@ -242,6 +243,7 @@ export interface CategoryMeta {
 export interface SubCategoryConfig {
   master_list: SubCategoryEntry[];
   categories: Record<string, CategoryMeta>;
+  categoryGroups?: Record<string, { en?: string; he?: string }>;
 }
 
 // Lucide icon name → component (for category-level icons)
@@ -310,6 +312,20 @@ export function getSubCategoryLabel(type: string, lang?: string): string {
   if (isHe && entry.names?.he) return entry.names.he;
   if (entry.names?.en) return entry.names.en;
   return type;
+}
+
+/** Get the categoryGroup key for a sub-category type (e.g. "river" → "nature"). */
+export function getSubCategoryGroup(type: string): string | undefined {
+  return getSubCategoryEntry(type)?.categoryGroup;
+}
+
+/** Get the localized label for a categoryGroup key. */
+export function getCategoryGroupLabel(groupKey: string, lang?: string): string {
+  if (!cachedConfig?.categoryGroups) return groupKey;
+  const group = cachedConfig.categoryGroups[groupKey];
+  if (!group) return groupKey;
+  const isHe = (lang ?? document.documentElement.lang) === 'he';
+  return (isHe ? group.he : group.en) || group.en || groupKey;
 }
 
 export function getSubCategoriesForPOICategory(poiCategory: string): SubCategoryEntry[] {

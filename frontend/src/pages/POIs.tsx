@@ -15,7 +15,7 @@ import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
 import type { PointOfInterest, POIStatus, POICategory } from '@/types/trip';
 import { flattenTripLocations } from '@/services/tripLocationService';
 import { POICard } from '@/components/poi/POICard';
-import { getCategoryIcon, getCategoryLabel, getSubCategoryLabel, getPOICategories } from '@/lib/subCategoryConfig';
+import { getCategoryIcon, getCategoryLabel, getSubCategoryLabel, getCategoryGroupLabel, getSubCategoryGroup, getPOICategories } from '@/lib/subCategoryConfig';
 
 type GroupBy = 'category' | 'location' | 'status';
 type SortBy = 'name' | 'updated_at' | 'created_at';
@@ -184,9 +184,13 @@ const POIsPage = () => {
         // Build sub-groups
         const subMap: Record<string, PointOfInterest[]> = {};
         for (const poi of pois) {
-          const sub = groupBy === 'category'
-            ? (poi.subCategory || '—')
-            : (poi.location.city || poi.location.country || '—');
+          let sub: string;
+          if (groupBy === 'category') {
+            // Use categoryGroup from config when available, fall back to subCategory
+            sub = (poi.subCategory && getSubCategoryGroup(poi.subCategory)) || poi.subCategory || '—';
+          } else {
+            sub = poi.location.city || poi.location.country || '—';
+          }
           if (!subMap[sub]) subMap[sub] = [];
           subMap[sub].push(poi);
         }
@@ -241,7 +245,10 @@ const POIsPage = () => {
     const baseLabel = groupBy === 'category' ? getCategoryLabel(primary)
       : groupBy === 'status' ? (t(`status.${primary}`, primary))
       : primary;
-    return sub ? `${baseLabel} | ${getSubCategoryLabel(sub)}` : baseLabel;
+    if (!sub) return baseLabel;
+    // Try categoryGroup label first, then subCategory label
+    const subLabel = getCategoryGroupLabel(sub) !== sub ? getCategoryGroupLabel(sub) : getSubCategoryLabel(sub);
+    return `${baseLabel} | ${subLabel}`;
   };
 
   const getGroupIcon = (key: string): React.ReactNode => {
