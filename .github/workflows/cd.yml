@@ -19,6 +19,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
     strategy:
+      fail-fast: false
       matrix:
         lambda: [gateway, downloader, worker, mail_handler, admin]
       max-parallel: 4

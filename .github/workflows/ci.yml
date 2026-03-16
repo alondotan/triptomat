@@ -67,6 +67,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         lambda: [gateway, downloader, worker, mail_handler, admin]
     steps:
