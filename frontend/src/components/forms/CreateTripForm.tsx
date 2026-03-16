@@ -116,99 +116,102 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {triggerEl && <DialogTrigger asChild>{triggerEl}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] max-sm:top-[5%] max-sm:translate-y-0 flex flex-col overflow-hidden" preventAutoFocus>
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[500px] max-h-[85dvh] max-sm:top-[5%] max-sm:translate-y-0 !flex flex-col overflow-hidden p-0" preventAutoFocus>
+        <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
           <DialogTitle>{t('createTrip.newTrip')}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-3 overflow-y-auto flex-1 min-h-0 px-1">
-          {/* Basic info */}
-          <div className="rounded-lg bg-muted/50 p-3 space-y-2">
-            <Label htmlFor="name">{t('createTrip.tripName')}</Label>
-            <Input
-              id="name"
-              placeholder={t('createTrip.tripNamePlaceholder')}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              autoComplete="off"
-            />
-          </div>
-
-          <div className="rounded-lg bg-muted/50 p-3 space-y-2">
-            <Label htmlFor="description">{t('createTrip.description')}</Label>
-            <Textarea
-              id="description"
-              name="description"
-              placeholder={t('createTrip.descriptionPlaceholder')}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              autoComplete="off"
-            />
-          </div>
-
-          <div className="rounded-lg bg-muted/50 p-3 space-y-2">
-            <Label htmlFor="trip-countries">{t('createTrip.countries')}</Label>
-            <CountrySelector
-              value={countries}
-              onChange={setCountries}
-              placeholder={t('createTrip.chooseDestinations')}
-            />
-          </div>
-
-          {/* Planning level selection */}
-          <div className="rounded-lg bg-muted/50 p-3 space-y-2">
-            <Label htmlFor="trip-planning-level">{t('createTrip.planningStage')}</Label>
-            <PlanningLevelPicker value={planningLevel} onChange={setPlanningLevel} />
-          </div>
-
-          {/* Conditional fields based on planning level */}
-          {planningLevel === 'planning' && (
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="space-y-3 overflow-y-auto flex-1 min-h-0 px-6 py-3">
+            {/* Basic info */}
             <div className="rounded-lg bg-muted/50 p-3 space-y-2">
-              <Label htmlFor="numberOfDays">{t('createTrip.numberOfDays')}</Label>
+              <Label htmlFor="name">{t('createTrip.tripName')}</Label>
               <Input
-                id="numberOfDays"
-                type="number"
-                min={1}
-                max={365}
-                placeholder="7"
-                value={numberOfDays}
-                onChange={(e) => setNumberOfDays(e.target.value ? parseInt(e.target.value) : '')}
+                id="name"
+                placeholder={t('createTrip.tripNamePlaceholder')}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 required
                 autoComplete="off"
               />
             </div>
-          )}
 
-          {planningLevel === 'detailed_planning' && (
-            <div className="rounded-lg bg-muted/50 p-3 grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startDate">{t('createTrip.startDate')}</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  required
-                  autoComplete="off"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endDate">{t('createTrip.endDate')}</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  min={startDate}
-                  required
-                  autoComplete="off"
-                />
-              </div>
+            <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+              <Label htmlFor="description">{t('createTrip.description')}</Label>
+              <Textarea
+                id="description"
+                name="description"
+                placeholder={t('createTrip.descriptionPlaceholder')}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                autoComplete="off"
+                rows={2}
+              />
             </div>
-          )}
 
-          <div className="flex justify-end gap-2 pt-4">
+            <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+              <Label htmlFor="trip-countries">{t('createTrip.countries')}</Label>
+              <CountrySelector
+                value={countries}
+                onChange={setCountries}
+                placeholder={t('createTrip.chooseDestinations')}
+              />
+            </div>
+
+            {/* Planning level selection */}
+            <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+              <Label htmlFor="trip-planning-level">{t('createTrip.planningStage')}</Label>
+              <PlanningLevelPicker value={planningLevel} onChange={setPlanningLevel} compact />
+            </div>
+
+            {/* Conditional fields based on planning level */}
+            {planningLevel === 'planning' && (
+              <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+                <Label htmlFor="numberOfDays">{t('createTrip.numberOfDays')}</Label>
+                <Input
+                  id="numberOfDays"
+                  type="number"
+                  min={1}
+                  max={365}
+                  placeholder="7"
+                  value={numberOfDays}
+                  onChange={(e) => setNumberOfDays(e.target.value ? parseInt(e.target.value) : '')}
+                  required
+                  autoComplete="off"
+                />
+              </div>
+            )}
+
+            {planningLevel === 'detailed_planning' && (
+              <div className="rounded-lg bg-muted/50 p-3 grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="startDate">{t('createTrip.startDate')}</Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    required
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="endDate">{t('createTrip.endDate')}</Label>
+                  <Input
+                    id="endDate"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    min={startDate}
+                    required
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 px-6 py-3 border-t shrink-0">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               {t('common.cancel')}
             </Button>
