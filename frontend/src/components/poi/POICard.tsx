@@ -134,6 +134,7 @@ export function POICard({
           type="button"
           className={`flex flex-col gap-0.5 flex-1 min-w-0 cursor-pointer bg-transparent border-0 p-0 text-start ${isSelected ? 'text-primary' : ''} ${className}`}
           onClick={handleCardClick}
+          onDoubleClick={() => setDialogOpen(true)}
         >
           {/* Name row */}
           <div className="flex items-center gap-2">

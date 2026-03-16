@@ -249,12 +249,13 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
         </div>
 
         {/* ── DESKTOP HEADER ── */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-1">
+          <img src="/icon.png" alt="Triptomat" className="h-7 w-7 rounded shrink-0" />
           {activeTrip ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-lg p-1 h-9 w-9 shrink-0" aria-label={t('nav.menu')}>
-                  <img src="/icon.png" alt="Triptomat" className="h-7 w-7 rounded" />
+                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label={t('nav.menu')}>
+                  <ChevronDown size={16} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56">
@@ -304,7 +305,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
             </DropdownMenu>
           ) : (
             <RouterNavLink to="/" className="flex items-center" aria-label={t('nav.triptomat')}>
-              <img src="/icon.png" alt="Triptomat" className="h-7 w-7 rounded" />
+              <span className="sr-only">Triptomat</span>
             </RouterNavLink>
           )}
         </div>

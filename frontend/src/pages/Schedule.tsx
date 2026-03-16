@@ -7,9 +7,10 @@ import { useItinerary } from '@/context/ItineraryContext';
 import { updateItineraryDay, createItineraryDay } from '@/services/itineraryService';
 import { rebuildPOIBookingsFromDays } from '@/services/poiService';
 import { LocationContextPicker } from '@/components/shared/LocationContextPicker';
-import { parseISO, format } from 'date-fns';
+import { parseISO, format, addDays, subDays } from 'date-fns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useTripDays, tripDayDate } from '@/hooks/useTripDays';
-import type { ItineraryActivity, PointOfInterest } from '@/types/trip';
+import type { ItineraryActivity, ItineraryDay, PointOfInterest } from '@/types/trip';
 import { POICard } from '@/components/poi/POICard';
 import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
 import { CreateTransportForm } from '@/components/forms/CreateTransportForm';
@@ -93,6 +94,46 @@ function transportEmoji(category: string): string {
   }
 }
 
+// ─── Chronological reorder ────────────────────────────────────────────────────
+// When a time_block gets/changes its time, reorder activities so timed items
+// appear in chronological order. Untimed items stay grouped with their preceding
+// timed item (their "section leader").
+
+function reorderActivitiesChronologically(
+  activities: ItineraryActivity[],
+  resolveTime: (act: ItineraryActivity) => string | undefined,
+): ItineraryActivity[] {
+  const sorted = [...activities].sort((a, b) => a.order - b.order);
+
+  // Build sections: each section = [timed_leader, ...untimed_followers]
+  const sections: ItineraryActivity[][] = [];
+  let current: ItineraryActivity[] = [];
+
+  for (const act of sorted) {
+    if (resolveTime(act) && current.length > 0) {
+      sections.push(current);
+      current = [act];
+    } else {
+      current.push(act);
+    }
+  }
+  if (current.length > 0) sections.push(current);
+
+  // Sort sections by leader time (untimed leaders stay at start)
+  sections.sort((a, b) => {
+    const tA = resolveTime(a[0]);
+    const tB = resolveTime(b[0]);
+    if (!tA && !tB) return 0;
+    if (!tA) return -1;
+    if (!tB) return 1;
+    return tA.localeCompare(tB);
+  });
+
+  // Reassign order values
+  let order = 1;
+  return sections.flat().map(act => ({ ...act, order: order++ }));
+}
+
 // ─── Group logic ───────────────────────────────────────────────────────────────
 
 interface Group {
@@ -148,7 +189,7 @@ function groupLabel(groups: Group[], index: number, t: (key: string) => string):
   // Locked group: time_block shows its own label; timed POI shows HH:mm
   if (group.isLocked) {
     const item = group.items[0];
-    if (item?.isTimeBlock) return item.label + (item.time ? ` · ${item.time}` : '');
+    if (item?.isTimeBlock) return (item.time ? `${item.time} · ` : '') + item.label;
     return item?.time ?? '🔒';
   }
 
@@ -244,7 +285,7 @@ function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeing
 
 function SortableScheduledItem({
   item, isLocked, onToggleLock, onAddTransport, onDeleteTransport, onEditTransport,
-  onUpdateTimeBlock, onDeleteTimeBlock, calcDurationMin, onSelect, isSelected,
+  onUpdateTimeBlock, onDeleteTimeBlock, calcDurationMin, onSelect, isSelected, onRemove,
 }: {
   item: Item;
   isLocked: boolean;
@@ -257,6 +298,7 @@ function SortableScheduledItem({
   calcDurationMin?: number;
   onSelect?: () => void;
   isSelected?: boolean;
+  onRemove?: () => void;
 }) {
   const isTransport = !item.poi && item.id.startsWith('trans_');
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -376,7 +418,18 @@ function SortableScheduledItem({
         </button>
       )}
       {item.poi ? (
-        <POICard poi={item.poi} level={2} editable onAddTransport={onAddTransport} onSelect={onSelect} isSelected={isSelected} />
+        <>
+          <POICard poi={item.poi} level={2} editable onAddTransport={onAddTransport} onSelect={onSelect} isSelected={isSelected} />
+          {onRemove && (
+            <button
+              type="button"
+              className="shrink-0 p-1 mt-0.5 text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 rounded transition-colors self-start"
+              onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            >
+              <X size={12} />
+            </button>
+          )}
+        </>
       ) : (
         <>
           <span className="material-symbols-outlined text-base">{item.emoji}</span>
@@ -418,11 +471,13 @@ function SortableScheduledItem({
 
 // ─── Time-block section header ─────────────────────────────────────────────────
 
-function TimeBlockSectionHeader({ item, canDelete, onUpdate, onDelete }: {
+function TimeBlockSectionHeader({ item, canDelete, onUpdate, onDelete, dragHandleRef, dragHandleProps }: {
   item: Item;
   canDelete?: boolean;
   onUpdate: (label: string, time: string | undefined) => void;
   onDelete: () => void;
+  dragHandleRef?: (node: HTMLElement | null) => void;
+  dragHandleProps?: Record<string, unknown>;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(item.label);
@@ -467,12 +522,22 @@ function TimeBlockSectionHeader({ item, canDelete, onUpdate, onDelete }: {
   return (
     <div className="flex flex-col gap-0.5 py-0.5 px-1">
       <div className="flex items-center gap-1">
-        <span className="text-[10px] font-semibold tracking-widest text-primary/80 uppercase flex-1">{item.label}</span>
-        {item.time && (
-          <span className="text-[10px] text-primary/50 font-mono shrink-0">{item.time}</span>
+        {dragHandleProps && (
+          <button
+            type="button"
+            ref={dragHandleRef}
+            {...dragHandleProps}
+            className="shrink-0 p-0.5 touch-none select-none cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground"
+          >
+            <GripVertical size={13} />
+          </button>
         )}
+        {item.time && (
+          <span className="text-[10px] font-semibold text-amber-500/70 font-mono shrink-0">{item.time}</span>
+        )}
+        <span className="text-[10px] font-semibold tracking-widest text-primary/80 uppercase flex-1">{item.label}</span>
       </div>
-      <div className="flex items-center gap-0.5">
+      <div className={`flex items-center gap-0.5 ${dragHandleProps ? 'ps-5' : ''}`}>
         <button
           type="button"
           onClick={() => { setEditLabel(item.label); setEditTime(item.time ?? ''); setIsEditing(true); }}
@@ -496,7 +561,7 @@ function TimeBlockSectionHeader({ item, canDelete, onUpdate, onDelete }: {
 
 // ─── Group frame ───────────────────────────────────────────────────────────────
 
-function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onDeleteTransport, onEditTransport, onUpdateTimeBlock, onDeleteTimeBlock, canDelete, onRenameGroup, onDeleteGroup, legMap, onHighlightLeg, transportCalcDurations, selectedItemId, onSelectItem }: {
+function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onDeleteTransport, onEditTransport, onUpdateTimeBlock, onDeleteTimeBlock, canDelete, onRenameGroup, onDeleteGroup, legMap, onHighlightLeg, transportCalcDurations, selectedItemId, onSelectItem, onRemoveActivity }: {
   group: Group;
   label: string;
   lockedIds: Set<string>;
@@ -514,6 +579,7 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
   transportCalcDurations?: Map<string, number>;
   selectedItemId?: string | null;
   onSelectItem?: (itemId: string) => void;
+  onRemoveActivity?: (itemId: string) => void;
 }) {
   // Time block item at the start of the group acts as a section header
   const timeBlockItem = group.items.find(i => i.isTimeBlock);
@@ -540,10 +606,17 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
     disabled: group.isLocked,
   });
 
+  // Untimed time-block groups can be dragged as a whole
+  const isDraggableGroup = !!timeBlockItem && !timeBlockItem.time;
+  const { attributes: dragAttrs, listeners: dragListeners, setNodeRef: setDragRef, isDragging: isGroupDragging } = useDraggable({
+    id: `group-drag-${group.id}`,
+    disabled: !isDraggableGroup,
+  });
+
   return (
     <div
       ref={setFrameRef}
-      className={`rounded-lg transition-colors ${isOver ? 'ring-2 ring-primary/40 bg-primary/5' : ''}`}
+      className={`rounded-lg transition-colors ${isOver ? 'ring-2 ring-primary/40 bg-primary/5' : ''} ${isGroupDragging ? 'opacity-30' : ''}`}
     >
       {timeBlockItem ? (
         <TimeBlockSectionHeader
@@ -551,6 +624,8 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
           canDelete
           onUpdate={(lbl, t) => onUpdateTimeBlock?.(timeBlockItem.id, lbl, t)}
           onDelete={() => onDeleteTimeBlock?.(timeBlockItem.id)}
+          dragHandleRef={isDraggableGroup ? setDragRef : undefined}
+          dragHandleProps={isDraggableGroup ? { ...dragAttrs, ...dragListeners } : undefined}
         />
       ) : group.isLocked ? (
         <span className="text-[10px] font-semibold tracking-widest px-1 text-amber-500/70">{label}</span>
@@ -632,6 +707,7 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
                   calcDurationMin={transportCalcDurations?.get(item.id)}
                   onSelect={item.poi && onSelectItem ? () => onSelectItem(item.id) : undefined}
                   isSelected={item.poi ? selectedItemId === item.id : false}
+                  onRemove={item.poi ? () => onRemoveActivity?.(item.id) : undefined}
                 />
               </Fragment>
             );
@@ -645,7 +721,7 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
 // ─── Droppable day pill (real trip days) ─────────────────────────────────────
 
 function DroppableDayPill({
-  dayNum, shortLabel, isSelected, hasContent, weatherIcon, onClick,
+  dayNum, shortLabel, isSelected, hasContent, weatherIcon, onClick, onDoubleClick,
 }: {
   dayNum: number;
   shortLabel: { line1: string; line2: string; line3: string };
@@ -653,13 +729,15 @@ function DroppableDayPill({
   hasContent: boolean;
   weatherIcon?: string;
   onClick: () => void;
+  onDoubleClick?: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `day-drop-${dayNum}` });
   return (
     <button
       ref={setNodeRef}
       onClick={onClick}
-      className={`flex flex-col items-center min-w-[56px] sm:min-w-[72px] px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border-2 transition-all text-xs sm:text-sm ${
+      onDoubleClick={onDoubleClick}
+      className={`flex flex-col items-center w-[56px] sm:w-[72px] px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border-2 transition-all text-xs sm:text-sm shrink-0 ${
         isSelected
           ? 'border-primary bg-primary text-primary-foreground font-semibold'
           : isOver
@@ -790,6 +868,11 @@ export default function SchedulePage() {
   const [researchEndDate, setResearchEndDate] = useState('');
   const [researchSubmitting, setResearchSubmitting] = useState(false);
 
+  // Day date picker dialog state (planning → detailed_planning via double-click)
+  const [dateDayNum, setDateDayNum] = useState<number | null>(null);
+  const [datePickerValue, setDatePickerValue] = useState('');
+  const [datePickerSubmitting, setDatePickerSubmitting] = useState(false);
+
   const handleResearchSubmit = async () => {
     if (!activeTrip) return;
     if (researchLevel === 'planning' && (!researchDays || Number(researchDays) < 1)) {
@@ -825,6 +908,32 @@ export default function SchedulePage() {
     }
   };
 
+  // Handle day double-click → set date and switch to detailed_planning
+  const handleDayDoubleClick = (dayNum: number) => {
+    if (!activeTrip || activeTrip.status !== 'planning') return;
+    setDateDayNum(dayNum);
+    setDatePickerValue('');
+    setDatePickerSubmitting(false);
+  };
+
+  const handleDatePickerConfirm = async () => {
+    if (!activeTrip || dateDayNum === null || !datePickerValue) return;
+    setDatePickerSubmitting(true);
+    try {
+      // Calculate startDate: if the user picked a date for dayNum N,
+      // then startDate = pickedDate - (N - 1) days
+      const pickedDate = parseISO(datePickerValue);
+      const startDate = format(subDays(pickedDate, dateDayNum - 1), 'yyyy-MM-dd');
+      const updates = await transitionToDetailedPlanning(activeTrip, startDate);
+      updateTripInList({ id: activeTrip.id, ...updates } as typeof activeTrip & { id: string });
+      setDateDayNum(null);
+    } catch {
+      toast({ title: t('common.error'), variant: 'destructive' });
+    } finally {
+      setDatePickerSubmitting(false);
+    }
+  };
+
   const tripDays = useTripDays();
   const { weatherByDate } = useTripWeather(activeTrip ?? undefined, itineraryDays);
 
@@ -848,13 +957,14 @@ export default function SchedulePage() {
   const [lockedIds, setLockedIds] = useState<Set<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeDragItem, setActiveDragItem] = useState<Item | null>(null);
+  const [activeDragGroupCount, setActiveDragGroupCount] = useState(0);
   const [log, setLog] = useState<string[]>([]);
   const [resetKey, setResetKey] = useState(0);
 
   // ── Location editing (mirrors Index.tsx) ────────────────────────────────────
   const [locationContext, setLocationContext] = useState('');
   const [editingLocation, setEditingLocation] = useState(false);
-  const [locationDaysForward, setLocationDaysForward] = useState(0);
+  const [locationTotalDays, setLocationTotalDays] = useState(1);
 
   const locationDayWidth = typeof window !== 'undefined' ? (window.innerWidth < 640 ? 64 : 80) : 72;
   const selectedIdx = selectedDayNum - 1;
@@ -936,6 +1046,20 @@ export default function SchedulePage() {
     setEditTransportId(transportId);
   }, []);
 
+  // Resolve effective time for an activity (used for chronological reordering)
+  const resolveActivityTime = useCallback((itDay: ItineraryDay, act: ItineraryActivity): string | undefined => {
+    if (act.time_window?.start) return act.time_window.start;
+    if (act.type === 'poi') {
+      const poi = pois.find(p => p.id === act.id);
+      const dayDate = itDay.date;
+      const booking = dayDate
+        ? poi?.details?.bookings?.find(b => b.reservation_date === dayDate)
+        : poi?.details?.bookings?.[0];
+      return booking?.reservation_hour;
+    }
+    return undefined;
+  }, [pois]);
+
   const handleAddTimeBlock = useCallback(async () => {
     if (!newTbLabel.trim()) return;
     let itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
@@ -959,28 +1083,37 @@ export default function SchedulePage() {
       label: newTbLabel.trim(),
       ...(newTbTime ? { time_window: { start: newTbTime } } : {}),
     };
-    const updatedActivities = [...itDay.activities, newActivity];
+    let updatedActivities = [...itDay.activities, newActivity];
+    // If the new time block has a time, reorder chronologically
+    if (newTbTime) {
+      const day = itDay;
+      updatedActivities = reorderActivitiesChronologically(updatedActivities, a => resolveActivityTime(day, a));
+    }
     setItineraryDays(itineraryDays.map(d => d.id === itDay!.id ? { ...d, activities: updatedActivities } : d));
     await updateItineraryDay(itDay.id, { activities: updatedActivities });
     setNewTbLabel('');
     setNewTbTime('');
     setAddingTimeBlock(false);
     await refreshDays();
-  }, [newTbLabel, newTbTime, selectedDayNum, tripDays, itineraryDays, activeTrip, setItineraryDays, refreshDays]);
+  }, [newTbLabel, newTbTime, selectedDayNum, tripDays, itineraryDays, activeTrip, setItineraryDays, refreshDays, resolveActivityTime]);
 
   const handleUpdateTimeBlock = useCallback(async (itemId: string, label: string, time: string | undefined) => {
     const activityId = itemId.replace('tblock_', '');
     const itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
     if (!itDay) return;
-    const updatedActivities = itDay.activities.map(a =>
+    let updatedActivities = itDay.activities.map(a =>
       a.id === activityId
         ? { ...a, label, time_window: time ? { start: time } : undefined }
         : a,
     );
+    // If time was set/changed, reorder chronologically
+    if (time) {
+      updatedActivities = reorderActivitiesChronologically(updatedActivities, a => resolveActivityTime(itDay, a));
+    }
     setItineraryDays(itineraryDays.map(d => d.id === itDay.id ? { ...d, activities: updatedActivities } : d));
     await updateItineraryDay(itDay.id, { activities: updatedActivities });
     await refreshDays();
-  }, [selectedDayNum, itineraryDays, setItineraryDays, refreshDays]);
+  }, [selectedDayNum, itineraryDays, setItineraryDays, refreshDays, resolveActivityTime]);
 
   const handleDeleteTimeBlock = useCallback(async (itemId: string) => {
     const activityId = itemId.replace('tblock_', '');
@@ -1015,15 +1148,18 @@ export default function SchedulePage() {
       ...(time ? { time_window: { start: time } } : {}),
     };
 
-    const updatedActivities = [...itDay.activities, newActivity];
+    let updatedActivities = [...itDay.activities, newActivity];
+    // If time was set, reorder chronologically
+    if (time) {
+      updatedActivities = reorderActivitiesChronologically(updatedActivities, a => resolveActivityTime(itDay, a));
+    }
     setItineraryDays(itineraryDays.map(d => d.id === itDay!.id ? { ...d, activities: updatedActivities } : d));
     await updateItineraryDay(itDay.id, { activities: updatedActivities });
     await refreshDays();
-  }, [selectedDayNum, itineraryDays, setItineraryDays, refreshDays]);
+  }, [selectedDayNum, itineraryDays, setItineraryDays, refreshDays, resolveActivityTime]);
 
   const updateLocationContext = useCallback(async () => {
-    const totalDays = 1 + locationDaysForward;
-    for (let i = 0; i < totalDays; i++) {
+    for (let i = 0; i < locationTotalDays; i++) {
       const dayNum = selectedDayNum + i;
       if (dayNum > tripDays.length) break;
       let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
@@ -1041,9 +1177,9 @@ export default function SchedulePage() {
       if (targetDay) await updateItineraryDay(targetDay.id, { locationContext });
     }
     setEditingLocation(false);
-    setLocationDaysForward(0);
+    setLocationTotalDays(1);
     await refreshDays();
-  }, [locationContext, locationDaysForward, selectedDayNum, tripDays, itineraryDays, activeTrip, refreshDays]);
+  }, [locationContext, locationTotalDays, selectedDayNum, tripDays, itineraryDays, activeTrip, refreshDays]);
 
   // ── Ensure itinerary day exists ─────────────────────────────────────────────
   const ensureItDay = useCallback(async () => {
@@ -1404,9 +1540,12 @@ export default function SchedulePage() {
     const newLocked = new Set<string>();
 
     // ── POI activities ────────────────────────────────────────────────────────
+    const seenPoiIds = new Set<string>();
     itDay.activities
       .filter(a => a.type === 'poi')
       .forEach(a => {
+        if (seenPoiIds.has(a.id)) return;
+        seenPoiIds.add(a.id);
         const poi = pois.find(p => p.id === a.id);
         if (!poi) return;
         // time: prefer itinerary time_window, fallback to POI booking hour
@@ -1565,16 +1704,14 @@ export default function SchedulePage() {
       });
     });
 
-    // Potential POIs after scheduled
+    // Potential POIs after scheduled (clear time_window so they stay potential on reload)
     const schedLen = updatedActivities.length;
     newPotential.forEach((item, idx) => {
-      const existing = itDay.activities.find(a => a.id === item.id);
       updatedActivities.push({
         order: schedLen + idx + 1,
         type: 'poi',
         id: item.id,
         schedule_state: 'potential',
-        ...(existing?.time_window ? { time_window: existing.time_window } : {}),
       });
     });
 
@@ -1687,17 +1824,29 @@ export default function SchedulePage() {
     setActiveId(id);
     // Capture the dragged item immediately so the overlay survives potential/scheduled array changes
     const isSchedDrag = id.startsWith('sched-');
-    const item = isSchedDrag
-      ? scheduled.find(i => `sched-${i.id}` === id)
-      : potential.find(i => i.id === id);
+    const isGroupDrag = id.startsWith('group-drag-');
+    let groupContentCount = 0;
+    const item = isGroupDrag
+      ? (() => {
+          const currentGroups = buildGroups(scheduled, lockedIds);
+          const groupId = id.replace('group-drag-', '');
+          const group = currentGroups.find(g => g.id === groupId);
+          groupContentCount = group ? group.items.filter(i => !i.isTimeBlock).length : 0;
+          return group?.items.find(i => i.isTimeBlock) ?? null;
+        })()
+      : isSchedDrag
+        ? scheduled.find(i => `sched-${i.id}` === id)
+        : potential.find(i => i.id === id);
     setActiveDragItem(item ?? null);
+    setActiveDragGroupCount(groupContentCount);
     setSelectedItemId(null);
     addLog(`🟡 start: "${id}"`);
-  }, [potential, scheduled]);
+  }, [potential, scheduled, lockedIds]);
 
   const handleDragEnd = useCallback((e: DragEndEvent) => {
     const { active, over } = e;
     setActiveId(null);
+    setActiveDragGroupCount(0);
     setActiveDragItem(null);
 
     if (!over) { addLog(`🔴 end: no target`); return; }
@@ -1710,6 +1859,61 @@ export default function SchedulePage() {
     if (overId.startsWith('day-drop-')) {
       const targetDayNum = parseInt(overId.replace('day-drop-', ''), 10);
       if (targetDayNum === selectedDayNum) return;
+
+      // ── Group drag to another day ──────────────────────────────────────────
+      if (activeIdStr.startsWith('group-drag-')) {
+        const groupId = activeIdStr.replace('group-drag-', '');
+        const currentGroups = buildGroups(scheduled, lockedIds);
+        const draggedGroup = currentGroups.find(g => g.id === groupId);
+        if (!draggedGroup) return;
+
+        const sourceDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
+        const targetDay = itineraryDays.find(d => d.dayNumber === targetDayNum);
+        if (!sourceDay || !targetDay) { addLog(`  ❌ Day not found`); return; }
+
+        // Collect all activity IDs in the group (time block uses raw ID, POIs use item ID directly)
+        const groupItemIds = draggedGroup.items.map(i =>
+          i.id.startsWith('tblock_') ? i.id.replace('tblock_', '') : i.id,
+        );
+        const groupIdSet = new Set(groupItemIds);
+
+        // Remove from source day
+        const newSourceActivities = sourceDay.activities.filter(a => !groupIdSet.has(a.id));
+
+        // Add to target day — preserve relative order, append at the end
+        let nextOrder = targetDay.activities.length > 0
+          ? Math.max(...targetDay.activities.map(a => a.order)) + 1
+          : 1;
+        const movedActivities = sourceDay.activities
+          .filter(a => groupIdSet.has(a.id))
+          .sort((a, b) => a.order - b.order)
+          .map(a => ({ ...a, order: nextOrder++ }));
+        const newTargetActivities = [...targetDay.activities, ...movedActivities];
+
+        // Optimistic UI — remove group items from scheduled
+        const draggedItemIds = new Set(draggedGroup.items.map(i => i.id));
+        setScheduled(prev => prev.filter(i => !draggedItemIds.has(i.id)));
+
+        // Update context in-memory
+        setItineraryDays(itineraryDays.map(d => {
+          if (d.id === sourceDay.id) return { ...d, activities: newSourceActivities };
+          if (d.id === targetDay.id) return { ...d, activities: newTargetActivities };
+          return d;
+        }));
+
+        // Persist to DB
+        const groupLabel = draggedGroup.items.find(i => i.isTimeBlock)?.label ?? '?';
+        Promise.all([
+          updateItineraryDay(sourceDay.id, { activities: newSourceActivities }),
+          updateItineraryDay(targetDay.id, { activities: newTargetActivities }),
+        ]).then(() => {
+          addLog(`  📅 group "${groupLabel}" (${draggedGroup.items.length} items) → day ${targetDayNum} ✓`);
+        }).catch(err => {
+          console.error('Failed to move group:', err);
+          addLog(`  ❌ Save failed`);
+        });
+        return;
+      }
 
       const isSchedItem = activeIdStr.startsWith('sched-');
       const itemId = isSchedItem ? activeIdStr.replace('sched-', '') : activeIdStr;
@@ -1755,6 +1959,38 @@ export default function SchedulePage() {
         console.error('Failed to move activity:', err);
         addLog(`  ❌ Save failed`);
       });
+      return;
+    }
+
+    // ── Group drag (untimed time-block group) — reorder within same day ──────
+    if (activeIdStr.startsWith('group-drag-')) {
+      if (!overId.startsWith('gap-')) return; // day drops handled above
+
+      const groupId = activeIdStr.replace('group-drag-', '');
+      const currentGroups = buildGroups(scheduled, lockedIds);
+      const draggedGroup = currentGroups.find(g => g.id === groupId);
+      if (!draggedGroup) return;
+
+      const draggedItemIds = new Set(draggedGroup.items.map(i => i.id));
+      const gapIndex = parseInt(overId.replace('gap-', ''), 10);
+
+      // Calculate insert position in the flat scheduled array
+      let insertPos = 0;
+      for (let i = 0; i < gapIndex; i++) insertPos += currentGroups[i].items.length;
+
+      // Remove dragged group items and insert at the new position
+      const withoutGroup = scheduled.filter(i => !draggedItemIds.has(i.id));
+      // Adjust insert position if the group was before the gap
+      const firstOldIdx = scheduled.findIndex(i => draggedItemIds.has(i.id));
+      const adjustedPos = firstOldIdx < insertPos ? insertPos - draggedGroup.items.length : insertPos;
+      const newScheduled = [
+        ...withoutGroup.slice(0, adjustedPos),
+        ...draggedGroup.items,
+        ...withoutGroup.slice(adjustedPos),
+      ];
+      setScheduled(newScheduled);
+      persistDayActivities(newScheduled, potential);
+      addLog(`  ↕ moved group "${draggedGroup.items[0]?.label}" (gap ${gapIndex})`);
       return;
     }
 
@@ -1979,6 +2215,7 @@ export default function SchedulePage() {
                       hasContent={hasContent}
                       weatherIcon={dayWeather ? weatherCodeToIcon(dayWeather.weatherCode) : undefined}
                       onClick={() => { setSelectedDayNum(td.dayNum); setSelectedItemId(null); setHighlightedLegId(null); }}
+                      onDoubleClick={() => handleDayDoubleClick(td.dayNum)}
                     />
                   );
                 })}
@@ -1987,7 +2224,7 @@ export default function SchedulePage() {
               {/* Gantt-like location strip */}
               <div className="relative h-6 mt-1 mb-1">
                 {locationSpans.map((span, i) => {
-                  const left = span.startIdx * locationDayWidth;
+                  const start = span.startIdx * locationDayWidth;
                   const width = (span.endIdx - span.startIdx + 1) * locationDayWidth - 8;
                   const isSelected = selectedSpan === span;
                   return (
@@ -2001,7 +2238,7 @@ export default function SchedulePage() {
                           ? 'bg-secondary border border-primary/40 cursor-pointer hover:border-primary'
                           : 'bg-secondary border border-border cursor-default'
                       }`}
-                      style={{ left: `${left}px`, width: `${width}px` }}
+                      style={{ insetInlineStart: `${start}px`, width: `${width}px` }}
                     >
                       <span className="text-[11px] font-medium text-primary truncate">{span.location}</span>
                       {isSelected && <Pencil size={9} className="shrink-0 text-primary opacity-70" />}
@@ -2013,7 +2250,7 @@ export default function SchedulePage() {
                     type="button"
                     onClick={() => { setLocationContext(''); setEditingLocation(true); }}
                     className="absolute top-0 h-full border border-dashed border-primary/40 rounded-md flex items-center justify-center px-2 text-[11px] text-muted-foreground hover:text-primary hover:border-primary transition-colors"
-                    style={{ left: `${selectedIdx * locationDayWidth}px`, width: `${locationDayWidth - 8}px` }}
+                    style={{ insetInlineStart: `${selectedIdx * locationDayWidth}px`, width: `${locationDayWidth - 8}px` }}
                   >
                     {t('timeline.addLocation')}
                   </button>
@@ -2025,19 +2262,18 @@ export default function SchedulePage() {
           )}
 
           {activeTrip?.status !== 'research' && (<>
-          {/* Location picker */}
-          {activeTrip && editingLocation && (
-            <div className="w-full sm:w-80">
-              <LocationContextPicker
-                value={locationContext}
-                onChange={setLocationContext}
-                daysForward={locationDaysForward}
-                onDaysForwardChange={setLocationDaysForward}
-                maxDaysForward={tripDays.length - selectedDayNum}
-                onSave={updateLocationContext}
-                onCancel={() => { setEditingLocation(false); setLocationDaysForward(0); }}
-              />
-            </div>
+          {/* Location picker dialog */}
+          {activeTrip && (
+            <LocationContextPicker
+              open={editingLocation}
+              onOpenChange={(open) => { if (!open) { setEditingLocation(false); setLocationTotalDays(1); } }}
+              value={locationContext}
+              onChange={setLocationContext}
+              totalDays={locationTotalDays}
+              onTotalDaysChange={setLocationTotalDays}
+              maxTotalDays={tripDays.length - selectedDayNum + 1}
+              onSave={updateLocationContext}
+            />
           )}
 
           {/* ── Mobile tab switcher ──────────────────────── */}
@@ -2250,6 +2486,7 @@ export default function SchedulePage() {
                             transportCalcDurations={transportCalcDurations}
                             selectedItemId={isMobile ? null : selectedItemId}
                             onSelectItem={isMobile ? undefined : (id) => setSelectedItemId(prev => prev === id ? null : id)}
+                            onRemoveActivity={removeActivity}
                           />
                         </div>
                         {/* Gap after each group */}
@@ -2391,6 +2628,11 @@ export default function SchedulePage() {
                   <>
                     <span className="material-symbols-outlined">{activeItem.emoji}</span>
                     <span className="text-sm font-medium">{activeItem.label}</span>
+                    {activeDragGroupCount > 0 && (
+                      <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                        +{activeDragGroupCount}
+                      </span>
+                    )}
                   </>
                 )}
               </div>
@@ -2430,6 +2672,35 @@ export default function SchedulePage() {
           />
         ) : null;
       })()}
+      {/* Day date picker dialog (planning → detailed_planning) */}
+      <Dialog open={dateDayNum !== null} onOpenChange={(open) => { if (!open) setDateDayNum(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t('timeline.setDayDate')}</DialogTitle>
+            <DialogDescription>
+              {t('timeline.setDayDateDescription', { day: dateDayNum ?? '' })}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <Label>{t('timeline.date')}</Label>
+            <Input
+              type="date"
+              value={datePickerValue}
+              onChange={(e) => setDatePickerValue(e.target.value)}
+              className="h-9 mt-1"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDateDayNum(null)}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={handleDatePickerConfirm} disabled={datePickerSubmitting || !datePickerValue}>
+              {t('common.confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

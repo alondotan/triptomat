@@ -592,11 +592,16 @@ const he = {
     addTimeWindow: 'הוסף חלון זמן',
     timeWindowPlaceholder: 'שם חלון (לדוגמה: סיור בעיר)',
     addLocation: '+ מיקום',
+    setLocation: 'עדכון מיקום',
+    totalDays: 'סה״כ ימים',
     noActiveTrip: 'אין טיול פעיל',
     mapTab: 'מפה',
     scheduleTab: 'לו״ז',
     from: 'מ:',
     to: 'עד:',
+    setDayDate: 'קביעת תאריך ליום',
+    setDayDateDescription: 'בחר תאריך עבור יום {{day}}. שאר הימים יתעדכנו בהתאם והטיול יעבור לתכנון מפורט.',
+    date: 'תאריך',
   },
 
   // ── Merge Dialog ──

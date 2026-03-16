@@ -1,53 +1,64 @@
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LocationSelector } from './LocationSelector';
 
 interface LocationContextPickerProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   value: string;
   onChange: (value: string) => void;
-  daysForward: number;
-  onDaysForwardChange: (n: number) => void;
-  maxDaysForward: number;
+  totalDays: number;
+  onTotalDaysChange: (n: number) => void;
+  maxTotalDays: number;
   onSave: () => void;
-  onCancel: () => void;
 }
 
 export function LocationContextPicker({
-  value, onChange, daysForward, onDaysForwardChange,
-  maxDaysForward, onSave, onCancel,
+  open, onOpenChange, value, onChange, totalDays, onTotalDaysChange,
+  maxTotalDays, onSave,
 }: LocationContextPickerProps) {
+  const { t } = useTranslation();
   return (
-    <div className="space-y-2">
-      <LocationSelector
-        value={value}
-        onChange={onChange}
-        placeholder="Choose location..."
-      />
-      <DaysForwardControl value={daysForward} onChange={onDaysForwardChange} max={maxDaysForward} />
-      <div className="flex gap-2">
-        <Button size="sm" className="h-7 text-xs" onClick={onSave} disabled={!value}>Save</Button>
-        <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={onCancel}>Cancel</Button>
-      </div>
-    </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xs" preventAutoFocus>
+        <DialogHeader>
+          <DialogTitle className="text-sm">{t('timeline.setLocation')}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <LocationSelector
+            value={value}
+            onChange={onChange}
+            placeholder={t('locationSelector.chooseLocation')}
+          />
+          <TotalDaysControl value={totalDays} onChange={onTotalDaysChange} max={maxTotalDays} />
+          <div className="flex gap-2">
+            <Button size="sm" className="h-7 text-xs" onClick={onSave} disabled={!value}>{t('common.save')}</Button>
+            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-function DaysForwardControl({ value, onChange, max }: { value: number; onChange: (n: number) => void; max: number }) {
-  if (max <= 0) return null;
+function TotalDaysControl({ value, onChange, max }: { value: number; onChange: (n: number) => void; max: number }) {
+  const { t } = useTranslation();
+  if (max <= 1) return null;
   return (
-    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-      <span>Apply also to</span>
+    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <span>{t('timeline.totalDays')}</span>
       <Input
         type="number"
-        min={0}
+        min={1}
         max={max}
         value={value}
-        onChange={e => onChange(Math.max(0, parseInt(e.target.value) || 0))}
+        onChange={e => onChange(Math.max(1, Math.min(max, parseInt(e.target.value) || 1)))}
         className="h-6 text-xs w-12 text-center"
-        aria-label="Number of days"
-        name="days"
+        aria-label={t('timeline.totalDays')}
+        name="total-days"
       />
-      <span>days forward</span>
     </div>
   );
 }

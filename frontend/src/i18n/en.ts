@@ -594,11 +594,16 @@ const en = {
     addTimeWindow: 'Add time window',
     timeWindowPlaceholder: 'Window name (e.g. City tour)',
     addLocation: '+ Location',
+    setLocation: 'Set Location',
+    totalDays: 'Total days',
     noActiveTrip: 'No active trip',
     mapTab: 'Map',
     scheduleTab: 'Schedule',
     from: 'From:',
     to: 'To:',
+    setDayDate: 'Set day date',
+    setDayDateDescription: 'Pick a date for Day {{day}}. The other days will adjust accordingly and the trip will switch to detailed planning.',
+    date: 'Date',
   },
 
   // ── Merge Dialog ──

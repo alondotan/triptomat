@@ -26,7 +26,11 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
   const { toast } = useToast();
   const [openInternal, setOpenInternal] = useState(false);
   const open = openProp !== undefined ? openProp : openInternal;
-  const setOpen = (v: boolean) => { setOpenInternal(v); onOpenChange?.(v); };
+  const setOpen = (v: boolean) => {
+    setOpenInternal(v);
+    onOpenChange?.(v);
+    if (!v) resetForm();
+  };
 
   // Form state
   const [name, setName] = useState('');

@@ -96,7 +96,7 @@ const Index = () => {
   const [selectedDayNum, setSelectedDayNum] = useState(1);
   const [locationContext, setLocationContext] = useState('');
   const [editingLocation, setEditingLocation] = useState(false);
-  const [locationDaysForward, setLocationDaysForward] = useState(0);
+  const [locationTotalDays, setLocationTotalDays] = useState(1);
 
   // ── Drag state ───────────────────────────────────────────────────────────────
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -748,8 +748,7 @@ const Index = () => {
   }, [activeTrip, addTransportation, addEntityToDay, addMission]);
 
   const updateLocationContext = useCallback(async () => {
-    const totalDays = 1 + locationDaysForward;
-    for (let i = 0; i < totalDays; i++) {
+    for (let i = 0; i < locationTotalDays; i++) {
       const dayNum = selectedDayNum + i;
       if (dayNum > tripDays.length) break;
       let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
@@ -770,9 +769,9 @@ const Index = () => {
       }
     }
     setEditingLocation(false);
-    setLocationDaysForward(0);
+    setLocationTotalDays(1);
     await refreshDays();
-  }, [ensureItDay, currentItDay, locationContext, locationDaysForward, selectedDayNum, tripDays, itineraryDays, activeTrip, refreshDays]);
+  }, [ensureItDay, currentItDay, locationContext, locationTotalDays, selectedDayNum, tripDays, itineraryDays, activeTrip, refreshDays]);
 
   // ── Drag handlers ────────────────────────────────────────────────────────────
 
@@ -957,21 +956,17 @@ const Index = () => {
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
 
-          {/* Location picker */}
-          {editingLocation && selectedDate && (
-            <div className="w-full sm:w-80">
-              <LocationContextPicker
-                countries={trip.countries}
-                value={locationContext}
-                onChange={setLocationContext}
-                daysForward={locationDaysForward}
-                onDaysForwardChange={setLocationDaysForward}
-                maxDaysForward={tripDays.length - selectedDayNum}
-                onSave={updateLocationContext}
-                onCancel={() => { setEditingLocation(false); setLocationDaysForward(0); }}
-              />
-            </div>
-          )}
+          {/* Location picker dialog */}
+          <LocationContextPicker
+            open={editingLocation}
+            onOpenChange={(open) => { if (!open) { setEditingLocation(false); setLocationTotalDays(1); } }}
+            value={locationContext}
+            onChange={setLocationContext}
+            totalDays={locationTotalDays}
+            onTotalDaysChange={setLocationTotalDays}
+            maxTotalDays={tripDays.length - selectedDayNum + 1}
+            onSave={updateLocationContext}
+          />
 
           {/* 4-Section Day Content */}
           {selectedDate && (

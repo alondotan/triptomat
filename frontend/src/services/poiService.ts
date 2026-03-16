@@ -167,7 +167,7 @@ function mergeBookings(a?: POIBooking[], b?: POIBooking[]): POIBooking[] | undef
   if (all.length === 0) return undefined;
   const seen = new Set<string>();
   return all.filter(slot => {
-    const key = `${slot.reservation_date || ''}|${slot.reservation_hour || ''}`;
+    const key = `${slot.reservation_date || slot.trip_day_number || ''}|${slot.reservation_hour || ''}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -192,7 +192,7 @@ export async function rebuildPOIBookingsFromDays(tripId: string, poiId: string):
   // 1. Fetch all itinerary days for the trip
   const { data: days, error: daysError } = await supabase
     .from('itinerary_days')
-    .select('date, activities')
+    .select('date, day_number, activities')
     .eq('trip_id', tripId);
   if (daysError) throw daysError;
 
@@ -201,12 +201,15 @@ export async function rebuildPOIBookingsFromDays(tripId: string, poiId: string):
   const newBookings: POIBooking[] = [];
   for (const day of days || []) {
     const dayDate = day.date as string | null;
-    if (!dayDate) continue;
+    const dayNumber = day.day_number as number;
+    if (!dayDate && !dayNumber) continue;
     const activities = (day.activities || []) as Activity[];
-    const match = activities.find(a => a.type === 'poi' && a.id === poiId);
+    const match = activities.find(a => a.type === 'poi' && a.id === poiId && a.schedule_state === 'scheduled');
     if (match) {
       newBookings.push({
-        reservation_date: dayDate,
+        ...(dayDate
+          ? { reservation_date: dayDate }
+          : { trip_day_number: dayNumber }),
         reservation_hour: match.time_window?.start || undefined,
       });
     }
@@ -224,14 +227,16 @@ export async function rebuildPOIBookingsFromDays(tripId: string, poiId: string):
   const existingBookings = details.bookings || [];
 
   // Preserve number_of_people from existing bookings
+  const bookingKey = (b: POIBooking) =>
+    `${b.reservation_date || b.trip_day_number || ''}|${b.reservation_hour || ''}`;
   for (const nb of newBookings) {
-    const existing = existingBookings.find(e => e.reservation_date === nb.reservation_date);
+    const existing = existingBookings.find(e => bookingKey(e) === bookingKey(nb));
     if (existing?.number_of_people) nb.number_of_people = existing.number_of_people;
   }
 
   // 4. Compare and update if changed
-  const oldKey = JSON.stringify(existingBookings.map(b => `${b.reservation_date}|${b.reservation_hour || ''}`).sort());
-  const newKey = JSON.stringify(newBookings.map(b => `${b.reservation_date}|${b.reservation_hour || ''}`).sort());
+  const oldKey = JSON.stringify(existingBookings.map(bookingKey).sort());
+  const newKey = JSON.stringify(newBookings.map(bookingKey).sort());
   if (oldKey === newKey) return;
 
   details.bookings = newBookings.length > 0 ? newBookings : undefined;

@@ -17,6 +17,7 @@ import { LocationSelector } from '@/components/shared/LocationSelector';
 import type { PointOfInterest, POICategory, POIStatus, POIBooking } from '@/types/trip';
 import { getPOICategories, getCategoryLabel } from '@/lib/subCategoryConfig';
 import { syncActivityBookingsToDays } from '@/services/itineraryService';
+import { useItinerary } from '@/context/ItineraryContext';
 import { useTripMode } from '@/hooks/useTripMode';
 import { TripDaySelect } from '@/components/shared/TripDaySelect';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -53,6 +54,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const { activeTrip } = useActiveTrip();
+  const { refetchItinerary } = useItinerary();
   const { isResearch, isPlanning } = useTripMode();
 
   // Editable fields
@@ -84,7 +86,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
   // Booking fields (multiple time slots)
   const [bookings, setBookings] = useState<Array<{ date: string; hour: string }>>(
     (poi.details.bookings || []).map(b => ({
-      date: b.reservation_date || '',
+      date: b.reservation_date || (b.trip_day_number != null ? String(b.trip_day_number) : ''),
       hour: b.reservation_hour || '',
     }))
   );
@@ -116,7 +118,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     setRoomType(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
     setOccupancy(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
     setBookings((poi.details.bookings || []).map(b => ({
-      date: b.reservation_date || '',
+      date: b.reservation_date || (b.trip_day_number != null ? String(b.trip_day_number) : ''),
       hour: b.reservation_hour || '',
     })));
     setOrderNumber(poi.details.order_number || '');
@@ -187,7 +189,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
       finalStatus = 'booked';
     } else if (!['visited', 'skipped'].includes(poi.status)) {
       const hasTime = bookings.some(b => b.date && b.hour);
-      const hasDate = bookings.some(b => b.date);
+      const hasDate = bookings.some(b => b.date); // date holds either a date string or day number string
       if (hasTime) finalStatus = 'scheduled';
       else if (hasDate) finalStatus = 'planned';
       else if (poi.status === 'booked' || poi.status === 'scheduled' || poi.status === 'planned') {
@@ -218,7 +220,9 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           ? (freeCancellationUntil ? `${freeCancellationUntil}:00` : null)
           : poi.details.free_cancellation_until,
         bookings: bookings.filter(b => b.date).map(b => ({
-          reservation_date: b.date,
+          ...(isPlanning
+            ? { trip_day_number: parseInt(b.date) }
+            : { reservation_date: b.date }),
           reservation_hour: b.hour || undefined,
         })),
         activity_details: (category === 'eatery' || category === 'attraction') ? {
@@ -241,6 +245,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     if (category === 'eatery' || category === 'attraction') {
       const savedBookings: POIBooking[] = updatedPOI.details.bookings || [];
       await syncActivityBookingsToDays(poi.tripId, poi.id, savedBookings);
+      await refetchItinerary();
     }
 
     onOpenChange(false);
@@ -266,7 +271,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     setRoomType(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
     setOccupancy(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
     setBookings((poi.details.bookings || []).map(b => ({
-      date: b.reservation_date || '',
+      date: b.reservation_date || (b.trip_day_number != null ? String(b.trip_day_number) : ''),
       hour: b.reservation_hour || '',
     })));
     setOrderNumber(poi.details.order_number || '');

@@ -121,7 +121,7 @@ export async function transitionToResearch(
 
 async function convertPoiDayNumbersToDates(tripId: string, startDate: string) {
   const { data: pois } = await supabase
-    .from('pois')
+    .from('points_of_interest')
     .select('id, details')
     .eq('trip_id', tripId);
 
@@ -159,14 +159,14 @@ async function convertPoiDayNumbersToDates(tripId: string, startDate: string) {
     }
 
     if (changed) {
-      await supabase.from('pois').update({ details }).eq('id', poi.id);
+      await supabase.from('points_of_interest').update({ details: details as unknown as import('@/integrations/supabase/types').Json }).eq('id', poi.id);
     }
   }
 }
 
 async function convertPoiDatesToDayNumbers(tripId: string, startDate: string) {
   const { data: pois } = await supabase
-    .from('pois')
+    .from('points_of_interest')
     .select('id, details')
     .eq('trip_id', tripId);
 
@@ -202,7 +202,7 @@ async function convertPoiDatesToDayNumbers(tripId: string, startDate: string) {
     }
 
     if (changed) {
-      await supabase.from('pois').update({ details }).eq('id', poi.id);
+      await supabase.from('points_of_interest').update({ details: details as unknown as import('@/integrations/supabase/types').Json }).eq('id', poi.id);
     }
   }
 }
