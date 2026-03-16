@@ -317,7 +317,7 @@ export function CountrySelector({ value, onChange, placeholder = 'Choose destina
       </Dialog>
 
       {value.length > 0 && (
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
           {value.map((country) => (
             <Badge key={country} variant="secondary" className="gap-1">
               {country}

@@ -2249,10 +2249,10 @@ export default function SchedulePage() {
                   <button
                     type="button"
                     onClick={() => { setLocationContext(''); setEditingLocation(true); }}
-                    className="absolute top-0 h-full border border-dashed border-primary/40 rounded-md flex items-center justify-center px-2 text-[11px] text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+                    className="absolute top-0 h-full border border-dashed border-primary/40 rounded-md flex items-center justify-center px-1 text-[9px] sm:text-[11px] text-muted-foreground hover:text-primary hover:border-primary transition-colors whitespace-nowrap"
                     style={{ insetInlineStart: `${selectedIdx * locationDayWidth}px`, width: `${locationDayWidth - 8}px` }}
                   >
-                    {t('timeline.addLocation')}
+                    + {t('timeline.location')}
                   </button>
                 )}
               </div>

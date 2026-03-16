@@ -592,6 +592,7 @@ const he = {
     addTimeWindow: 'הוסף חלון זמן',
     timeWindowPlaceholder: 'שם חלון (לדוגמה: סיור בעיר)',
     addLocation: '+ מיקום',
+    location: 'מיקום',
     setLocation: 'עדכון מיקום',
     totalDays: 'סה״כ ימים',
     noActiveTrip: 'אין טיול פעיל',

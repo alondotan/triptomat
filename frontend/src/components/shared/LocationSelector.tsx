@@ -100,7 +100,7 @@ export function LocationSelector({ value, onChange, placeholder, className }: Lo
                 onChange={e => setSearch(e.target.value)}
                 placeholder={t('locationSelector.searchLocation')}
                 className="h-8 text-sm pr-8"
-                autoFocus
+                autoFocus={window.innerWidth >= 640}
                 aria-label={t('locationSelector.searchLocation')}
                 name="location-search"
               />

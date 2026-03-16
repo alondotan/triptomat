@@ -594,6 +594,7 @@ const en = {
     addTimeWindow: 'Add time window',
     timeWindowPlaceholder: 'Window name (e.g. City tour)',
     addLocation: '+ Location',
+    location: 'Loc',
     setLocation: 'Set Location',
     totalDays: 'Total days',
     noActiveTrip: 'No active trip',

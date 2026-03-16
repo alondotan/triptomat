@@ -116,12 +116,12 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {triggerEl && <DialogTrigger asChild>{triggerEl}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[500px] max-sm:top-[5%] max-sm:translate-y-0 max-sm:max-h-[90vh] max-sm:overflow-y-auto" preventAutoFocus>
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] max-sm:top-[5%] max-sm:translate-y-0 flex flex-col overflow-hidden" preventAutoFocus>
         <DialogHeader>
           <DialogTitle>{t('createTrip.newTrip')}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3 overflow-y-auto flex-1 min-h-0 px-1">
           {/* Basic info */}
           <div className="rounded-lg bg-muted/50 p-3 space-y-2">
             <Label htmlFor="name">{t('createTrip.tripName')}</Label>
