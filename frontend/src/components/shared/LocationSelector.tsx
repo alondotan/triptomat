@@ -74,7 +74,7 @@ export function LocationSelector({ value, onChange, placeholder, className }: Lo
 
   return (
     <div className={cn('flex gap-1', className)}>
-      <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSearch(''); }}>
+      <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSearch(''); }} modal={false}>
         <PopoverTrigger asChild>
           <Button
             type="button"
