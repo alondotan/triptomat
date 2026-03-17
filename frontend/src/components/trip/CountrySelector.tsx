@@ -317,14 +317,14 @@ export function CountrySelector({ value, onChange, placeholder = 'Choose destina
       </Dialog>
 
       {value.length > 0 && (
-        <div className="flex flex-wrap gap-1 max-h-16 overflow-y-auto">
+        <div className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {value.map((country) => (
-            <Badge key={country} variant="secondary" className="gap-1">
+            <Badge key={country} variant="secondary" className="gap-1 shrink-0 text-xs">
               {country}
               <button
                 type="button"
                 onClick={() => removeCountry(country)}
-                className="ml-1 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-secondary-foreground/20"
+                className="ml-0.5 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring hover:bg-secondary-foreground/20"
                 aria-label="Remove country"
               >
                 <X className="h-3 w-3" />

@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useTripList } from '@/context/TripListContext';
 import { CountrySelector } from '@/components/trip/CountrySelector';
 import { Plus } from 'lucide-react';
@@ -116,15 +115,15 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {triggerEl && <DialogTrigger asChild>{triggerEl}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[500px] max-h-[85dvh] max-sm:top-[5%] max-sm:translate-y-0 !flex flex-col overflow-hidden p-0" preventAutoFocus>
-        <DialogHeader className="px-6 pt-6 pb-0 shrink-0">
+      <DialogContent className="sm:max-w-[500px] sm:max-h-[85dvh] max-sm:inset-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-none max-sm:h-[100dvh] max-sm:max-h-none max-sm:rounded-none !flex flex-col overflow-hidden p-0" preventAutoFocus>
+        <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0 shrink-0">
           <DialogTitle>{t('createTrip.newTrip')}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="space-y-3 overflow-y-auto flex-1 min-h-0 px-6 py-3">
-            {/* Basic info */}
-            <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+          <div className="space-y-2 sm:space-y-3 flex-1 px-4 sm:px-6 py-3">
+            {/* Name + Description row */}
+            <div className="space-y-2">
               <Label htmlFor="name">{t('createTrip.tripName')}</Label>
               <Input
                 id="name"
@@ -136,20 +135,18 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
               />
             </div>
 
-            <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="description">{t('createTrip.description')}</Label>
-              <Textarea
+              <Input
                 id="description"
-                name="description"
                 placeholder={t('createTrip.descriptionPlaceholder')}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 autoComplete="off"
-                rows={2}
               />
             </div>
 
-            <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="trip-countries">{t('createTrip.countries')}</Label>
               <CountrySelector
                 value={countries}
@@ -159,14 +156,14 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
             </div>
 
             {/* Planning level selection */}
-            <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+            <div className="space-y-2">
               <Label htmlFor="trip-planning-level">{t('createTrip.planningStage')}</Label>
               <PlanningLevelPicker value={planningLevel} onChange={setPlanningLevel} compact />
             </div>
 
             {/* Conditional fields based on planning level */}
             {planningLevel === 'planning' && (
-              <div className="rounded-lg bg-muted/50 p-3 space-y-2">
+              <div className="space-y-2">
                 <Label htmlFor="numberOfDays">{t('createTrip.numberOfDays')}</Label>
                 <Input
                   id="numberOfDays"
@@ -183,7 +180,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
             )}
 
             {planningLevel === 'detailed_planning' && (
-              <div className="rounded-lg bg-muted/50 p-3 grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="startDate">{t('createTrip.startDate')}</Label>
                   <Input
@@ -211,7 +208,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
             )}
           </div>
 
-          <div className="flex justify-end gap-2 px-6 py-3 border-t shrink-0">
+          <div className="flex justify-end gap-2 px-4 sm:px-6 py-3 border-t shrink-0 mt-auto">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               {t('common.cancel')}
             </Button>
