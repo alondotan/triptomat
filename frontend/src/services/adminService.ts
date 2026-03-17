@@ -377,6 +377,14 @@ export function listUsers(
   return adminFetch<UsersListResponse>(`/admin/users${qs ? `?${qs}` : ''}`);
 }
 
+/** Delete a user and all their data. */
+export function deleteUser(userId: string): Promise<{ message: string }> {
+  return adminFetch<{ message: string }>('/admin/users', {
+    method: 'DELETE',
+    body: JSON.stringify({ user_id: userId }),
+  });
+}
+
 /** Fetch CloudWatch metrics for Lambda functions and SQS queues. */
 export function getCloudWatchMetrics(
   period?: string,

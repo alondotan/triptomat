@@ -215,6 +215,7 @@ def _route(event: dict) -> dict:
         ("DELETE", "/admin/cache"): _handle_cache_delete,
         ("POST", "/admin/cache/reprocess"): _handle_cache_reprocess,
         ("GET", "/admin/users"): _handle_users_list,
+        ("DELETE", "/admin/users"): _handle_users_delete,
         ("GET", "/admin/cloudwatch/metrics"): _handle_cloudwatch_metrics,
         ("GET", "/admin/dlq"): _handle_dlq_list,
         ("POST", "/admin/dlq/redrive"): _handle_dlq_redrive,
@@ -687,6 +688,70 @@ def _handle_users_list(event: dict) -> dict:
         "limit": limit,
         "offset": offset,
     })
+
+
+# ---- DELETE /admin/users --------------------------------------------------
+def _handle_users_delete(event: dict) -> dict:
+    """Delete a user and all their data (trips, POIs, etc.) from Supabase."""
+    if not supabase:
+        return _response(500, {"error": "Supabase is not configured"})
+
+    size_err = _check_body_size(event)
+    if size_err:
+        return size_err
+    body = _parse_json_body(event)
+    user_id = body.get("user_id", "")
+
+    if not user_id:
+        return _response(400, {"error": "Missing 'user_id' in request body"})
+
+    logger.info("Deleting user: %s", user_id)
+
+    errors = []
+
+    # 1. Find all trips for this user
+    try:
+        trips_resp = supabase.table("trips").select("id").eq("user_id", user_id).execute()
+        trip_ids = [t["id"] for t in (trips_resp.data or [])]
+    except Exception as exc:
+        logger.error("Failed to fetch trips for user %s: %s", user_id, str(exc))
+        trip_ids = []
+        errors.append(f"Failed to fetch trips: {exc}")
+
+    # 2. Delete related data for each trip
+    if trip_ids:
+        for table in ["points_of_interest", "transportation", "itinerary_days", "missions", "collections", "source_emails", "source_recommendations"]:
+            try:
+                supabase.table(table).delete().in_("trip_id", trip_ids).execute()
+            except Exception as exc:
+                logger.error("Failed to delete %s for user %s: %s", table, user_id, str(exc))
+                errors.append(f"Failed to delete {table}: {exc}")
+
+    # 3. Delete trips
+    try:
+        supabase.table("trips").delete().eq("user_id", user_id).execute()
+    except Exception as exc:
+        logger.error("Failed to delete trips for user %s: %s", user_id, str(exc))
+        errors.append(f"Failed to delete trips: {exc}")
+
+    # 4. Delete webhook tokens
+    try:
+        supabase.table("webhook_tokens").delete().eq("user_id", user_id).execute()
+    except Exception as exc:
+        logger.error("Failed to delete webhook_tokens for user %s: %s", user_id, str(exc))
+        errors.append(f"Failed to delete webhook_tokens: {exc}")
+
+    # 5. Delete the auth user
+    try:
+        supabase.auth.admin.delete_user(user_id)
+    except Exception as exc:
+        logger.error("Failed to delete auth user %s: %s", user_id, str(exc))
+        errors.append(f"Failed to delete auth user: {exc}")
+
+    if errors:
+        return _response(207, {"message": "User partially deleted", "errors": errors})
+
+    return _response(200, {"message": f"User {user_id} deleted successfully"})
 
 
 # ---- GET /admin/cloudwatch/metrics ---------------------------------------

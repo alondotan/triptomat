@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Users as UsersIcon, Search, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Users as UsersIcon, Search, Loader2, AlertTriangle, RefreshCw, Trash2 } from 'lucide-react';
 import { formatDate } from '@/utils/adminUtils';
 import { useUsers } from '@/hooks/useAdminQueries';
+import { deleteUser } from '@/services/adminService';
 import type { UserInfo } from '@/services/adminService';
 
 // ── Helpers ────────────────────────────────────────────────────
@@ -28,6 +30,8 @@ function formatLastActive(iso: string | null | undefined): string {
 
 export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<UserInfo | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const {
     data: usersData,
@@ -35,6 +39,20 @@ export default function UsersPage() {
     error,
     refetch,
   } = useUsers(50, 0, searchQuery || undefined);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await deleteUser(deleteTarget.id);
+      setDeleteTarget(null);
+      refetch();
+    } catch (err) {
+      console.error('Failed to delete user:', err);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -104,6 +122,7 @@ export default function UsersPage() {
                   <TableHead>Trips</TableHead>
                   <TableHead>POIs</TableHead>
                   <TableHead>Last Active</TableHead>
+                  <TableHead className="w-[60px]" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -118,6 +137,16 @@ export default function UsersPage() {
                     <TableCell className="text-muted-foreground text-sm">
                       {formatLastActive(user.last_sign_in_at)}
                     </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => setDeleteTarget(user)}
+                      >
+                        <Trash2 size={14} />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -125,6 +154,29 @@ export default function UsersPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete user?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete <strong>{deleteTarget?.email}</strong> and all their data
+              (trips, POIs, transportation, tasks, etc.). This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

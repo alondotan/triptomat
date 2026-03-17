@@ -1,4 +1,5 @@
-const COGNITO_DOMAIN = import.meta.env.VITE_COGNITO_DOMAIN;
+const COGNITO_DOMAIN = import.meta.env.VITE_COGNITO_DOMAIN; // custom domain for user-facing URLs
+const COGNITO_TOKEN_DOMAIN = import.meta.env.VITE_COGNITO_TOKEN_DOMAIN; // prefix domain for token exchange (CORS)
 const COGNITO_CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID;
 const COGNITO_REDIRECT_URI = `${window.location.origin}/auth/callback`;
 
@@ -52,7 +53,7 @@ export async function exchangeCodeForTokens(code: string): Promise<{ id_token: s
   const codeVerifier = sessionStorage.getItem('cognito_code_verifier');
   if (!codeVerifier) throw new Error('Missing PKCE code verifier');
 
-  const response = await fetch(`https://${COGNITO_DOMAIN}/oauth2/token`, {
+  const response = await fetch(`https://${COGNITO_TOKEN_DOMAIN}/oauth2/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
