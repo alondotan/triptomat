@@ -22,7 +22,7 @@ export function LocationContextPicker({
   const { t } = useTranslation();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xs" preventAutoFocus>
+      <DialogContent className="max-w-xs max-sm:top-[30%] max-sm:translate-y-[-30%] max-sm:slide-in-from-top-[28%]" preventAutoFocus>
         <DialogHeader>
           <DialogTitle className="text-sm">{t('timeline.setLocation')}</DialogTitle>
         </DialogHeader>

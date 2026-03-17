@@ -91,7 +91,7 @@ export function LocationSelector({ value, onChange, placeholder, className }: Lo
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[320px] p-0 z-[1200]" align="start" dir="rtl">
+        <PopoverContent className="w-[320px] p-0 z-[1200]" align="start" dir="rtl" onOpenAutoFocus={window.innerWidth < 640 ? (e) => e.preventDefault() : undefined}>
           <div className="p-2 border-b">
             <div className="relative">
               <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />

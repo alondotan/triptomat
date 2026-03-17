@@ -1840,6 +1840,7 @@ export default function SchedulePage() {
     setActiveDragItem(item ?? null);
     setActiveDragGroupCount(groupContentCount);
     setSelectedItemId(null);
+    document.documentElement.style.overscrollBehaviorY = 'none';
     addLog(`🟡 start: "${id}"`);
   }, [potential, scheduled, lockedIds]);
 
@@ -1848,6 +1849,7 @@ export default function SchedulePage() {
     setActiveId(null);
     setActiveDragGroupCount(0);
     setActiveDragItem(null);
+    document.documentElement.style.overscrollBehaviorY = '';
 
     if (!over) { addLog(`🔴 end: no target`); return; }
 
@@ -2133,6 +2135,7 @@ export default function SchedulePage() {
           collisionDetection={collisionDetection}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          onDragCancel={() => { setActiveId(null); setActiveDragGroupCount(0); setActiveDragItem(null); document.documentElement.style.overscrollBehaviorY = ''; }}
         >
           {/* ── Day pills + Location strip (sticky, never scrolls) ── */}
           {activeTrip?.status === 'research' ? (
