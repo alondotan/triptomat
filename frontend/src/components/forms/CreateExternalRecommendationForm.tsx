@@ -204,7 +204,7 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent preventAutoFocus className="max-w-md max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0 bg-background/95 backdrop-blur-sm">
+      <DialogContent preventAutoFocus className="max-w-md max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0 bg-card/95 backdrop-blur-sm">
         <DialogHeader>
           <DialogTitle>{t('externalRec.title')}</DialogTitle>
         </DialogHeader>
