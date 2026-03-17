@@ -29,6 +29,7 @@ export function CountrySelector({ value, onChange, placeholder = 'Choose destina
 
   // Navigation state — path of nodes drilled into
   const [navPath, setNavPath] = useState<WorldTreeNode[]>([]);
+  const [searchFocused, setSearchFocused] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const currentNode = navPath.length > 0 ? navPath[navPath.length - 1] : tree;
@@ -228,7 +229,7 @@ export function CountrySelector({ value, onChange, placeholder = 'Choose destina
       </Button>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-[420px] h-[70vh] max-h-[70vh] max-sm:h-[85vh] max-sm:max-h-[85vh] flex flex-col p-0 gap-0 z-[1200]">
+        <DialogContent className="sm:max-w-[420px] h-[70vh] max-h-[70vh] max-sm:h-[85vh] max-sm:max-h-[85vh] flex flex-col p-0 gap-0 z-[1200]" preventAutoFocus>
           <DialogHeader className="px-4 pt-4 pb-2">
             <DialogTitle>Choose destinations</DialogTitle>
           </DialogHeader>
@@ -241,6 +242,10 @@ export function CountrySelector({ value, onChange, placeholder = 'Choose destina
                 placeholder="Search country or region..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                inputMode="search"
+                enterKeyHint="search"
                 className="flex h-10 w-full bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
               />
               {search && (
@@ -307,12 +312,14 @@ export function CountrySelector({ value, onChange, placeholder = 'Choose destina
             </div>
           </ScrollArea>
 
-          {/* Done button */}
-          <div className="px-4 py-3 border-t">
-            <Button className="w-full" onClick={() => setOpen(false)}>
-              Done{value.length > 0 ? ` (${value.length})` : ''}
-            </Button>
-          </div>
+          {/* Done button — hidden when keyboard is open */}
+          {!searchFocused && (
+            <div className="px-4 py-3 border-t">
+              <Button className="w-full" onClick={() => setOpen(false)}>
+                Done{value.length > 0 ? ` (${value.length})` : ''}
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

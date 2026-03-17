@@ -123,7 +123,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="space-y-2 sm:space-y-3 flex-1 px-4 sm:px-6 py-3">
             {/* Name + Description row */}
-            <div className="space-y-2">
+            <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
               <Label htmlFor="name">{t('createTrip.tripName')}</Label>
               <Input
                 id="name"
@@ -135,7 +135,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
               <Label htmlFor="description">{t('createTrip.description')}</Label>
               <Input
                 id="description"
@@ -146,7 +146,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
               <Label htmlFor="trip-countries">{t('createTrip.countries')}</Label>
               <CountrySelector
                 value={countries}
@@ -156,14 +156,14 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
             </div>
 
             {/* Planning level selection */}
-            <div className="space-y-2">
+            <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
               <Label htmlFor="trip-planning-level">{t('createTrip.planningStage')}</Label>
               <PlanningLevelPicker value={planningLevel} onChange={setPlanningLevel} compact />
             </div>
 
             {/* Conditional fields based on planning level */}
             {planningLevel === 'planning' && (
-              <div className="space-y-2">
+              <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
                 <Label htmlFor="numberOfDays">{t('createTrip.numberOfDays')}</Label>
                 <Input
                   id="numberOfDays"
@@ -180,7 +180,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
             )}
 
             {planningLevel === 'detailed_planning' && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg border border-border/50 bg-card/50 p-3 grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="startDate">{t('createTrip.startDate')}</Label>
                   <Input
