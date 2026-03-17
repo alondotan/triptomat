@@ -182,34 +182,35 @@ export function PendingInbox() {
                 <p className="text-center py-4 text-muted-foreground text-sm">{t('inboxPage.noPendingEmails')}</p>
               ) : (
                 emails.map(item => (
-                  <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-muted">{renderCategoryIcon(item.parsedData?.metadata?.category)}</div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{getEmailTitle(item)}</span>
-                          {item.parsedData?.metadata?.sub_category && (
-                            <Badge variant="outline" className="text-xs">{item.parsedData.metadata.sub_category}</Badge>
-                          )}
-                        </div>
-                        {item.sourceEmailInfo.subject && (
-                          <p className="text-xs text-muted-foreground truncate max-w-[250px]">{item.sourceEmailInfo.subject}</p>
+                  <div key={item.id} className="p-3 rounded-lg border bg-card space-y-1">
+                    {/* Row 1: icons */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-full bg-muted">{renderCategoryIcon(item.parsedData?.metadata?.category)}</div>
+                        {item.parsedData?.metadata?.sub_category && (
+                          <Badge variant="outline" className="text-xs">{item.parsedData.metadata.sub_category}</Badge>
                         )}
                       </div>
+                      <div className="flex items-center gap-1">
+                        <Button size="sm" variant="outline" onClick={() => openLinkDialog(item.id, 'email')}>
+                          <Link2 className="h-4 w-4 mr-1" /> {t('inboxPage.linkItem')}
+                        </Button>
+                        {item.sourceEmailInfo.email_permalink && (
+                          <a href={item.sourceEmailInfo.email_permalink} target="_blank" rel="noopener noreferrer" className="p-2" aria-label={t('sourceEmails.openEmail')}>
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        )}
+                        <Button size="sm" variant="ghost" aria-label={t('common.delete')} onClick={() => { if (window.confirm(t('sourceEmails.confirmDelete'))) handleDeleteEmail(item.id); }}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" onClick={() => openLinkDialog(item.id, 'email')}>
-                        <Link2 className="h-4 w-4 mr-1" /> {t('inboxPage.linkItem')}
-                      </Button>
-                      {item.sourceEmailInfo.email_permalink && (
-                        <a href={item.sourceEmailInfo.email_permalink} target="_blank" rel="noopener noreferrer" className="p-2" aria-label={t('sourceEmails.openEmail')}>
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      )}
-                      <Button size="sm" variant="ghost" aria-label={t('common.delete')} onClick={() => { if (window.confirm(t('sourceEmails.confirmDelete'))) handleDeleteEmail(item.id); }}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                    {/* Row 2: title */}
+                    <div className="font-medium truncate">{getEmailTitle(item)}</div>
+                    {/* Row 3: subject */}
+                    {item.sourceEmailInfo.subject && (
+                      <p className="text-xs text-muted-foreground truncate">{item.sourceEmailInfo.subject}</p>
+                    )}
                   </div>
                 ))
               )}
@@ -220,36 +221,39 @@ export function PendingInbox() {
                 <p className="text-center py-4 text-muted-foreground text-sm">{t('inboxPage.noPendingRecs')}</p>
               ) : (
                 recommendations.map(rec => (
-                  <div key={rec.id} className="flex items-center justify-between p-3 rounded-lg border bg-card">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-full bg-muted">
-                        <Star className="h-4 w-4" aria-hidden="true" />
+                  <div key={rec.id} className="p-3 rounded-lg border bg-card space-y-1">
+                    {/* Row 1: icons */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-full bg-muted">
+                          <Star className="h-4 w-4" aria-hidden="true" />
+                        </div>
                       </div>
-                      <div>
-                        <span className="font-medium">{rec.analysis.main_site || t('nav.recommendations')}</span>
+                      <div className="flex items-center gap-1">
+                        <Button size="sm" variant="outline" onClick={() => openLinkDialog(rec.id, 'recommendation')}>
+                          <Link2 className="h-4 w-4 mr-1" /> {t('inboxPage.linkItem')}
+                        </Button>
                         {rec.sourceUrl && (
-                          <p className="text-xs text-muted-foreground truncate max-w-[250px]">{rec.sourceUrl}</p>
+                          <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer" className="p-2" aria-label={t('sourceEmails.openEmail')}>
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
                         )}
-                        {rec.analysis.extracted_items && rec.analysis.extracted_items.length > 0 && (
-                          <p className="text-xs text-muted-foreground">
-                            {t('inboxPage.itemsExtracted', { count: rec.analysis.extracted_items.length })}
-                          </p>
-                        )}
+                        <Button size="sm" variant="ghost" aria-label={t('common.delete')} onClick={() => { if (window.confirm(t('sourceEmails.confirmDelete'))) handleDeleteRecommendation(rec.id); }}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline" onClick={() => openLinkDialog(rec.id, 'recommendation')}>
-                        <Link2 className="h-4 w-4 mr-1" /> {t('inboxPage.linkItem')}
-                      </Button>
-                      {rec.sourceUrl && (
-                        <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer" className="p-2" aria-label={t('sourceEmails.openEmail')}>
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      )}
-                      <Button size="sm" variant="ghost" aria-label={t('common.delete')} onClick={() => { if (window.confirm(t('sourceEmails.confirmDelete'))) handleDeleteRecommendation(rec.id); }}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                    {/* Row 2: title */}
+                    <div className="font-medium truncate">{rec.analysis.main_site || t('nav.recommendations')}</div>
+                    {/* Row 3: details */}
+                    {rec.sourceUrl && (
+                      <p className="text-xs text-muted-foreground truncate">{rec.sourceUrl}</p>
+                    )}
+                    {rec.analysis.extracted_items && rec.analysis.extracted_items.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {t('inboxPage.itemsExtracted', { count: rec.analysis.extracted_items.length })}
+                      </p>
+                    )}
                   </div>
                 ))
               )}

@@ -178,55 +178,60 @@ export function SourceEmailsDashboard() {
           return (
             <Collapsible key={item.id} open={isExpanded} onOpenChange={() => toggleExpanded(item.id)}>
               <div className={`rounded-lg border bg-card transition-colors ${isUnread ? 'border-blue-500/40 bg-blue-500/5' : ''}`}>
-                <div className="flex items-center justify-between p-3 hover:bg-accent/50 transition-colors">
-                  <CollapsibleTrigger className="flex items-center gap-3 flex-1 min-w-0 text-left cursor-pointer">
-                    {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
-                    <div className="relative shrink-0">
-                      <div className="p-2 rounded-full bg-muted">{renderCategoryIcon(item.parsedData?.metadata?.category)}</div>
-                      {isUnread && (
-                        <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-blue-500 border-2 border-background" />
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <span className="font-medium truncate">{title}</span>
+                <div className="p-3 hover:bg-accent/50 transition-colors space-y-1">
+                  {/* Row 1: icons */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CollapsibleTrigger className="cursor-pointer shrink-0">
+                        {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                      </CollapsibleTrigger>
+                      <div className="relative shrink-0">
+                        <div className="p-1.5 rounded-full bg-muted">{renderCategoryIcon(item.parsedData?.metadata?.category)}</div>
                         {isUnread && (
-                          <span className="shrink-0 inline-flex items-center rounded-full bg-blue-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{t('common.new').toUpperCase()}</span>
+                          <span className="absolute top-0 right-0 h-2.5 w-2.5 rounded-full bg-blue-500 border-2 border-background" />
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {tripName && <Badge variant="outline" className="text-xs mr-2">{tripName}</Badge>}
-                        {orderNumber && (
-                          <span className="inline-flex items-center gap-0.5 mr-1">
-                            <Hash className="h-3 w-3" />{orderNumber}
-                          </span>
-                        )}
-                        {orderNumber && ' • '}
-                        {format(new Date(item.createdAt), 'MMM d, yyyy')}
-                      </p>
+                      <Badge className={item.status === 'linked' ? 'bg-primary text-primary-foreground' : ''}>
+                        {item.status}
+                      </Badge>
+                      {isUnread && (
+                        <span className="shrink-0 inline-flex items-center rounded-full bg-blue-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">{t('common.new').toUpperCase()}</span>
+                      )}
                     </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {item.sourceEmailInfo.email_permalink && (
+                        <a href={item.sourceEmailInfo.email_permalink} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md hover:bg-muted" aria-label={t('sourceEmails.openEmail')}>
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
+                      <Button size="sm" variant="ghost" aria-label={t('common.delete')} onClick={async () => {
+                        if (!window.confirm(t('sourceEmails.confirmDelete'))) return;
+                        try {
+                          await deleteSourceEmail(item.id);
+                          setItems(prev => prev.filter(i => i.id !== item.id));
+                          toast({ title: t('inboxPage.deleted') });
+                        } catch {
+                          toast({ title: t('inboxPage.error'), description: t('inboxPage.deleteFailed'), variant: 'destructive' });
+                        }
+                      }}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </div>
+                  {/* Row 2: title */}
+                  <CollapsibleTrigger className="block w-full text-left cursor-pointer min-w-0">
+                    <span className="font-medium truncate block">{title}</span>
                   </CollapsibleTrigger>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Badge className={item.status === 'linked' ? 'bg-primary text-primary-foreground' : ''}>
-                      {item.status}
-                    </Badge>
-                    {item.sourceEmailInfo.email_permalink && (
-                      <a href={item.sourceEmailInfo.email_permalink} target="_blank" rel="noopener noreferrer" className="p-2 rounded-md hover:bg-muted" aria-label={t('sourceEmails.openEmail')}>
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
+                  {/* Row 3: metadata */}
+                  <div className="text-sm text-muted-foreground flex flex-wrap items-center gap-1">
+                    {tripName && <Badge variant="outline" className="text-xs">{tripName}</Badge>}
+                    {orderNumber && (
+                      <span className="inline-flex items-center gap-0.5">
+                        <Hash className="h-3 w-3" />{orderNumber}
+                      </span>
                     )}
-                    <Button size="sm" variant="ghost" aria-label={t('common.delete')} onClick={async () => {
-                      if (!window.confirm(t('sourceEmails.confirmDelete'))) return;
-                      try {
-                        await deleteSourceEmail(item.id);
-                        setItems(prev => prev.filter(i => i.id !== item.id));
-                        toast({ title: t('inboxPage.deleted') });
-                      } catch {
-                        toast({ title: t('inboxPage.error'), description: t('inboxPage.deleteFailed'), variant: 'destructive' });
-                      }
-                    }}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {(tripName || orderNumber) && <span>•</span>}
+                    <span>{format(new Date(item.createdAt), 'MMM d, yyyy')}</span>
                   </div>
                 </div>
                 <CollapsibleContent>

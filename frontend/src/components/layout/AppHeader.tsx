@@ -31,7 +31,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTripList } from '@/context/TripListContext';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { useLanguage } from '@/context/LanguageContext';
@@ -143,6 +143,33 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
     window.addEventListener('inboxUnreadChanged', handler);
     return () => window.removeEventListener('inboxUnreadChanged', handler);
   }, []);
+
+  // Recalculate unread count from DB — called on mount + real-time changes
+  const refreshUnread = useCallback(async () => {
+    try {
+      const { data } = await supabase.from('source_emails').select('id').eq('status', 'linked');
+      if (!data) return;
+      const readIdsRaw = localStorage.getItem('inbox_read_ids');
+      const readIds = readIdsRaw ? new Set<string>(JSON.parse(readIdsRaw)) : null;
+      // If user has never visited inbox, don't show badge (first-visit init happens in SourceEmailsDashboard)
+      if (!readIds) return;
+      const count = data.filter(row => !readIds.has(row.id)).length;
+      setInboxUnread(count);
+      localStorage.setItem('inbox_unread_count', String(count));
+    } catch { /* ignore */ }
+  }, []);
+
+  // Refresh unread on mount + subscribe to real-time source_emails changes
+  useEffect(() => {
+    refreshUnread();
+    const channel = supabase
+      .channel('header-inbox-unread')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'source_emails' }, () => {
+        refreshUnread();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refreshUnread]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();

@@ -840,6 +840,14 @@ const en = {
     urlLabel: 'URL',
     textLabel: 'Text',
   },
+
+  // ── PWA Install ──
+  pwa: {
+    installTitle: 'Install Triptomat',
+    installDescription: 'Add to home screen for the full experience',
+    install: 'Install',
+    dismiss: 'Dismiss',
+  },
 };
 
 export default en;

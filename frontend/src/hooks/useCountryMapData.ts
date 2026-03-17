@@ -96,6 +96,23 @@ export function useCountryMapData(countries: string[]) {
       if (data.boundaries && typeof data.boundaries === 'object') {
         Object.assign(merged, data.boundaries);
       }
+      // Synthesize a country-level boundary from geoData features
+      if (data.geoData && typeof data.geoData === 'object') {
+        const fc = data.geoData as GeoJSON.FeatureCollection;
+        if (fc.type === 'FeatureCollection' && fc.features?.length > 0) {
+          const polygons: GeoJSON.Position[][][] = [];
+          for (const f of fc.features) {
+            if (f.geometry?.type === 'Polygon') {
+              polygons.push((f.geometry as GeoJSON.Polygon).coordinates);
+            } else if (f.geometry?.type === 'MultiPolygon') {
+              polygons.push(...(f.geometry as GeoJSON.MultiPolygon).coordinates);
+            }
+          }
+          if (polygons.length > 0) {
+            merged[data.id] = { type: 'MultiPolygon', coordinates: polygons };
+          }
+        }
+      }
     }
     return merged;
   }, [countryDataMap]);
@@ -147,13 +164,27 @@ export function useCountryMapData(countries: string[]) {
       id: '_root',
       name: 'Trip',
       type: 'root',
-      children: entries.map((data) => ({
-        id: data.id,
-        name: (isHe && data.data.name_he) ? data.data.name_he : data.data.name,
-        type: 'country',
-        topAttractions: data.topAttractions,
-        children: data.locations.map(toNavNode),
-      })),
+      children: entries.map((data) => {
+        // Compute country center from first region's coordinates or from geoData
+        let coordinates: { lat: number; lng: number } | undefined;
+        const firstWithCoords = data.locations.find(l => l.coordinates);
+        if (firstWithCoords?.coordinates) {
+          // Average all region centers for a better country centroid
+          const withCoords = data.locations.filter(l => l.coordinates);
+          coordinates = {
+            lat: withCoords.reduce((s, l) => s + l.coordinates!.lat, 0) / withCoords.length,
+            lng: withCoords.reduce((s, l) => s + l.coordinates!.lng, 0) / withCoords.length,
+          };
+        }
+        return {
+          id: data.id,
+          name: (isHe && data.data.name_he) ? data.data.name_he : data.data.name,
+          type: 'country',
+          coordinates,
+          topAttractions: data.topAttractions,
+          children: data.locations.map(toNavNode),
+        };
+      }),
     };
   }, [countryDataMap]);
 

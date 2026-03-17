@@ -840,6 +840,14 @@ const he = {
   },
 
   common_paste: 'הדבק',
+
+  // ── PWA Install ──
+  pwa: {
+    installTitle: 'התקן את Triptomat',
+    installDescription: 'הוסף למסך הבית לחוויה מלאה',
+    install: 'התקן',
+    dismiss: 'סגור',
+  },
 };
 
 export default he;

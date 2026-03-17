@@ -11,6 +11,7 @@ import { AdminLayout } from "./components/admin/AdminLayout";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { LanguageProvider } from "./context/LanguageContext";
 import AuthPage from "./pages/Auth";
+import { InstallPrompt } from "./components/pwa/InstallPrompt";
 
 const ItineraryPage = lazy(() => import("./pages/Itinerary"));
 const POIsPage = lazy(() => import("./pages/POIs"));
@@ -47,6 +48,7 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
+        <InstallPrompt />
         <BrowserRouter>
           <Suspense fallback={<div className="flex items-center justify-center h-screen"><Loader2 className="animate-spin h-8 w-8" /></div>}>
             <Routes>
