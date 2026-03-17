@@ -62,6 +62,7 @@ export function LocationSelector({ value, onChange, placeholder, className }: Lo
   const { tripLocationTree, addSiteToHierarchy } = useActiveTrip();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
   const handleSelect = useCallback((label: string) => {
     addRecentLocation(label);
@@ -72,16 +73,73 @@ export function LocationSelector({ value, onChange, placeholder, className }: Lo
 
   const recentLocations = useMemo(() => getRecentLocations(), [open]); // refresh on open
 
+  const dropdownContent = (
+    <>
+      <div className="p-2 border-b shrink-0">
+        <div className="relative">
+          <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t('locationSelector.searchLocation')}
+            className="h-8 text-sm pr-8"
+            autoFocus={!isMobile}
+            aria-label={t('locationSelector.searchLocation')}
+            name="location-search"
+          />
+        </div>
+      </div>
+      <div className="max-h-[300px] overflow-y-auto overscroll-contain p-1">
+        <LocationTree
+          nodes={tripLocationTree}
+          search={search}
+          value={value}
+          onSelect={handleSelect}
+          onAddToTree={addSiteToHierarchy}
+          recentLocations={recentLocations}
+        />
+      </div>
+      <div className="shrink-0">
+        <ManualEntryFooter onSelect={handleSelect} onAddToTree={addSiteToHierarchy} />
+      </div>
+    </>
+  );
+
   return (
-    <div className={cn('flex gap-1', className)}>
-      <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSearch(''); }} modal={false}>
-        <PopoverTrigger asChild>
+    <div className={cn('flex flex-col gap-1', className)}>
+      {/* Desktop: Popover */}
+      {!isMobile ? (
+        <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setSearch(''); }}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="flex-1 justify-between font-normal"
+            >
+              {value ? (
+                <span className="truncate">{value}</span>
+              ) : (
+                <span className="text-muted-foreground">{effectivePlaceholder}</span>
+              )}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[320px] p-0 z-[1200]" align="start" dir="rtl">
+            {dropdownContent}
+          </PopoverContent>
+        </Popover>
+      ) : (
+        /* Mobile: inline dropdown (no Portal, so Dialog scroll-lock doesn't block it) */
+        <>
           <Button
             type="button"
             variant="outline"
             role="combobox"
             aria-expanded={open}
             className="flex-1 justify-between font-normal"
+            onClick={() => { setOpen(!open); if (open) setSearch(''); }}
           >
             {value ? (
               <span className="truncate">{value}</span>
@@ -90,38 +148,13 @@ export function LocationSelector({ value, onChange, placeholder, className }: Lo
             )}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[320px] p-0 z-[1200] max-sm:max-h-[50vh] max-sm:flex max-sm:flex-col" align="start" dir="rtl" collisionPadding={8} onOpenAutoFocus={window.innerWidth < 640 ? (e) => e.preventDefault() : undefined}>
-          <div className="p-2 border-b shrink-0">
-            <div className="relative">
-              <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder={t('locationSelector.searchLocation')}
-                className="h-8 text-sm pr-8"
-                autoFocus={window.innerWidth >= 640}
-                aria-label={t('locationSelector.searchLocation')}
-                name="location-search"
-              />
+          {open && (
+            <div className="rounded-md border bg-popover text-popover-foreground shadow-md" dir="rtl">
+              {dropdownContent}
             </div>
-          </div>
-          <div className="max-h-[300px] max-sm:max-h-none max-sm:min-h-0 max-sm:flex-1 overflow-y-auto overscroll-contain touch-pan-y p-1">
-            <LocationTree
-              nodes={tripLocationTree}
-              search={search}
-              value={value}
-              onSelect={handleSelect}
-              onAddToTree={addSiteToHierarchy}
-              recentLocations={recentLocations}
-            />
-          </div>
-          {/* Always-visible manual entry at bottom */}
-          <div className="shrink-0">
-            <ManualEntryFooter onSelect={handleSelect} onAddToTree={addSiteToHierarchy} />
-          </div>
-        </PopoverContent>
-      </Popover>
+          )}
+        </>
+      )}
     </div>
   );
 }
