@@ -106,7 +106,7 @@ export function LocationSelector({ value, onChange, placeholder, className }: Lo
               />
             </div>
           </div>
-          <div className="max-h-[300px] max-sm:max-h-none max-sm:min-h-0 max-sm:flex-1 overflow-y-auto p-1">
+          <div className="max-h-[300px] max-sm:max-h-none max-sm:min-h-0 max-sm:flex-1 overflow-y-auto overscroll-contain touch-pan-y p-1">
             <LocationTree
               nodes={tripLocationTree}
               search={search}
