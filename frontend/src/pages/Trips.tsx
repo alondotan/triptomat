@@ -221,6 +221,8 @@ const TripsPage = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    const { getCognitoLogoutUrl } = await import('@/lib/cognito');
+    window.location.href = getCognitoLogoutUrl();
   };
 
   const handleDeleteTrip = async () => {

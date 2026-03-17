@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { redirectToCognitoLogin } from '@/lib/cognito';
 import { Button } from '@/components/ui/button';
 import { Compass } from 'lucide-react';
 
@@ -26,11 +27,9 @@ export default function AuthPage() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin },
-    });
-    if (error) {
+    try {
+      await redirectToCognitoLogin();
+    } catch (error) {
       console.error('Sign in error:', error);
       setLoading(false);
     }

@@ -11,6 +11,7 @@ import { AdminLayout } from "./components/admin/AdminLayout";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { LanguageProvider } from "./context/LanguageContext";
 import AuthPage from "./pages/Auth";
+const AuthCallbackPage = lazy(() => import("./pages/AuthCallback"));
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 
 const ItineraryPage = lazy(() => import("./pages/Itinerary"));
@@ -53,6 +54,7 @@ const App = () => (
           <Suspense fallback={<div className="flex items-center justify-center h-screen"><Loader2 className="animate-spin h-8 w-8" /></div>}>
             <Routes>
               <Route path="/auth" element={<ErrorBoundary><AuthPage /></ErrorBoundary>} />
+              <Route path="/auth/callback" element={<ErrorBoundary><AuthCallbackPage /></ErrorBoundary>} />
               <Route path="/admin/*" element={
                 <AdminGuard>
                   <AdminLayout>
