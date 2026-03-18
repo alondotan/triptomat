@@ -349,11 +349,19 @@ const Recommendations = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                {rec.sourceUrl && (
+                {rec.sourceUrl && !rec.sourceUrl.startsWith('text://') && (
                   <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer"
                     className="text-primary hover:underline flex items-center gap-1 text-xs">
                     <ExternalLink size={12} /> {rec.sourceUrl}
                   </a>
+                )}
+                {rec.analysis?.source_text && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSourceTextDialog({ title: rec.sourceTitle || t('recsPage.viewSourceText'), text: rec.analysis.source_text! }); }}
+                    className="text-primary hover:underline flex items-center gap-1 text-xs cursor-pointer"
+                  >
+                    <FileText size={12} /> {t('recsPage.viewSourceText')}
+                  </button>
                 )}
 
                 {/* Sites list */}
