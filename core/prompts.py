@@ -23,7 +23,7 @@ Your output must be a RFC8259 compliant JSON object with the following structure
             "name": "Name of the specific place or attraction",
             "category": "Must be one of the allowed types listed below",
             "sentiment": "good | bad",
-            "paragraph": "The exact quote or sentence from the video describing this place",
+            "paragraph": "The exact quote or sentence from the source describing this place (or a short description if the input is a list)",
             "site": "The location/neighborhood/city from the sitesList",
             "day": "integer or null — the day number if the input is organized by days (Day 1, Day 2, etc.)",
             "order": "integer or null — the position within that day (1-based)",

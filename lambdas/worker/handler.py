@@ -167,7 +167,15 @@ def lambda_handler(event, context):
                         elif source_type == "web":
                             text = msg.text or ""
                             if text:
-                                prompt = f"Analyze this text and extract locations:\n{text}\n\n{main_prompt}"
+                                if text.strip().startswith("[AI Chat Insights"):
+                                    prompt = (
+                                        f"The following is a structured list of travel recommendations, "
+                                        f"possibly organized by day. Extract EVERY place name as a separate recommendation. "
+                                        f"If the list is grouped by days (Day 1, Day 2, etc.), preserve the day and order.\n\n"
+                                        f"{text}\n\n{main_prompt}"
+                                    )
+                                else:
+                                    prompt = f"Analyze this text and extract locations:\n{text}\n\n{main_prompt}"
                                 response_text = gemini.analyze_text(prompt)
                                 response_json = json.loads(response_text)
 

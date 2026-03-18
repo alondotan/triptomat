@@ -40,19 +40,24 @@ const tripSessions = new Map<string, Message[]>();
 
 const SUMMARIZE_PROMPT = `First, summarize what the user ultimately asked for in this conversation — consider only their final preferences (if the user changed their mind or rejected earlier suggestions, ignore those). Then list ONLY the specific place names that match what the user actually wanted. Reply in the SAME LANGUAGE the user used.
 
-If the conversation is about planning a multi-day route or itinerary, group the places by day:
+IMPORTANT: Do NOT put types in parentheses after the place name. Just the name.
 
-Day 1:
-- Place A (restaurant)
-- Place B (museum)
-Day 2:
-- Place C (beach)
-- Place D (market)
+If the conversation is about planning a multi-day route or itinerary, group the places by day and include the city/area for each day:
+
+Day 1 — Tokyo, Asakusa:
+- Senso-ji Temple
+- Nakamise Shopping Street
+- Tsukiji Outer Market
+Day 2 — Tokyo, Shibuya & Harajuku:
+- Meiji Shrine
+- Takeshita Street
+- Shibuya Crossing
 
 If the conversation is NOT about a multi-day plan (just general recommendations), use a flat list:
 
-- Casco Viejo (neighborhood)
-- Mercado de Mariscos (restaurant)
+- Casco Viejo
+- Mercado de Mariscos
+- BioMuseo
 
 In both cases, start with Line 1: A short summary of what the user wanted (e.g. "The user asked for a 3-day itinerary in Tokyo" or "The user asked for romantic restaurants in Tel Aviv"), then an empty line, then the places.
 No descriptions, no tips, no extra text — just the summary line and the place names (grouped by day if applicable).`;
