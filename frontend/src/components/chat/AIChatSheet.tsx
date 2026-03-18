@@ -38,12 +38,24 @@ const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
 // In-memory store for per-trip conversation sessions
 const tripSessions = new Map<string, Message[]>();
 
-const SUMMARIZE_PROMPT = `First, summarize what the user ultimately asked for in this conversation — consider only their final preferences (if the user changed their mind or rejected earlier suggestions, ignore those). Then list ONLY the specific place names that match what the user actually wanted. Reply in the SAME LANGUAGE the user used. Format:
-Line 1: A short summary of what the user wanted (e.g. "The user asked for romantic restaurants in Tel Aviv")
-Then an empty line, then the places:
+const SUMMARIZE_PROMPT = `First, summarize what the user ultimately asked for in this conversation — consider only their final preferences (if the user changed their mind or rejected earlier suggestions, ignore those). Then list ONLY the specific place names that match what the user actually wanted. Reply in the SAME LANGUAGE the user used.
+
+If the conversation is about planning a multi-day route or itinerary, group the places by day:
+
+Day 1:
+- Place A (restaurant)
+- Place B (museum)
+Day 2:
+- Place C (beach)
+- Place D (market)
+
+If the conversation is NOT about a multi-day plan (just general recommendations), use a flat list:
+
 - Casco Viejo (neighborhood)
 - Mercado de Mariscos (restaurant)
-No descriptions, no tips, no extra text — just the summary line and the place names.`;
+
+In both cases, start with Line 1: A short summary of what the user wanted (e.g. "The user asked for a 3-day itinerary in Tokyo" or "The user asked for romantic restaurants in Tel Aviv"), then an empty line, then the places.
+No descriptions, no tips, no extra text — just the summary line and the place names (grouped by day if applicable).`;
 
 export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProps) {
   const { t } = useTranslation();

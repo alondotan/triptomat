@@ -412,6 +412,50 @@ Deno.serve(async (req)=>{
                 matched_existing: false
               });
 
+              // Assign to itinerary day if the recommendation has day info
+              if (item.day != null && matchedTripId) {
+                try {
+                  // Find or create the itinerary_day for this day_number
+                  const { data: existingDay } = await supabase
+                    .from('itinerary_days')
+                    .select('id, activities')
+                    .eq('trip_id', matchedTripId)
+                    .eq('day_number', item.day)
+                    .maybeSingle();
+
+                  let dayId: string;
+                  let currentActivities: { id: string; type: string; order: number; schedule_state?: string }[];
+
+                  if (existingDay) {
+                    dayId = existingDay.id;
+                    currentActivities = (existingDay.activities || []) as typeof currentActivities;
+                  } else {
+                    const { data: createdDay } = await supabase
+                      .from('itinerary_days')
+                      .insert([{ trip_id: matchedTripId, day_number: item.day }])
+                      .select('id')
+                      .single();
+                    if (!createdDay) throw new Error('Failed to create itinerary day');
+                    dayId = createdDay.id;
+                    currentActivities = [];
+                  }
+
+                  // Add POI as potential activity if not already there
+                  if (!currentActivities.some(a => a.type === 'poi' && a.id === newPoi.id)) {
+                    currentActivities.push({
+                      id: newPoi.id,
+                      type: 'poi',
+                      order: item.order ?? currentActivities.length + 1,
+                      schedule_state: 'potential',
+                    });
+                    await supabase.from('itinerary_days').update({ activities: currentActivities }).eq('id', dayId);
+                    console.log(`[itinerary] Assigned POI ${newPoi.id} to day ${item.day}, order ${item.order}`);
+                  }
+                } catch (e) {
+                  console.error(`[itinerary] Failed to assign POI to day ${item.day}:`, e);
+                }
+              }
+
               // Fetch image from Pexels if no image was provided
               if (!item.image_url && !payload.source_image) {
                 const country = siteToCountry[(item.site || '').toLowerCase()] || '';

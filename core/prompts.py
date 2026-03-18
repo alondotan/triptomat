@@ -25,6 +25,8 @@ Your output must be a RFC8259 compliant JSON object with the following structure
             "sentiment": "good | bad",
             "paragraph": "The exact quote or sentence from the video describing this place",
             "site": "The location/neighborhood/city from the sitesList",
+            "day": "integer or null — the day number if the input is organized by days (Day 1, Day 2, etc.)",
+            "order": "integer or null — the position within that day (1-based)",
             "location_type": "specific | general",
             "location": {{
                 "address": "string",
@@ -77,4 +79,7 @@ Your output must be a RFC8259 compliant JSON object with the following structure
  5.5 If no contacts are found, return an empty array.
 6. Only provide the JSON object. No prose or explanations.
 7. Perform a JSON integrity check before responding.
+8. Day and order fields:
+ 8.1 If the input is organized by days (e.g. "Day 1:", "Day 2:", "יום 1:", "יום 2:"), set "day" to the day number (integer) and "order" to the position within that day (1-based).
+ 8.2 If the input is NOT organized by days, set both "day" and "order" to null.
 """
