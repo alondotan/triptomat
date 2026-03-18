@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { UrlSubmit } from '@/components/UrlSubmit';
 import { TextSubmit } from '@/components/TextSubmit';
 import { supabase } from '@/integrations/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const Recommendations = () => {
   const { t } = useTranslation();
@@ -34,6 +35,7 @@ const Recommendations = () => {
   const [selectedPoi, setSelectedPoi] = useState<PointOfInterest | null>(null);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [syncing, setSyncing] = useState<Record<string, boolean>>({});
+  const [sourceTextDialog, setSourceTextDialog] = useState<{ title: string; text: string } | null>(null);
 
   const handleRefreshMapList = async (rec: SourceRecommendation) => {
     const listId = rec.analysis.map_list_id;
@@ -215,12 +217,12 @@ const Recommendations = () => {
                     </a>
                   )}
                   {rec.analysis?.source_text && (
-                    <details className="text-xs text-muted-foreground">
-                      <summary className="cursor-pointer flex items-center gap-1 text-primary hover:underline">
-                        <FileText size={12} /> {t('recsPage.viewSourceText')}
-                      </summary>
-                      <pre className="mt-1 p-2 bg-muted rounded text-xs whitespace-pre-wrap max-h-40 overflow-y-auto">{rec.analysis.source_text}</pre>
-                    </details>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSourceTextDialog({ title: rec.sourceTitle || t('recsPage.viewSourceText'), text: rec.analysis.source_text! }); }}
+                      className="text-primary hover:underline flex items-center gap-1 text-xs cursor-pointer"
+                    >
+                      <FileText size={12} /> {t('recsPage.viewSourceText')}
+                    </button>
                   )}
                   <p className="text-xs text-muted-foreground">{t('recsPage.analysisInProgress')}</p>
                 </CardContent>
@@ -254,12 +256,12 @@ const Recommendations = () => {
                     </a>
                   )}
                   {rec.analysis?.source_text && (
-                    <details className="text-xs text-muted-foreground">
-                      <summary className="cursor-pointer flex items-center gap-1 text-primary hover:underline">
-                        <FileText size={12} /> {t('recsPage.viewSourceText')}
-                      </summary>
-                      <pre className="mt-1 p-2 bg-muted rounded text-xs whitespace-pre-wrap max-h-40 overflow-y-auto">{rec.analysis.source_text}</pre>
-                    </details>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSourceTextDialog({ title: rec.sourceTitle || t('recsPage.viewSourceText'), text: rec.analysis.source_text! }); }}
+                      className="text-primary hover:underline flex items-center gap-1 text-xs cursor-pointer"
+                    >
+                      <FileText size={12} /> {t('recsPage.viewSourceText')}
+                    </button>
                   )}
                   {rec.error && (
                     <p className="text-xs text-destructive bg-destructive/10 p-2 rounded">{rec.error}</p>
@@ -484,6 +486,19 @@ const Recommendations = () => {
             setSelectedContact(null);
           }}
         />
+
+        {/* Source Text Dialog */}
+        <Dialog open={!!sourceTextDialog} onOpenChange={(open) => { if (!open) setSourceTextDialog(null); }}>
+          <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <FileText size={16} />
+                {sourceTextDialog?.title}
+              </DialogTitle>
+            </DialogHeader>
+            <pre className="flex-1 overflow-y-auto p-3 bg-muted rounded-lg text-sm whitespace-pre-wrap">{sourceTextDialog?.text}</pre>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
