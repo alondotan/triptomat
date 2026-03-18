@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 import requests
 
 
-def send_to_webhook(analysis_data, original_url, source_metadata, webhook_token=None, job_id=None):
+def send_to_webhook(analysis_data, original_url, source_metadata, webhook_token=None, job_id=None, source_text=None):
     """Builds the final payload and sends it to the webhook."""
     webhook_base = os.environ.get("WEBHOOK_URL", "")
     token = webhook_token or os.environ.get("WEBHOOK_TOKEN", "")
@@ -22,6 +22,8 @@ def send_to_webhook(analysis_data, original_url, source_metadata, webhook_token=
             "source_image": source_metadata.get("image", ""),
             "analysis": analysis_data
         }
+        if source_text:
+            final_entry["source_text"] = source_text
 
         print(json.dumps(final_entry, indent=4))
         requests.post(webhook_url, json=final_entry, headers={"Content-Type": "application/json"}, timeout=10)

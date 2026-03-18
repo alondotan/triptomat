@@ -490,6 +490,7 @@ const he = {
     resend: 'שלח שוב',
     resent: 'נשלח מחדש לניתוח',
     resendFailed: 'השליחה מחדש נכשלה',
+    viewSourceText: 'הצג טקסט מקור',
     added: 'נוסף:',
     recDeleted: 'המלצה נמחקה',
     deleteError: 'לא ניתן למחוק.',

@@ -53,6 +53,7 @@ export interface SourceRecommendation {
   analysis: {
     main_site?: string;
     map_list_id?: string;
+    source_text?: string;
     sites_list?: Array<{
       site: string;
       site_type: string;

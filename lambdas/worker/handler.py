@@ -238,7 +238,8 @@ def lambda_handler(event, context):
                         with safe_span(tracer, "worker.webhook_send", {
                             "webhook.url_masked": webhook_url_masked,
                         }) as wh_span:
-                            result = send_to_webhook(enriched_data, url, source_metadata, webhook_token=webhook_token or None, job_id=job_id)
+                            _source_text = msg.text if source_type == "web" else None
+                            result = send_to_webhook(enriched_data, url, source_metadata, webhook_token=webhook_token or None, job_id=job_id, source_text=_source_text)
                             status_label = "success" if result else "failure"
                             if wh_span:
                                 try:

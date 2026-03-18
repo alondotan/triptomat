@@ -198,6 +198,12 @@ Deno.serve(async (req)=>{
     }
     console.log(`Matched trip: ${matchedTripId || 'none'}, source_image: ${payload.source_image ? 'YES' : 'NO'}, upsert: ${isUpsert} [v3]`);
 
+    // Embed source_text inside analysis JSON if present (avoids DB migration)
+    const analysisData = { ...payload.analysis };
+    if (payload.source_text) {
+      analysisData.source_text = payload.source_text;
+    }
+
     // Insert or update source_recommendation
     let sourceRecId: string;
     if (isUpsert && existingId) {
@@ -208,7 +214,7 @@ Deno.serve(async (req)=>{
         source_url: payload.source_url,
         source_title: payload.source_title || null,
         source_image: payload.source_image || null,
-        analysis: payload.analysis,
+        analysis: analysisData,
         status: matchedTripId ? 'linked' : 'pending',
         linked_entities: [],
       }).eq('id', existingId);
@@ -223,7 +229,7 @@ Deno.serve(async (req)=>{
           source_url: payload.source_url,
           source_title: payload.source_title || null,
           source_image: payload.source_image || null,
-          analysis: payload.analysis,
+          analysis: analysisData,
           status: matchedTripId ? 'linked' : 'pending',
           linked_entities: []
         }

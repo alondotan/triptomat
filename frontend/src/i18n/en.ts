@@ -492,6 +492,7 @@ const en = {
     resend: 'Resend',
     resent: 'Resent for analysis',
     resendFailed: 'Resend failed',
+    viewSourceText: 'View source text',
     added: 'Added:',
     recDeleted: 'Recommendation deleted',
     deleteError: 'Cannot delete.',

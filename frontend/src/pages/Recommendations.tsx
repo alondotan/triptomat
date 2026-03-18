@@ -8,7 +8,7 @@ import { AppLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExternalLink, ThumbsUp, ThumbsDown, Star, Trash2, ChevronDown, ChevronUp, Users, Loader2, AlertTriangle, RefreshCw, RotateCw } from 'lucide-react';
+import { ExternalLink, FileText, ThumbsUp, ThumbsDown, Star, Trash2, ChevronDown, ChevronUp, Users, Loader2, AlertTriangle, RefreshCw, RotateCw } from 'lucide-react';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
 import { ContactEditDialog } from '@/components/shared/ContactEditDialog';
@@ -208,11 +208,19 @@ const Recommendations = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="text-sm space-y-2">
-                  {rec.sourceUrl && (
+                  {rec.sourceUrl && !rec.sourceUrl.startsWith('text://') && (
                     <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer"
                       className="text-primary hover:underline flex items-center gap-1 text-xs">
                       <ExternalLink size={12} /> {rec.sourceUrl}
                     </a>
+                  )}
+                  {rec.analysis?.source_text && (
+                    <details className="text-xs text-muted-foreground">
+                      <summary className="cursor-pointer flex items-center gap-1 text-primary hover:underline">
+                        <FileText size={12} /> {t('recsPage.viewSourceText')}
+                      </summary>
+                      <pre className="mt-1 p-2 bg-muted rounded text-xs whitespace-pre-wrap max-h-40 overflow-y-auto">{rec.analysis.source_text}</pre>
+                    </details>
                   )}
                   <p className="text-xs text-muted-foreground">{t('recsPage.analysisInProgress')}</p>
                 </CardContent>
@@ -239,11 +247,19 @@ const Recommendations = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="text-sm space-y-2">
-                  {rec.sourceUrl && (
+                  {rec.sourceUrl && !rec.sourceUrl.startsWith('text://') && (
                     <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer"
                       className="text-primary hover:underline flex items-center gap-1 text-xs">
                       <ExternalLink size={12} /> {rec.sourceUrl}
                     </a>
+                  )}
+                  {rec.analysis?.source_text && (
+                    <details className="text-xs text-muted-foreground">
+                      <summary className="cursor-pointer flex items-center gap-1 text-primary hover:underline">
+                        <FileText size={12} /> {t('recsPage.viewSourceText')}
+                      </summary>
+                      <pre className="mt-1 p-2 bg-muted rounded text-xs whitespace-pre-wrap max-h-40 overflow-y-auto">{rec.analysis.source_text}</pre>
+                    </details>
                   )}
                   {rec.error && (
                     <p className="text-xs text-destructive bg-destructive/10 p-2 rounded">{rec.error}</p>
