@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Loader2, Bot, User, AlertCircle, Sparkles } from 'lucide-react';
+import { Send, Loader2, Bot, User, AlertCircle, Sparkles, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -274,6 +274,19 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
               <Bot size={18} className="text-primary" />
               <span className="truncate">{t('aiChat.title', { trip: tripLabel })}</span>
             </SheetTitle>
+            <div className="flex items-center gap-1.5">
+            {messages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="shrink-0 h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                onClick={() => { setMessages([]); if (tripId) tripSessions.delete(tripId); setError(null); }}
+                disabled={loading || integrating}
+                title={t('aiChat.clearChat')}
+              >
+                <Trash2 size={14} />
+              </Button>
+            )}
             {hasAssistantMessages && tripContext && (
               <Button
                 variant="outline"
@@ -288,6 +301,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
                 {t('aiChat.integrate')}
               </Button>
             )}
+            </div>
           </div>
         </SheetHeader>
 

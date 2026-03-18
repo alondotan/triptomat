@@ -712,6 +712,7 @@ const en = {
     insightsSent: 'Insights sent',
     insightsDescription: 'AI recommendations are being processed. Check the Recommendations page.',
     integrationConfirmation: 'I processed the conversation and sent the following recommendations for integration:',
+    clearChat: 'Clear conversation',
   },
 
   // ── Source Emails Dashboard ──

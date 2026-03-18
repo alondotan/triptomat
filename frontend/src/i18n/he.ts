@@ -710,6 +710,7 @@ const he = {
     insightsSent: 'תובנות נשלחו',
     insightsDescription: 'המלצות AI מעובדות. בדוק את עמוד ההמלצות.',
     integrationConfirmation: 'עיבדתי את השיחה ושלחתי את ההמלצות הבאות לשילוב בטיול:',
+    clearChat: 'נקה שיחה',
   },
 
   // ── Source Emails Dashboard ──
