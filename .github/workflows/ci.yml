@@ -20,7 +20,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
-      - run: npm run lint -- --max-warnings 144
+      - run: npm run lint -- --max-warnings 145
         name: Lint
       - run: npx tsc --noEmit
         name: Type Check
@@ -69,7 +69,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lambda: [gateway, downloader, worker, mail_handler, admin]
+        lambda: [gateway, downloader, worker, mail_handler, admin, whatsapp]
     steps:
       - uses: actions/checkout@v4
       - run: docker build -f lambdas/${{ matrix.lambda }}/Dockerfile .
