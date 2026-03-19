@@ -46,9 +46,9 @@ export function useItineraryDraft() {
   const applyToolCall = useCallback((days: DraftDay[]) => {
     // Normalize the AI response
     const normalized = days.map(d => ({
-      dayNumber: d.dayNumber ?? (d as any).day_number,
+      dayNumber: d.dayNumber ?? (d as unknown as Record<string, number>).day_number,
       date: d.date,
-      locationContext: d.locationContext ?? (d as any).location_context,
+      locationContext: d.locationContext ?? (d as unknown as Record<string, string>).location_context,
       places: (d.places || []).map(p => ({
         name: p.name,
         category: (CATEGORY_MAP[p.category] || 'attraction') as DraftPlace['category'],

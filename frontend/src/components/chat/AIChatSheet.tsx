@@ -185,8 +185,8 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
         content: data?.message || 'Sorry, I could not generate a response.',
       };
       setMessages(prev => [...prev, assistantMsg]);
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong. Please try again.');
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -273,8 +273,8 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
       } else {
         throw new Error(gatewayData.error || 'Gateway rejected the request');
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to integrate insights.');
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to integrate insights.');
     } finally {
       setIntegrating(false);
     }
@@ -293,8 +293,8 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
       });
       // Re-initialize draft from real data (will happen via context refresh)
       initFromReal(itineraryDays, pois);
-    } catch (err: any) {
-      setError(err.message || 'Failed to update trip.');
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Failed to update trip.');
     } finally {
       setApplying(false);
     }
