@@ -1,17 +1,27 @@
 import type { PointOfInterest } from '@/types/trip';
 import type { DraftDay } from '@/types/itineraryDraft';
+import type { Json } from '@/integrations/supabase/types';
 import { createOrMergePOI } from './poiService';
 import { supabase } from './helpers';
+
+interface ActivityEntry {
+  id: string;
+  type: string;
+  order: number;
+  schedule_state?: string;
+  time_window?: { start?: string; end?: string };
+  [key: string]: Json | undefined; // index signature for Json compatibility
+}
 
 /**
  * Apply a draft itinerary to the real trip.
  * - Resolves place names to POI IDs (creates new POIs as needed via createOrMergePOI)
- * - Creates/updates itinerary_days with activities
+ * - Merges draft activities into existing itinerary_days (preserves scheduled/planned items)
  */
 export async function applyDraftToTrip(
   tripId: string,
   draft: DraftDay[],
-  existingPois: PointOfInterest[],
+  _existingPois: PointOfInterest[],
 ): Promise<void> {
   const poiIdMap = new Map<string, string>(); // "name|category" → POI ID
 
@@ -21,7 +31,7 @@ export async function applyDraftToTrip(
       const key = `${place.name}|${place.category}`;
       if (poiIdMap.has(key)) continue;
 
-      // Check if we already have a matching POI
+      // If this place came from a real POI, reuse its ID
       if (place.existingPoiId) {
         poiIdMap.set(key, place.existingPoiId);
         continue;
@@ -48,9 +58,8 @@ export async function applyDraftToTrip(
     }
   }
 
-  // 2) Create/update itinerary days
+  // 2) Merge into itinerary days
   for (const day of draft) {
-    // Find or create the itinerary day
     const { data: existingDay } = await supabase
       .from('itinerary_days')
       .select('id, activities')
@@ -58,20 +67,44 @@ export async function applyDraftToTrip(
       .eq('day_number', day.dayNumber)
       .maybeSingle();
 
-    const activities = day.places.map((place, idx) => ({
-      order: idx + 1,
-      type: 'poi' as const,
-      id: poiIdMap.get(`${place.name}|${place.category}`) || '',
-      schedule_state: 'potential' as const,
-      time_window: place.time ? { start: place.time } : undefined,
-    })).filter(a => a.id); // skip any unresolved
+    // Build new activity entries from draft
+    const draftPoiIds = new Set<string>();
+    const newActivities: ActivityEntry[] = day.places
+      .map((place, idx) => {
+        const poiId = poiIdMap.get(`${place.name}|${place.category}`) || '';
+        if (poiId) draftPoiIds.add(poiId);
+        return {
+          order: idx + 1,
+          type: 'poi' as const,
+          id: poiId,
+          schedule_state: 'potential' as const,
+          time_window: place.time ? { start: place.time } : undefined,
+        };
+      })
+      .filter(a => a.id);
 
     if (existingDay) {
+      // Preserve existing non-POI activities (time_blocks, collections)
+      // and POIs that are NOT in the draft (they were already there)
+      const existingActivities = (existingDay.activities || []) as unknown as ActivityEntry[];
+      const preserved = existingActivities.filter(a => {
+        if (a.type !== 'poi') return true; // keep time_blocks, collections
+        if (draftPoiIds.has(a.id)) return false; // draft replaces this
+        return true; // keep POIs not in draft (user's other planned items)
+      });
+
+      // Merge: draft activities first (with their order), then preserved items after
+      const maxOrder = newActivities.length;
+      const merged = [
+        ...newActivities,
+        ...preserved.map((a, i) => ({ ...a, order: maxOrder + i + 1 })),
+      ];
+
       await supabase
         .from('itinerary_days')
         .update({
-          activities,
-          location_context: day.locationContext || undefined,
+          activities: merged as unknown as Json,
+          location_context: day.locationContext || (existingDay as Record<string, unknown>).location_context as string || undefined,
         })
         .eq('id', existingDay.id);
     } else {
@@ -81,7 +114,7 @@ export async function applyDraftToTrip(
           trip_id: tripId,
           day_number: day.dayNumber,
           location_context: day.locationContext || null,
-          activities,
+          activities: newActivities as unknown as Json,
         }]);
     }
   }
