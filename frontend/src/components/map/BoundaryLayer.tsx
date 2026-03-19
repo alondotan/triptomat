@@ -29,11 +29,21 @@ function FitToNode({
       const layer = L.geoJSON({ type: 'Feature', geometry: currentBoundary, properties: {} } as GeoJSON.Feature);
       map.fitBounds(layer.getBounds().pad(0.05));
     } else {
-      const coords = childRegions
-        .filter((c) => c.center)
-        .map((c) => c.center!);
-      if (coords.length > 0) {
-        map.fitBounds(L.latLngBounds(coords.map((c) => L.latLng(c[0], c[1]))).pad(0.1), { maxZoom: 13 });
+      // Try to fit all child boundaries (e.g. country outlines at root level)
+      const withBoundary = childRegions.filter((c) => c.boundary);
+      if (withBoundary.length > 0) {
+        const fc: GeoJSON.FeatureCollection = {
+          type: 'FeatureCollection',
+          features: withBoundary.map((c) => ({ type: 'Feature' as const, geometry: c.boundary!, properties: {} })),
+        };
+        map.fitBounds(L.geoJSON(fc).getBounds().pad(0.05));
+      } else {
+        const coords = childRegions
+          .filter((c) => c.center)
+          .map((c) => c.center!);
+        if (coords.length > 0) {
+          map.fitBounds(L.latLngBounds(coords.map((c) => L.latLng(c[0], c[1]))).pad(0.1), { maxZoom: 13 });
+        }
       }
     }
   }, [currentBoundary, childRegions, map]);
