@@ -174,10 +174,14 @@ async function callGemini(body: Record<string, unknown>) {
   if (!response.ok) {
     const err = await response.text();
     console.error('Gemini API error:', response.status, err);
-    throw new Error('AI service temporarily unavailable');
+    throw new Error(`AI service error (${response.status}): ${err.slice(0, 200)}`);
   }
 
-  return response.json();
+  const json = await response.json();
+  console.log('Gemini response finishReason:', json.candidates?.[0]?.finishReason,
+    'parts:', json.candidates?.[0]?.content?.parts?.length || 0,
+    'hasFunctionCall:', json.candidates?.[0]?.content?.parts?.some((p: { functionCall?: unknown }) => p.functionCall) || false);
+  return json;
 }
 
 Deno.serve(async (req) => {
@@ -275,56 +279,20 @@ Deno.serve(async (req) => {
     const textParts = parts.filter((p: { text?: string }) => p.text).map((p: { text: string }) => p.text).join('');
     const functionCalls = parts.filter((p: { functionCall?: unknown }) => p.functionCall);
 
-    // If there are tool calls, do server-side tool loop to get text summary
+    // If there are tool calls, return them along with any text from the same response
     if (functionCalls.length > 0) {
       const toolCalls = functionCalls.map((fc: { functionCall: { name: string; args: unknown } }) => ({
         name: fc.functionCall.name,
         args: fc.functionCall.args,
       }));
 
-      // Build tool response and ask Gemini for text summary
-      const updatedContents = [
-        ...sanitized,
-        // Model's response with function call
-        { role: 'model', parts },
-        // Our "execution result" — role must be "function" for Gemini tool protocol
-        {
-          role: 'function',
-          parts: functionCalls.map((fc: { functionCall: { name: string } }) => ({
-            functionResponse: {
-              name: fc.functionCall.name,
-              response: { success: true, message: 'Itinerary updated in the planner panel.' },
-            },
-          })),
-        },
-      ];
-
-      // Second call to get text response
-      const followUpBody = { ...geminiBody, contents: updatedContents };
-      try {
-        const followUpResult = await callGemini(followUpBody);
-        const followUpText = followUpResult.candidates?.[0]?.content?.parts
-          ?.filter((p: { text?: string }) => p.text)
-          .map((p: { text: string }) => p.text)
-          .join('') || textParts;
-
-        return new Response(JSON.stringify({
-          message: followUpText || 'I updated the itinerary.',
-          toolCalls,
-        }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      } catch {
-        // If follow-up fails, return what we have
-        return new Response(JSON.stringify({
-          message: textParts || 'I updated the itinerary.',
-          toolCalls,
-        }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+      return new Response(JSON.stringify({
+        message: textParts || 'I updated the itinerary plan.',
+        toolCalls,
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // No tool calls — regular text response
