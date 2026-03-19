@@ -5,6 +5,8 @@ const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
 const MAX_INPUT_LENGTH = 2000;
 const MAX_MESSAGES = 30;
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -57,32 +59,125 @@ interface TripContext {
   locations?: string[];
 }
 
-function buildSystemPrompt(tripContext?: TripContext): string {
-  if (!tripContext?.tripName) return BASE_SYSTEM_PROMPT;
+interface DraftDay {
+  dayNumber: number;
+  date?: string;
+  locationContext?: string;
+  places: { name: string; category: string; city?: string; notes?: string; time?: string; duration?: number }[];
+}
 
-  const parts = [`\n\n## Current trip context\nYou are assisting with a trip called "${tripContext.tripName}".`];
+function buildSystemPrompt(tripContext?: TripContext, draft?: DraftDay[] | null): string {
+  let prompt = BASE_SYSTEM_PROMPT;
 
-  if (tripContext.countries?.length) {
-    parts.push(`Destinations: ${tripContext.countries.join(', ')}.`);
-  }
-  if (tripContext.startDate && tripContext.endDate) {
-    parts.push(`Dates: ${tripContext.startDate} to ${tripContext.endDate}.`);
-  } else if (tripContext.numberOfDays) {
-    parts.push(`Duration: ${tripContext.numberOfDays} days.`);
-  }
-  if (tripContext.currency) {
-    parts.push(`Display currency: ${tripContext.currency}.`);
-  }
-  if (tripContext.status) {
-    parts.push(`Trip phase: ${tripContext.status}.`);
-  }
-  if (tripContext.locations?.length) {
-    parts.push(`Planned locations: ${tripContext.locations.join(', ')}.`);
+  if (tripContext?.tripName) {
+    const parts = [`\n\n## Current trip context\nYou are assisting with a trip called "${tripContext.tripName}".`];
+
+    if (tripContext.countries?.length) {
+      parts.push(`Destinations: ${tripContext.countries.join(', ')}.`);
+    }
+    if (tripContext.startDate && tripContext.endDate) {
+      parts.push(`Dates: ${tripContext.startDate} to ${tripContext.endDate}.`);
+    } else if (tripContext.numberOfDays) {
+      parts.push(`Duration: ${tripContext.numberOfDays} days.`);
+    }
+    if (tripContext.currency) {
+      parts.push(`Display currency: ${tripContext.currency}.`);
+    }
+    if (tripContext.status) {
+      parts.push(`Trip phase: ${tripContext.status}.`);
+    }
+    if (tripContext.locations?.length) {
+      parts.push(`Planned locations: ${tripContext.locations.join(', ')}.`);
+    }
+
+    parts.push('Use this context to give relevant, specific advice. Reference the trip details naturally when helpful.');
+    prompt += parts.join('\n');
   }
 
-  parts.push('Use this context to give relevant, specific advice. Reference the trip details naturally when helpful.');
+  // Planner mode: inject draft and tool instructions
+  if (draft !== undefined && draft !== null) {
+    prompt += `\n\n## Itinerary Planner Mode
+You have access to a set_itinerary tool. ALWAYS call this tool when you suggest, add, remove, reorder, or modify the itinerary.
+When calling the tool, include the COMPLETE updated itinerary (all days and all places), not just the changed parts.
 
-  return BASE_SYSTEM_PROMPT + parts.join('\n');
+### Current draft itinerary:
+${draft.length === 0 ? '(Empty — no days planned yet. Build one from scratch based on the conversation.)' : JSON.stringify(draft, null, 2)}
+
+### Rules:
+- When the user asks to add, remove, move, or reorganize places or days — call set_itinerary with the full updated itinerary.
+- When just chatting, answering questions, or giving tips — respond with text only, do NOT call the tool.
+- Always explain what you changed in your text response alongside the tool call.
+- Use realistic categories: accommodation, eatery, attraction, or service.
+- Include city names for each place when possible.
+- Suggest times and durations when it makes sense.`;
+  }
+
+  return prompt;
+}
+
+// Gemini tool declaration for itinerary planning
+const ITINERARY_TOOL = {
+  function_declarations: [{
+    name: 'set_itinerary',
+    description: 'Set or update the draft trip itinerary. Call this whenever you suggest, modify, add, remove, or reorganize the itinerary. Always include ALL days and places, not just changes.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {
+        days: {
+          type: 'ARRAY',
+          description: 'Array of days in the itinerary, ordered by day number',
+          items: {
+            type: 'OBJECT',
+            properties: {
+              day_number: { type: 'INTEGER', description: 'Day number (1-based)' },
+              location_context: { type: 'STRING', description: 'City or area for this day' },
+              places: {
+                type: 'ARRAY',
+                description: 'Ordered list of places/activities for this day',
+                items: {
+                  type: 'OBJECT',
+                  properties: {
+                    name: { type: 'STRING', description: 'Name of the place' },
+                    category: { type: 'STRING', description: 'One of: accommodation, eatery, attraction, service' },
+                    city: { type: 'STRING', description: 'City where this place is located' },
+                    notes: { type: 'STRING', description: 'Brief note about this place' },
+                    time: { type: 'STRING', description: 'Suggested time in HH:mm format' },
+                    duration: { type: 'INTEGER', description: 'Estimated duration in minutes' },
+                  },
+                  required: ['name', 'category'],
+                },
+              },
+            },
+            required: ['day_number', 'places'],
+          },
+        },
+      },
+      required: ['days'],
+    },
+  }],
+};
+
+const SAFETY_SETTINGS = [
+  { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+  { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+  { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+  { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+];
+
+async function callGemini(body: Record<string, unknown>) {
+  const response = await fetch(GEMINI_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    console.error('Gemini API error:', response.status, err);
+    throw new Error('AI service temporarily unavailable');
+  }
+
+  return response.json();
 }
 
 Deno.serve(async (req) => {
@@ -121,7 +216,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { messages, tripContext } = body;
+    const { messages, tripContext, mode, itineraryDraft } = body;
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: 'messages array is required' }), {
@@ -143,52 +238,100 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Call Gemini API
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: buildSystemPrompt(tripContext) }] },
-          contents: sanitized,
-          generationConfig: {
-            maxOutputTokens: 1024,
-            temperature: 0.7,
-          },
-          safetySettings: [
-            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-          ],
-        }),
-      },
-    );
+    const isPlanner = mode === 'planner';
+    const systemPrompt = buildSystemPrompt(tripContext, isPlanner ? (itineraryDraft ?? []) : undefined);
 
-    if (!response.ok) {
-      const err = await response.text();
-      console.error('Gemini API error:', response.status, err);
-      return new Response(JSON.stringify({ error: 'AI service temporarily unavailable' }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const geminiBody: Record<string, unknown> = {
+      system_instruction: { parts: [{ text: systemPrompt }] },
+      contents: sanitized,
+      generationConfig: {
+        maxOutputTokens: isPlanner ? 2048 : 1024,
+        temperature: 0.7,
+      },
+      safetySettings: SAFETY_SETTINGS,
+    };
+
+    // Add tool calling for planner mode
+    if (isPlanner) {
+      geminiBody.tools = [ITINERARY_TOOL];
+      geminiBody.tool_config = { function_calling_config: { mode: 'AUTO' } };
     }
 
-    const result = await response.json();
+    // First Gemini call
+    const result = await callGemini(geminiBody);
 
     // Check if response was blocked by safety filters
     if (result.candidates?.[0]?.finishReason === 'SAFETY') {
-      return new Response(JSON.stringify({ message: "I can only help with travel-related questions. What destination are you thinking about?" }), {
+      return new Response(JSON.stringify({
+        message: "I can only help with travel-related questions. What destination are you thinking about?",
+        toolCalls: [],
+      }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const assistantMessage = result.candidates?.[0]?.content?.parts?.[0]?.text
-      || 'Sorry, I could not generate a response.';
+    const parts = result.candidates?.[0]?.content?.parts || [];
+    const textParts = parts.filter((p: { text?: string }) => p.text).map((p: { text: string }) => p.text).join('');
+    const functionCalls = parts.filter((p: { functionCall?: unknown }) => p.functionCall);
 
-    return new Response(JSON.stringify({ message: assistantMessage }), {
+    // If there are tool calls, do server-side tool loop to get text summary
+    if (functionCalls.length > 0) {
+      const toolCalls = functionCalls.map((fc: { functionCall: { name: string; args: unknown } }) => ({
+        name: fc.functionCall.name,
+        args: fc.functionCall.args,
+      }));
+
+      // Build tool response and ask Gemini for text summary
+      const updatedContents = [
+        ...sanitized,
+        // Model's response with function call
+        { role: 'model', parts },
+        // Our "execution result"
+        {
+          role: 'user',
+          parts: functionCalls.map((fc: { functionCall: { name: string } }) => ({
+            functionResponse: {
+              name: fc.functionCall.name,
+              response: { success: true, message: 'Itinerary updated in the planner panel.' },
+            },
+          })),
+        },
+      ];
+
+      // Second call to get text response
+      const followUpBody = { ...geminiBody, contents: updatedContents };
+      try {
+        const followUpResult = await callGemini(followUpBody);
+        const followUpText = followUpResult.candidates?.[0]?.content?.parts
+          ?.filter((p: { text?: string }) => p.text)
+          .map((p: { text: string }) => p.text)
+          .join('') || textParts;
+
+        return new Response(JSON.stringify({
+          message: followUpText || 'I updated the itinerary.',
+          toolCalls,
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } catch {
+        // If follow-up fails, return what we have
+        return new Response(JSON.stringify({
+          message: textParts || 'I updated the itinerary.',
+          toolCalls,
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // No tool calls — regular text response
+    return new Response(JSON.stringify({
+      message: textParts || 'Sorry, I could not generate a response.',
+      toolCalls: [],
+    }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

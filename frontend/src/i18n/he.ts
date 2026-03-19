@@ -711,6 +711,16 @@ const he = {
     insightsDescription: 'המלצות AI מעובדות. בדוק את עמוד ההמלצות.',
     integrationConfirmation: 'עיבדתי את השיחה ושלחתי את ההמלצות הבאות לשילוב בטיול:',
     clearChat: 'נקה שיחה',
+    chatTab: 'צ׳אט',
+    planTab: 'תכנון',
+    planTitle: 'טיוטת מסלול',
+    draftEmpty: 'התחל לשוחח כדי לבנות מסלול. בקש מה-AI לתכנן את הימים שלך!',
+    noPlaces: 'אין מקומות עדיין',
+    dayLabel: 'יום {{n}}',
+    clearDraft: 'נקה',
+    updateTrip: 'עדכן טיול',
+    tripUpdated: 'הטיול עודכן',
+    tripUpdatedDesc: 'המסלול עודכן עם המקומות המתוכננים.',
   },
 
   // ── Source Emails Dashboard ──

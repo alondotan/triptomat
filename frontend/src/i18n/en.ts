@@ -713,6 +713,16 @@ const en = {
     insightsDescription: 'AI recommendations are being processed. Check the Recommendations page.',
     integrationConfirmation: 'I processed the conversation and sent the following recommendations for integration:',
     clearChat: 'Clear conversation',
+    chatTab: 'Chat',
+    planTab: 'Plan',
+    planTitle: 'Itinerary Draft',
+    draftEmpty: 'Start chatting to build your itinerary. Ask the AI to plan your days!',
+    noPlaces: 'No places yet',
+    dayLabel: 'Day {{n}}',
+    clearDraft: 'Clear',
+    updateTrip: 'Update trip',
+    tripUpdated: 'Trip updated',
+    tripUpdatedDesc: 'The itinerary has been updated with the planned places.',
   },
 
   // ── Source Emails Dashboard ──

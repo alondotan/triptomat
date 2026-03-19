@@ -3,10 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Loader2, Bot, User, AlertCircle, Sparkles, Trash2 } from 'lucide-react';
+import { Send, Loader2, Bot, User, AlertCircle, Sparkles, Trash2, Map, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useItinerary } from '@/context/ItineraryContext';
+import { usePOI } from '@/context/POIContext';
+import { useItineraryDraft } from '@/hooks/useItineraryDraft';
+import { DraftTreePanel } from './DraftTreePanel';
+import { applyDraftToTrip } from '@/services/itineraryDraftService';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -71,12 +76,28 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [integrating, setIntegrating] = useState(false);
+  const [applying, setApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSentAt, setLastSentAt] = useState(0);
+  const [mobileTab, setMobileTab] = useState<'chat' | 'plan'>('chat');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const prevTripIdRef = useRef<string | null>(tripId);
   const { toast } = useToast();
+
+  // Itinerary + POI contexts for seeding draft
+  const { itineraryDays } = useItinerary();
+  const { pois } = usePOI();
+
+  // Draft state
+  const { draft, isDirty, isInitialized, initFromReal, applyToolCall, clearDraft } = useItineraryDraft();
+
+  // Initialize draft when sheet opens or trip changes
+  useEffect(() => {
+    if (open && tripContext && !isInitialized) {
+      initFromReal(itineraryDays, pois);
+    }
+  }, [open, tripContext, isInitialized, initFromReal, itineraryDays, pois]);
 
   // When trip changes, save current session and load the new one
   useEffect(() => {
@@ -91,8 +112,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
     }
   }, [tripId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Persist session on message changes (tripId intentionally excluded —
-  // the trip-switch effect above already saves before switching)
+  // Persist session on message changes
   useEffect(() => {
     if (tripId && messages.length > 0) {
       tripSessions.set(tripId, messages);
@@ -141,11 +161,24 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
             currency: tripContext.currency,
             locations: tripContext.locations,
           },
+          mode: 'planner',
+          itineraryDraft: draft,
         },
       });
 
       if (fnError) throw new Error(fnError.message || 'Failed to get response');
       if (data?.error) throw new Error(data.error);
+
+      // Handle tool calls (itinerary updates)
+      if (data?.toolCalls?.length > 0) {
+        for (const tc of data.toolCalls) {
+          if (tc.name === 'set_itinerary' && tc.args?.days) {
+            applyToolCall(tc.args.days);
+            // On mobile, switch to plan tab to show the update
+            setMobileTab('plan');
+          }
+        }
+      }
 
       const assistantMsg: Message = {
         role: 'assistant',
@@ -157,7 +190,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, lastSentAt, tripContext]);
+  }, [input, loading, messages, lastSentAt, tripContext, draft, applyToolCall]);
 
   const handleIntegrateInsights = useCallback(async () => {
     if (!tripContext || loading || integrating) return;
@@ -169,7 +202,6 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
     setError(null);
 
     try {
-      // Step 1: Ask AI to summarize the conversation as recommendations
       const summaryMessages = [
         ...messages.map(m => ({ role: m.role, content: m.content })),
         { role: 'user' as const, content: SUMMARIZE_PROMPT },
@@ -197,7 +229,6 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
       const summaryText = data?.message;
       if (!summaryText) throw new Error('No summary generated');
 
-      // Step 2: Get webhook token
       const { data: tokenData } = await supabase
         .from('webhook_tokens')
         .select('token')
@@ -205,7 +236,6 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
 
       if (!tokenData?.token) throw new Error('No webhook token found');
 
-      // Step 3: Send summary to gateway (same as TextSubmit)
       const prefixedText = `[AI Chat Insights — ${tripContext.tripName}]\n\n${summaryText}`;
 
       const res = await fetch(GATEWAY_URL, {
@@ -217,7 +247,6 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
       const gatewayData = await res.json();
 
       if (res.status === 202) {
-        // Insert placeholder row
         const jobId = gatewayData.job_id;
         const meta = gatewayData.source_metadata || {};
         if (jobId && tripContext.tripId) {
@@ -231,7 +260,6 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
           }]);
         }
 
-        // Show concise confirmation in chat
         const confirmationMsg: Message = {
           role: 'assistant',
           content: `${t('aiChat.integrationConfirmation')}\n\n${summaryText}`,
@@ -252,6 +280,26 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
     }
   }, [tripContext, loading, integrating, messages, toast]);
 
+  const handleApplyDraft = useCallback(async () => {
+    if (!tripContext || applying || draft.length === 0) return;
+    setApplying(true);
+    setError(null);
+
+    try {
+      await applyDraftToTrip(tripContext.tripId, draft, pois);
+      toast({
+        title: t('aiChat.tripUpdated'),
+        description: t('aiChat.tripUpdatedDesc'),
+      });
+      // Re-initialize draft from real data (will happen via context refresh)
+      initFromReal(itineraryDays, pois);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update trip.');
+    } finally {
+      setApplying(false);
+    }
+  }, [tripContext, applying, draft, pois, toast, t, initFromReal, itineraryDays]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -266,7 +314,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-full sm:w-[420px] sm:max-w-[420px] p-0 flex flex-col"
+        className="w-full sm:w-[780px] sm:max-w-[780px] p-0 flex flex-col"
       >
         <SheetHeader className="px-4 py-3 border-b border-border shrink-0">
           <div className="flex items-center justify-between pr-6">
@@ -275,142 +323,187 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
               <span className="truncate">{t('aiChat.title', { trip: tripLabel })}</span>
             </SheetTitle>
             <div className="flex items-center gap-1.5">
-            {messages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="shrink-0 h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                onClick={() => { setMessages([]); if (tripId) tripSessions.delete(tripId); setError(null); }}
-                disabled={loading || integrating}
-                title={t('aiChat.clearChat')}
-              >
-                <Trash2 size={14} />
-              </Button>
-            )}
-            {hasAssistantMessages && tripContext && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="shrink-0 gap-1.5 text-xs h-7"
-                onClick={handleIntegrateInsights}
-                disabled={loading || integrating}
-              >
-                {integrating
-                  ? <Loader2 size={12} className="animate-spin" />
-                  : <Sparkles size={12} />}
-                {t('aiChat.integrate')}
-              </Button>
-            )}
+              {messages.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="shrink-0 h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                  onClick={() => { setMessages([]); if (tripId) tripSessions.delete(tripId); setError(null); }}
+                  disabled={loading || integrating}
+                  title={t('aiChat.clearChat')}
+                >
+                  <Trash2 size={14} />
+                </Button>
+              )}
+              {hasAssistantMessages && tripContext && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 gap-1.5 text-xs h-7"
+                  onClick={handleIntegrateInsights}
+                  disabled={loading || integrating}
+                >
+                  {integrating
+                    ? <Loader2 size={12} className="animate-spin" />
+                    : <Sparkles size={12} />}
+                  {t('aiChat.integrate')}
+                </Button>
+              )}
             </div>
           </div>
         </SheetHeader>
 
-        {/* Messages area */}
-        <ScrollArea className="flex-1 min-h-0" ref={scrollRef}>
-          <div className="px-4 py-4 space-y-4">
-            {messages.length === 0 && tripContext && (
-              <div className="text-center text-muted-foreground text-sm py-12 space-y-2">
-                <Bot size={32} className="mx-auto text-muted-foreground/50" />
-                <p className="font-medium">{t('aiChat.greeting', { trip: tripLabel })}</p>
-                <p className="text-xs">
-                  {tripContext.countries.length > 0
-                    ? t('aiChat.promptWithCountries', { countries: tripContext.countries.join(', ') })
-                    : t('aiChat.promptGeneric')}
-                </p>
-              </div>
+        {/* Mobile tab bar */}
+        <div className="sm:hidden flex border-b border-border shrink-0">
+          <button
+            onClick={() => setMobileTab('chat')}
+            className={cn(
+              'flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors',
+              mobileTab === 'chat' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'
             )}
-
-            {!tripContext && (
-              <div className="text-center text-muted-foreground text-sm py-12 space-y-2">
-                <Bot size={32} className="mx-auto text-muted-foreground/50" />
-                <p className="font-medium">{t('aiChat.noTripSelected')}</p>
-                <p className="text-xs">{t('aiChat.selectTripFirst')}</p>
-              </div>
+          >
+            <MessageSquare size={14} /> {t('aiChat.chatTab')}
+          </button>
+          <button
+            onClick={() => setMobileTab('plan')}
+            className={cn(
+              'flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors',
+              mobileTab === 'plan' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'
             )}
+          >
+            <Map size={14} /> {t('aiChat.planTab')}
+            {isDirty && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+          </button>
+        </div>
 
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={cn(
-                  'flex gap-2.5',
-                  msg.role === 'user' ? 'justify-end' : 'justify-start'
-                )}
-              >
-                {msg.role === 'assistant' && (
-                  <div className="shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
-                    <Bot size={14} className="text-primary" />
-                  </div>
-                )}
-                <div
-                  className={cn(
-                    'rounded-2xl px-3.5 py-2.5 text-sm max-w-[85%] whitespace-pre-wrap break-words',
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground rounded-br-md'
-                      : 'bg-muted rounded-bl-md'
-                  )}
-                >
-                  {msg.content}
-                </div>
-                {msg.role === 'user' && (
-                  <div className="shrink-0 w-7 h-7 rounded-full bg-muted flex items-center justify-center mt-0.5">
-                    <User size={14} />
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {loading && (
-              <div className="flex gap-2.5 justify-start">
-                <div className="shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
-                  <Bot size={14} className="text-primary" />
-                </div>
-                <div className="rounded-2xl rounded-bl-md bg-muted px-3.5 py-2.5">
-                  <Loader2 size={16} className="animate-spin text-muted-foreground" />
-                </div>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-
-        {/* Error banner */}
-        {error && (
-          <div className="mx-4 mb-2 flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
-            <AlertCircle size={14} className="shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {/* Input area */}
-        <div className="shrink-0 border-t border-border p-3">
-          <div className="flex items-end gap-2">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={e => setInput(e.target.value.slice(0, MAX_INPUT))}
-              onKeyDown={handleKeyDown}
-              placeholder={tripContext ? t('aiChat.inputPlaceholder', { trip: tripLabel }) : t('aiChat.inputDisabled')}
-              rows={1}
-              className="flex-1 resize-none rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 max-h-[120px] min-h-[40px]"
-              style={{ height: 'auto', overflow: 'auto' }}
-              onInput={e => {
-                const t = e.currentTarget;
-                t.style.height = 'auto';
-                t.style.height = Math.min(t.scrollHeight, 120) + 'px';
-              }}
-              disabled={loading || !tripContext}
+        <div className="flex-1 flex min-h-0">
+          {/* Draft tree panel — left side on desktop, tab on mobile */}
+          <div className={cn(
+            'w-[300px] border-e border-border flex-col bg-muted/20',
+            mobileTab === 'plan' ? 'flex' : 'hidden sm:flex'
+          )}>
+            <DraftTreePanel
+              draft={draft}
+              isDirty={isDirty}
+              applying={applying}
+              onApply={handleApplyDraft}
+              onClear={clearDraft}
             />
-            <Button
-              size="icon"
-              className="shrink-0 rounded-xl h-10 w-10"
-              onClick={sendMessage}
-              disabled={!input.trim() || loading || !tripContext}
-            >
-              {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-            </Button>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-            {t('aiChat.disclaimer')}
-          </p>
+
+          {/* Chat panel — right side on desktop, tab on mobile */}
+          <div className={cn(
+            'flex-1 flex flex-col min-w-0',
+            mobileTab === 'chat' ? 'flex' : 'hidden sm:flex'
+          )}>
+            {/* Messages area */}
+            <ScrollArea className="flex-1 min-h-0" ref={scrollRef}>
+              <div className="px-4 py-4 space-y-4">
+                {messages.length === 0 && tripContext && (
+                  <div className="text-center text-muted-foreground text-sm py-12 space-y-2">
+                    <Bot size={32} className="mx-auto text-muted-foreground/50" />
+                    <p className="font-medium">{t('aiChat.greeting', { trip: tripLabel })}</p>
+                    <p className="text-xs">
+                      {tripContext.countries.length > 0
+                        ? t('aiChat.promptWithCountries', { countries: tripContext.countries.join(', ') })
+                        : t('aiChat.promptGeneric')}
+                    </p>
+                  </div>
+                )}
+
+                {!tripContext && (
+                  <div className="text-center text-muted-foreground text-sm py-12 space-y-2">
+                    <Bot size={32} className="mx-auto text-muted-foreground/50" />
+                    <p className="font-medium">{t('aiChat.noTripSelected')}</p>
+                    <p className="text-xs">{t('aiChat.selectTripFirst')}</p>
+                  </div>
+                )}
+
+                {messages.map((msg, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      'flex gap-2.5',
+                      msg.role === 'user' ? 'justify-end' : 'justify-start'
+                    )}
+                  >
+                    {msg.role === 'assistant' && (
+                      <div className="shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
+                        <Bot size={14} className="text-primary" />
+                      </div>
+                    )}
+                    <div
+                      className={cn(
+                        'rounded-2xl px-3.5 py-2.5 text-sm max-w-[85%] whitespace-pre-wrap break-words',
+                        msg.role === 'user'
+                          ? 'bg-primary text-primary-foreground rounded-br-md'
+                          : 'bg-muted rounded-bl-md'
+                      )}
+                    >
+                      {msg.content}
+                    </div>
+                    {msg.role === 'user' && (
+                      <div className="shrink-0 w-7 h-7 rounded-full bg-muted flex items-center justify-center mt-0.5">
+                        <User size={14} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {loading && (
+                  <div className="flex gap-2.5 justify-start">
+                    <div className="shrink-0 w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
+                      <Bot size={14} className="text-primary" />
+                    </div>
+                    <div className="rounded-2xl rounded-bl-md bg-muted px-3.5 py-2.5">
+                      <Loader2 size={16} className="animate-spin text-muted-foreground" />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            {/* Error banner */}
+            {error && (
+              <div className="mx-4 mb-2 flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                <AlertCircle size={14} className="shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Input area */}
+            <div className="shrink-0 border-t border-border p-3">
+              <div className="flex items-end gap-2">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={e => setInput(e.target.value.slice(0, MAX_INPUT))}
+                  onKeyDown={handleKeyDown}
+                  placeholder={tripContext ? t('aiChat.inputPlaceholder', { trip: tripLabel }) : t('aiChat.inputDisabled')}
+                  rows={1}
+                  className="flex-1 resize-none rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 max-h-[120px] min-h-[40px]"
+                  style={{ height: 'auto', overflow: 'auto' }}
+                  onInput={e => {
+                    const t = e.currentTarget;
+                    t.style.height = 'auto';
+                    t.style.height = Math.min(t.scrollHeight, 120) + 'px';
+                  }}
+                  disabled={loading || !tripContext}
+                />
+                <Button
+                  size="icon"
+                  className="shrink-0 rounded-xl h-10 w-10"
+                  onClick={sendMessage}
+                  disabled={!input.trim() || loading || !tripContext}
+                >
+                  {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
+                {t('aiChat.disclaimer')}
+              </p>
+            </div>
+          </div>
         </div>
       </SheetContent>
     </Sheet>
