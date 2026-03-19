@@ -1660,7 +1660,7 @@ export default function SchedulePage() {
     setScheduled(merged);
     setLockedIds(newLocked);
   // resetKey forces reload when user presses Reset
-  }, [selectedDayNum, itineraryDays, pois, transportation, resetKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedDayNum, itineraryDays, pois, transportation, resetKey]);
 
   const isScheduledDrag = activeId?.startsWith('sched-') ?? false;
   const isPotentialDrag = activeId !== null && !isScheduledDrag;
