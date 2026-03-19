@@ -11,6 +11,7 @@ const he = {
     budget: 'תקציב',
     tasks: 'משימות',
     contacts: 'אנשי קשר',
+    docs: 'מסמכים',
     inbox: 'דואר',
     more: 'עוד',
     recommendations: 'המלצות',
@@ -446,6 +447,44 @@ const he = {
     contactsImported: '{{count}} אנשי קשר יובאו',
   },
 
+  // ── Documents Page ──
+  documentsPage: {
+    title: 'מסמכים',
+    upload: 'העלאה',
+    tripDocuments: 'מסמכי הטיול',
+    myDocuments: 'המסמכים שלי',
+    noTripDocuments: 'אין מסמכי טיול עדיין',
+    noGeneralDocuments: 'אין מסמכים אישיים עדיין',
+    uploadDocument: 'העלאת מסמך',
+    editDocument: 'עריכת מסמך',
+    documentName: 'שם המסמך',
+    category: 'קטגוריה',
+    scope: 'שיוך',
+    scopeTrip: 'הטיול הזה',
+    scopeGeneral: 'כללי (כל הטיולים)',
+    notes: 'הערות',
+    selectFile: 'בחר קובץ',
+    maxSize: 'גודל מקסימלי: 10MB',
+    fileTooLarge: 'הקובץ גדול מדי (מקסימום 10MB)',
+    uploading: 'מעלה...',
+    deleteConfirm: 'למחוק את המסמך הזה?',
+    preview: 'תצוגה מקדימה',
+    download: 'הורדה',
+  },
+
+  // ── Document Categories ──
+  documentCategory: {
+    passport: 'דרכון',
+    visa: 'ויזה',
+    insurance: 'ביטוח',
+    id: 'תעודת זהות',
+    flight: 'טיסה',
+    hotel: 'מלון',
+    car_rental: 'השכרת רכב',
+    activity: 'פעילות',
+    other: 'אחר',
+  },
+
   // ── Inbox Page ──
   inboxPage: {
     title: 'דואר נכנס',
@@ -750,6 +789,8 @@ const he = {
     eateryLabel: 'אוכל',
     reservationDate: 'תאריך הזמנה:',
     reservationHour: 'שעת הזמנה:',
+    filterByTrip: 'סנן לפי הטיול הנוכחי',
+    noEmailsForTrip: 'אין אימיילים לטיול הנוכחי',
   },
 
   // ── Location Selector ──

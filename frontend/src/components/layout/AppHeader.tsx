@@ -27,6 +27,7 @@ import {
   Sparkles,
   MoreVertical,
   ListIcon,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -75,6 +76,7 @@ const navItems = [
   { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },
   { path: '/tasks', labelKey: 'nav.tasks', icon: CheckSquare },
   { path: '/contacts', labelKey: 'nav.contacts', icon: Users },
+  { path: '/documents', labelKey: 'nav.docs', icon: FileText },
   { path: '/inbox', labelKey: 'nav.inbox', icon: Inbox },
 ];
 

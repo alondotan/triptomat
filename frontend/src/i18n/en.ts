@@ -11,6 +11,7 @@ const en = {
     budget: 'Budget',
     tasks: 'Tasks',
     contacts: 'Contacts',
+    docs: 'Docs',
     inbox: 'Inbox',
     more: 'More',
     recommendations: 'Recommendations',
@@ -448,6 +449,44 @@ const en = {
     contactsImported: '{{count}} contact(s) imported',
   },
 
+  // ── Documents Page ──
+  documentsPage: {
+    title: 'Documents',
+    upload: 'Upload',
+    tripDocuments: 'Trip Documents',
+    myDocuments: 'My Documents',
+    noTripDocuments: 'No trip documents yet',
+    noGeneralDocuments: 'No personal documents yet',
+    uploadDocument: 'Upload Document',
+    editDocument: 'Edit Document',
+    documentName: 'Document Name',
+    category: 'Category',
+    scope: 'Scope',
+    scopeTrip: 'This trip',
+    scopeGeneral: 'General (all trips)',
+    notes: 'Notes',
+    selectFile: 'Select file',
+    maxSize: 'Max file size: 10MB',
+    fileTooLarge: 'File is too large (max 10MB)',
+    uploading: 'Uploading...',
+    deleteConfirm: 'Delete this document?',
+    preview: 'Preview',
+    download: 'Download',
+  },
+
+  // ── Document Categories ──
+  documentCategory: {
+    passport: 'Passport',
+    visa: 'Visa',
+    insurance: 'Insurance',
+    id: 'ID Card',
+    flight: 'Flight',
+    hotel: 'Hotel',
+    car_rental: 'Car Rental',
+    activity: 'Activity',
+    other: 'Other',
+  },
+
   // ── Inbox Page ──
   inboxPage: {
     title: 'Inbox',
@@ -752,6 +791,8 @@ const en = {
     eateryLabel: 'Eatery',
     reservationDate: 'Reservation date:',
     reservationHour: 'Reservation hour:',
+    filterByTrip: 'Filter by current trip',
+    noEmailsForTrip: 'No emails for this trip',
   },
 
   // ── Location Selector ──

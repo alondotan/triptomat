@@ -266,6 +266,26 @@ export interface Contact {
 }
 
 // ============================================================
+// DOCUMENT
+// ============================================================
+export type DocumentCategory = 'passport' | 'visa' | 'insurance' | 'id' | 'flight' | 'hotel' | 'car_rental' | 'activity' | 'other';
+
+export interface TripDocument {
+  id: string;
+  userId: string;
+  tripId: string | null;
+  category: DocumentCategory;
+  name: string;
+  fileName: string;
+  fileSize?: number;
+  mimeType?: string;
+  storagePath: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================================
 // COMPUTED TYPES
 // ============================================================
 export interface CostBreakdown {

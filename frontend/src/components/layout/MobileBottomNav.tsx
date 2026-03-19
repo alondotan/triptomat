@@ -13,6 +13,7 @@ import {
   DollarSign,
   CheckSquare,
   Users,
+  FileText,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -31,6 +32,7 @@ const moreItems = [
   { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },
   { path: '/tasks', labelKey: 'nav.tasks', icon: CheckSquare },
   { path: '/contacts', labelKey: 'nav.contacts', icon: Users },
+  { path: '/documents', labelKey: 'nav.docs', icon: FileText },
 ];
 
 export function MobileBottomNav() {
