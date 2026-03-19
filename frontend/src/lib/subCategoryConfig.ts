@@ -293,19 +293,20 @@ export async function loadSubCategoryConfig(): Promise<SubCategoryConfig> {
 
 // Synchronous lookup (after load)
 export function getSubCategoryIcon(type: string): LucideIcon {
-  if (!cachedConfig) return MapPin;
+  if (!cachedConfig || !type) return MapPin;
   const entry = cachedConfig.master_list.find(e => e.type.toLowerCase() === type.toLowerCase());
   if (!entry) return MapPin;
   return materialToLucide[entry.icon] || MapPin;
 }
 
 export function getSubCategoryEntry(type: string): SubCategoryEntry | undefined {
-  if (!cachedConfig) return undefined;
+  if (!cachedConfig || !type) return undefined;
   return cachedConfig.master_list.find(e => e.type.toLowerCase() === type.toLowerCase());
 }
 
 /** Get the localized display name for a sub-category type. */
 export function getSubCategoryLabel(type: string, lang?: string): string {
+  if (!type) return '';
   const entry = getSubCategoryEntry(type);
   if (!entry) return type;
   const isHe = (lang ?? document.documentElement.lang) === 'he';
