@@ -117,7 +117,7 @@ ${draft.length === 0 ? '(Empty — no days planned yet. Build one from scratch b
 
 // Gemini tool declaration for itinerary planning
 const ITINERARY_TOOL = {
-  function_declarations: [{
+  functionDeclarations: [{
     name: 'set_itinerary',
     description: 'Set or update the draft trip itinerary. Call this whenever you suggest, modify, add, remove, or reorganize the itinerary. Always include ALL days and places, not just changes.',
     parameters: {
@@ -258,7 +258,7 @@ Deno.serve(async (req) => {
     // Add tool calling for planner mode
     if (isPlanner) {
       geminiBody.tools = [ITINERARY_TOOL];
-      geminiBody.tool_config = { function_calling_config: { mode: 'AUTO' } };
+      geminiBody.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
     }
 
     // First Gemini call
