@@ -115,6 +115,8 @@ Include the COMPLETE updated itinerary (all days), not just changes.
 When answering questions or giving tips without changing the plan, just respond with text — do NOT call the tool.
 Always include a text explanation of what you changed alongside the tool call.
 Categories: accommodation, eatery, attraction, service.
+When you're done planning or the user seems satisfied, suggest they can say "update the trip" to save the plan.
+When the user asks to update/save/apply the itinerary, call the apply_itinerary tool.
 
 Current draft:
 ${draftText}`;
@@ -161,6 +163,13 @@ const ITINERARY_TOOL = {
         },
       },
       required: ['days'],
+    },
+  }, {
+    name: 'apply_itinerary',
+    description: 'Apply the current draft itinerary to the real trip. Call this ONLY when the user explicitly asks to update/save/apply the plan to their trip. Do NOT call this on your own — wait for the user to confirm.',
+    parameters: {
+      type: 'OBJECT',
+      properties: {},
     },
   }],
 };

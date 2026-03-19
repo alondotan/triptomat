@@ -1,16 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { MapPin, Utensils, Hotel, Wrench, Sparkles, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { MapPin, Utensils, Hotel, Wrench, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import type { DraftDay } from '@/types/itineraryDraft';
 
 interface DraftTreePanelProps {
   draft: DraftDay[];
-  isDirty: boolean;
   applying: boolean;
-  onApply: () => void;
   onClear: () => void;
 }
 
@@ -21,7 +19,7 @@ const CATEGORY_ICONS: Record<string, typeof MapPin> = {
   service: Wrench,
 };
 
-export function DraftTreePanel({ draft, isDirty, applying, onApply, onClear }: DraftTreePanelProps) {
+export function DraftTreePanel({ draft, applying, onClear }: DraftTreePanelProps) {
   const { t } = useTranslation();
   const [collapsedDays, setCollapsedDays] = useState<Set<number>>(new Set());
 
@@ -125,14 +123,6 @@ export function DraftTreePanel({ draft, isDirty, applying, onApply, onClear }: D
           disabled={draft.length === 0 || applying}
         >
           <Trash2 size={12} /> {t('aiChat.clearDraft')}
-        </Button>
-        <Button
-          size="sm"
-          className="text-xs h-7 gap-1 ms-auto"
-          onClick={onApply}
-          disabled={!isDirty || draft.length === 0 || applying}
-        >
-          <Sparkles size={12} /> {t('aiChat.updateTrip')}
         </Button>
       </div>
     </div>

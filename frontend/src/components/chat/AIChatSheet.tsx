@@ -88,7 +88,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { data: aiUsage } = useAiUsage();
-  const chatUsage = aiUsage?.features?.ai_chat;
+  const chatUsage = aiUsage?.tier !== 'super' ? aiUsage?.features?.ai_chat : null;
   const chatLimitReached = chatUsage ? chatUsage.used >= chatUsage.limit : false;
 
   // Itinerary + POI contexts for seeding draft
@@ -180,12 +180,14 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
       if (data?.error) throw new Error(data.error);
 
       // Handle tool calls (itinerary updates)
+      let shouldApply = false;
       if (data?.toolCalls?.length > 0) {
         for (const tc of data.toolCalls) {
           if (tc.name === 'set_itinerary' && tc.args?.days) {
             applyToolCall(tc.args.days);
-            // On mobile, switch to plan tab to show the update
             setMobileTab('plan');
+          } else if (tc.name === 'apply_itinerary') {
+            shouldApply = true;
           }
         }
       }
@@ -196,6 +198,11 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
       };
       setMessages(prev => [...prev, assistantMsg]);
       queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
+
+      // Apply itinerary to trip if AI called apply_itinerary
+      if (shouldApply && tripContext && draft.length > 0) {
+        handleApplyDraft();
+      }
     } catch (err: unknown) {
       setError((err as Error).message || 'Something went wrong. Please try again.');
     } finally {
@@ -395,9 +402,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
           )}>
             <DraftTreePanel
               draft={draft}
-              isDirty={isDirty}
               applying={applying}
-              onApply={handleApplyDraft}
               onClear={clearDraft}
             />
           </div>
