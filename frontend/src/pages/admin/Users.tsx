@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Users as UsersIcon, Search, Loader2, AlertTriangle, RefreshCw, Trash2 } from 'lucide-react';
 import { formatDate } from '@/utils/adminUtils';
 import { useUsers } from '@/hooks/useAdminQueries';
-import { deleteUser } from '@/services/adminService';
-import type { UserInfo } from '@/services/adminService';
+import { deleteUser, updateUserTier } from '@/services/adminService';
+import type { UserInfo, UserTier } from '@/services/adminService';
 
 // ── Helpers ────────────────────────────────────────────────────
 
@@ -32,6 +33,19 @@ export default function UsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<UserInfo | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [updatingTier, setUpdatingTier] = useState<string | null>(null);
+
+  const handleTierChange = async (userId: string, tier: UserTier) => {
+    setUpdatingTier(userId);
+    try {
+      await updateUserTier(userId, tier);
+      refetch();
+    } catch (err) {
+      console.error('Failed to update tier:', err);
+    } finally {
+      setUpdatingTier(null);
+    }
+  };
 
   const {
     data: usersData,
@@ -122,6 +136,7 @@ export default function UsersPage() {
                   <TableHead>Trips</TableHead>
                   <TableHead>POIs</TableHead>
                   <TableHead>Last Active</TableHead>
+                  <TableHead>Tier</TableHead>
                   <TableHead className="w-[60px]" />
                 </TableRow>
               </TableHeader>
@@ -136,6 +151,22 @@ export default function UsersPage() {
                     <TableCell className="font-medium">{user.pois_count}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {formatLastActive(user.last_sign_in_at)}
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={user.user_tier || 'free'}
+                        onValueChange={(value) => handleTierChange(user.id, value as UserTier)}
+                        disabled={updatingTier === user.id}
+                      >
+                        <SelectTrigger className="w-[100px] h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="free">Free</SelectItem>
+                          <SelectItem value="pro">Pro</SelectItem>
+                          <SelectItem value="super">Super</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       <Button

@@ -215,6 +215,7 @@ def _route(event: dict) -> dict:
         ("DELETE", "/admin/cache"): _handle_cache_delete,
         ("POST", "/admin/cache/reprocess"): _handle_cache_reprocess,
         ("GET", "/admin/users"): _handle_users_list,
+        ("PATCH", "/admin/users/tier"): _handle_users_update_tier,
         ("DELETE", "/admin/users"): _handle_users_delete,
         ("GET", "/admin/cloudwatch/metrics"): _handle_cloudwatch_metrics,
         ("GET", "/admin/dlq"): _handle_dlq_list,
@@ -672,6 +673,10 @@ def _handle_users_list(event: dict) -> dict:
             ).in_("trip_id", trip_ids).execute()
             pois_count = pois_resp.count if pois_resp.count is not None else 0
 
+        # Get user tier from profiles
+        tier_resp = supabase.table("profiles").select("user_tier").eq("id", user_id).maybe_single().execute()
+        user_tier = (tier_resp.data or {}).get("user_tier", "free") if tier_resp.data else "free"
+
         users.append({
             "id": user_id,
             "email": user.email,
@@ -679,6 +684,7 @@ def _handle_users_list(event: dict) -> dict:
             "last_sign_in_at": str(user.last_sign_in_at) if user.last_sign_in_at else None,
             "trips_count": trips_count,
             "pois_count": pois_count,
+            "user_tier": user_tier,
         })
 
     return _response(200, {
@@ -688,6 +694,36 @@ def _handle_users_list(event: dict) -> dict:
         "limit": limit,
         "offset": offset,
     })
+
+
+# ---- PATCH /admin/users/tier ----------------------------------------------
+def _handle_users_update_tier(event: dict) -> dict:
+    """Update a user's AI usage tier."""
+    if not supabase:
+        return _response(500, {"error": "Supabase is not configured"})
+
+    size_err = _check_body_size(event)
+    if size_err:
+        return size_err
+    body = _parse_json_body(event)
+    user_id = body.get("user_id", "")
+    tier = body.get("tier", "")
+
+    if not user_id:
+        return _response(400, {"error": "Missing 'user_id'"})
+    if tier not in ("free", "pro", "super"):
+        return _response(400, {"error": "Invalid tier. Must be 'free', 'pro', or 'super'"})
+
+    logger.info("Updating user %s tier to %s", user_id, tier)
+
+    try:
+        resp = supabase.table("profiles").update({"user_tier": tier}).eq("id", user_id).execute()
+        if not resp.data:
+            return _response(404, {"error": "User profile not found"})
+        return _response(200, {"message": f"Tier updated to {tier}", "tier": tier})
+    except Exception as exc:
+        logger.error("Failed to update tier: %s", str(exc))
+        return _response(500, {"error": f"Failed to update tier: {str(exc)}"})
 
 
 # ---- DELETE /admin/users --------------------------------------------------

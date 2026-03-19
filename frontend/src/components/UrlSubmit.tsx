@@ -25,7 +25,7 @@ export function UrlSubmit() {
 
   const queryClient = useQueryClient();
   const { data: aiUsage } = useAiUsage();
-  const urlUsage = aiUsage?.features?.url_analysis;
+  const urlUsage = aiUsage?.tier !== 'super' ? aiUsage?.features?.url_analysis : null;
   const urlLimitReached = urlUsage ? urlUsage.used >= urlUsage.limit : false;
 
   const [url, setUrl] = useState('');

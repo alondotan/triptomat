@@ -96,6 +96,8 @@ export interface ReprocessResponse {
 }
 
 /** GET /admin/users — individual user */
+export type UserTier = 'free' | 'pro' | 'super';
+
 export interface UserInfo {
   id: string;
   email: string;
@@ -103,6 +105,7 @@ export interface UserInfo {
   last_sign_in_at: string;
   trips_count: number;
   pois_count: number;
+  user_tier: UserTier;
 }
 
 /** GET /admin/users — response */
@@ -375,6 +378,14 @@ export function listUsers(
   if (search) params.set('search', search);
   const qs = params.toString();
   return adminFetch<UsersListResponse>(`/admin/users${qs ? `?${qs}` : ''}`);
+}
+
+/** Update a user's AI usage tier. */
+export function updateUserTier(userId: string, tier: UserTier): Promise<{ message: string; tier: string }> {
+  return adminFetch<{ message: string; tier: string }>('/admin/users/tier', {
+    method: 'PATCH',
+    body: JSON.stringify({ user_id: userId, tier }),
+  });
 }
 
 /** Delete a user and all their data. */
