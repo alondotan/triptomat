@@ -150,7 +150,7 @@ def lambda_handler(event, context):
                     return {'statusCode': 200, 'body': json.dumps('No user found, skipped')}
 
                 # Daily AI usage check
-                uid = get_user_id_from_token(token, SUPABASE_URL, SUPABASE_SERVICE_KEY)
+                uid = get_user_id_from_token(token, SUPABASE_URL, SUPABASE_SERVICE_KEY) if SUPABASE_URL else None
                 if uid:
                     usage = check_ai_usage(uid, "email_parsing", SUPABASE_URL, SUPABASE_SERVICE_KEY)
                     if not usage.get("allowed", True):
