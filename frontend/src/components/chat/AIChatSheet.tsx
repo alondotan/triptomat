@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Loader2, Bot, User, AlertCircle, Sparkles, Trash2, Map, MessageSquare } from 'lucide-react';
+import { Send, Loader2, Bot, User, AlertCircle, Sparkles, Trash2, Map as MapIcon, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -371,7 +371,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
               mobileTab === 'plan' ? 'text-primary border-b-2 border-primary' : 'text-muted-foreground'
             )}
           >
-            <Map size={14} /> {t('aiChat.planTab')}
+            <MapIcon size={14} /> {t('aiChat.planTab')}
             {isDirty && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
           </button>
         </div>
