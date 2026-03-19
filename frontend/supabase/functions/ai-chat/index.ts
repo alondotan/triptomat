@@ -97,20 +97,27 @@ function buildSystemPrompt(tripContext?: TripContext, draft?: DraftDay[] | null)
 
   // Planner mode: inject draft and tool instructions
   if (draft !== undefined && draft !== null) {
+    let draftText: string;
+    if (draft.length === 0) {
+      draftText = '(Empty — no days planned yet)';
+    } else {
+      // Compact format: "Day 1 (City): Place1, Place2, ..."
+      draftText = draft.map((d: DraftDay) => {
+        const loc = d.locationContext ? ` (${d.locationContext})` : '';
+        const places = d.places.map(p => p.name).join(', ');
+        return `Day ${d.dayNumber}${loc}: ${places || '(empty)'}`;
+      }).join('\n');
+    }
+
     prompt += `\n\n## Itinerary Planner Mode
-You have access to a set_itinerary tool. ALWAYS call this tool when you suggest, add, remove, reorder, or modify the itinerary.
-When calling the tool, include the COMPLETE updated itinerary (all days and all places), not just the changed parts.
+You have a set_itinerary tool. Call it when you add, remove, move, or change places in the itinerary.
+Include the COMPLETE updated itinerary (all days), not just changes.
+When answering questions or giving tips without changing the plan, just respond with text — do NOT call the tool.
+Always include a text explanation of what you changed alongside the tool call.
+Categories: accommodation, eatery, attraction, service.
 
-### Current draft itinerary:
-${draft.length === 0 ? '(Empty — no days planned yet. Build one from scratch based on the conversation.)' : JSON.stringify(draft, null, 2)}
-
-### Rules:
-- When the user asks to add, remove, move, or reorganize places or days — call set_itinerary with the full updated itinerary.
-- When just chatting, answering questions, or giving tips — respond with text only, do NOT call the tool.
-- Always explain what you changed in your text response alongside the tool call.
-- Use realistic categories: accommodation, eatery, attraction, or service.
-- Include city names for each place when possible.
-- Suggest times and durations when it makes sense.`;
+Current draft:
+${draftText}`;
   }
 
   return prompt;
@@ -297,9 +304,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    const parts = result.candidates?.[0]?.content?.parts || [];
+    const candidate = result.candidates?.[0];
+    const parts = candidate?.content?.parts || [];
     const textParts = parts.filter((p: { text?: string }) => p.text).map((p: { text: string }) => p.text).join('');
     const functionCalls = parts.filter((p: { functionCall?: unknown }) => p.functionCall);
+
+    // Log for debugging empty responses
+    if (!textParts && functionCalls.length === 0) {
+      console.warn('Empty Gemini response:', JSON.stringify({
+        finishReason: candidate?.finishReason,
+        partsCount: parts.length,
+        rawCandidate: JSON.stringify(candidate).slice(0, 500),
+      }));
+    }
 
     // If there are tool calls, return them along with any text from the same response
     if (functionCalls.length > 0) {
