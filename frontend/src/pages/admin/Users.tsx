@@ -5,7 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Users as UsersIcon, Search, Loader2, AlertTriangle, RefreshCw, Trash2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Users as UsersIcon, Search, Loader2, AlertTriangle, RefreshCw, Trash2, Sparkles } from 'lucide-react';
 import { formatDate } from '@/utils/adminUtils';
 import { useUsers } from '@/hooks/useAdminQueries';
 import { deleteUser, updateUserTier } from '@/services/adminService';
@@ -25,6 +26,38 @@ function formatLastActive(iso: string | null | undefined): string {
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
   return formatDate(iso);
+}
+
+const FEATURE_LABELS: Record<string, string> = {
+  url_analysis: 'URL',
+  ai_chat: 'Chat',
+  whatsapp_chat: 'WhatsApp',
+  email_parsing: 'Email',
+};
+
+function AiUsageCell({ usage }: { usage: Record<string, number> | undefined }) {
+  if (!usage || Object.keys(usage).length === 0) {
+    return <span className="text-muted-foreground text-xs">--</span>;
+  }
+  const total = Object.values(usage).reduce((s, v) => s + v, 0);
+  const breakdown = Object.entries(usage)
+    .filter(([, v]) => v > 0)
+    .map(([k, v]) => `${FEATURE_LABELS[k] || k}: ${v}`)
+    .join(', ');
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-sm font-medium cursor-default flex items-center gap-1">
+            <Sparkles size={12} className="text-muted-foreground" />
+            {total}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent><p>{breakdown}</p></TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
 }
 
 // ── Component ──────────────────────────────────────────────────
@@ -137,6 +170,7 @@ export default function UsersPage() {
                   <TableHead>POIs</TableHead>
                   <TableHead>Last Active</TableHead>
                   <TableHead>Tier</TableHead>
+                  <TableHead>AI Today</TableHead>
                   <TableHead className="w-[60px]" />
                 </TableRow>
               </TableHeader>
@@ -167,6 +201,9 @@ export default function UsersPage() {
                           <SelectItem value="super">Super</SelectItem>
                         </SelectContent>
                       </Select>
+                    </TableCell>
+                    <TableCell>
+                      <AiUsageCell usage={user.ai_usage_today} />
                     </TableCell>
                     <TableCell>
                       <Button

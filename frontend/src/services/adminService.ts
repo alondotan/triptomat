@@ -106,6 +106,7 @@ export interface UserInfo {
   trips_count: number;
   pois_count: number;
   user_tier: UserTier;
+  ai_usage_today: Record<string, number>;
 }
 
 /** GET /admin/users — response */

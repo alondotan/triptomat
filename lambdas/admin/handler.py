@@ -677,6 +677,12 @@ def _handle_users_list(event: dict) -> dict:
         tier_resp = supabase.table("profiles").select("user_tier").eq("id", user_id).maybe_single().execute()
         user_tier = (tier_resp.data or {}).get("user_tier", "free") if tier_resp.data else "free"
 
+        # Get today's AI usage
+        import datetime
+        today = datetime.date.today().isoformat()
+        usage_resp = supabase.table("ai_usage").select("feature,count").eq("user_id", user_id).eq("usage_date", today).execute()
+        ai_usage = {row["feature"]: row["count"] for row in (usage_resp.data or [])}
+
         users.append({
             "id": user_id,
             "email": user.email,
@@ -685,6 +691,7 @@ def _handle_users_list(event: dict) -> dict:
             "trips_count": trips_count,
             "pois_count": pois_count,
             "user_tier": user_tier,
+            "ai_usage_today": ai_usage,
         })
 
     return _response(200, {
