@@ -23,14 +23,14 @@ export function useItineraryDraft() {
       date: day.date,
       locationContext: day.locationContext,
       places: (day.activities || [])
-        .filter(a => a.type === 'poi')
+        .filter(a => a.type === 'poi' && poiMap.has(a.id))
         .sort((a, b) => a.order - b.order)
         .map(a => {
-          const poi = poiMap.get(a.id);
+          const poi = poiMap.get(a.id)!;
           return {
-            name: poi?.name || 'Unknown',
-            category: CATEGORY_MAP[poi?.category || ''] || 'attraction',
-            city: poi?.location?.city,
+            name: poi.name,
+            category: CATEGORY_MAP[poi.category || ''] || 'attraction',
+            city: poi.location?.city,
             existingPoiId: a.id,
             time: a.time_window?.start,
           };

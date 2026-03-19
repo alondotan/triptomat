@@ -287,9 +287,9 @@ Deno.serve(async (req) => {
         ...sanitized,
         // Model's response with function call
         { role: 'model', parts },
-        // Our "execution result"
+        // Our "execution result" — role must be "function" for Gemini tool protocol
         {
-          role: 'user',
+          role: 'function',
           parts: functionCalls.map((fc: { functionCall: { name: string } }) => ({
             functionResponse: {
               name: fc.functionCall.name,
