@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lambda: [gateway, downloader, worker, mail_handler, admin]
+        lambda: [gateway, downloader, worker, mail_handler, admin, whatsapp]
       max-parallel: 4
     steps:
       - uses: actions/checkout@v4
