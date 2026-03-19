@@ -25,6 +25,7 @@ from email.policy import default
 from email.utils import parseaddr
 
 from core.config import load_config
+from core.supabase_client import get_user_id_from_token, check_ai_usage
 from core.pipeline_events import report_event
 from core.reconciliation import reconcile
 from core.telemetry import (
@@ -147,6 +148,15 @@ def lambda_handler(event, context):
                     print(f"No webhook token found for {user_email} — skipping")
                     record_counter(emails_counter, attributes={"status": "skipped"})
                     return {'statusCode': 200, 'body': json.dumps('No user found, skipped')}
+
+                # Daily AI usage check
+                uid = get_user_id_from_token(token, SUPABASE_URL, SUPABASE_SERVICE_KEY)
+                if uid:
+                    usage = check_ai_usage(uid, "email_parsing", SUPABASE_URL, SUPABASE_SERVICE_KEY)
+                    if not usage.get("allowed", True):
+                        print(f"Daily email parsing limit reached for {_mask_email(user_email)} ({usage.get('used')}/{usage.get('limit')})")
+                        record_counter(emails_counter, attributes={"status": "usage_limited"})
+                        return {'statusCode': 200, 'body': json.dumps('Daily usage limit reached')}
 
                 mail_job_id = str(uuid.uuid4())
                 report_event(

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,6 +8,7 @@ import { Send, Loader2, Bot, User, AlertCircle, Sparkles, Trash2, Map as MapIcon
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useAiUsage } from '@/hooks/useAiUsage';
 import { useItinerary } from '@/context/ItineraryContext';
 import { usePOI } from '@/context/POIContext';
 import { useItineraryDraft } from '@/hooks/useItineraryDraft';
@@ -84,6 +86,10 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const prevTripIdRef = useRef<string | null>(tripId);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: aiUsage } = useAiUsage();
+  const chatUsage = aiUsage?.features?.ai_chat;
+  const chatLimitReached = chatUsage ? chatUsage.used >= chatUsage.limit : false;
 
   // Itinerary + POI contexts for seeding draft
   const { itineraryDays } = useItinerary();
@@ -167,6 +173,10 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
       });
 
       if (fnError) throw new Error(fnError.message || 'Failed to get response');
+      if (data?.error === 'daily_limit_exceeded') {
+        queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
+        throw new Error(data.message || 'Daily AI chat limit reached');
+      }
       if (data?.error) throw new Error(data.error);
 
       // Handle tool calls (itinerary updates)
@@ -185,12 +195,13 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
         content: data?.message || 'Sorry, I could not generate a response.',
       };
       setMessages(prev => [...prev, assistantMsg]);
+      queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
     } catch (err: unknown) {
       setError((err as Error).message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, lastSentAt, tripContext, draft, applyToolCall]);
+  }, [input, loading, messages, lastSentAt, tripContext, draft, applyToolCall, queryClient]);
 
   const handleIntegrateInsights = useCallback(async () => {
     if (!tripContext || loading || integrating) return;
@@ -479,7 +490,6 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
                   value={input}
                   onChange={e => setInput(e.target.value.slice(0, MAX_INPUT))}
                   onKeyDown={handleKeyDown}
-                  placeholder={tripContext ? t('aiChat.inputPlaceholder', { trip: tripLabel }) : t('aiChat.inputDisabled')}
                   rows={1}
                   className="flex-1 resize-none rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 max-h-[120px] min-h-[40px]"
                   style={{ height: 'auto', overflow: 'auto' }}
@@ -488,20 +498,31 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
                     t.style.height = 'auto';
                     t.style.height = Math.min(t.scrollHeight, 120) + 'px';
                   }}
-                  disabled={loading || !tripContext}
+                  disabled={loading || !tripContext || chatLimitReached}
+                  placeholder={chatLimitReached ? t('aiChat.limitReached', 'Daily AI chat limit reached') : tripContext ? t('aiChat.inputPlaceholder', { trip: tripLabel }) : t('aiChat.inputDisabled')}
                 />
                 <Button
                   size="icon"
                   className="shrink-0 rounded-xl h-10 w-10"
                   onClick={sendMessage}
-                  disabled={!input.trim() || loading || !tripContext}
+                  disabled={!input.trim() || loading || !tripContext || chatLimitReached}
                 >
                   {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                 </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-1.5 text-center">
-                {t('aiChat.disclaimer')}
-              </p>
+              <div className="flex items-center justify-between mt-1.5 px-1">
+                <p className="text-[10px] text-muted-foreground">
+                  {t('aiChat.disclaimer')}
+                </p>
+                {chatUsage && (
+                  <p className={cn(
+                    "text-[10px]",
+                    chatLimitReached ? "text-destructive font-medium" : "text-muted-foreground"
+                  )}>
+                    {chatUsage.used}/{chatUsage.limit}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

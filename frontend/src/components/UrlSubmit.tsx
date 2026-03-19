@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveTrip } from '@/context/ActiveTripContext';
+import { useAiUsage } from '@/hooks/useAiUsage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link, Loader2, CheckCircle, AlertCircle, ClipboardPaste } from 'lucide-react';
@@ -20,6 +22,11 @@ export function UrlSubmit() {
   const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
   const tripId = activeTrip?.id;
+
+  const queryClient = useQueryClient();
+  const { data: aiUsage } = useAiUsage();
+  const urlUsage = aiUsage?.features?.url_analysis;
+  const urlLimitReached = urlUsage ? urlUsage.used >= urlUsage.limit : false;
 
   const [url, setUrl] = useState('');
   const [status, setStatus] = useState<Status>('idle');
@@ -112,6 +119,10 @@ export function UrlSubmit() {
         }
         setStatus('success');
         setMessage(t('urlSubmit.submitted'));
+      } else if (data.error === 'daily_limit_exceeded') {
+        queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
+        setStatus('error');
+        setMessage(data.message || t('urlSubmit.limitReached', 'Daily URL analysis limit reached'));
       } else {
         setStatus('error');
         setMessage(data.error || t('common.somethingWentWrong'));
@@ -139,10 +150,10 @@ export function UrlSubmit() {
       </p>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <Input
-          placeholder={t('urlSubmit.placeholder')}
+          placeholder={urlLimitReached ? t('urlSubmit.limitReached', 'Daily URL analysis limit reached') : t('urlSubmit.placeholder')}
           value={url}
           onChange={e => setUrl(e.target.value)}
-          disabled={status === 'loading' || !webhookToken}
+          disabled={status === 'loading' || !webhookToken || urlLimitReached}
           className="flex-1 text-sm"
           aria-label="Enter URL"
           name="url"
@@ -153,7 +164,7 @@ export function UrlSubmit() {
           type="button"
           variant="outline"
           size="icon"
-          disabled={status === 'loading' || !webhookToken}
+          disabled={status === 'loading' || !webhookToken || urlLimitReached}
           onClick={async () => {
             try {
               const clip = await navigator.clipboard.readText();
@@ -167,12 +178,17 @@ export function UrlSubmit() {
         </Button>
         <Button
           type="submit"
-          disabled={!url.trim() || status === 'loading' || !webhookToken}
+          disabled={!url.trim() || status === 'loading' || !webhookToken || urlLimitReached}
           size="sm"
         >
           {status === 'loading' ? <Loader2 size={14} className="animate-spin" /> : t('urlSubmit.analyze')}
         </Button>
       </form>
+      {urlUsage && (
+        <p className={`text-[10px] ${urlLimitReached ? 'text-destructive font-medium' : 'text-muted-foreground'}`}>
+          {urlUsage.used}/{urlUsage.limit} {t('urlSubmit.dailyAnalyses', 'daily analyses')}
+        </p>
+      )}
 
       <div aria-live="polite">
         {status === 'success' && (

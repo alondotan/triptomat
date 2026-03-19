@@ -32,6 +32,7 @@ from core.schemas import GatewayRequest
 from core.url_helpers import is_google_maps_url, is_video_url
 from core.scrapers import extract_text_from_url, get_final_maps_url, get_web_metadata, MapsService
 from core.geocoding import extract_coords_from_url
+from core.supabase_client import get_user_id_from_token, check_ai_usage
 from core.pipeline_events import report_event
 from core.telemetry import (
     init_telemetry, get_tracer, get_meter,
@@ -67,6 +68,8 @@ ALLOWED_ORIGINS = {
 }
 RATE_LIMIT = int(os.environ.get("RATE_LIMIT", "30"))
 MAX_BODY_SIZE = 1_000_000  # 1 MB
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
 # Set per-invocation by lambda_handler; used by _response.
 _cors_origin = ""
@@ -161,8 +164,32 @@ def lambda_handler(event, context):
                     record_counter(rate_limit_counter)
                     return _response(429, {"error": "Too many requests. Limit: {} per minute".format(RATE_LIMIT)})
 
+                # ── Daily AI usage check (for text flow, before dispatch) ──
+                def _check_daily_usage():
+                    """Check daily AI usage limit. Returns error response or None."""
+                    if not webhook_token or not SUPABASE_URL:
+                        return None  # anonymous or no Supabase config — skip
+                    uid = get_user_id_from_token(webhook_token, SUPABASE_URL, SUPABASE_SERVICE_KEY)
+                    if not uid:
+                        return None  # unknown token — skip
+                    usage = check_ai_usage(uid, "url_analysis", SUPABASE_URL, SUPABASE_SERVICE_KEY)
+                    if not usage.get("allowed", True):
+                        return _response(429, {
+                            "error": "daily_limit_exceeded",
+                            "message": f"You've reached your daily limit for URL analysis ({usage.get('limit', 0)}/day on {usage.get('tier', 'Free').title()} tier)",
+                            "feature": "url_analysis",
+                            "limit": usage.get("limit", 0),
+                            "used": usage.get("used", 0),
+                            "remaining": 0,
+                            "tier": usage.get("tier", "free"),
+                        })
+                    return None
+
                 # ── Text paste flow: skip cache, skip scraping, go straight to analysis ──
                 if text and text.strip():
+                    usage_err = _check_daily_usage()
+                    if usage_err:
+                        return usage_err
                     text = text.strip()
                     job_id = str(uuid.uuid4())
                     synthetic_url = f"text://paste-{job_id}"
@@ -226,6 +253,11 @@ def lambda_handler(event, context):
                             "source_metadata": cached.get("source_metadata", {}),
                             "analysis": cached.get("result", {})
                         })
+
+                # ── Daily AI usage check (for URL flow, after cache miss) ──
+                usage_err = _check_daily_usage()
+                if usage_err:
+                    return usage_err
 
                 job_id = str(uuid.uuid4())
 

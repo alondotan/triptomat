@@ -10,6 +10,44 @@ import urllib.error
 from typing import Optional
 
 
+def _supabase_rpc(base_url: str, key: str, fn_name: str, params: dict) -> dict | None:
+    """Call a Supabase RPC function via POST. Returns parsed JSON or None."""
+    url = f"{base_url}/rest/v1/rpc/{fn_name}"
+    data = json.dumps(params).encode("utf-8")
+    req = urllib.request.Request(
+        url, data=data,
+        headers={
+            "apikey": key,
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as res:
+            return json.loads(res.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        print(f"Supabase RPC {fn_name} failed {e.code}: {e.read().decode()}")
+        return None
+    except Exception as e:
+        print(f"Supabase RPC {fn_name} error: {e}")
+        return None
+
+
+def check_ai_usage(
+    user_id: str, feature: str, supabase_url: str, supabase_key: str
+) -> dict:
+    """Check and increment daily AI usage. Fails open on errors."""
+    result = _supabase_rpc(
+        supabase_url, supabase_key,
+        "check_and_increment_usage",
+        {"p_user_id": user_id, "p_feature": feature},
+    )
+    if result and isinstance(result, dict):
+        return result
+    # Fail open — don't block users if Supabase is down
+    return {"allowed": True, "remaining": 0, "limit": 0, "used": 0, "tier": "unknown"}
+
+
 def _supabase_get(base_url: str, key: str, path_and_params: str) -> list | dict | None:
     """Make an authenticated GET request to Supabase REST API."""
     full_url = f"{base_url}{path_and_params}"
@@ -55,12 +93,15 @@ def get_active_trips(
         f"/rest/v1/trip_members?user_id=eq.{user_id}"
         f"&select=trip_id,trips!inner(id,name,countries,start_date,end_date,status)"
         f"&trips.status=neq.completed"
-        f"&order=trips.start_date.desc&limit=5"
+        f"&limit=10"
     )
     if not isinstance(result, list):
         return []
     # Flatten: each row is {trip_id, trips: {id, name, ...}} -> extract the trips object
-    return [row["trips"] for row in result if row.get("trips")]
+    trips = [row["trips"] for row in result if row.get("trips")]
+    # Sort by start_date descending (newest first)
+    trips.sort(key=lambda t: t.get("start_date") or "", reverse=True)
+    return trips[:5]
 
 
 def get_trip_entities(

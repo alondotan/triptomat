@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY') || '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
@@ -211,7 +212,28 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Rate limit
+    // Daily AI usage limit
+    const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: usageResult } = await serviceClient.rpc('check_and_increment_usage', {
+      p_user_id: user.id,
+      p_feature: 'ai_chat',
+    });
+    if (usageResult && !usageResult.allowed) {
+      return new Response(JSON.stringify({
+        error: 'daily_limit_exceeded',
+        message: `You've reached your daily limit for AI chat (${usageResult.limit}/day on ${usageResult.tier === 'pro' ? 'Pro' : 'Free'} tier)`,
+        feature: 'ai_chat',
+        limit: usageResult.limit,
+        used: usageResult.used,
+        remaining: 0,
+        tier: usageResult.tier,
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Per-minute rate limit
     if (!checkRateLimit(user.id)) {
       return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please wait a moment before sending another message.' }), {
         status: 429,
