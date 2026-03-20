@@ -172,7 +172,8 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
         return
 
     # Intercept task/place intents before calling Gemini
-    intent_result = _try_handle_task_intent(text, trip_id, phone)
+    webhook_token = wa_user.get("webhook_token", "")
+    intent_result = _try_handle_task_intent(text, trip_id, phone, webhook_token)
     if intent_result:
         meta_api.send_text(phone, intent_result)
         return
@@ -226,7 +227,7 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
                 break
 
         if function_call:
-            reply_text = _execute_function_call(function_call, trip_id)
+            reply_text = _execute_function_call(function_call, trip_id, webhook_token)
         else:
             reply_text = "".join(p.get("text", "") for p in resp_parts).strip()
 
@@ -292,7 +293,7 @@ _ADD_PLACE_PATTERNS = re.compile(
 )
 
 
-def _try_handle_task_intent(text: str, trip_id: str, phone: str = "") -> str | None:
+def _try_handle_task_intent(text: str, trip_id: str, phone: str = "", webhook_token: str = "") -> str | None:
     """Try to match task/place intents and handle them directly.
 
     Returns a response string if handled, None if not matched.
@@ -325,14 +326,14 @@ def _try_handle_task_intent(text: str, trip_id: str, phone: str = "") -> str | N
         # Try to get explicit place name from the regex
         explicit_name = (m.group(1) or m.group(2) or "").strip() if m.lastindex else ""
         if explicit_name:
-            return _add_place_from_name(explicit_name, trip_id)
+            return _add_place_from_name(explicit_name, trip_id, webhook_token)
         # No explicit name — need to extract from conversation history
-        return _add_place_from_conversation(phone, trip_id, text)
+        return _add_place_from_conversation(phone, trip_id, text, webhook_token)
 
     return None
 
 
-def _add_place_from_name(name: str, trip_id: str) -> str:
+def _add_place_from_name(name: str, trip_id: str, webhook_token: str = "") -> str:
     """Add a place by explicit name — guess category + sub_category from name."""
     lower = name.lower()
     if any(w in lower for w in ("מסעדה", "restaurant")):
@@ -355,10 +356,10 @@ def _add_place_from_name(name: str, trip_id: str) -> str:
         category, sub = "attraction", "point_of_interest"
     return _execute_function_call({"name": "add_place", "args": {
         "name": name, "category": category, "sub_category": sub,
-    }}, trip_id)
+    }}, trip_id, webhook_token)
 
 
-def _add_place_from_conversation(phone: str, trip_id: str, text: str) -> str:
+def _add_place_from_conversation(phone: str, trip_id: str, text: str, webhook_token: str = "") -> str:
     """Extract place details from recent conversation and add to trip."""
     conversation = _load_conversation(phone)
     if not conversation:
@@ -404,13 +405,13 @@ If the user said "the first one" or similar, pick the first mentioned place. If 
         if not name:
             return "I couldn't figure out which place you mean. Please tell me the name."
 
-        return _execute_function_call({"name": "add_place", "args": place}, trip_id)
+        return _execute_function_call({"name": "add_place", "args": place}, trip_id, webhook_token)
     except Exception as e:
         logger.error("Failed to extract place from conversation: %s", e)
         return "I couldn't figure out which place you mean. Please tell me the name."
 
 
-def _execute_function_call(function_call: dict, trip_id: str) -> str:
+def _execute_function_call(function_call: dict, trip_id: str, webhook_token: str = "") -> str:
     """Execute a Gemini function call and return a user-facing message."""
     name = function_call.get("name", "")
     args = function_call.get("args", {})
@@ -482,15 +483,14 @@ def _execute_function_call(function_call: dict, trip_id: str) -> str:
         address = args.get("address", "")
         notes = args.get("notes", "")
 
+        if not webhook_token:
+            return "Cannot add places — webhook token missing."
         result = _create_poi(
-            trip_id, place_name, category,
+            webhook_token, place_name, category,
             sub_category=sub_category,
             city=city, country=country, address=address, notes=notes,
         )
-        if isinstance(result, str) and result.startswith("already_exists:"):
-            existing_name = result.split(":", 1)[1]
-            return f"*{existing_name}* is already in your trip!"
-        if result is True:
+        if result:
             cat_label = {"accommodation": "Accommodation", "eatery": "Restaurant", "attraction": "Attraction"}.get(category, category)
             loc = f" ({city})" if city else ""
             return f"\u2705 *{place_name}*{loc} added to your trip as {cat_label}!"
@@ -499,132 +499,72 @@ def _execute_function_call(function_call: dict, trip_id: str) -> str:
     return "I don't know how to do that yet."
 
 
-def _fuzzy_name_match(a: str, b: str) -> bool:
-    """Case-insensitive containment check, same logic as _shared/matching.ts."""
-    x = a.lower().strip()
-    y = b.lower().strip()
-    if not x or not y:
-        return False
-    return x == y or x in y or y in x
-
-
-def _find_existing_poi(trip_id: str, name: str, category: str, city: str = "") -> dict | None:
-    """Check if a POI with a similar name already exists in the trip."""
-    import urllib.request
-
-    url = (
-        f"{SUPABASE_URL}/rest/v1/points_of_interest"
-        f"?trip_id=eq.{trip_id}&category=eq.{category}&is_cancelled=is.false"
-        f"&select=id,name,location,image_url"
-    )
-    req = urllib.request.Request(url, headers={
-        "apikey": SUPABASE_SERVICE_KEY,
-        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-    })
-    try:
-        with urllib.request.urlopen(req, timeout=5) as res:
-            pois = json.loads(res.read().decode())
-            for poi in pois:
-                if _fuzzy_name_match(poi.get("name", ""), name):
-                    # If city provided, also check city matches
-                    if city:
-                        poi_city = (poi.get("location") or {}).get("city", "")
-                        if poi_city and not _fuzzy_name_match(poi_city, city):
-                            continue
-                    return poi
-    except Exception as e:
-        logger.warning("Failed to check existing POIs: %s", e)
-    return None
-
-
 def _create_poi(
-    trip_id: str, name: str, category: str,
+    webhook_token: str, name: str, category: str,
     sub_category: str = "", city: str = "", country: str = "",
     address: str = "", notes: str = "",
-) -> bool | str:
-    """Create a POI in Supabase (with dedup) and trigger enrichment.
+) -> bool:
+    """Create a POI via the recommendation-webhook (same flow as video/web recs).
 
-    Returns True on success, a string message if duplicate found, False on error.
+    This reuses the full pipeline: dedup, fuzzy match, merge, sites hierarchy,
+    enrichment (geocoding + images).
     """
     import urllib.request
+    import uuid
 
-    # Check for existing duplicate
-    existing = _find_existing_poi(trip_id, name, category, city)
-    if existing:
-        return f"already_exists:{existing.get('name', name)}"
-
-    location = {}
-    if city:
-        location["city"] = city
+    # Build sites_hierarchy for the webhook
+    sites_hierarchy = []
     if country:
-        location["country"] = country
-    if address:
-        location["address"] = address
+        country_node = {"site": country, "site_type": "country", "sub_sites": []}
+        if city:
+            country_node["sub_sites"].append({"site": city, "site_type": "city"})
+        sites_hierarchy.append(country_node)
 
-    details = {}
-    if notes:
-        details["notes"] = notes
-
-    poi_data = {
-        "trip_id": trip_id,
+    # Build a recommendation payload matching the webhook's expected format
+    recommendation = {
         "name": name,
-        "category": category,
-        "status": "suggested",
-        "location": location,
-        "details": details,
-        "source_refs": {"email_ids": [], "recommendation_ids": []},
+        "category": sub_category or category,
+        "site": city or country or "",
+        "paragraph": notes or f"Added via WhatsApp",
+        "sentiment": "good",
+        "location": {},
     }
-    if sub_category:
-        poi_data["sub_category"] = sub_category
+    if address:
+        recommendation["location"]["address"] = address
 
-    data = json.dumps(poi_data).encode()
+    payload = {
+        "recommendation_id": f"whatsapp-{uuid.uuid4().hex[:12]}",
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "source_url": "whatsapp://chat",
+        "source_title": f"WhatsApp: {name}",
+        "status": "completed",
+        "analysis": {
+            "sites_hierarchy": sites_hierarchy,
+            "recommendations": [recommendation],
+            "contacts": [],
+            "tips": [],
+        },
+    }
 
-    url = f"{SUPABASE_URL}/rest/v1/points_of_interest"
-    req = urllib.request.Request(url, data=data, method="POST", headers={
+    webhook_url = (
+        f"{SUPABASE_URL}/functions/v1/recommendation-webhook"
+        f"?token={webhook_token}"
+    )
+    data = json.dumps(payload).encode()
+
+    req = urllib.request.Request(webhook_url, data=data, method="POST", headers={
         "apikey": SUPABASE_SERVICE_KEY,
         "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
         "Content-Type": "application/json",
-        "Prefer": "return=representation",
     })
     try:
-        with urllib.request.urlopen(req, timeout=10) as res:
-            rows = json.loads(res.read().decode())
-            if rows and len(rows) > 0:
-                poi_id = rows[0].get("id")
-                if poi_id:
-                    # Fire-and-forget: trigger enrichment via edge function
-                    _trigger_enrichment(poi_id, name, city, country, address)
-                return True
+        with urllib.request.urlopen(req, timeout=15) as res:
+            result = json.loads(res.read().decode())
+            logger.info("Recommendation webhook result: %s", result)
+            return result.get("success", False)
     except Exception as e:
-        logger.error("Failed to create POI: %s", e)
+        logger.error("Failed to call recommendation-webhook: %s", e)
     return False
-
-
-def _trigger_enrichment(
-    poi_id: str, name: str, city: str = "", country: str = "", address: str = "",
-) -> None:
-    """Call the fetch-poi-image edge function to enrich a POI."""
-    import urllib.request
-
-    enrich_url = f"{SUPABASE_URL}/functions/v1/fetch-poi-image"
-    data = json.dumps({
-        "poiId": poi_id,
-        "name": name,
-        "city": city,
-        "country": country,
-        "address": address,
-    }).encode()
-
-    req = urllib.request.Request(enrich_url, data=data, method="POST", headers={
-        "apikey": SUPABASE_SERVICE_KEY,
-        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-        "Content-Type": "application/json",
-    })
-    try:
-        urllib.request.urlopen(req, timeout=15)
-        logger.info("Enrichment triggered for POI %s", poi_id)
-    except Exception as e:
-        logger.warning("Enrichment call failed for POI %s: %s", poi_id, e)
 
 
 def _fuzzy_match_task(pending: list[dict], query: str) -> dict | None:
