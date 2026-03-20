@@ -487,7 +487,10 @@ def _execute_function_call(function_call: dict, trip_id: str) -> str:
             sub_category=sub_category,
             city=city, country=country, address=address, notes=notes,
         )
-        if result:
+        if isinstance(result, str) and result.startswith("already_exists:"):
+            existing_name = result.split(":", 1)[1]
+            return f"*{existing_name}* is already in your trip!"
+        if result is True:
             cat_label = {"accommodation": "Accommodation", "eatery": "Restaurant", "attraction": "Attraction"}.get(category, category)
             loc = f" ({city})" if city else ""
             return f"\u2705 *{place_name}*{loc} added to your trip as {cat_label}!"
@@ -496,13 +499,59 @@ def _execute_function_call(function_call: dict, trip_id: str) -> str:
     return "I don't know how to do that yet."
 
 
+def _fuzzy_name_match(a: str, b: str) -> bool:
+    """Case-insensitive containment check, same logic as _shared/matching.ts."""
+    x = a.lower().strip()
+    y = b.lower().strip()
+    if not x or not y:
+        return False
+    return x == y or x in y or y in x
+
+
+def _find_existing_poi(trip_id: str, name: str, category: str, city: str = "") -> dict | None:
+    """Check if a POI with a similar name already exists in the trip."""
+    import urllib.request
+
+    url = (
+        f"{SUPABASE_URL}/rest/v1/points_of_interest"
+        f"?trip_id=eq.{trip_id}&category=eq.{category}&is_cancelled=is.false"
+        f"&select=id,name,location,image_url"
+    )
+    req = urllib.request.Request(url, headers={
+        "apikey": SUPABASE_SERVICE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=5) as res:
+            pois = json.loads(res.read().decode())
+            for poi in pois:
+                if _fuzzy_name_match(poi.get("name", ""), name):
+                    # If city provided, also check city matches
+                    if city:
+                        poi_city = (poi.get("location") or {}).get("city", "")
+                        if poi_city and not _fuzzy_name_match(poi_city, city):
+                            continue
+                    return poi
+    except Exception as e:
+        logger.warning("Failed to check existing POIs: %s", e)
+    return None
+
+
 def _create_poi(
     trip_id: str, name: str, category: str,
     sub_category: str = "", city: str = "", country: str = "",
     address: str = "", notes: str = "",
-) -> bool:
-    """Create a POI in Supabase and trigger enrichment."""
+) -> bool | str:
+    """Create a POI in Supabase (with dedup) and trigger enrichment.
+
+    Returns True on success, a string message if duplicate found, False on error.
+    """
     import urllib.request
+
+    # Check for existing duplicate
+    existing = _find_existing_poi(trip_id, name, category, city)
+    if existing:
+        return f"already_exists:{existing.get('name', name)}"
 
     location = {}
     if city:
