@@ -49,12 +49,10 @@ When asked about flights, look in the transportation data.
 When asked about hotels/accommodation, look in the POIs with category "accommodation".
 When asked about the schedule, look in the itinerary days.
 When asked about budget/costs/payments, look in the budget data section.
-  - Each item shows its original currency. The user's preferred currency is noted in the budget header.
-  - ALWAYS sum up amounts when the user asks about totals — first sum per original currency, then convert.
-  - When answering about a specific item, show original amount AND preferred currency if they differ (e.g. "350 EUR (~1,330 ILS)").
-  - When answering about totals/sums, show: original total + converted to preferred currency (e.g. "18,260 PHP (~1,190 ILS)").
-  - Approximate rates to 1 USD: ILS 3.6, EUR 0.92, GBP 0.79, PHP 56, THB 34, JPY 150, INR 83, TRY 32, MXN 17, BRL 5, AUD 1.55, CAD 1.36, CHF 0.88, CZK 23, HUF 370, PLN 4, SEK 10.5, NOK 10.7, DKK 6.9, NZD 1.7, ZAR 18, KRW 1350, SGD 1.35, HKD 7.8, TWD 32, MYR 4.5, IDR 15800, VND 25000, AED 3.67, SAR 3.75, EGP 50, MAD 10, GEL 2.7, RON 4.6, BGN 1.8, HRK 7, RSD 108, BAM 1.8, ALL 95, ISK 137, COP 4000, PEN 3.7, CLP 950, ARS 900, UYU 40.
-  - Derive cross-rates from USD rates (e.g. PHP→ILS = amount / 56 * 3.6).
+  - Budget data includes amounts already converted to the user's preferred currency using live exchange rates.
+  - Each item shows: original amount + converted amount in preferred currency.
+  - When answering, use the converted amounts in preferred currency. You can mention the original currency in parentheses.
+  - For totals/sums, sum the converted amounts — they are all in the same currency.
 When asked about tasks/missions/to-do list, look in the tasks section.
 If something is not in the data, say so honestly.
 
@@ -544,6 +542,43 @@ def _load_trip_context(trip_id: str, user_id: str) -> str:
     return "\n".join(parts)
 
 
+def _fetch_exchange_rates(base_currency: str, currencies: set[str]) -> dict[str, float]:
+    """Fetch live exchange rates from Frankfurter API.
+
+    Returns dict mapping currency code → rate (1 unit of currency = X units of base).
+    """
+    currencies.discard(base_currency)
+    if not currencies:
+        return {base_currency: 1.0}
+
+    rates = {base_currency: 1.0}
+    symbols = ",".join(currencies)
+    try:
+        resp = requests.get(
+            f"https://api.frankfurter.dev/v1/latest?base={base_currency}&symbols={symbols}",
+            timeout=5,
+        )
+        if resp.ok:
+            data = resp.json()
+            for cur, rate in data.get("rates", {}).items():
+                if rate:
+                    rates[cur] = 1.0 / rate  # invert: 1 cur = X base
+    except Exception as e:
+        logger.warning("Failed to fetch exchange rates: %s", e)
+
+    return rates
+
+
+def _convert(amount: float, currency: str, rates: dict, base: str) -> float | None:
+    """Convert amount to base currency using rates."""
+    if currency == base:
+        return amount
+    rate = rates.get(currency)
+    if not rate:
+        return None
+    return amount * rate
+
+
 def _load_budget_context(trip_id: str, trip_currency: str) -> str:
     """Build budget context text for AI chat."""
     pois = _supabase_get(
@@ -562,9 +597,9 @@ def _load_budget_context(trip_id: str, trip_currency: str) -> str:
         f"&select=description,category,amount,currency,is_paid"
     ) or []
 
-    items = []
-    total = 0
-    total_paid = 0
+    # Collect all currencies used
+    all_currencies = set()
+    raw_items = []
 
     for p in pois:
         details = p.get("details") or {}
@@ -573,11 +608,14 @@ def _load_budget_context(trip_id: str, trip_currency: str) -> str:
         if not amount:
             continue
         currency = cost_obj.get("currency", trip_currency)
-        is_paid = p.get("is_paid", False)
-        items.append(f"- {p.get('name','?')} ({p.get('category','')}): {amount} {currency} {'PAID' if is_paid else 'UNPAID'}")
-        total += amount
-        if is_paid:
-            total_paid += amount
+        all_currencies.add(currency)
+        raw_items.append({
+            "name": p.get("name", "?"),
+            "label": p.get("category", ""),
+            "amount": amount,
+            "currency": currency,
+            "is_paid": p.get("is_paid", False),
+        })
 
     for t in transport:
         cost_obj = t.get("cost") or {}
@@ -585,7 +623,7 @@ def _load_budget_context(trip_id: str, trip_currency: str) -> str:
         if not amount:
             continue
         currency = cost_obj.get("currency", trip_currency)
-        is_paid = t.get("is_paid", False)
+        all_currencies.add(currency)
         cat = t.get("category", "transport")
         segs = t.get("segments") or []
         if segs:
@@ -601,29 +639,64 @@ def _load_budget_context(trip_id: str, trip_currency: str) -> str:
                 name += f" ({carrier} {flight_num})".rstrip()
         else:
             name = cat
-        items.append(f"- {name} ({cat}): {amount} {currency} {'PAID' if is_paid else 'UNPAID'}")
-        total += amount
-        if is_paid:
-            total_paid += amount
+        raw_items.append({
+            "name": name, "label": cat,
+            "amount": amount, "currency": currency,
+            "is_paid": t.get("is_paid", False),
+        })
 
     for e in expenses:
         amount = e.get("amount", 0) or 0
         if not amount:
             continue
         currency = e.get("currency", trip_currency)
-        is_paid = e.get("is_paid", False)
-        items.append(f"- {e.get('description','Expense')} (expense): {amount} {currency} {'PAID' if is_paid else 'UNPAID'}")
-        total += amount
-        if is_paid:
-            total_paid += amount
+        all_currencies.add(currency)
+        raw_items.append({
+            "name": e.get("description", "Expense"),
+            "label": "expense",
+            "amount": amount, "currency": currency,
+            "is_paid": e.get("is_paid", False),
+        })
 
-    if not items:
+    if not raw_items:
         return ""
 
+    # Fetch real exchange rates
+    rates = _fetch_exchange_rates(trip_currency, all_currencies)
+
+    # Build items with converted amounts
+    items = []
+    total_converted = 0.0
+    total_paid_converted = 0.0
+
+    for item in raw_items:
+        converted = _convert(item["amount"], item["currency"], rates, trip_currency)
+        paid_str = "PAID" if item["is_paid"] else "UNPAID"
+
+        if converted is not None and item["currency"] != trip_currency:
+            line = f"- {item['name']} ({item['label']}): {item['amount']:.2f} {item['currency']} = {converted:.2f} {trip_currency} {paid_str}"
+            total_converted += converted
+            if item["is_paid"]:
+                total_paid_converted += converted
+        elif converted is not None:
+            line = f"- {item['name']} ({item['label']}): {item['amount']:.2f} {trip_currency} {paid_str}"
+            total_converted += converted
+            if item["is_paid"]:
+                total_paid_converted += converted
+        else:
+            line = f"- {item['name']} ({item['label']}): {item['amount']:.2f} {item['currency']} {paid_str} (no rate available)"
+            # Still add unconverted amount for rough total
+            total_converted += item["amount"]
+            if item["is_paid"]:
+                total_paid_converted += item["amount"]
+
+        items.append(line)
+
+    remaining = total_converted - total_paid_converted
+
     lines = [
-        f"\n### Budget (user's preferred currency: {trip_currency})",
-        f"Note: each item shows its original currency. Convert totals to {trip_currency} when answering the user.",
-        f"Total (mixed currencies, approximate): {total} | Paid: {total_paid} | Remaining: {total - total_paid}",
+        f"\n### Budget (all amounts converted to {trip_currency} using live exchange rates)",
+        f"Total: {total_converted:,.2f} {trip_currency} | Paid: {total_paid_converted:,.2f} {trip_currency} | Remaining: {remaining:,.2f} {trip_currency}",
     ] + items
 
     return "\n".join(lines)
