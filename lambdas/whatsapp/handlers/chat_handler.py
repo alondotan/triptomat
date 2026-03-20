@@ -171,10 +171,14 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
         meta_api.send_text(phone, "No active trip selected. Use /trip to choose one.")
         return
 
+    # Strip WhatsApp markdown (* for bold, _ for italic) before intent matching
+    clean_text = text.replace("*", "").replace("_", "").replace("~", "")
+
     # Intercept task/place intents before calling Gemini
     webhook_token = wa_user.get("webhook_token", "")
-    intent_result = _try_handle_task_intent(text, trip_id, phone, webhook_token)
+    intent_result = _try_handle_task_intent(clean_text, trip_id, phone, webhook_token)
     if intent_result:
+        logger.info("Intent handled: %s", intent_result[:100])
         meta_api.send_text(phone, intent_result)
         return
 
@@ -563,6 +567,8 @@ def _create_poi(
         f"?token={webhook_token}"
     )
     data = json.dumps(payload).encode()
+    logger.info("Calling recommendation-webhook for '%s' (category=%s, sub=%s, token=%s...)",
+                name, category, sub_category, webhook_token[:8] if webhook_token else "NONE")
 
     req = urllib.request.Request(webhook_url, data=data, method="POST", headers={
         "apikey": SUPABASE_SERVICE_KEY,
@@ -571,9 +577,13 @@ def _create_poi(
     })
     try:
         with urllib.request.urlopen(req, timeout=15) as res:
-            result = json.loads(res.read().decode())
-            logger.info("Recommendation webhook result: %s", result)
+            body = res.read().decode()
+            logger.info("Recommendation webhook response: %s", body[:500])
+            result = json.loads(body)
             return result.get("success", False)
+    except urllib.request.HTTPError as e:
+        error_body = e.read().decode() if hasattr(e, 'read') else ""
+        logger.error("Recommendation webhook HTTP %s: %s", e.code, error_body[:500])
     except Exception as e:
         logger.error("Failed to call recommendation-webhook: %s", e)
     return False
