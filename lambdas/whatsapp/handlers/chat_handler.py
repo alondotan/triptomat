@@ -46,6 +46,7 @@ You have access to the user's trip data below. Use it to answer specific questio
 When asked about flights, look in the transportation data.
 When asked about hotels/accommodation, look in the POIs with category "accommodation".
 When asked about the schedule, look in the itinerary days.
+When asked about budget/costs/payments, look in the budget data section.
 If something is not in the data, say so honestly.
 """
 
@@ -280,7 +281,89 @@ def _load_trip_context(trip_id: str, user_id: str) -> str:
                 info += f" | {c['phone']}"
             parts.append(info)
 
+    # Budget data
+    budget_text = _load_budget_context(trip_id, trip.get("currency", "EUR"))
+    if budget_text:
+        parts.append(budget_text)
+
     return "\n".join(parts)
+
+
+def _load_budget_context(trip_id: str, trip_currency: str) -> str:
+    """Build budget context text for AI chat."""
+    pois = _supabase_get(
+        SUPABASE_URL, SUPABASE_SERVICE_KEY,
+        f"/rest/v1/points_of_interest?trip_id=eq.{trip_id}"
+        f"&is_cancelled=is.false&select=name,category,details,is_paid"
+    ) or []
+    transport = _supabase_get(
+        SUPABASE_URL, SUPABASE_SERVICE_KEY,
+        f"/rest/v1/transportation?trip_id=eq.{trip_id}"
+        f"&is_cancelled=is.false&select=category,cost,is_paid,segments"
+    ) or []
+    expenses = _supabase_get(
+        SUPABASE_URL, SUPABASE_SERVICE_KEY,
+        f"/rest/v1/expenses?trip_id=eq.{trip_id}"
+        f"&select=description,category,amount,currency,is_paid"
+    ) or []
+
+    items = []
+    total = 0
+    total_paid = 0
+
+    for p in pois:
+        details = p.get("details") or {}
+        cost_obj = details.get("cost") or {}
+        amount = cost_obj.get("amount", 0) or 0
+        if not amount:
+            continue
+        currency = cost_obj.get("currency", trip_currency)
+        is_paid = p.get("is_paid", False)
+        items.append(f"- {p.get('name','?')} ({p.get('category','')}): {amount} {currency} {'PAID' if is_paid else 'UNPAID'}")
+        total += amount
+        if is_paid:
+            total_paid += amount
+
+    for t in transport:
+        cost_obj = t.get("cost") or {}
+        amount = cost_obj.get("total_amount", 0) or 0
+        if not amount:
+            continue
+        currency = cost_obj.get("currency", trip_currency)
+        is_paid = t.get("is_paid", False)
+        segs = t.get("segments") or []
+        if segs:
+            seg = segs[0]
+            fr = seg.get("from") or seg.get("departure") or {}
+            to = seg.get("to") or seg.get("arrival") or {}
+            name = f"{fr.get('city', fr.get('name', '?'))} -> {to.get('city', to.get('name', '?'))}"
+        else:
+            name = t.get("category", "Transport")
+        items.append(f"- {name} (transport): {amount} {currency} {'PAID' if is_paid else 'UNPAID'}")
+        total += amount
+        if is_paid:
+            total_paid += amount
+
+    for e in expenses:
+        amount = e.get("amount", 0) or 0
+        if not amount:
+            continue
+        currency = e.get("currency", trip_currency)
+        is_paid = e.get("is_paid", False)
+        items.append(f"- {e.get('description','Expense')} (expense): {amount} {currency} {'PAID' if is_paid else 'UNPAID'}")
+        total += amount
+        if is_paid:
+            total_paid += amount
+
+    if not items:
+        return ""
+
+    lines = [
+        f"\n### Budget (currency: {trip_currency})",
+        f"Total: {total} | Paid: {total_paid} | Remaining: {total - total_paid}",
+    ] + items
+
+    return "\n".join(lines)
 
 
 def _load_conversation(phone: str) -> list[dict]:

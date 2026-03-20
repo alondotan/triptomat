@@ -207,6 +207,8 @@ def handle_command(wa_user: dict, message: dict, phone: str) -> None:
     elif text.startswith("/done "):
         query = raw_text[6:].strip()
         _cmd_done_task(wa_user, phone, query)
+    elif text == "/budget":
+        _cmd_budget(wa_user, phone)
     elif text == "/unlink":
         meta_api.send_text(
             phone,
@@ -241,6 +243,7 @@ def _cmd_help(phone: str) -> None:
         "\U0001f517 *Send a link* — YouTube, website, or Google Maps link to analyze\n"
         "\U0001f4cd *Share location* — Look up a place\n"
         "\U0001f4ce *Send a file* — Upload documents, photos, or PDFs to your trip\n"
+        "/budget — Budget summary\n"
         "/tasks — List trip tasks\n"
         "/task Buy sunscreen — Add a new task\n"
         "/done Buy sunscreen — Mark a task as done\n"
@@ -282,6 +285,192 @@ def _cmd_status(wa_user: dict, phone: str) -> None:
         f"\U0001f4c5 {start} \u2192 {end}\n\n"
         f"Send me links to add recommendations to this trip!",
     )
+
+
+def _cmd_budget(wa_user: dict, phone: str) -> None:
+    """Show a budget summary for the active trip."""
+    import urllib.request
+
+    trip_id = wa_user.get("active_trip_id")
+    if not trip_id:
+        meta_api.send_text(phone, "No active trip selected. Use /trip to choose one.")
+        return
+
+    # Fetch trip currency
+    trips = get_active_trips(wa_user.get("user_id", ""), SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    trip = next((t for t in trips if t["id"] == trip_id), None)
+    trip_currency = trip.get("currency", "EUR") if trip else "EUR"
+
+    # Fetch all cost data in parallel-ish (sequential but fast)
+    pois = _budget_query(
+        f"/rest/v1/points_of_interest?trip_id=eq.{trip_id}"
+        f"&is_cancelled=is.false&select=name,category,details,is_paid"
+    ) or []
+    transport = _budget_query(
+        f"/rest/v1/transportation?trip_id=eq.{trip_id}"
+        f"&is_cancelled=is.false&select=category,cost,is_paid,segments"
+    ) or []
+    expenses = _budget_query(
+        f"/rest/v1/expenses?trip_id=eq.{trip_id}"
+        f"&select=description,category,amount,currency,is_paid"
+    ) or []
+
+    # Aggregate
+    categories = {
+        "accommodation": {"total": 0, "paid": 0, "items": []},
+        "transport": {"total": 0, "paid": 0, "items": []},
+        "activities": {"total": 0, "paid": 0, "items": []},
+        "other": {"total": 0, "paid": 0, "items": []},
+    }
+
+    grand_total = 0
+    grand_paid = 0
+
+    # POIs
+    for p in pois:
+        details = p.get("details") or {}
+        cost_obj = details.get("cost") or {}
+        amount = cost_obj.get("amount", 0) or 0
+        if not amount:
+            continue
+        currency = cost_obj.get("currency", trip_currency)
+        is_paid = p.get("is_paid", False)
+        cat = p.get("category", "")
+        name = p.get("name", "?")
+
+        bucket = "accommodation" if cat == "accommodation" else (
+            "activities" if cat in ("attraction", "eatery") else "other"
+        )
+        categories[bucket]["total"] += amount
+        categories[bucket]["items"].append(
+            {"name": name, "amount": amount, "currency": currency, "paid": is_paid}
+        )
+        if is_paid:
+            categories[bucket]["paid"] += amount
+        grand_total += amount
+        if is_paid:
+            grand_paid += amount
+
+    # Transportation
+    for t in transport:
+        cost_obj = t.get("cost") or {}
+        amount = cost_obj.get("total_amount", 0) or 0
+        if not amount:
+            continue
+        currency = cost_obj.get("currency", trip_currency)
+        is_paid = t.get("is_paid", False)
+        # Build a name from segments
+        segments = t.get("segments") or []
+        if segments:
+            seg = segments[0]
+            fr = seg.get("from") or seg.get("departure") or {}
+            to = seg.get("to") or seg.get("arrival") or {}
+            fr_name = fr.get("city") or fr.get("name") or fr.get("code") or "?"
+            to_name = to.get("city") or to.get("name") or to.get("code") or "?"
+            name = f"{fr_name} \u2192 {to_name}"
+        else:
+            name = t.get("category", "Transport")
+
+        categories["transport"]["total"] += amount
+        categories["transport"]["items"].append(
+            {"name": name, "amount": amount, "currency": currency, "paid": is_paid}
+        )
+        if is_paid:
+            categories["transport"]["paid"] += amount
+        grand_total += amount
+        if is_paid:
+            grand_paid += amount
+
+    # Manual expenses
+    for e in expenses:
+        amount = e.get("amount", 0) or 0
+        if not amount:
+            continue
+        currency = e.get("currency", trip_currency)
+        is_paid = e.get("is_paid", False)
+        name = e.get("description", "Expense")
+
+        categories["other"]["total"] += amount
+        categories["other"]["items"].append(
+            {"name": name, "amount": amount, "currency": currency, "paid": is_paid}
+        )
+        if is_paid:
+            categories["other"]["paid"] += amount
+        grand_total += amount
+        if is_paid:
+            grand_paid += amount
+
+    # Format message
+    if grand_total == 0:
+        meta_api.send_text(phone, "No budget data yet for this trip.")
+        return
+
+    grand_unpaid = grand_total - grand_paid
+
+    lines = [
+        f"*Budget Summary* \U0001f4b0\n",
+        f"*Total:* {_fmt_money(grand_total, trip_currency)}",
+        f"*Paid:* {_fmt_money(grand_paid, trip_currency)} \u2705",
+        f"*Remaining:* {_fmt_money(grand_unpaid, trip_currency)}\n",
+    ]
+
+    # Category breakdown
+    cat_labels = {
+        "accommodation": "\U0001f3e8 Accommodation",
+        "transport": "\u2708\ufe0f Transport",
+        "activities": "\U0001f3ad Activities",
+        "other": "\U0001f4cb Other",
+    }
+    for key, label in cat_labels.items():
+        cat = categories[key]
+        if cat["total"] > 0:
+            unpaid = cat["total"] - cat["paid"]
+            line = f"{label}: {_fmt_money(cat['total'], trip_currency)}"
+            if unpaid > 0:
+                line += f" ({_fmt_money(unpaid, trip_currency)} unpaid)"
+            lines.append(line)
+
+    # Top unpaid items
+    all_items = []
+    for cat in categories.values():
+        all_items.extend(cat["items"])
+    unpaid_items = [i for i in all_items if not i["paid"]]
+    unpaid_items.sort(key=lambda x: x["amount"], reverse=True)
+
+    if unpaid_items:
+        lines.append("\n*Still to pay:*")
+        for item in unpaid_items[:7]:
+            lines.append(f"  \u2022 {item['name']}: {_fmt_money(item['amount'], item['currency'])}")
+        if len(unpaid_items) > 7:
+            lines.append(f"  _...and {len(unpaid_items) - 7} more_")
+
+    meta_api.send_text(phone, "\n".join(lines))
+
+
+def _budget_query(path_and_params: str) -> list | None:
+    """Fetch data from Supabase for budget aggregation."""
+    import urllib.request
+
+    url = f"{SUPABASE_URL}{path_and_params}"
+    req = urllib.request.Request(url, headers={
+        "apikey": SUPABASE_SERVICE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=5) as res:
+            return json.loads(res.read().decode())
+    except Exception as e:
+        logger.error("Budget query failed: %s", e)
+        return None
+
+
+def _fmt_money(amount: float, currency: str) -> str:
+    """Format a money amount with currency symbol."""
+    symbols = {"USD": "$", "EUR": "\u20ac", "GBP": "\u00a3", "ILS": "\u20aa", "JPY": "\u00a5"}
+    sym = symbols.get(currency, currency + " ")
+    if currency in ("JPY",):
+        return f"{sym}{amount:,.0f}"
+    return f"{sym}{amount:,.2f}"
 
 
 def _cmd_tasks(wa_user: dict, phone: str) -> None:
