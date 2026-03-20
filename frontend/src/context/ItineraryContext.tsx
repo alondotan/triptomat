@@ -91,6 +91,23 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
     };
   }, [activeTrip?.id]);
 
+  // Realtime subscription for missions
+  useEffect(() => {
+    const tripId = activeTrip?.id;
+    if (!tripId) return;
+
+    const channel = supabase
+      .channel(`missions-realtime-${tripId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'missions', filter: `trip_id=eq.${tripId}` }, () => {
+        fetchMissions(tripId).then(missions => dispatch({ type: 'SET_MISSIONS', payload: missions }));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeTrip?.id]);
+
   const addMission = useCallback(async (m: Omit<Mission, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
       const newM = await createMissionService(m);
