@@ -167,10 +167,10 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
         meta_api.send_text(phone, "No active trip selected. Use /trip to choose one.")
         return
 
-    # Intercept task-related intents before calling Gemini
-    task_result = _try_handle_task_intent(text, trip_id)
-    if task_result:
-        meta_api.send_text(phone, task_result)
+    # Intercept task/place intents before calling Gemini
+    intent_result = _try_handle_task_intent(text, trip_id, phone)
+    if intent_result:
+        meta_api.send_text(phone, intent_result)
         return
 
     # Load trip context
@@ -274,20 +274,33 @@ _LIST_TASK_PATTERNS = re.compile(
 )
 
 
-def _try_handle_task_intent(text: str, trip_id: str) -> str | None:
-    """Try to match task-related intents and handle them directly.
+_ADD_PLACE_PATTERNS = re.compile(
+    r"(?i)"
+    r"(?:תוסיף|הוסף|תוסיפי|הוסיפי|תכניס|שמור|תשמור)"
+    r"\s*(?:את\s*)?(?:ה)?(?:מסעדה|מקום|אטרקציה|מלון|בית.?מלון|המקום|זה|אותו|אותה|הראשו[נן]|השני|השלישי|האחרו[נן])"
+    r"|"
+    r"(?:add|save|include)\s+(?:it|this|the\s+\w+|that)\s+(?:to\s+)?(?:my\s+)?(?:trip|plan|itinerary)"
+    r"|"
+    r"(?:תוסיף|הוסף|תוסיפי|הוסיפי|תכניס)\s+(?:את\s+)?(.+?)(?:\s+ל(?:טיול|תוכנית|לוח))"
+    r"|"
+    r"(?:add|save)\s+(.+?)(?:\s+to\s+(?:my\s+)?(?:trip|plan|itinerary))",
+    re.UNICODE,
+)
 
-    Returns a response string if handled, None if not a task intent.
+
+def _try_handle_task_intent(text: str, trip_id: str, phone: str = "") -> str | None:
+    """Try to match task/place intents and handle them directly.
+
+    Returns a response string if handled, None if not matched.
     """
     # List tasks
     if _LIST_TASK_PATTERNS.search(text):
         return _execute_function_call({"name": "list_tasks", "args": {}}, trip_id)
 
-    # Add task
+    # Add task (requires "משימה"/"task" keyword)
     m = _ADD_TASK_PATTERNS.search(text)
     if m:
-        title = (m.group(1) or m.group(2) or m.group(3) or "").strip()
-        # Clean up common prefixes
+        title = (m.group(1) or m.group(2) or m.group(3) or m.group(4) or "").strip()
         for prefix in ("ש", "ל", "את ", "to "):
             if title.startswith(prefix) and len(title) > len(prefix) + 2:
                 title = title[len(prefix):]
@@ -302,7 +315,82 @@ def _try_handle_task_intent(text: str, trip_id: str) -> str | None:
         if query:
             return _execute_function_call({"name": "complete_task", "args": {"title": query}}, trip_id)
 
+    # Add place to trip — extract from conversation context
+    m = _ADD_PLACE_PATTERNS.search(text)
+    if m:
+        # Try to get explicit place name from the regex
+        explicit_name = (m.group(1) or m.group(2) or "").strip() if m.lastindex else ""
+        if explicit_name:
+            return _add_place_from_name(explicit_name, trip_id)
+        # No explicit name — need to extract from conversation history
+        return _add_place_from_conversation(phone, trip_id, text)
+
     return None
+
+
+def _add_place_from_name(name: str, trip_id: str) -> str:
+    """Add a place by explicit name — guess category from name."""
+    # Simple heuristic for category
+    lower = name.lower()
+    if any(w in lower for w in ("מסעדה", "restaurant", "cafe", "קפה", "בר", "bar", "אוכל", "food")):
+        category = "eatery"
+    elif any(w in lower for w in ("מלון", "hotel", "hostel", "אכסניה", "resort")):
+        category = "accommodation"
+    else:
+        category = "attraction"
+    return _execute_function_call({"name": "add_place", "args": {"name": name, "category": category}}, trip_id)
+
+
+def _add_place_from_conversation(phone: str, trip_id: str, text: str) -> str:
+    """Extract place details from recent conversation and add to trip."""
+    conversation = _load_conversation(phone)
+    if not conversation:
+        return "I'm not sure which place you mean. Can you tell me the name?"
+
+    # Find the last assistant message that likely contains place recommendations
+    last_recs = ""
+    for msg in reversed(conversation[-6:]):
+        if msg.get("role") == "assistant" and len(msg.get("text", "")) > 50:
+            last_recs = msg["text"]
+            break
+
+    if not last_recs:
+        return "I'm not sure which place you mean. Can you tell me the name?"
+
+    # Use Gemini to extract the place from context
+    extract_prompt = f"""The user is asking to add a place to their trip. Based on the conversation below, extract the specific place they want to add.
+
+User's message: "{text}"
+
+Previous recommendations:
+{last_recs}
+
+Respond ONLY with a JSON object (no markdown, no explanation):
+{{"name": "place name", "category": "eatery|attraction|accommodation", "city": "city name", "country": "country name"}}
+
+If the user said "the first one" or similar, pick the first mentioned place. If unclear, pick the most likely one."""
+
+    try:
+        resp = requests.post(GEMINI_URL, json={
+            "contents": [{"role": "user", "parts": [{"text": extract_prompt}]}],
+            "generationConfig": {"maxOutputTokens": 200, "temperature": 0.1},
+        }, timeout=10)
+        resp.raise_for_status()
+        result = resp.json()
+        parts = result.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+        raw = "".join(p.get("text", "") for p in parts).strip()
+
+        # Parse JSON from response
+        raw = raw.replace("```json", "").replace("```", "").strip()
+        place = json.loads(raw)
+        name = place.get("name", "")
+        if not name:
+            return "I couldn't figure out which place you mean. Please tell me the name."
+
+        return _execute_function_call({"name": "add_place", "args": place}, trip_id)
+    except Exception as e:
+        logger.error("Failed to extract place from conversation: %s", e)
+        return "I couldn't figure out which place you mean. Please tell me the name."
 
 
 def _execute_function_call(function_call: dict, trip_id: str) -> str:
