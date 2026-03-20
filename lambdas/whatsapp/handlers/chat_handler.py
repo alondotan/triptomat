@@ -552,7 +552,7 @@ def _load_budget_context(trip_id: str, trip_currency: str) -> str:
     transport = _supabase_get(
         SUPABASE_URL, SUPABASE_SERVICE_KEY,
         f"/rest/v1/transportation?trip_id=eq.{trip_id}"
-        f"&is_cancelled=is.false&select=category,cost,is_paid,segments"
+        f"&is_cancelled=is.false&select=category,cost,is_paid,segments,booking"
     ) or []
     expenses = _supabase_get(
         SUPABASE_URL, SUPABASE_SERVICE_KEY,
@@ -584,15 +584,22 @@ def _load_budget_context(trip_id: str, trip_currency: str) -> str:
             continue
         currency = cost_obj.get("currency", trip_currency)
         is_paid = t.get("is_paid", False)
+        cat = t.get("category", "transport")
         segs = t.get("segments") or []
         if segs:
             seg = segs[0]
             fr = seg.get("from") or seg.get("departure") or {}
             to = seg.get("to") or seg.get("arrival") or {}
-            name = f"{fr.get('city', fr.get('name', '?'))} -> {to.get('city', to.get('name', '?'))}"
+            fr_name = fr.get("city") or fr.get("name") or fr.get("code") or "?"
+            to_name = to.get("city") or to.get("name") or to.get("code") or "?"
+            carrier = seg.get("carrier_code") or seg.get("carrier", "")
+            flight_num = seg.get("flight_or_vessel_number") or seg.get("number", "")
+            name = f"{fr_name} -> {to_name}"
+            if carrier or flight_num:
+                name += f" ({carrier} {flight_num})".rstrip()
         else:
-            name = t.get("category", "Transport")
-        items.append(f"- {name} (transport): {amount} {currency} {'PAID' if is_paid else 'UNPAID'}")
+            name = cat
+        items.append(f"- {name} ({cat}): {amount} {currency} {'PAID' if is_paid else 'UNPAID'}")
         total += amount
         if is_paid:
             total_paid += amount
