@@ -232,6 +232,13 @@ def _handle_interactive_reply(wa_user: dict, reply_id: str, phone: str) -> None:
                 trip_name = t.get("name", "your trip")
                 break
         _set_active_trip(phone, trip_id, trip_name)
+    elif reply_id.startswith("done:"):
+        mission_id = reply_id[5:]
+        success = _update_mission_status(mission_id, "completed")
+        if success:
+            meta_api.send_text(phone, "\u2705 Task completed!")
+        else:
+            meta_api.send_text(phone, "Failed to update the task. Please try again.")
     else:
         meta_api.send_text(phone, "Got it!")
 
@@ -508,7 +515,26 @@ def _cmd_tasks(wa_user: dict, phone: str) -> None:
         if len(completed) > 5:
             lines.append(f"_...and {len(completed) - 5} more completed_")
 
-    meta_api.send_text(phone, "\n".join(lines))
+    # If there are pending tasks, send as interactive list with "Mark as Done" button
+    if pending:
+        rows = []
+        for m in pending[:10]:
+            title = m.get("title", "")
+            due = m.get("due_date", "")
+            due_str = f"Due {due[:10]}" if due else "No due date"
+            rows.append({
+                "id": f"done:{m['id']}",
+                "title": title[:24],
+                "description": due_str[:72],
+            })
+        meta_api.send_interactive_list(
+            phone,
+            "\n".join(lines),
+            "\u2705 Mark as Done",
+            [{"title": "Pending Tasks", "rows": rows}],
+        )
+    else:
+        meta_api.send_text(phone, "\n".join(lines))
 
 
 def _cmd_add_task(wa_user: dict, phone: str, title: str) -> None:
