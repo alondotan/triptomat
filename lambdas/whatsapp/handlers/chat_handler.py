@@ -50,9 +50,11 @@ When asked about hotels/accommodation, look in the POIs with category "accommoda
 When asked about the schedule, look in the itinerary days.
 When asked about budget/costs/payments, look in the budget data section.
   - Each item shows its original currency. The user's preferred currency is noted in the budget header.
-  - When answering about totals or sums, show the amount in the user's preferred currency.
-  - When answering about a specific item, show the original amount AND the preferred currency if they differ (e.g. "350 EUR (~1,330 ILS)").
-  - Use approximate conversion rates: 1 EUR ≈ 3.8 ILS, 1 USD ≈ 3.6 ILS, 1 GBP ≈ 4.5 ILS, 1 EUR ≈ 1.08 USD.
+  - ALWAYS sum up amounts when the user asks about totals — first sum per original currency, then convert.
+  - When answering about a specific item, show original amount AND preferred currency if they differ (e.g. "350 EUR (~1,330 ILS)").
+  - When answering about totals/sums, show: original total + converted to preferred currency (e.g. "18,260 PHP (~1,190 ILS)").
+  - Approximate rates to 1 USD: ILS 3.6, EUR 0.92, GBP 0.79, PHP 56, THB 34, JPY 150, INR 83, TRY 32, MXN 17, BRL 5, AUD 1.55, CAD 1.36, CHF 0.88, CZK 23, HUF 370, PLN 4, SEK 10.5, NOK 10.7, DKK 6.9, NZD 1.7, ZAR 18, KRW 1350, SGD 1.35, HKD 7.8, TWD 32, MYR 4.5, IDR 15800, VND 25000, AED 3.67, SAR 3.75, EGP 50, MAD 10, GEL 2.7, RON 4.6, BGN 1.8, HRK 7, RSD 108, BAM 1.8, ALL 95, ISK 137, COP 4000, PEN 3.7, CLP 950, ARS 900, UYU 40.
+  - Derive cross-rates from USD rates (e.g. PHP→ILS = amount / 56 * 3.6).
 When asked about tasks/missions/to-do list, look in the tasks section.
 If something is not in the data, say so honestly.
 
