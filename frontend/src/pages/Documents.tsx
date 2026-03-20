@@ -1,16 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/context/ActiveTripContext';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  FileText, Plus, Trash2, Download, Pencil, Eye,
-  CreditCard, Stamp, Shield, Plane, Hotel, Car, Ticket,
-  ChevronDown, ChevronRight, Loader2,
-} from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import { DocumentUploadDialog } from '@/components/documents/DocumentUploadDialog';
+import { FolderSidebar, type FolderPath } from '@/components/documents/FolderSidebar';
+import { FileExplorerContent } from '@/components/documents/FileExplorerContent';
 import { useToast } from '@/hooks/use-toast';
 import {
   fetchTripDocuments,
@@ -30,26 +26,25 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
 
-const CATEGORY_ICONS: Record<DocumentCategory, typeof FileText> = {
-  passport: CreditCard,
-  id: CreditCard,
-  visa: Stamp,
-  insurance: Shield,
-  flight: Plane,
-  hotel: Hotel,
-  car_rental: Car,
-  activity: Ticket,
-  other: FileText,
-};
+const CATEGORIES: DocumentCategory[] = [
+  'passport', 'visa', 'insurance', 'id', 'flight', 'hotel', 'car_rental', 'activity', 'other',
+];
 
-const CATEGORIES: DocumentCategory[] = ['passport', 'visa', 'insurance', 'id', 'flight', 'hotel', 'car_rental', 'activity', 'other'];
-
-function formatFileSize(bytes?: number): string {
-  if (!bytes) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function countByCategory(docs: TripDocument[]): Record<DocumentCategory, number> {
+  const counts = {} as Record<DocumentCategory, number>;
+  for (const cat of CATEGORIES) counts[cat] = 0;
+  for (const doc of docs) counts[doc.category] = (counts[doc.category] || 0) + 1;
+  return counts;
 }
 
 const DocumentsPage = () => {
@@ -63,13 +58,33 @@ const DocumentsPage = () => {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<TripDocument | null>(null);
   const [editTarget, setEditTarget] = useState<TripDocument | null>(null);
-  const [tripSectionOpen, setTripSectionOpen] = useState(true);
-  const [generalSectionOpen, setGeneralSectionOpen] = useState(true);
+
+  // Navigation state
+  const [currentPath, setCurrentPath] = useState<FolderPath | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() =>
+    (localStorage.getItem('docs-view-mode') as 'grid' | 'list') || 'grid',
+  );
 
   // Edit form state
   const [editName, setEditName] = useState('');
   const [editCategory, setEditCategory] = useState<DocumentCategory>('other');
   const [editNotes, setEditNotes] = useState('');
+
+  // DnD sensors
+  const pointerSensor = useSensor(PointerSensor, { activationConstraint: { distance: 8 } });
+  const touchSensor = useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } });
+  const sensors = useSensors(pointerSensor, touchSensor);
+
+  // Computed counts
+  const tripDocCounts = useMemo(() => countByCategory(tripDocs), [tripDocs]);
+  const generalDocCounts = useMemo(() => countByCategory(generalDocs), [generalDocs]);
+
+  // Filtered documents for current view
+  const filteredDocs = useMemo(() => {
+    if (!currentPath || !currentPath.category) return [];
+    const pool = currentPath.scope === 'trip' ? tripDocs : generalDocs;
+    return pool.filter((d) => d.category === currentPath.category);
+  }, [currentPath, tripDocs, generalDocs]);
 
   const loadDocuments = useCallback(async () => {
     setLoading(true);
@@ -88,6 +103,11 @@ const DocumentsPage = () => {
   }, [activeTrip, t, toast]);
 
   useEffect(() => { loadDocuments(); }, [loadDocuments]);
+
+  // Persist view mode
+  useEffect(() => { localStorage.setItem('docs-view-mode', viewMode); }, [viewMode]);
+
+  // ── Handlers ──
 
   const handleUpload = async (
     data: { category: DocumentCategory; name: string; notes?: string; isGeneral: boolean },
@@ -141,55 +161,42 @@ const DocumentsPage = () => {
     setEditTarget(null);
   };
 
-  const canPreview = (mimeType?: string) => {
-    if (!mimeType) return false;
-    return mimeType.startsWith('image/') || mimeType === 'application/pdf';
-  };
+  // ── Drag & Drop ──
 
-  const renderDocCard = (doc: TripDocument) => {
-    const Icon = CATEGORY_ICONS[doc.category] || FileText;
-    return (
-      <Card key={doc.id}>
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3 min-w-0 flex-1">
-              <div className="rounded-lg bg-secondary p-2 shrink-0">
-                <Icon size={20} className="text-muted-foreground" />
-              </div>
-              <div className="space-y-0.5 min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold truncate">{doc.name}</p>
-                  <Badge variant="secondary" className="text-xs shrink-0">
-                    {t(`documentCategory.${doc.category}`)}
-                  </Badge>
-                </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  {doc.fileName}
-                  {doc.fileSize ? ` · ${formatFileSize(doc.fileSize)}` : ''}
-                </p>
-                {doc.notes && <p className="text-xs text-muted-foreground italic mt-1">{doc.notes}</p>}
-              </div>
-            </div>
-            <div className="flex gap-1 shrink-0 ml-2">
-              {canPreview(doc.mimeType) && (
-                <Button variant="ghost" size="sm" onClick={() => handlePreview(doc)} title={t('documentsPage.preview')}>
-                  <Eye size={14} />
-                </Button>
-              )}
-              <Button variant="ghost" size="sm" onClick={() => handleDownload(doc)} title={t('documentsPage.download')}>
-                <Download size={14} />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => openEdit(doc)}>
-                <Pencil size={14} />
-              </Button>
-              <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setDeleteTarget(doc)}>
-                <Trash2 size={14} />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const overId = String(over.id);
+    if (!overId.startsWith('folder:')) return;
+
+    // Parse folder:scope:category
+    const parts = overId.split(':');
+    const targetScope = parts[1] as 'trip' | 'general';
+    const targetCategory = parts[2] as DocumentCategory;
+
+    // Get the dragged document
+    const docData = active.data.current?.doc as TripDocument | undefined;
+    if (!docData) return;
+
+    // Skip if nothing changed
+    const currentScope = docData.tripId ? 'trip' : 'general';
+    if (currentScope === targetScope && docData.category === targetCategory) return;
+
+    try {
+      const updates: { category?: DocumentCategory; tripId?: string | null } = {};
+      if (docData.category !== targetCategory) updates.category = targetCategory;
+      if (currentScope !== targetScope) {
+        updates.tripId = targetScope === 'trip' ? (activeTrip?.id || null) : null;
+      }
+      await updateDocument(docData.id, updates);
+      await loadDocuments();
+
+      const folderName = t(`documentCategory.${targetCategory}`);
+      toast({ title: t('documentsPage.movedTo', { folder: folderName }) });
+    } catch {
+      toast({ title: t('common.somethingWentWrong'), variant: 'destructive' });
+    }
   };
 
   if (!activeTrip) {
@@ -198,73 +205,61 @@ const DocumentsPage = () => {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">{t('documentsPage.title')}</h2>
-          <Button className="gap-1" onClick={() => setUploadOpen(true)}>
-            <Plus size={16} /> {t('documentsPage.upload')}
-          </Button>
+      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <div className="space-y-4">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold">{t('documentsPage.title')}</h2>
+            <Button className="gap-1" onClick={() => setUploadOpen(true)}>
+              <Plus size={16} /> {t('documentsPage.upload')}
+            </Button>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="flex gap-6">
+              {/* Sidebar — hidden on mobile */}
+              <div className="hidden md:block">
+                <FolderSidebar
+                  currentPath={currentPath}
+                  onNavigate={setCurrentPath}
+                  tripDocCounts={tripDocCounts}
+                  generalDocCounts={generalDocCounts}
+                  tripTotal={tripDocs.length}
+                  generalTotal={generalDocs.length}
+                  hasTripContext={!!activeTrip}
+                />
+              </div>
+
+              {/* Content area */}
+              <FileExplorerContent
+                currentPath={currentPath}
+                onNavigate={setCurrentPath}
+                documents={filteredDocs}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                onPreview={handlePreview}
+                onDownload={handleDownload}
+                onEdit={openEdit}
+                onDelete={setDeleteTarget}
+                onUpload={() => setUploadOpen(true)}
+                hasTripContext={!!activeTrip}
+                tripDocCounts={tripDocCounts}
+                generalDocCounts={generalDocCounts}
+              />
+            </div>
+          )}
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <>
-            {/* Trip Documents Section */}
-            <div>
-              <button
-                className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 hover:text-foreground transition-colors"
-                onClick={() => setTripSectionOpen(!tripSectionOpen)}
-              >
-                {tripSectionOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                {t('documentsPage.tripDocuments')} ({tripDocs.length})
-              </button>
-              {tripSectionOpen && (
-                <div className="space-y-3">
-                  {tripDocs.length === 0 ? (
-                    <Card>
-                      <CardContent className="py-6 text-center text-muted-foreground">
-                        <FileText className="mx-auto mb-2 h-10 w-10 opacity-40" />
-                        <p className="text-sm">{t('documentsPage.noTripDocuments')}</p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    tripDocs.map(renderDocCard)
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* General Documents Section */}
-            <div>
-              <button
-                className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2 hover:text-foreground transition-colors"
-                onClick={() => setGeneralSectionOpen(!generalSectionOpen)}
-              >
-                {generalSectionOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                {t('documentsPage.myDocuments')} ({generalDocs.length})
-              </button>
-              {generalSectionOpen && (
-                <div className="space-y-3">
-                  {generalDocs.length === 0 ? (
-                    <Card>
-                      <CardContent className="py-6 text-center text-muted-foreground">
-                        <CreditCard className="mx-auto mb-2 h-10 w-10 opacity-40" />
-                        <p className="text-sm">{t('documentsPage.noGeneralDocuments')}</p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    generalDocs.map(renderDocCard)
-                  )}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+        {/* Drag overlay */}
+        <DragOverlay>
+          {/* Minimal drag preview */}
+          {null}
+        </DragOverlay>
+      </DndContext>
 
       {/* Upload Dialog */}
       <DocumentUploadDialog

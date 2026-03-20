@@ -1,14 +1,20 @@
 """triptomat-mail-handler Lambda handler.
 
 Required env vars:
-  MAIL_WEBHOOK_URL    — Supabase travel-webhook Edge Function URL
-  SUPABASE_URL        — Supabase project URL (for user lookup)
-  SUPABASE_SERVICE_KEY — Supabase service-role key
-  OPENAI_API_KEY      — OpenAI API key for email analysis
-  GOOGLE_API_KEY      — Google Gemini API key (for reconciliation)
+  MAIL_WEBHOOK_URL       — Supabase travel-webhook Edge Function URL (prod)
+  SUPABASE_URL           — Supabase project URL (for user lookup)
+  SUPABASE_SERVICE_KEY   — Supabase service-role key
+  OPENAI_API_KEY         — OpenAI API key for email analysis
+  GOOGLE_API_KEY         — Google Gemini API key (for reconciliation)
 
 Optional env vars:
-  OTEL_ENABLED        — "true" to enable OpenTelemetry tracing/metrics
+  STAGE_MAIL_WEBHOOK_URL — Webhook URL for stage environment
+  MEDIA_BUCKET           — S3 bucket for attachments (default: triptomat-media)
+  OTEL_ENABLED           — "true" to enable OpenTelemetry tracing/metrics
+
+Environment detection:
+  S3 key prefix "stage/" routes to STAGE_MAIL_WEBHOOK_URL.
+  All other keys route to MAIL_WEBHOOK_URL (prod).
 """
 
 import json
@@ -57,9 +63,11 @@ s3_client = boto3.client('s3')
 
 ALLOWED_TYPES, GEO_ONLY_TYPES = load_config()
 WEBHOOK_URL = os.environ.get('MAIL_WEBHOOK_URL', '')
+STAGE_WEBHOOK_URL = os.environ.get('STAGE_MAIL_WEBHOOK_URL', '')
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
 SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+MEDIA_BUCKET = os.environ.get('MEDIA_BUCKET', 'triptomat-media')
 
 
 def _mask_email(email: str) -> str:
@@ -71,15 +79,106 @@ def _mask_email(email: str) -> str:
         return "***"
 
 
+def _detect_environment(s3_key: str) -> str:
+    """Detect prod/stage environment from S3 key prefix."""
+    if s3_key.startswith("stage/"):
+        return "stage"
+    return "prod"
+
+
+def _extract_attachments(msg) -> list[dict]:
+    """Extract file attachments from a MIME email message.
+
+    Returns a list of dicts with filename, content_type, size, and data (bytes).
+    Skips inline images and text parts.
+    """
+    attachments = []
+    if not msg.is_multipart():
+        return attachments
+
+    for part in msg.walk():
+        content_disposition = str(part.get("Content-Disposition", ""))
+        content_type = part.get_content_type()
+
+        # Skip text parts and parts without attachment disposition
+        if content_type in ("text/html", "text/plain"):
+            continue
+        if "attachment" not in content_disposition and "inline" not in content_disposition:
+            continue
+        # For inline parts, only keep non-image files (skip inline logos etc.)
+        if "inline" in content_disposition and content_type.startswith("image/"):
+            continue
+
+        payload = part.get_payload(decode=True)
+        if not payload:
+            continue
+
+        filename = part.get_filename() or f"attachment_{len(attachments) + 1}"
+        attachments.append({
+            "filename": filename,
+            "content_type": content_type,
+            "size": len(payload),
+            "data": payload,
+        })
+
+    return attachments
+
+
+def _upload_attachments(
+    attachments: list[dict],
+    user_id: str | None,
+    trip_id: str | None,
+) -> list[dict]:
+    """Upload attachments to S3 and return metadata with S3 URLs.
+
+    Path: s3://triptomat-media/documents/{user_id}/{trip_id}/{filename}
+    If no trip: s3://triptomat-media/documents/{user_id}/unassigned/{filename}
+    If no user: skips upload.
+    """
+    if not user_id or not attachments:
+        return []
+
+    uploaded = []
+    folder = trip_id if trip_id else "unassigned"
+
+    for att in attachments:
+        # Sanitize filename
+        safe_name = re.sub(r'[^\w.\-]', '_', att["filename"])
+        s3_key = f"documents/{user_id}/{folder}/{safe_name}"
+
+        try:
+            s3_client.put_object(
+                Bucket=MEDIA_BUCKET,
+                Key=s3_key,
+                Body=att["data"],
+                ContentType=att["content_type"],
+            )
+            uploaded.append({
+                "filename": att["filename"],
+                "content_type": att["content_type"],
+                "size": att["size"],
+                "s3_url": f"s3://{MEDIA_BUCKET}/{s3_key}",
+                "s3_key": s3_key,
+            })
+            print(f"Uploaded attachment: {s3_key} ({att['size']} bytes)")
+        except Exception as e:
+            print(f"Failed to upload attachment {att['filename']}: {e}")
+
+    return uploaded
+
+
 def lambda_handler(event, context):
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'])
+    env = _detect_environment(key)
+    active_webhook_url = STAGE_WEBHOOK_URL if env == "stage" else WEBHOOK_URL
 
     try:
         with safe_span(tracer, "mail_handler.handle_email", {
             "mail.message_id": key[:100],
             "s3.bucket": bucket,
             "s3.key": key[:200],
+            "env": env,
         }) as root_span:
             try:
                 # ── Read raw email from S3 ──────────────────────────────────
@@ -124,11 +223,16 @@ def lambda_handler(event, context):
                     parse_duration = time_ms() - parse_start
                     record_histogram(parse_duration_hist, parse_duration)
 
+                    # Extract attachments
+                    attachments = _extract_attachments(msg)
+                    print(f"Extracted {len(attachments)} attachments from email")
+
                     if parse_span:
                         try:
                             parse_span.set_attribute("email.has_html", has_html)
                             parse_span.set_attribute("email.has_plain", has_plain)
                             parse_span.set_attribute("email.subject", subject[:80])
+                            parse_span.set_attribute("email.attachment_count", len(attachments))
                         except Exception:
                             pass
 
@@ -207,16 +311,39 @@ def lambda_handler(event, context):
                             os.environ.get("GOOGLE_API_KEY", ""),
                         )
 
+                    # ── Upload attachments ────────────────────────────────
+                    print(f"Attachments to upload: {len(attachments)}, uid={uid}, _resolved_user_id={payload.get('_resolved_user_id')}, _resolved_trip_id={payload.get('_resolved_trip_id')}")
+                    if attachments:
+                        with safe_span(tracer, "mail_handler.upload_attachments") as att_span:
+                            resolved_user_id = payload.pop("_resolved_user_id", None) or uid
+                            resolved_trip_id = payload.pop("_resolved_trip_id", None)
+                            uploaded = _upload_attachments(
+                                attachments, resolved_user_id, resolved_trip_id,
+                            )
+                            if uploaded:
+                                payload["attachments"] = uploaded
+                            if att_span:
+                                try:
+                                    att_span.set_attribute("attachments.count", len(uploaded))
+                                    att_span.set_attribute("attachments.trip_id", resolved_trip_id or "unassigned")
+                                except Exception:
+                                    pass
+                    else:
+                        # Clean up internal fields even if no attachments
+                        payload.pop("_resolved_user_id", None)
+                        payload.pop("_resolved_trip_id", None)
+
                     print(json.dumps(payload, indent=2, ensure_ascii=False))
 
                     # ── Webhook send ────────────────────────────────────────
-                    if WEBHOOK_URL:
+                    if active_webhook_url:
                         with safe_span(tracer, "mail_handler.webhook_send") as wh_span:
                             try:
-                                send_to_webhook(payload, WEBHOOK_URL, token)
+                                send_to_webhook(payload, active_webhook_url, token)
                                 if wh_span:
                                     try:
                                         wh_span.set_attribute("webhook.status", "success")
+                                        wh_span.set_attribute("webhook.env", env)
                                     except Exception:
                                         pass
                             except Exception as wh_exc:

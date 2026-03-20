@@ -329,6 +329,10 @@ def reconcile(
             print("Reconciliation skipped: no active trip found for token")
             return data
 
+        # Inject resolved trip/user IDs so callers can use them
+        data["_resolved_trip_id"] = trip_context.get("trip_id")
+        data["_resolved_user_id"] = trip_context.get("user_id")
+
         # 3. Skip if nothing to compare against
         has_existing = (
             trip_context["existing_pois"]

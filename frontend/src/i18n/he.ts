@@ -470,6 +470,13 @@ const he = {
     deleteConfirm: 'למחוק את המסמך הזה?',
     preview: 'תצוגה מקדימה',
     download: 'הורדה',
+    allDocuments: 'כל המסמכים',
+    gridView: 'תצוגת רשת',
+    listView: 'תצוגת רשימה',
+    emptyFolder: 'התיקייה ריקה',
+    movedTo: 'הועבר ל-{{folder}}',
+    folders: 'תיקיות',
+    files: 'קבצים',
   },
 
   // ── Document Categories ──

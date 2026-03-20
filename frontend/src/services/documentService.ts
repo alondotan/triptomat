@@ -70,11 +70,12 @@ export async function createDocument(
   return mapDocument(data);
 }
 
-export async function updateDocument(id: string, updates: Partial<Pick<TripDocument, 'name' | 'category' | 'notes'>>): Promise<void> {
+export async function updateDocument(id: string, updates: Partial<Pick<TripDocument, 'name' | 'category' | 'notes'>> & { tripId?: string | null }): Promise<void> {
   const updateData: Record<string, unknown> = {};
   if (updates.name !== undefined) updateData.name = updates.name;
   if (updates.category !== undefined) updateData.category = updates.category;
   if (updates.notes !== undefined) updateData.notes = updates.notes || null;
+  if ('tripId' in updates) updateData.trip_id = updates.tripId;
   const { error } = await supabase.from('documents').update(updateData).eq('id', id);
   if (error) throw error;
 }

@@ -472,6 +472,13 @@ const en = {
     deleteConfirm: 'Delete this document?',
     preview: 'Preview',
     download: 'Download',
+    allDocuments: 'All Documents',
+    gridView: 'Grid view',
+    listView: 'List view',
+    emptyFolder: 'This folder is empty',
+    movedTo: 'Moved to {{folder}}',
+    folders: 'Folders',
+    files: 'Files',
   },
 
   // ── Document Categories ──

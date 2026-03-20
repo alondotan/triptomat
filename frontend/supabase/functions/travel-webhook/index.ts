@@ -63,6 +63,13 @@ interface WebhookPayload {
     email_permalink?: string;
     raw_content_cleaned?: string;
   };
+  attachments?: Array<{
+    filename: string;
+    content_type: string;
+    size: number;
+    s3_url: string;
+    s3_key: string;
+  }>;
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -330,7 +337,33 @@ Deno.serve(async (req) => {
       .from('source_emails').select('id').eq('email_id', emailUniqueId).maybeSingle();
 
     if (existingEmail) {
-      console.log('Exact same email already processed, skipping');
+      console.log('Exact same email already processed — saving any new attachments then skipping');
+      // Still save attachments even for duplicate emails (e.g. re-forwarded with attachments)
+      if (payload.attachments?.length && userId) {
+        const { data: existingSrc } = await supabase
+          .from('source_emails').select('trip_id').eq('id', existingEmail.id).single();
+        const tripId = existingSrc?.trip_id || null;
+        const categoryMap: Record<string, string> = {
+          transportation: 'flight', accommodation: 'hotel',
+          attraction: 'activity', eatery: 'activity',
+        };
+        const docCategory = categoryMap[metadata.category] || 'other';
+        for (const att of payload.attachments) {
+          // Skip if already saved (by storage_path)
+          const { data: existingDoc } = await supabase
+            .from('documents').select('id').eq('storage_path', att.s3_key).maybeSingle();
+          if (existingDoc) continue;
+          const { error: docErr } = await supabase.from('documents').insert({
+            user_id: userId, trip_id: tripId, category: docCategory,
+            name: att.filename, file_name: att.filename,
+            file_size: att.size, mime_type: att.content_type,
+            storage_path: att.s3_key,
+            notes: `From email: ${source_email_info?.subject || ''}`,
+          });
+          if (docErr) console.error('Failed to insert document:', docErr);
+          else console.log('Saved document (from duplicate email):', att.filename);
+        }
+      }
       return new Response(JSON.stringify({ success: true, action: 'duplicate_skipped' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -632,6 +665,35 @@ Deno.serve(async (req) => {
       // Update source_email with linked entities
       if (linkedEntities.length > 0) {
         await supabase.from('source_emails').update({ linked_entities: linkedEntities }).eq('id', sourceEmailId);
+      }
+    }
+
+    // ── Save attachments to documents table (regardless of trip match) ──
+    if (payload.attachments?.length && userId) {
+      const categoryMap: Record<string, string> = {
+        transportation: 'flight', accommodation: 'hotel',
+        attraction: 'activity', eatery: 'activity',
+      };
+      const docCategory = categoryMap[metadata.category] || 'other';
+
+      for (const att of payload.attachments) {
+        // Skip if already saved (by storage_path)
+        const { data: existingDoc } = await supabase
+          .from('documents').select('id').eq('storage_path', att.s3_key).maybeSingle();
+        if (existingDoc) continue;
+        const { error: docErr } = await supabase.from('documents').insert({
+          user_id: userId,
+          trip_id: matchedTripId,
+          category: docCategory,
+          name: att.filename,
+          file_name: att.filename,
+          file_size: att.size,
+          mime_type: att.content_type,
+          storage_path: att.s3_key,
+          notes: `From email: ${source_email_info?.subject || ''}`,
+        });
+        if (docErr) console.error('Failed to insert document:', docErr);
+        else console.log('Saved document:', att.filename);
       }
     }
 

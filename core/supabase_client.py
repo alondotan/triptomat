@@ -178,6 +178,7 @@ def fetch_trip_context(
 
     return {
         "trip_id": selected_trip["id"],
+        "user_id": user_id,
         "countries": selected_trip.get("countries") or [],
         "start_date": selected_trip.get("start_date"),
         "end_date": selected_trip.get("end_date"),
