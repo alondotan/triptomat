@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import re
 import time
 
 import boto3
@@ -125,6 +126,12 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
         meta_api.send_text(phone, "No active trip selected. Use /trip to choose one.")
         return
 
+    # Intercept task-related intents before calling Gemini
+    task_result = _try_handle_task_intent(text, trip_id)
+    if task_result:
+        meta_api.send_text(phone, task_result)
+        return
+
     # Load trip context
     trip_context = _load_trip_context(trip_id, wa_user.get("user_id", ""))
 
@@ -192,6 +199,67 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
     # Save conversation
     conversation.append({"role": "assistant", "text": reply_text})
     _save_conversation(phone, conversation)
+
+
+_ADD_TASK_PATTERNS = re.compile(
+    r"(?i)"
+    r"(?:תוסיף|הוסף|תוסיפי|הוסיפי|תכניס|תרשום|תרשמי|צריך לזכור|תזכיר לי|תזכירי לי)"
+    r"[\s:]*(?:משימה|task|תזכורת)?[\s:]*(.+)"
+    r"|"
+    r"(?:add|create|new)\s+(?:a\s+)?(?:task|todo|to-do|reminder)[\s:]+(.+)"
+    r"|"
+    r"(?:remind me to|don'?t forget to)\s+(.+)",
+    re.UNICODE,
+)
+
+_COMPLETE_TASK_PATTERNS = re.compile(
+    r"(?i)"
+    r"(?:סיימתי|עשיתי|ביצעתי|בוצע|סמן|תסמן|תסמני)\s*(?:את\s*)?(?:המשימה\s*)?(.+)"
+    r"|"
+    r"(?:done with|finished|completed|mark.*done)\s+(.+)",
+    re.UNICODE,
+)
+
+_LIST_TASK_PATTERNS = re.compile(
+    r"(?i)"
+    r"מה המשימות|רשימת משימות|אילו משימות|תראה.*משימות|מה יש לי לעשות|מה נשאר לעשות"
+    r"|"
+    r"(?:list|show|what).{0,10}(?:task|todo|to-do|mission)"
+    r"|"
+    r"what.{0,10}(?:left to do|need to do|have to do)",
+    re.UNICODE,
+)
+
+
+def _try_handle_task_intent(text: str, trip_id: str) -> str | None:
+    """Try to match task-related intents and handle them directly.
+
+    Returns a response string if handled, None if not a task intent.
+    """
+    # List tasks
+    if _LIST_TASK_PATTERNS.search(text):
+        return _execute_function_call({"name": "list_tasks", "args": {}}, trip_id)
+
+    # Add task
+    m = _ADD_TASK_PATTERNS.search(text)
+    if m:
+        title = (m.group(1) or m.group(2) or m.group(3) or "").strip()
+        # Clean up common prefixes
+        for prefix in ("ש", "ל", "את ", "to "):
+            if title.startswith(prefix) and len(title) > len(prefix) + 2:
+                title = title[len(prefix):]
+        title = title.strip()
+        if title:
+            return _execute_function_call({"name": "add_task", "args": {"title": title}}, trip_id)
+
+    # Complete task
+    m = _COMPLETE_TASK_PATTERNS.search(text)
+    if m:
+        query = (m.group(1) or m.group(2) or "").strip()
+        if query:
+            return _execute_function_call({"name": "complete_task", "args": {"title": query}}, trip_id)
+
+    return None
 
 
 def _execute_function_call(function_call: dict, trip_id: str) -> str:
