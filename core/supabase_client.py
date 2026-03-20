@@ -91,7 +91,7 @@ def get_active_trips(
     result = _supabase_get(
         supabase_url, supabase_key,
         f"/rest/v1/trip_members?user_id=eq.{user_id}"
-        f"&select=trip_id,trips!inner(id,name,countries,start_date,end_date,status)"
+        f"&select=trip_id,trips!inner(id,name,countries,start_date,end_date,status,currency)"
         f"&trips.status=neq.completed"
         f"&limit=10"
     )
