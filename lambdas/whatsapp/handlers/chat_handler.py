@@ -281,14 +281,21 @@ _LIST_TASK_PATTERNS = re.compile(
 
 _ADD_PLACE_PATTERNS = re.compile(
     r"(?i)"
+    # "תוסיף את המסעדה/אותו/זה" (pronoun/generic reference)
     r"(?:תוסיף|הוסף|תוסיפי|הוסיפי|תכניס|שמור|תשמור)"
-    r"\s*(?:את\s*)?(?:ה)?(?:מסעדה|מקום|אטרקציה|מלון|בית.?מלון|המקום|זה|אותו|אותה|הראשו[נן]|השני|השלישי|האחרו[נן])"
+    r"\s*(?:בבקשה\s*)?(?:את\s*)?(?:ה)?(?:מסעדה|מקום|אטרקציה|מלון|בית.?מלון|המקום|זה|אותו|אותה|הראשו[נן]|השני|השלישי|האחרו[נן])"
     r"|"
+    # "add it/this/that to my trip"
     r"(?:add|save|include)\s+(?:it|this|the\s+\w+|that)\s+(?:to\s+)?(?:my\s+)?(?:trip|plan|itinerary)"
     r"|"
-    r"(?:תוסיף|הוסף|תוסיפי|הוסיפי|תכניס)\s+(?:את\s+)?(.+?)(?:\s+ל(?:טיול|תוכנית|לוח))"
+    # "תוסיף (בבקשה) את X לטיול" (explicit name + לטיול)
+    r"(?:תוסיף|הוסף|תוסיפי|הוסיפי|תכניס)\s*(?:בבקשה\s*)?(?:את\s+)?(.+?)(?:\s+ל(?:טיול|תוכנית|לוח))"
     r"|"
-    r"(?:add|save)\s+(.+?)(?:\s+to\s+(?:my\s+)?(?:trip|plan|itinerary))",
+    # "add X to my trip"
+    r"(?:add|save)\s+(.+?)(?:\s+to\s+(?:my\s+)?(?:trip|plan|itinerary))"
+    r"|"
+    # "תוסיף (בבקשה) את X" at end of message (no לטיול needed)
+    r"(?:תוסיף|הוסף|תוסיפי|הוסיפי|תכניס)\s*(?:בבקשה\s*)?(?:את\s+)(.+)$",
     re.UNICODE,
 )
 
@@ -324,7 +331,12 @@ def _try_handle_task_intent(text: str, trip_id: str, phone: str = "", webhook_to
     m = _ADD_PLACE_PATTERNS.search(text)
     if m:
         # Try to get explicit place name from the regex
-        explicit_name = (m.group(1) or m.group(2) or "").strip() if m.lastindex else ""
+        explicit_name = ""
+        if m.lastindex:
+            for i in range(1, m.lastindex + 1):
+                if m.group(i):
+                    explicit_name = m.group(i).strip()
+                    break
         if explicit_name:
             return _add_place_from_name(explicit_name, trip_id, webhook_token)
         # No explicit name — need to extract from conversation history
