@@ -49,6 +49,10 @@ When asked about flights, look in the transportation data.
 When asked about hotels/accommodation, look in the POIs with category "accommodation".
 When asked about the schedule, look in the itinerary days.
 When asked about budget/costs/payments, look in the budget data section.
+  - Each item shows its original currency. The user's preferred currency is noted in the budget header.
+  - When answering about totals or sums, show the amount in the user's preferred currency.
+  - When answering about a specific item, show the original amount AND the preferred currency if they differ (e.g. "350 EUR (~1,330 ILS)").
+  - Use approximate conversion rates: 1 EUR ≈ 3.8 ILS, 1 USD ≈ 3.6 ILS, 1 GBP ≈ 4.5 ILS, 1 EUR ≈ 1.08 USD.
 When asked about tasks/missions/to-do list, look in the tasks section.
 If something is not in the data, say so honestly.
 
@@ -608,8 +612,9 @@ def _load_budget_context(trip_id: str, trip_currency: str) -> str:
         return ""
 
     lines = [
-        f"\n### Budget (currency: {trip_currency})",
-        f"Total: {total} | Paid: {total_paid} | Remaining: {total - total_paid}",
+        f"\n### Budget (user's preferred currency: {trip_currency})",
+        f"Note: each item shows its original currency. Convert totals to {trip_currency} when answering the user.",
+        f"Total (mixed currencies, approximate): {total} | Paid: {total_paid} | Remaining: {total - total_paid}",
     ] + items
 
     return "\n".join(lines)
