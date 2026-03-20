@@ -47,6 +47,7 @@ When asked about flights, look in the transportation data.
 When asked about hotels/accommodation, look in the POIs with category "accommodation".
 When asked about the schedule, look in the itinerary days.
 When asked about budget/costs/payments, look in the budget data section.
+When asked about tasks/missions/to-do list, look in the tasks section.
 If something is not in the data, say so honestly.
 """
 
@@ -286,6 +287,11 @@ def _load_trip_context(trip_id: str, user_id: str) -> str:
     if budget_text:
         parts.append(budget_text)
 
+    # Tasks / Missions
+    tasks_text = _load_tasks_context(trip_id)
+    if tasks_text:
+        parts.append(tasks_text)
+
     return "\n".join(parts)
 
 
@@ -362,6 +368,38 @@ def _load_budget_context(trip_id: str, trip_currency: str) -> str:
         f"\n### Budget (currency: {trip_currency})",
         f"Total: {total} | Paid: {total_paid} | Remaining: {total - total_paid}",
     ] + items
+
+    return "\n".join(lines)
+
+
+def _load_tasks_context(trip_id: str) -> str:
+    """Build tasks/missions context text for AI chat."""
+    missions = _supabase_get(
+        SUPABASE_URL, SUPABASE_SERVICE_KEY,
+        f"/rest/v1/missions?trip_id=eq.{trip_id}"
+        f"&select=title,status,due_date,description"
+        f"&order=created_at.asc"
+    ) or []
+
+    if not missions:
+        return ""
+
+    pending = [m for m in missions if m.get("status") == "pending"]
+    completed = [m for m in missions if m.get("status") == "completed"]
+
+    lines = [f"\n### Tasks ({len(pending)} pending, {len(completed)} completed)"]
+
+    for m in pending:
+        line = f"- [ ] {m['title']}"
+        if m.get("due_date"):
+            line += f" (due: {m['due_date'][:10]})"
+        if m.get("description"):
+            line += f" — {m['description']}"
+        lines.append(line)
+
+    for m in completed:
+        line = f"- [x] {m['title']}"
+        lines.append(line)
 
     return "\n".join(lines)
 
