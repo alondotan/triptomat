@@ -171,11 +171,14 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
         meta_api.send_text(phone, "No active trip selected. Use /trip to choose one.")
         return
 
-    # Strip WhatsApp markdown (* for bold, _ for italic) before intent matching
+    # Strip WhatsApp markdown and invisible Unicode characters before intent matching
     clean_text = text.replace("*", "").replace("_", "").replace("~", "")
+    # Remove invisible Unicode chars (RTL/LTR marks, zero-width spaces, etc.)
+    clean_text = re.sub(r'[\u200e\u200f\u200b\u200c\u200d\u2069\u2068\u202a\u202b\u202c\ufeff]', '', clean_text).strip()
 
     # Intercept task/place intents before calling Gemini
     webhook_token = wa_user.get("webhook_token", "")
+    logger.info("Intent check: clean_text=%r, webhook_token=%s", clean_text[:80], "YES" if webhook_token else "NO")
     intent_result = _try_handle_task_intent(clean_text, trip_id, phone, webhook_token)
     if intent_result:
         logger.info("Intent handled: %s", intent_result[:100])
@@ -333,6 +336,7 @@ def _try_handle_task_intent(text: str, trip_id: str, phone: str = "", webhook_to
 
     # Add place to trip — extract from conversation context
     m = _ADD_PLACE_PATTERNS.search(text)
+    logger.info("Place pattern match: %s (text=%r)", "YES" if m else "NO", text[:60])
     if m:
         # Try to get explicit place name from the regex
         explicit_name = ""
