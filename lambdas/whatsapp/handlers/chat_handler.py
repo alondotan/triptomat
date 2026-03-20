@@ -117,6 +117,10 @@ GEMINI_TOOLS = [{
                         "enum": ["accommodation", "eatery", "attraction"],
                         "description": "The type of place",
                     },
+                    "sub_category": {
+                        "type": "string",
+                        "description": "Specific sub-type. For eateries: restaurant, cafe, bar, bakery, fine_dining, street_food, sushi_bar, steakhouse, etc. For accommodations: hotel, hostel, resort, villa, apartment_stay, boutique_hotel, etc. For attractions: museum, beach, temple, national_park, viewpoint, hiking_trail, etc.",
+                    },
                     "city": {
                         "type": "string",
                         "description": "City where the place is located",
@@ -329,16 +333,29 @@ def _try_handle_task_intent(text: str, trip_id: str, phone: str = "") -> str | N
 
 
 def _add_place_from_name(name: str, trip_id: str) -> str:
-    """Add a place by explicit name — guess category from name."""
-    # Simple heuristic for category
+    """Add a place by explicit name — guess category + sub_category from name."""
     lower = name.lower()
-    if any(w in lower for w in ("מסעדה", "restaurant", "cafe", "קפה", "בר", "bar", "אוכל", "food")):
-        category = "eatery"
-    elif any(w in lower for w in ("מלון", "hotel", "hostel", "אכסניה", "resort")):
-        category = "accommodation"
+    if any(w in lower for w in ("מסעדה", "restaurant")):
+        category, sub = "eatery", "restaurant"
+    elif any(w in lower for w in ("קפה", "cafe", "coffee")):
+        category, sub = "eatery", "cafe"
+    elif any(w in lower for w in ("בר", "bar", "pub")):
+        category, sub = "eatery", "bar"
+    elif any(w in lower for w in ("מלון", "hotel")):
+        category, sub = "accommodation", "hotel"
+    elif any(w in lower for w in ("hostel", "אכסניה")):
+        category, sub = "accommodation", "hostel"
+    elif any(w in lower for w in ("resort", "ריזורט")):
+        category, sub = "accommodation", "resort"
+    elif any(w in lower for w in ("מוזיאון", "museum")):
+        category, sub = "attraction", "museum"
+    elif any(w in lower for w in ("חוף", "beach")):
+        category, sub = "attraction", "beach"
     else:
-        category = "attraction"
-    return _execute_function_call({"name": "add_place", "args": {"name": name, "category": category}}, trip_id)
+        category, sub = "attraction", "point_of_interest"
+    return _execute_function_call({"name": "add_place", "args": {
+        "name": name, "category": category, "sub_category": sub,
+    }}, trip_id)
 
 
 def _add_place_from_conversation(phone: str, trip_id: str, text: str) -> str:
@@ -366,7 +383,7 @@ Previous recommendations:
 {last_recs}
 
 Respond ONLY with a JSON object (no markdown, no explanation):
-{{"name": "place name", "category": "eatery|attraction|accommodation", "city": "city name", "country": "country name"}}
+{{"name": "place name", "category": "eatery|attraction|accommodation", "sub_category": "specific type (e.g. restaurant, cafe, bar, museum, beach, hotel, hostel)", "city": "city name", "country": "country name"}}
 
 If the user said "the first one" or similar, pick the first mentioned place. If unclear, pick the most likely one."""
 
@@ -459,6 +476,7 @@ def _execute_function_call(function_call: dict, trip_id: str) -> str:
         if not place_name:
             return "I need a place name to add it."
         category = args.get("category", "attraction")
+        sub_category = args.get("sub_category", "")
         city = args.get("city", "")
         country = args.get("country", "")
         address = args.get("address", "")
@@ -466,6 +484,7 @@ def _execute_function_call(function_call: dict, trip_id: str) -> str:
 
         result = _create_poi(
             trip_id, place_name, category,
+            sub_category=sub_category,
             city=city, country=country, address=address, notes=notes,
         )
         if result:
@@ -479,7 +498,8 @@ def _execute_function_call(function_call: dict, trip_id: str) -> str:
 
 def _create_poi(
     trip_id: str, name: str, category: str,
-    city: str = "", country: str = "", address: str = "", notes: str = "",
+    sub_category: str = "", city: str = "", country: str = "",
+    address: str = "", notes: str = "",
 ) -> bool:
     """Create a POI in Supabase and trigger enrichment."""
     import urllib.request
@@ -496,7 +516,7 @@ def _create_poi(
     if notes:
         details["notes"] = notes
 
-    data = json.dumps({
+    poi_data = {
         "trip_id": trip_id,
         "name": name,
         "category": category,
@@ -504,7 +524,11 @@ def _create_poi(
         "location": location,
         "details": details,
         "source_refs": {"email_ids": [], "recommendation_ids": []},
-    }).encode()
+    }
+    if sub_category:
+        poi_data["sub_category"] = sub_category
+
+    data = json.dumps(poi_data).encode()
 
     url = f"{SUPABASE_URL}/rest/v1/points_of_interest"
     req = urllib.request.Request(url, data=data, method="POST", headers={
