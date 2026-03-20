@@ -466,6 +466,23 @@ def _load_trip_context(trip_id: str, user_id: str) -> str:
     ) or []
 
     if itinerary:
+        # Build ID→name lookup from POIs and transport
+        name_lookup = {}
+        for p in pois:
+            name_lookup[p.get("id", "")] = p.get("name", "?")
+        for t in transport:
+            tid = t.get("id", "")
+            segs = t.get("segments") or []
+            if segs:
+                seg = segs[0]
+                fr = seg.get("from") or seg.get("departure") or {}
+                to = seg.get("to") or seg.get("arrival") or {}
+                fr_name = fr.get("city") or fr.get("name") or fr.get("code") or "?"
+                to_name = to.get("city") or to.get("name") or to.get("code") or "?"
+                name_lookup[tid] = f"{fr_name} \u2192 {to_name}"
+            else:
+                name_lookup[tid] = t.get("category", "Transport")
+
         parts.append("\n### Daily Schedule")
         for day in itinerary:
             day_num = day.get("day_number", "?")
@@ -478,12 +495,21 @@ def _load_trip_context(trip_id: str, user_id: str) -> str:
             if date:
                 header += f" ({date})"
             if loc:
-                header += f" — {loc}"
+                header += f" \u2014 {loc}"
             parts.append(f"\n{header}")
 
             if scheduled:
                 for act in scheduled:
-                    parts.append(f"  - {act.get('type', 'poi')}: {act.get('id', '?')}")
+                    act_id = act.get("id", "")
+                    act_name = name_lookup.get(act_id, act_id)
+                    act_type = act.get("type", "poi")
+                    time_str = act.get("time", "")
+                    line = f"  - {act_name}"
+                    if time_str:
+                        line += f" ({time_str})"
+                    if act_type == "transport":
+                        line += " [transport]"
+                    parts.append(line)
             else:
                 parts.append("  (no scheduled activities)")
 
