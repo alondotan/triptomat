@@ -102,6 +102,41 @@ GEMINI_TOOLS = [{
                 "properties": {},
             },
         },
+        {
+            "name": "add_place",
+            "description": "Add a place (restaurant, attraction, hotel, etc.) to the trip. Use when the user asks to save, add, or include a specific place in their trip — NOT for tasks/reminders.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The place name",
+                    },
+                    "category": {
+                        "type": "string",
+                        "enum": ["accommodation", "eatery", "attraction"],
+                        "description": "The type of place",
+                    },
+                    "city": {
+                        "type": "string",
+                        "description": "City where the place is located",
+                    },
+                    "country": {
+                        "type": "string",
+                        "description": "Country where the place is located",
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "Street address if known",
+                    },
+                    "notes": {
+                        "type": "string",
+                        "description": "Any additional notes or context about the place",
+                    },
+                },
+                "required": ["name", "category"],
+            },
+        },
     ],
 }]
 
@@ -209,8 +244,10 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
 
 _ADD_TASK_PATTERNS = re.compile(
     r"(?i)"
-    r"(?:תוסיף|הוסף|תוסיפי|הוסיפי|תכניס|תרשום|תרשמי|צריך לזכור|תזכיר לי|תזכירי לי)"
-    r"[\s:]*(?:משימה|task|תזכורת)?[\s:]*(.+)"
+    r"(?:תוסיף|הוסף|תוסיפי|הוסיפי|תכניס|תרשום|תרשמי)"
+    r"[\s:]*(?:משימה|task|תזכורת)[\s:]*(.+)"
+    r"|"
+    r"(?:צריך לזכור|תזכיר לי|תזכירי לי)[\s:]*(.+)"
     r"|"
     r"(?:add|create|new)\s+(?:a\s+)?(?:task|todo|to-do|reminder)[\s:]+(.+)"
     r"|"
@@ -329,7 +366,104 @@ def _execute_function_call(function_call: dict, trip_id: str) -> str:
             return "No tasks yet for this trip."
         return "\n".join(lines)
 
+    elif name == "add_place":
+        place_name = args.get("name", "").strip()
+        if not place_name:
+            return "I need a place name to add it."
+        category = args.get("category", "attraction")
+        city = args.get("city", "")
+        country = args.get("country", "")
+        address = args.get("address", "")
+        notes = args.get("notes", "")
+
+        result = _create_poi(
+            trip_id, place_name, category,
+            city=city, country=country, address=address, notes=notes,
+        )
+        if result:
+            cat_label = {"accommodation": "Accommodation", "eatery": "Restaurant", "attraction": "Attraction"}.get(category, category)
+            loc = f" ({city})" if city else ""
+            return f"\u2705 *{place_name}*{loc} added to your trip as {cat_label}!"
+        return "Failed to add the place. Please try again."
+
     return "I don't know how to do that yet."
+
+
+def _create_poi(
+    trip_id: str, name: str, category: str,
+    city: str = "", country: str = "", address: str = "", notes: str = "",
+) -> bool:
+    """Create a POI in Supabase and trigger enrichment."""
+    import urllib.request
+
+    location = {}
+    if city:
+        location["city"] = city
+    if country:
+        location["country"] = country
+    if address:
+        location["address"] = address
+
+    details = {}
+    if notes:
+        details["notes"] = notes
+
+    data = json.dumps({
+        "trip_id": trip_id,
+        "name": name,
+        "category": category,
+        "status": "suggested",
+        "location": location,
+        "details": details,
+        "source_refs": {"email_ids": [], "recommendation_ids": []},
+    }).encode()
+
+    url = f"{SUPABASE_URL}/rest/v1/points_of_interest"
+    req = urllib.request.Request(url, data=data, method="POST", headers={
+        "apikey": SUPABASE_SERVICE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation",
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=10) as res:
+            rows = json.loads(res.read().decode())
+            if rows and len(rows) > 0:
+                poi_id = rows[0].get("id")
+                if poi_id:
+                    # Fire-and-forget: trigger enrichment via edge function
+                    _trigger_enrichment(poi_id, name, city, country, address)
+                return True
+    except Exception as e:
+        logger.error("Failed to create POI: %s", e)
+    return False
+
+
+def _trigger_enrichment(
+    poi_id: str, name: str, city: str = "", country: str = "", address: str = "",
+) -> None:
+    """Call the fetch-poi-image edge function to enrich a POI."""
+    import urllib.request
+
+    enrich_url = f"{SUPABASE_URL}/functions/v1/fetch-poi-image"
+    data = json.dumps({
+        "poiId": poi_id,
+        "name": name,
+        "city": city,
+        "country": country,
+        "address": address,
+    }).encode()
+
+    req = urllib.request.Request(enrich_url, data=data, method="POST", headers={
+        "apikey": SUPABASE_SERVICE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": "application/json",
+    })
+    try:
+        urllib.request.urlopen(req, timeout=15)
+        logger.info("Enrichment triggered for POI %s", poi_id)
+    except Exception as e:
+        logger.warning("Enrichment call failed for POI %s: %s", poi_id, e)
 
 
 def _fuzzy_match_task(pending: list[dict], query: str) -> dict | None:
