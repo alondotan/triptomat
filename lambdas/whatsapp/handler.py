@@ -33,6 +33,7 @@ from classifier import classify
 from handlers.link_handler import handle_link
 from handlers.chat_handler import handle_chat
 from handlers.command_handler import handle_command, handle_unlinked_user
+from handlers.file_handler import handle_file
 from handlers.notify_handler import handle_sqs_notifications
 import meta_api
 
@@ -300,11 +301,12 @@ def lambda_handler(event, context):
                     handle_link(wa_user, message, phone)
                 elif msg_type in ("command", "location"):
                     handle_command(wa_user, message, phone)
-                elif msg_type in ("booking", "image_booking"):
-                    # Phase 3 — for now, acknowledge and explain
+                elif msg_type == "image_booking":
+                    handle_file(wa_user, message, phone)
+                elif msg_type == "booking":
                     meta_api.send_text(
                         phone,
-                        "Booking forwarding is coming soon! "
+                        "Booking text forwarding is coming soon! "
                         "For now, please forward bookings to your Triptomat email address.",
                     )
                 elif msg_type == "chat":
