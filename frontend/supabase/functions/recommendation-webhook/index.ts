@@ -5,7 +5,7 @@ import { mergeWithNewWins } from '../_shared/merge.ts';
 import { fuzzyMatch } from '../_shared/matching.ts';
 import { TYPE_TO_CATEGORY, GEO_TYPES, TIP_TYPES } from '../_shared/categories.ts';
 import { buildSiteToCountryMap, buildSiteToCityMap } from '../_shared/mapUtils.ts';
-import { fetchAndSetPoiImage } from '../_shared/pexels.ts';
+import { enrichPoi } from '../_shared/enrichPoi.ts';
 
 interface SiteHierarchyNode {
   site: string;
@@ -462,11 +462,13 @@ Deno.serve(async (req)=>{
                 }
               }
 
-              // Fetch image from Pexels if no image was provided
-              if (!item.image_url && !payload.source_image) {
+              // Fire-and-forget: enrich with coordinates + image if missing
+              if (!item.image_url || !item.location?.coordinates?.lat) {
                 const country = siteToCountry[(item.site || '').toLowerCase()] || '';
-                fetchAndSetPoiImage(supabase, newPoi.id, item.name, country)
-                  .catch(e => console.warn(`[image] Pexels fetch failed for "${item.name}":`, e));
+                const city = siteToCity[(item.site || '').toLowerCase()] || '';
+                enrichPoi(supabase, newPoi.id, item.name, {
+                  city, country, address: item.location?.address,
+                }).catch(e => console.warn(`[enrich] Failed for "${item.name}":`, e));
               }
             }
           }
@@ -555,6 +557,22 @@ Deno.serve(async (req)=>{
             tag: `rec-${sourceRecId}`,
           }),
         }).catch(e => console.error('Push notification failed:', e));
+
+        // Send WhatsApp notification (fire-and-forget)
+        fetch(new URL('/functions/v1/whatsapp-notify', Deno.env.get('SUPABASE_URL')!).toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!}`,
+          },
+          body: JSON.stringify({
+            user_ids: members.map(m => m.user_id),
+            type: 'recommendation_ready',
+            text: `✅ ${newCount} new item${newCount !== 1 ? 's' : ''} from "${sourceTitle}" added to your trip!`,
+            template_name: 'recommendation_ready',
+            template_params: [sourceTitle, String(newCount)],
+          }),
+        }).catch(e => console.error('WhatsApp notification failed:', e));
       }
     }
     return new Response(JSON.stringify({
