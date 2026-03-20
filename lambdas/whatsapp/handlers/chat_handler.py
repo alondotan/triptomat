@@ -11,6 +11,7 @@ from botocore.exceptions import ClientError
 
 import meta_api
 from core.supabase_client import get_active_trips, get_trip_entities, _supabase_get, check_ai_usage
+from handlers.command_handler import _fetch_missions, _create_mission, _update_mission_status
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,53 @@ When asked about the schedule, look in the itinerary days.
 When asked about budget/costs/payments, look in the budget data section.
 When asked about tasks/missions/to-do list, look in the tasks section.
 If something is not in the data, say so honestly.
+
+## Actions
+You have tools to manage tasks. When the user asks to add a task, mark a task as done,
+or list tasks — use the appropriate tool. After using a tool, confirm the action to the user
+in a short friendly message.
 """
+
+GEMINI_TOOLS = [{
+    "function_declarations": [
+        {
+            "name": "add_task",
+            "description": "Add a new task/mission to the trip. Use when the user asks to add, create, or remember a task, to-do item, or reminder.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "The task title, in the user's language",
+                    },
+                },
+                "required": ["title"],
+            },
+        },
+        {
+            "name": "complete_task",
+            "description": "Mark an existing task as completed/done. Use when the user says they finished, completed, or did something from the task list.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "description": "The task title or keyword to match (fuzzy match supported)",
+                    },
+                },
+                "required": ["title"],
+            },
+        },
+        {
+            "name": "list_tasks",
+            "description": "List all tasks/missions for the trip. Use when the user asks what tasks they have, what's left to do, or wants to see their to-do list.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+            },
+        },
+    ],
+}]
 
 
 def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
@@ -97,6 +144,7 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
     gemini_body = {
         "system_instruction": {"parts": [{"text": system_text}]},
         "contents": contents,
+        "tools": GEMINI_TOOLS,
         "generationConfig": {
             "maxOutputTokens": 1024,
             "temperature": 0.7,
@@ -115,8 +163,20 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
         resp.raise_for_status()
         result = resp.json()
 
-        parts = result.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-        reply_text = "".join(p.get("text", "") for p in parts).strip()
+        candidate = result.get("candidates", [{}])[0]
+        resp_parts = candidate.get("content", {}).get("parts", [])
+
+        # Check for function calls
+        function_call = None
+        for part in resp_parts:
+            if "functionCall" in part:
+                function_call = part["functionCall"]
+                break
+
+        if function_call:
+            reply_text = _execute_function_call(function_call, trip_id)
+        else:
+            reply_text = "".join(p.get("text", "") for p in resp_parts).strip()
 
         if not reply_text:
             reply_text = "Sorry, I couldn't generate a response. Try rephrasing your question."
@@ -132,6 +192,95 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
     # Save conversation
     conversation.append({"role": "assistant", "text": reply_text})
     _save_conversation(phone, conversation)
+
+
+def _execute_function_call(function_call: dict, trip_id: str) -> str:
+    """Execute a Gemini function call and return a user-facing message."""
+    name = function_call.get("name", "")
+    args = function_call.get("args", {})
+
+    logger.info("Gemini function call: %s(%s)", name, json.dumps(args, ensure_ascii=False))
+
+    if name == "add_task":
+        title = args.get("title", "").strip()
+        if not title:
+            return "I need a task title to add it."
+        if len(title) > 200:
+            title = title[:200]
+        success = _create_mission(trip_id, title)
+        if success:
+            return f"\u2705 Task added: *{title}*"
+        return "Failed to add the task. Please try again."
+
+    elif name == "complete_task":
+        query = args.get("title", "").strip()
+        if not query:
+            return "I need to know which task to mark as done."
+        missions = _fetch_missions(trip_id)
+        if not missions:
+            return "No tasks found for this trip."
+        pending = [m for m in missions if m.get("status") == "pending"]
+        if not pending:
+            return "No pending tasks to complete."
+        # Fuzzy match
+        match = _fuzzy_match_task(pending, query)
+        if not match:
+            titles = ", ".join(m["title"] for m in pending[:5])
+            return f"No matching task for \"{query}\". Pending tasks: {titles}"
+        success = _update_mission_status(match["id"], "completed")
+        if success:
+            return f"\u2705 Done: ~{match['title']}~"
+        return "Failed to update the task. Please try again."
+
+    elif name == "list_tasks":
+        missions = _fetch_missions(trip_id)
+        if not missions:
+            return "No tasks yet for this trip."
+        pending = [m for m in missions if m.get("status") == "pending"]
+        completed = [m for m in missions if m.get("status") == "completed"]
+        lines = []
+        if pending:
+            lines.append(f"*Pending ({len(pending)}):*")
+            for m in pending:
+                due = m.get("due_date", "")
+                due_str = f" (due {due[:10]})" if due else ""
+                lines.append(f"\u2b1c {m['title']}{due_str}")
+        if completed:
+            lines.append(f"\n*Completed ({len(completed)}):*")
+            for m in completed[:5]:
+                lines.append(f"\u2705 ~{m['title']}~")
+            if len(completed) > 5:
+                lines.append(f"_...and {len(completed) - 5} more_")
+        if not pending and not completed:
+            return "No tasks yet for this trip."
+        return "\n".join(lines)
+
+    return "I don't know how to do that yet."
+
+
+def _fuzzy_match_task(pending: list[dict], query: str) -> dict | None:
+    """Find the best matching pending task by fuzzy title search."""
+    query_lower = query.lower()
+    # Exact
+    for m in pending:
+        if m["title"].lower() == query_lower:
+            return m
+    # Starts-with
+    for m in pending:
+        if m["title"].lower().startswith(query_lower):
+            return m
+    # Substring
+    for m in pending:
+        if query_lower in m["title"].lower():
+            return m
+    # Word overlap
+    query_words = set(query_lower.split())
+    best_score, best = 0, None
+    for m in pending:
+        overlap = len(query_words & set(m["title"].lower().split()))
+        if overlap > best_score:
+            best_score, best = overlap, m
+    return best if best_score > 0 else None
 
 
 def _load_trip_context(trip_id: str, user_id: str) -> str:
