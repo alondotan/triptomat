@@ -7,7 +7,7 @@ export type UnifiedSource =
 
 export type SourceSection = 'videos' | 'maps' | 'articles' | 'conversations';
 
-const VIDEO_RE = /youtube\.com|youtu\.be|tiktok\.com|instagram\.com|facebook\.com|fb\.watch/i;
+const VIDEO_RE = /youtube\.com|youtu\.be|tiktok\.com|instagram\.com\/reel|fb\.watch/i;
 const MAPS_RE = /maps\.app\.goo\.gl|google\.com\/maps|goo\.gl\/maps/i;
 
 export function classifyRecommendation(rec: SourceRecommendation): SourceSection {
