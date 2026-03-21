@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button';
 import {
   loadCountryResources,
   triggerResourceSearch,
-  isStale,
+  needsLangSearch,
   mergeResources,
   invalidateResourceCache,
   type CountryResource,
   type ResourceCategory,
+  type ResourceLang,
 } from '@/services/resourceService';
+import { useLanguage } from '@/context/LanguageContext';
 import { useToast } from '@/hooks/use-toast';
 
 // Platform icon + color mapping
@@ -158,7 +160,9 @@ function SkeletonCards() {
 const Resources = () => {
   const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
+  const { language } = useLanguage();
   const { toast } = useToast();
+  const lang = language as ResourceLang;
 
   const [resources, setResources] = useState<CountryResource[]>([]);
   const [loading, setLoading] = useState(true);
@@ -168,59 +172,9 @@ const Resources = () => {
 
   const countries = activeTrip?.countries || [];
 
-  // Load resources from S3 for all trip countries
-  const loadAll = useCallback(async () => {
-    if (countries.length === 0) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    const allResources: CountryResource[] = [];
-    const staleCountries: string[] = [];
-    const missingCountries: string[] = [];
-
-    const results = await Promise.all(
-      countries.map(async (country) => {
-        const file = await loadCountryResources(country);
-        return { country, file };
-      })
-    );
-
-    for (const { country, file } of results) {
-      if (!file) {
-        missingCountries.push(country);
-      } else {
-        allResources.push(...file.resources);
-        if (isStale(file)) {
-          staleCountries.push(country);
-        }
-      }
-    }
-
-    setResources(allResources);
-    setLoading(false);
-
-    // For missing countries: show loading and trigger search
-    if (missingCountries.length > 0) {
-      setSearchingCountries(prev => new Set([...prev, ...missingCountries]));
-      for (const country of missingCountries) {
-        triggerSearch(country);
-      }
-    }
-
-    // For stale countries: trigger background search (data already shown)
-    if (staleCountries.length > 0) {
-      setSearchingCountries(prev => new Set([...prev, ...staleCountries]));
-      for (const country of staleCountries) {
-        triggerSearch(country);
-      }
-    }
-  }, [countries.join(',')]);
-
-  const triggerSearch = async (country: string) => {
+  const doSearch = async (country: string) => {
     try {
-      const newResources = await triggerResourceSearch(country);
+      const newResources = await triggerResourceSearch(country, lang);
       if (newResources.length > 0) {
         setResources(prev => mergeResources(prev, newResources));
       }
@@ -240,6 +194,45 @@ const Resources = () => {
     }
   };
 
+  // Load resources from S3 for all trip countries
+  const loadAll = useCallback(async () => {
+    if (countries.length === 0) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const allResources: CountryResource[] = [];
+    const toSearch: string[] = [];
+
+    const results = await Promise.all(
+      countries.map(async (country) => {
+        const file = await loadCountryResources(country);
+        return { country, file };
+      })
+    );
+
+    for (const { country, file } of results) {
+      if (file) {
+        allResources.push(...file.resources);
+      }
+      // Need search if file missing, stale, or user's language not yet searched
+      if (needsLangSearch(file, lang)) {
+        toSearch.push(country);
+      }
+    }
+
+    setResources(allResources);
+    setLoading(false);
+
+    if (toSearch.length > 0) {
+      setSearchingCountries(new Set(toSearch));
+      for (const country of toSearch) {
+        doSearch(country);
+      }
+    }
+  }, [countries.join(','), lang]);
+
   const handleRefresh = async () => {
     for (const country of countries) {
       invalidateResourceCache(country);
@@ -248,7 +241,7 @@ const Resources = () => {
     setResources([]);
 
     for (const country of countries) {
-      triggerSearch(country);
+      doSearch(country);
     }
   };
 

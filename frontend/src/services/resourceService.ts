@@ -3,10 +3,13 @@
 export type ResourceCategory = 'general' | 'attractions' | 'food' | 'hotels' | 'transport' | 'nightlife';
 export type ResourceSourceType = 'youtube' | 'article' | 'facebook' | 'instagram' | 'tiktok' | 'other';
 
+export type ResourceLang = 'en' | 'he';
+
 export interface CountryResource {
   id: string;
   source_type: ResourceSourceType;
   category: ResourceCategory;
+  lang: ResourceLang;
   title: string;
   url: string;
   thumbnail: string | null;
@@ -20,6 +23,8 @@ export interface CountryResource {
 export interface CountryResourceFile {
   country: string;
   searched_at: string;
+  /** Which languages have been searched so far */
+  searched_langs: ResourceLang[];
   resources: CountryResource[];
 }
 
@@ -53,13 +58,20 @@ export function isStale(file: CountryResourceFile): boolean {
   return Date.now() - searchedAt > CACHE_MAX_AGE_MS;
 }
 
+/** Check if a specific language is missing or stale in the file */
+export function needsLangSearch(file: CountryResourceFile | null, lang: ResourceLang): boolean {
+  if (!file) return true;
+  if (!file.searched_langs || !file.searched_langs.includes(lang)) return true;
+  return isStale(file);
+}
+
 // ── Search trigger (edge function) ──
 
-export async function triggerResourceSearch(country: string): Promise<CountryResource[]> {
+export async function triggerResourceSearch(country: string, lang: ResourceLang = 'en'): Promise<CountryResource[]> {
   const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/search-country-resources`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ country }),
+    body: JSON.stringify({ country, lang }),
   });
 
   if (!res.ok) {
