@@ -1,16 +1,20 @@
-import { supabase } from '@/integrations/supabase/client';
-
 // ── Types ──
+
+export type ResourceCategory = 'general' | 'attractions' | 'food' | 'hotels' | 'transport' | 'nightlife';
+export type ResourceSourceType = 'youtube' | 'article' | 'facebook' | 'instagram' | 'tiktok' | 'other';
 
 export interface CountryResource {
   id: string;
-  source_type: 'youtube' | 'article' | 'facebook' | 'instagram' | 'tiktok' | 'other';
+  source_type: ResourceSourceType;
+  category: ResourceCategory;
   title: string;
   url: string;
   thumbnail: string | null;
   snippet: string | null;
   channel: string | null;
   published_at: string | null;
+  /** ID from the country location tree (country, region, city, etc.) */
+  location_id: string | null;
 }
 
 export interface CountryResourceFile {

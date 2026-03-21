@@ -5,7 +5,10 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from 'https://esm.sh/@aw
  * Edge function: search Google Custom Search + YouTube Data API for travel
  * resources per country, merge with existing results, save to S3 as JSON.
  *
- * POST { country: string }
+ * POST { country: string, location_id?: string, location_name?: string }
+ *
+ * - country-level search: location_id = null (default, auto-search)
+ * - city/region search: pass location_id + location_name for scoped results
  *
  * Returns { status, new_resources, file }
  */
@@ -24,17 +27,22 @@ const s3 = new S3Client({
   },
 });
 
-// ── Helpers ──
+// ── Types ──
+
+type ResourceCategory = 'general' | 'attractions' | 'food' | 'hotels' | 'transport' | 'nightlife';
+type ResourceSourceType = 'youtube' | 'article' | 'facebook' | 'instagram' | 'tiktok' | 'other';
 
 interface Resource {
   id: string;
-  source_type: 'youtube' | 'article' | 'facebook' | 'instagram' | 'tiktok' | 'other';
+  source_type: ResourceSourceType;
+  category: ResourceCategory;
   title: string;
   url: string;
   thumbnail: string | null;
   snippet: string | null;
   channel: string | null;
   published_at: string | null;
+  location_id: string | null;
 }
 
 interface ResourceFile {
@@ -43,7 +51,9 @@ interface ResourceFile {
   resources: Resource[];
 }
 
-function classifyUrl(url: string): Resource['source_type'] {
+// ── Helpers ──
+
+function classifyUrl(url: string): ResourceSourceType {
   const u = url.toLowerCase();
   if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube';
   if (u.includes('facebook.com') || u.includes('fb.com') || u.includes('fb.watch')) return 'facebook';
@@ -56,9 +66,77 @@ function generateId(): string {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 12);
 }
 
+// ── Search queries per category ──
+
+interface SearchSpec {
+  category: ResourceCategory;
+  queries: { google: string[]; youtube: { q: string; max: number }[] };
+}
+
+function buildSearchSpecs(place: string): SearchSpec[] {
+  return [
+    {
+      category: 'general',
+      queries: {
+        google: [
+          `${place} travel guide`,
+          `${place} travel tips`,
+        ],
+        youtube: [
+          { q: `${place} travel guide`, max: 15 },
+        ],
+      },
+    },
+    {
+      category: 'attractions',
+      queries: {
+        google: [
+          `${place} best places to visit`,
+          `${place} things to do`,
+          `${place} travel vlog site:youtube.com`,
+        ],
+        youtube: [
+          { q: `${place} things to do`, max: 10 },
+        ],
+      },
+    },
+    {
+      category: 'food',
+      queries: {
+        google: [
+          `${place} best restaurants food`,
+          `${place} street food where to eat`,
+        ],
+        youtube: [
+          { q: `${place} food tour`, max: 10 },
+        ],
+      },
+    },
+    {
+      category: 'hotels',
+      queries: {
+        google: [
+          `${place} best hotels where to stay`,
+          `${place} accommodation guide`,
+        ],
+        youtube: [],
+      },
+    },
+    {
+      category: 'nightlife',
+      queries: {
+        google: [
+          `${place} nightlife bars clubs`,
+        ],
+        youtube: [],
+      },
+    },
+  ];
+}
+
 // ── Google Custom Search ──
 
-async function googleSearch(query: string): Promise<Resource[]> {
+async function googleSearch(query: string, category: ResourceCategory, locationId: string | null): Promise<Resource[]> {
   if (!GOOGLE_CSE_API_KEY || !GOOGLE_CSE_ID) return [];
   try {
     const params = new URLSearchParams({
@@ -76,6 +154,7 @@ async function googleSearch(query: string): Promise<Resource[]> {
     return (data.items || []).map((item: any) => ({
       id: generateId(),
       source_type: classifyUrl(item.link),
+      category,
       title: item.title || '',
       url: item.link,
       thumbnail: item.pagemap?.cse_thumbnail?.[0]?.src
@@ -84,6 +163,7 @@ async function googleSearch(query: string): Promise<Resource[]> {
       snippet: item.snippet || null,
       channel: new URL(item.link).hostname.replace('www.', ''),
       published_at: null,
+      location_id: locationId,
     }));
   } catch (err) {
     console.error('[google-search] error:', err);
@@ -93,7 +173,7 @@ async function googleSearch(query: string): Promise<Resource[]> {
 
 // ── YouTube Data API ──
 
-async function youtubeSearch(query: string, maxResults = 20): Promise<Resource[]> {
+async function youtubeSearch(query: string, maxResults: number, category: ResourceCategory, locationId: string | null): Promise<Resource[]> {
   if (!YOUTUBE_API_KEY) return [];
   try {
     const params = new URLSearchParams({
@@ -114,6 +194,7 @@ async function youtubeSearch(query: string, maxResults = 20): Promise<Resource[]
     return (data.items || []).map((item: any) => ({
       id: generateId(),
       source_type: 'youtube' as const,
+      category,
       title: item.snippet?.title || '',
       url: `https://www.youtube.com/watch?v=${item.id?.videoId}`,
       thumbnail: item.snippet?.thumbnails?.high?.url
@@ -123,11 +204,21 @@ async function youtubeSearch(query: string, maxResults = 20): Promise<Resource[]
       snippet: item.snippet?.description || null,
       channel: item.snippet?.channelTitle || null,
       published_at: item.snippet?.publishedAt || null,
+      location_id: locationId,
     }));
   } catch (err) {
     console.error('[youtube-search] error:', err);
     return [];
   }
+}
+
+// Also search social media via Google
+async function socialSearch(place: string, locationId: string | null): Promise<Resource[]> {
+  return googleSearch(
+    `${place} travel site:tiktok.com OR site:instagram.com OR site:facebook.com`,
+    'general',
+    locationId,
+  );
 }
 
 // ── S3 read/write ──
@@ -153,7 +244,7 @@ async function saveFile(country: string, file: ResourceFile): Promise<void> {
     Key: `resources/${country}.json`,
     Body: JSON.stringify(file, null, 2),
     ContentType: 'application/json',
-    CacheControl: 'public, max-age=86400', // CDN cache 1 day
+    CacheControl: 'public, max-age=86400',
   });
   await s3.send(command);
 }
@@ -166,7 +257,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { country } = await req.json();
+    const body = await req.json();
+    const country = body.country as string;
+    const locationId = (body.location_id as string) || null;
+    const locationName = (body.location_name as string) || null;
+
     if (!country || typeof country !== 'string') {
       return new Response(JSON.stringify({ error: 'country is required' }), {
         status: 400,
@@ -174,25 +269,29 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`[search-country-resources] Searching for: ${country}`);
+    // Search place name: use location_name if provided (e.g. city), otherwise country
+    const searchPlace = locationName || country;
+    console.log(`[search-country-resources] Searching for: ${searchPlace} (country: ${country}, location_id: ${locationId})`);
+
+    // Build search specs per category
+    const specs = buildSearchSpecs(searchPlace);
 
     // Run all searches in parallel
-    const searchResults = await Promise.all([
-      // Google searches
-      googleSearch(`${country} travel guide`),
-      googleSearch(`${country} best places to visit`),
-      googleSearch(`${country} things to do`),
-      googleSearch(`${country} travel tips`),
-      googleSearch(`${country} travel vlog site:youtube.com`),
-      googleSearch(`${country} travel site:tiktok.com OR site:instagram.com OR site:facebook.com`),
-      // YouTube searches
-      youtubeSearch(`${country} travel guide`, 20),
-      youtubeSearch(`${country} things to do`, 10),
-      youtubeSearch(`${country} food tour`, 10),
-    ]);
+    const allPromises: Promise<Resource[]>[] = [];
+    for (const spec of specs) {
+      for (const q of spec.queries.google) {
+        allPromises.push(googleSearch(q, spec.category, locationId));
+      }
+      for (const yt of spec.queries.youtube) {
+        allPromises.push(youtubeSearch(yt.q, yt.max, spec.category, locationId));
+      }
+    }
+    // Social media search
+    allPromises.push(socialSearch(searchPlace, locationId));
 
+    const searchResults = await Promise.all(allPromises);
     const allNewResults = searchResults.flat();
-    console.log(`[search-country-resources] Got ${allNewResults.length} raw results for ${country}`);
+    console.log(`[search-country-resources] Got ${allNewResults.length} raw results for ${searchPlace}`);
 
     // Load existing file and merge
     const existing = await loadExistingFile(country);

@@ -13,12 +13,12 @@ import {
   mergeResources,
   invalidateResourceCache,
   type CountryResource,
-  type CountryResourceFile,
+  type ResourceCategory,
 } from '@/services/resourceService';
 import { useToast } from '@/hooks/use-toast';
 
 // Platform icon + color mapping
-const PLATFORM_CONFIG: Record<string, { label: string; color: string; icon?: string }> = {
+const PLATFORM_CONFIG: Record<string, { label: string; color: string }> = {
   youtube: { label: 'YouTube', color: 'bg-red-100 text-red-700 border-red-200' },
   facebook: { label: 'Facebook', color: 'bg-blue-100 text-blue-700 border-blue-200' },
   instagram: { label: 'Instagram', color: 'bg-pink-100 text-pink-700 border-pink-200' },
@@ -29,8 +29,18 @@ const PLATFORM_CONFIG: Record<string, { label: string; color: string; icon?: str
 
 const SOURCE_TYPES = ['all', 'youtube', 'article', 'facebook', 'instagram', 'tiktok'] as const;
 
+const CATEGORIES: { key: ResourceCategory | 'all'; labelKey: string; color: string }[] = [
+  { key: 'all', labelKey: 'resourcesPage.allCategories', color: '' },
+  { key: 'attractions', labelKey: 'resourcesPage.catAttractions', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+  { key: 'food', labelKey: 'resourcesPage.catFood', color: 'bg-orange-100 text-orange-700 border-orange-200' },
+  { key: 'hotels', labelKey: 'resourcesPage.catHotels', color: 'bg-violet-100 text-violet-700 border-violet-200' },
+  { key: 'nightlife', labelKey: 'resourcesPage.catNightlife', color: 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200' },
+  { key: 'general', labelKey: 'resourcesPage.catGeneral', color: 'bg-sky-100 text-sky-700 border-sky-200' },
+];
+
 function ResourceCard({ resource }: { resource: CountryResource }) {
   const platform = PLATFORM_CONFIG[resource.source_type] || PLATFORM_CONFIG.other;
+  const category = CATEGORIES.find(c => c.key === resource.category);
   const isVideo = ['youtube', 'tiktok', 'facebook', 'instagram'].includes(resource.source_type);
 
   return (
@@ -85,6 +95,11 @@ function ResourceCard({ resource }: { resource: CountryResource }) {
               <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${platform.color}`}>
                 {platform.label}
               </Badge>
+              {category && category.key !== 'all' && (
+                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${category.color}`}>
+                  {category.labelKey.split('.').pop()}
+                </Badge>
+              )}
               {resource.channel && (
                 <span className="text-[10px] text-muted-foreground truncate">{resource.channel}</span>
               )}
@@ -104,6 +119,11 @@ function ResourceCard({ resource }: { resource: CountryResource }) {
             <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${platform.color}`}>
               {platform.label}
             </Badge>
+            {category && category.key !== 'all' && (
+              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${category.color}`}>
+                {category.labelKey.split('.').pop()}
+              </Badge>
+            )}
             {resource.channel && (
               <span className="text-[10px] text-muted-foreground truncate">{resource.channel}</span>
             )}
@@ -143,7 +163,7 @@ const Resources = () => {
   const [resources, setResources] = useState<CountryResource[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchingCountries, setSearchingCountries] = useState<Set<string>>(new Set());
-  const [selectedCountry, setSelectedCountry] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
 
   const countries = activeTrip?.countries || [];
@@ -236,19 +256,17 @@ const Resources = () => {
     loadAll();
   }, [loadAll]);
 
-  // Filter resources
+  // Filter resources by category + source type
   const filteredResources = useMemo(() => {
     let filtered = resources;
-    if (selectedCountry !== 'all') {
-      // Resources don't have a country field per-item, so we need to match
-      // For now, show all; country filtering will work when we tag resources by country
-      // TODO: add country field to each resource in the S3 file
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(r => r.category === selectedCategory);
     }
     if (selectedType !== 'all') {
       filtered = filtered.filter(r => r.source_type === selectedType);
     }
     return filtered;
-  }, [resources, selectedCountry, selectedType]);
+  }, [resources, selectedCategory, selectedType]);
 
   if (!activeTrip) {
     return (
@@ -297,6 +315,23 @@ const Resources = () => {
           >
             <RefreshCw size={16} className={searchingCountries.size > 0 ? 'animate-spin' : ''} />
           </Button>
+        </div>
+
+        {/* Category filters */}
+        <div className="flex flex-wrap gap-1.5">
+          {CATEGORIES.map(cat => {
+            const isActive = selectedCategory === cat.key;
+            return (
+              <Badge
+                key={cat.key}
+                variant={isActive ? 'default' : 'outline'}
+                className={`cursor-pointer text-xs ${isActive ? '' : 'hover:bg-muted'} ${!isActive ? cat.color : ''}`}
+                onClick={() => setSelectedCategory(cat.key)}
+              >
+                {t(cat.labelKey)}
+              </Badge>
+            );
+          })}
         </div>
 
         {/* Source type filters */}
