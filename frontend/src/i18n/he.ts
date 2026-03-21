@@ -22,6 +22,7 @@ const he = {
     showTrips: 'הצג טיולים',
     triptomat: 'Triptomat',
     aiAssistant: 'עוזר AI לטיולים',
+    resources: 'מקורות',
   },
 
   // ── Common ──
@@ -544,6 +545,16 @@ const he = {
     newPlacesFound: '{{count}} מקומות חדשים נמצאו.',
     noNewPlaces: 'לא נמצאו מקומות חדשים.',
     syncFailed: 'הסנכרון נכשל',
+  },
+
+  // ── Resources Page ──
+  resourcesPage: {
+    title: 'מקורות מידע',
+    subtitle: 'סרטונים, כתבות ותוכן על היעדים שלך',
+    allTypes: 'הכל',
+    updating: 'מעדכן...',
+    noResources: 'אין עדיין מקורות. בקר שוב בקרוב!',
+    searchFailed: 'החיפוש נכשל עבור {{country}}',
   },
 
   // ── Accommodation Page ──

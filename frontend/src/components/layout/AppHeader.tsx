@@ -71,6 +71,7 @@ const navItems = [
   { path: '/accommodation', labelKey: 'nav.stay', icon: Hotel },
   { path: '/transport', labelKey: 'nav.transport', icon: Plane },
   { path: '/recommendations', labelKey: 'nav.recs', icon: Star },
+  { path: '/resources', labelKey: 'nav.resources', icon: Compass },
   { path: '/itinerary', labelKey: 'nav.itinerary', icon: Table2 },
   { path: '/map', labelKey: 'nav.map', icon: Map },
   { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },

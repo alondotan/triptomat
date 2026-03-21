@@ -22,6 +22,7 @@ const en = {
     showTrips: 'Show Trips',
     triptomat: 'Triptomat',
     aiAssistant: 'AI Travel Assistant',
+    resources: 'Resources',
   },
 
   // ── Common ──
@@ -546,6 +547,16 @@ const en = {
     newPlacesFound: '{{count}} new places found.',
     noNewPlaces: 'No new places found.',
     syncFailed: 'Sync failed',
+  },
+
+  // ── Resources Page ──
+  resourcesPage: {
+    title: 'Resources',
+    subtitle: 'Videos, articles and content about your destinations',
+    allTypes: 'All',
+    updating: 'Updating...',
+    noResources: 'No resources yet. Check back soon!',
+    searchFailed: 'Search failed for {{country}}',
   },
 
   // ── Accommodation Page ──

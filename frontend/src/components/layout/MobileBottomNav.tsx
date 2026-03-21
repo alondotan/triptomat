@@ -14,6 +14,7 @@ import {
   CheckSquare,
   Users,
   FileText,
+  Compass,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -28,6 +29,7 @@ const primaryItems = [
 
 const moreItems = [
   { path: '/recommendations', labelKey: 'nav.recommendations', icon: Star },
+  { path: '/resources', labelKey: 'nav.resources', icon: Compass },
   { path: '/itinerary', labelKey: 'nav.itinerary', icon: Table2 },
   { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },
   { path: '/tasks', labelKey: 'nav.tasks', icon: CheckSquare },

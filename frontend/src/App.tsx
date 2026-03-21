@@ -28,6 +28,7 @@ const SchedulePage = lazy(() => import("./pages/Schedule"));
 const ShareTargetPage = lazy(() => import("./pages/ShareTarget"));
 const ContactsPage = lazy(() => import("./pages/Contacts"));
 const DocumentsPage = lazy(() => import("./pages/Documents"));
+const ResourcesPage = lazy(() => import("./pages/Resources"));
 const TripsPage = lazy(() => import("./pages/Trips"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -91,6 +92,7 @@ const App = () => (
                       <Route path="/accommodation" element={<ErrorBoundary><AccommodationPage /></ErrorBoundary>} />
                       <Route path="/contacts" element={<ErrorBoundary><ContactsPage /></ErrorBoundary>} />
                       <Route path="/documents" element={<ErrorBoundary><DocumentsPage /></ErrorBoundary>} />
+                      <Route path="/resources" element={<ErrorBoundary><ResourcesPage /></ErrorBoundary>} />
                       <Route path="/trips" element={<ErrorBoundary><TripsPage /></ErrorBoundary>} />
                       <Route path="/share-target" element={<ErrorBoundary><ShareTargetPage /></ErrorBoundary>} />
                       <Route path="*" element={<NotFound />} />
