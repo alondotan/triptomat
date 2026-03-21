@@ -5,15 +5,10 @@ import {
   CalendarDays,
   Compass,
   Map,
-  MapPin,
-  Plane,
-  Star,
   Table2,
   DollarSign,
   CheckSquare,
-  Users,
   Inbox,
-  Hotel,
   Menu,
   ChevronDown,
   Plus,
@@ -28,6 +23,7 @@ import {
   MoreVertical,
   ListIcon,
   FileText,
+  LayoutDashboard,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -68,17 +64,12 @@ import { useAiUsage } from '@/hooks/useAiUsage';
 import { Crown } from 'lucide-react';
 
 const navItems = [
+  { path: '/overview', labelKey: 'nav.home', icon: LayoutDashboard },
   { path: '/', labelKey: 'nav.timeline', icon: CalendarDays },
-  { path: '/pois', labelKey: 'nav.pois', icon: MapPin },
-  { path: '/accommodation', labelKey: 'nav.stay', icon: Hotel },
-  { path: '/transport', labelKey: 'nav.transport', icon: Plane },
-  { path: '/recommendations', labelKey: 'nav.recs', icon: Star },
-  { path: '/resources', labelKey: 'nav.resources', icon: Compass },
   { path: '/itinerary', labelKey: 'nav.itinerary', icon: Table2 },
   { path: '/map', labelKey: 'nav.map', icon: Map },
   { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },
   { path: '/tasks', labelKey: 'nav.tasks', icon: CheckSquare },
-  { path: '/contacts', labelKey: 'nav.contacts', icon: Users },
   { path: '/documents', labelKey: 'nav.docs', icon: FileText },
   { path: '/inbox', labelKey: 'nav.inbox', icon: Inbox },
 ];
@@ -365,7 +356,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
         )}
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center flex-1 justify-evenly">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;

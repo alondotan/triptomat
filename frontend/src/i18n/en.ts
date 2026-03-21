@@ -23,6 +23,7 @@ const en = {
     triptomat: 'Triptomat',
     aiAssistant: 'AI Travel Assistant',
     resources: 'Resources',
+    home: 'Home',
   },
 
   // ── Common ──
@@ -444,6 +445,9 @@ const en = {
     pendingLabel: 'Pending ({{count}})',
     completedLabel: 'Completed ({{count}})',
     done: 'Done',
+    dueDateLabel: 'Due date',
+    dueAt: 'Due',
+    editMission: 'Edit Mission',
   },
 
   // ── Contacts Page ──
@@ -578,6 +582,23 @@ const en = {
     updating: 'Updating...',
     noResources: 'No resources yet. Check back soon!',
     searchFailed: 'Search failed for {{country}}',
+    analyze: 'Analyze video',
+    analyzeStarted: 'Analysis started, results will appear in Recommendations',
+  },
+
+  // ── Sources Page (unified) ──
+  sourcesPage: {
+    title: 'Sources',
+    subtitle: 'Your travel research and content',
+    tabVideos: 'Videos',
+    tabMaps: 'Maps & Lists',
+    tabArticles: 'Articles',
+    tabConversations: 'AI Conversations',
+    noSources: 'No sources yet. Add a link via the + button!',
+    analyzed: 'Analyzed',
+    notAnalyzed: 'Not analyzed',
+    analyze: 'Analyze',
+    analyzeStarted: 'Analysis started, results will appear shortly',
   },
 
   // ── Accommodation Page ──
@@ -675,7 +696,13 @@ const en = {
     addLocation: '+ Location',
     location: 'Loc',
     setLocation: 'Set Location',
-    totalDays: 'Total days',
+    selectLocations: 'Add locations to plan your trip',
+    selectLocationsDesc: 'Click + to add destinations, then assign places of interest to each.',
+    addPlace: 'Add place',
+    noPoisYet: 'No places added yet. Click below to add.',
+    totalDays: 'Total: {{count}} days',
+    startPlanning: 'Start planning',
+    orSetDaysManually: '— or set days manually —',
     noActiveTrip: 'No active trip',
     mapTab: 'Map',
     scheduleTab: 'Schedule',
@@ -919,10 +946,12 @@ const en = {
   // ── Mobile FAB ──
   fab: {
     add: 'Add',
-    external: 'External recommendation',
+    addLocation: 'Add location',
+    external: 'Add source',
     poi: 'Point of interest',
     transport: 'Transport',
     accommodation: 'Accommodation',
+    contact: 'Contact',
   },
 
   // ── External Recommendation Form ──
@@ -940,6 +969,27 @@ const en = {
     installDescription: 'Add to home screen for the full experience',
     install: 'Install',
     dismiss: 'Dismiss',
+  },
+
+  // ── Overview ──
+  overview: {
+    attractions: 'Attractions',
+    eateries: 'Eat & Drink',
+    hotels: 'Hotels',
+    transport: 'Transport',
+    contacts: 'Contacts',
+    sources: 'Sources',
+    resources: 'Resources',
+    viewAll: 'View All',
+    noItems: 'No items yet',
+    items: 'items',
+    itinerary: 'Trip Plan',
+    noItinerary: 'No itinerary yet',
+    chatHint: 'Ask the AI assistant to help plan your trip',
+    openChat: 'Open Chat',
+    feed: 'Feed',
+    map: 'Map',
+    plan: 'Plan',
   },
 };
 

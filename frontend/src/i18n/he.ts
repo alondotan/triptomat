@@ -23,6 +23,7 @@ const he = {
     triptomat: 'Triptomat',
     aiAssistant: 'עוזר AI לטיולים',
     resources: 'מקורות',
+    home: 'בית',
   },
 
   // ── Common ──
@@ -442,6 +443,9 @@ const he = {
     pendingLabel: 'ממתינות ({{count}})',
     completedLabel: 'הושלמו ({{count}})',
     done: 'בוצע',
+    dueDateLabel: 'תאריך יעד',
+    dueAt: 'יעד',
+    editMission: 'עריכת משימה',
   },
 
   // ── Contacts Page ──
@@ -576,6 +580,23 @@ const he = {
     updating: 'מעדכן...',
     noResources: 'אין עדיין מקורות. בקר שוב בקרוב!',
     searchFailed: 'החיפוש נכשל עבור {{country}}',
+    analyze: 'נתח סרטון',
+    analyzeStarted: 'הניתוח התחיל, התוצאות יופיעו בהמלצות',
+  },
+
+  // ── Sources Page (unified) ──
+  sourcesPage: {
+    title: 'מקורות',
+    subtitle: 'המחקר והתוכן שלך לטיול',
+    tabVideos: 'סרטונים',
+    tabMaps: 'מפות ורשימות',
+    tabArticles: 'כתבות',
+    tabConversations: 'שיחות AI',
+    noSources: 'אין עדיין מקורות. הוסף קישור דרך כפתור +!',
+    analyzed: 'נותח',
+    notAnalyzed: 'לא נותח',
+    analyze: 'נתח',
+    analyzeStarted: 'הניתוח התחיל, התוצאות יופיעו בקרוב',
   },
 
   // ── Accommodation Page ──
@@ -673,7 +694,13 @@ const he = {
     addLocation: '+ מיקום',
     location: 'מיקום',
     setLocation: 'עדכון מיקום',
-    totalDays: 'סה״כ ימים',
+    selectLocations: 'הוסיפו מקומות לתכנון הטיול',
+    selectLocationsDesc: 'לחצו + כדי להוסיף יעדים, ואז שייכו מקומות עניין לכל יעד.',
+    addPlace: 'הוסף מקום',
+    noPoisYet: 'עוד לא נוספו מקומות. לחצו למטה להוספה.',
+    totalDays: 'סה״כ: {{count}} ימים',
+    startPlanning: 'התחלת תכנון',
+    orSetDaysManually: '— או הגדירו ימים ידנית —',
     noActiveTrip: 'אין טיול פעיל',
     mapTab: 'מפה',
     scheduleTab: 'לו״ז',
@@ -917,10 +944,12 @@ const he = {
   // ── Mobile FAB ──
   fab: {
     add: 'הוסף',
-    external: 'המלצה חיצונית',
+    addLocation: 'הוסף מקום',
+    external: 'הוסף מקור',
     poi: 'נקודת עניין',
     transport: 'תחבורה',
     accommodation: 'מקום לינה',
+    contact: 'איש קשר',
   },
 
   // ── External Recommendation Form ──
@@ -940,6 +969,27 @@ const he = {
     installDescription: 'הוסף למסך הבית לחוויה מלאה',
     install: 'התקן',
     dismiss: 'סגור',
+  },
+
+  // ── Overview ──
+  overview: {
+    attractions: 'אטרקציות',
+    eateries: 'אוכל ושתייה',
+    hotels: 'מלונות',
+    transport: 'תחבורה',
+    contacts: 'אנשי קשר',
+    sources: 'המלצות',
+    resources: 'מקורות',
+    viewAll: 'הצג הכל',
+    noItems: 'אין פריטים עדיין',
+    items: 'פריטים',
+    itinerary: 'תוכנית טיול',
+    noItinerary: 'אין מסלול עדיין',
+    chatHint: 'שאלו את עוזר ה-AI לעזור בתכנון הטיול',
+    openChat: 'פתח צ׳אט',
+    feed: 'פיד',
+    map: 'מפה',
+    plan: 'תוכנית',
   },
 };
 

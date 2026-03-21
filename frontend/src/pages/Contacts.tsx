@@ -170,15 +170,7 @@ const ContactsPage = () => {
                 <Smartphone size={16} /> {t('contactsPage.importContacts')}
               </Button>
             )}
-            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-1"><Plus size={16} /> {t('common.add')}</Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md sm:max-w-xl">
-                <DialogHeader><DialogTitle>{t('contactsPage.addContact')}</DialogTitle></DialogHeader>
-                <ContactForm onSubmit={handleCreate} onCancel={() => setCreateOpen(false)} />
-              </DialogContent>
-            </Dialog>
+            {/* Create via global FAB */}
           </div>
         </div>
 

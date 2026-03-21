@@ -5,10 +5,11 @@ import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
 import { useItinerary } from '@/context/ItineraryContext';
 import { updateItineraryDay, createItineraryDay } from '@/services/itineraryService';
-import { findOrCreateItineraryLocation } from '@/services/itineraryLocationService';
+import { findOrCreateItineraryLocation, assignDayToLocation } from '@/services/itineraryLocationService';
 import { findInFlatList } from '@/services/tripLocationService';
 import { rebuildPOIBookingsFromDays } from '@/services/poiService';
 import { LocationContextPicker } from '@/components/shared/LocationContextPicker';
+import { LocationSelector } from '@/components/shared/LocationSelector';
 import { parseISO, format, addDays, subDays } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useTripDays, tripDayDate } from '@/hooks/useTripDays';
@@ -39,7 +40,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Building2, CalendarDays, Check, Clock, GripVertical, Moon, Pencil, Sun, Trash2, X } from 'lucide-react';
+import { Building2, CalendarDays, Check, Clock, GripVertical, MapPin, Moon, Pencil, Plus, Sun, Trash2, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -836,7 +837,7 @@ function ScheduleZone({ children, activePotentialDrag, isEmpty }: {
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function SchedulePage() {
-  const { activeTrip, updateCurrentTrip, tripLocations } = useActiveTrip();
+  const { activeTrip, updateCurrentTrip, tripLocations, addSiteToHierarchy, reloadLocations } = useActiveTrip();
   const { updateTripInList } = useTripList();
   const { pois, addPOI, updatePOI } = usePOI();
   const { transportation, deleteTransportation } = useTransport();
@@ -869,6 +870,25 @@ export default function SchedulePage() {
   const [researchStartDate, setResearchStartDate] = useState('');
   const [researchEndDate, setResearchEndDate] = useState('');
   const [researchSubmitting, setResearchSubmitting] = useState(false);
+
+  // Research mode location strip state
+  const [selectedResearchLocId, setSelectedResearchLocId] = useState<string | null>(null);
+  const [addLocationOpen, setAddLocationOpen] = useState(false);
+
+  // Listen for FAB "add location" event in research mode
+  useEffect(() => {
+    const handler = () => setAddLocationOpen(true);
+    window.addEventListener('research-add-location', handler);
+    return () => window.removeEventListener('research-add-location', handler);
+  }, []);
+
+  // Auto-select first research location when available and none selected
+  useEffect(() => {
+    if (activeTrip?.status === 'research' && !selectedResearchLocId && itineraryLocations.length > 0) {
+      const first = itineraryLocations.find(il => !il.isDefault);
+      if (first) setSelectedResearchLocId(first.id);
+    }
+  }, [activeTrip?.status, selectedResearchLocId, itineraryLocations]);
 
   // Day date picker dialog state (planning → detailed_planning via double-click)
   const [dateDayNum, setDateDayNum] = useState<number | null>(null);
@@ -909,6 +929,158 @@ export default function SchedulePage() {
       setResearchSubmitting(false);
     }
   };
+
+  // Research mode: derived values for location strip
+  const researchLocations = useMemo(() =>
+    itineraryLocations.filter(il => !il.isDefault),
+    [itineraryLocations],
+  );
+
+  const researchLocNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const il of researchLocations) {
+      if (il.tripLocationId) {
+        const tl = tripLocations.find(l => l.id === il.tripLocationId);
+        if (tl) map.set(il.id, tl.name);
+      }
+    }
+    return map;
+  }, [researchLocations, tripLocations]);
+
+  // Holding day for selected research location (stores potential POIs)
+  const selectedResearchDay = useMemo(() => {
+    if (!selectedResearchLocId) return undefined;
+    return itineraryDays.find(d => d.itineraryLocationId === selectedResearchLocId);
+  }, [selectedResearchLocId, itineraryDays]);
+
+  // Build potential items for selected research location
+  const researchPotential = useMemo(() => {
+    if (!selectedResearchDay) return [];
+    const items: Item[] = [];
+    for (const a of selectedResearchDay.activities || []) {
+      if (a.type === 'poi') {
+        const poi = pois.find(p => p.id === a.id);
+        if (!poi) continue;
+        items.push({
+          id: a.id,
+          label: poi.name,
+          emoji: categoryEmoji(poi.category),
+          sublabel: poi.location?.city || getSubCategoryLabel(poi.subCategory) || '',
+          poi,
+        });
+      }
+    }
+    return items;
+  }, [selectedResearchDay, pois]);
+
+  // Add a location to the research strip
+  const handleAddResearchLocation = useCallback(async (locationName: string) => {
+    if (!activeTrip) return;
+    setAddLocationOpen(false);
+    try {
+      // Ensure it's in trip_locations
+      const existing = findInFlatList(tripLocations, locationName);
+      let tripLocId: string;
+      if (existing) {
+        tripLocId = existing.id;
+      } else {
+        // addSiteToHierarchy triggers a reload; wait for it
+        addSiteToHierarchy(locationName);
+        // Wait for reload and find the new location
+        await new Promise(r => setTimeout(r, 500));
+        await reloadLocations();
+        // Re-fetch to find the new one — we'll select on next render
+        return;
+      }
+
+      // Create itinerary_location
+      const itinLoc = await findOrCreateItineraryLocation(activeTrip.id, tripLocId);
+
+      // Check if holding day already exists
+      const existingDay = itineraryDays.find(d => d.itineraryLocationId === itinLoc.id);
+      if (!existingDay) {
+        const dayNumber = researchLocations.length + 1;
+        const created = await createItineraryDay({
+          tripId: activeTrip.id,
+          dayNumber,
+          locationContext: locationName,
+          accommodationOptions: [],
+          activities: [],
+          transportationSegments: [],
+        });
+        await assignDayToLocation(created.id, itinLoc.id);
+      }
+
+      await refetchItineraryLocations();
+      await refetchItinerary();
+      setSelectedResearchLocId(itinLoc.id);
+    } catch {
+      toast({ title: t('common.error'), variant: 'destructive' });
+    }
+  }, [activeTrip, tripLocations, addSiteToHierarchy, reloadLocations, itineraryDays, researchLocations, refetchItineraryLocations, refetchItinerary, t, toast]);
+
+  // Add a POI to the selected research location
+  const handleAddResearchPoi = useCallback(async (poiId: string) => {
+    if (!activeTrip || !selectedResearchLocId) return;
+    try {
+      let holdingDay = itineraryDays.find(d => d.itineraryLocationId === selectedResearchLocId);
+      if (!holdingDay) return;
+
+      const existing = holdingDay.activities || [];
+      if (existing.some(a => a.id === poiId)) return;
+
+      await updateItineraryDay(holdingDay.id, {
+        activities: [...existing, { order: existing.length + 1, type: 'poi' as const, id: poiId, schedule_state: 'potential' as const }],
+      });
+
+      // Update POI status if needed
+      const poi = pois.find(p => p.id === poiId);
+      if (poi && (poi.status === 'suggested' || poi.status === 'interested')) {
+        await updatePOI({ ...poi, status: 'planned' });
+      }
+
+      await refetchItinerary();
+    } catch {
+      toast({ title: t('common.error'), variant: 'destructive' });
+    }
+  }, [activeTrip, selectedResearchLocId, itineraryDays, pois, updatePOI, refetchItinerary, t, toast]);
+
+  // Remove a POI from the selected research location
+  const handleRemoveResearchPoi = useCallback(async (poiId: string) => {
+    if (!selectedResearchDay) return;
+    try {
+      const updated = (selectedResearchDay.activities || []).filter(a => a.id !== poiId);
+      await updateItineraryDay(selectedResearchDay.id, { activities: updated });
+      await refetchItinerary();
+    } catch {
+      toast({ title: t('common.error'), variant: 'destructive' });
+    }
+  }, [selectedResearchDay, refetchItinerary, t, toast]);
+
+  // Transition from research to planning (location-aware)
+  const handleLocationBasedTransition = useCallback(async () => {
+    if (!activeTrip || researchLocations.length === 0) return;
+    setResearchSubmitting(true);
+    try {
+      // Each research location already has 1 holding day — just renumber sequentially
+      let dayNumber = 1;
+      for (const il of researchLocations) {
+        const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
+        if (holdingDay) {
+          await updateItineraryDay(holdingDay.id, { dayNumber });
+          dayNumber++;
+        }
+      }
+      const totalDays = dayNumber - 1;
+      await updateCurrentTrip({ status: 'planning' as const, numberOfDays: totalDays });
+      await refetchItineraryLocations();
+      await refetchItinerary();
+    } catch {
+      toast({ title: t('common.error'), variant: 'destructive' });
+    } finally {
+      setResearchSubmitting(false);
+    }
+  }, [activeTrip, researchLocations, itineraryDays, updateCurrentTrip, refetchItineraryLocations, refetchItinerary, t, toast]);
 
   // Handle day double-click → set date and switch to detailed_planning
   const handleDayDoubleClick = (dayNum: number) => {
@@ -1188,9 +1360,49 @@ export default function SchedulePage() {
       }
     }
 
-    for (let i = 0; i < locationTotalDays; i++) {
-      const dayNum = selectedDayNum + i;
-      if (dayNum > tripDays.length) break;
+    // Determine how many days the current span covers for this location
+    const currentSpanDays = selectedSpan ? (selectedSpan.endIdx - selectedSpan.startIdx + 1) : 0;
+    const daysToInsert = locationTotalDays - currentSpanDays;
+
+    if (daysToInsert > 0 && activeTrip.status !== 'research') {
+      // Insert new days: renumber all days after the insert point forward
+      const insertAfterDayNum = selectedSpan
+        ? selectedSpan.endIdx + 1   // after last day of current span (0-indexed → dayNum)
+        : selectedDayNum;           // no span yet, insert after selected day
+
+      // Shift existing days that come after the insert point
+      const daysToShift = itineraryDays
+        .filter(d => d.dayNumber > insertAfterDayNum)
+        .sort((a, b) => b.dayNumber - a.dayNumber); // descending to avoid conflicts
+      for (const day of daysToShift) {
+        await updateItineraryDay(day.id, { dayNumber: day.dayNumber + daysToInsert });
+      }
+
+      // Create the new days
+      for (let i = 0; i < daysToInsert; i++) {
+        const newDayNum = insertAfterDayNum + 1 + i;
+        const created = await createItineraryDay({
+          tripId: activeTrip.id,
+          dayNumber: newDayNum,
+          locationContext,
+          accommodationOptions: [],
+          activities: [],
+          transportationSegments: [],
+        });
+        if (itineraryLocationId) {
+          await assignDayToLocation(created.id, itineraryLocationId);
+        }
+      }
+
+      // Update trip numberOfDays
+      const newTotal = (activeTrip.numberOfDays || tripDays.length) + daysToInsert;
+      await updateCurrentTrip({ numberOfDays: newTotal });
+    }
+
+    // Set location on existing span days
+    const spanStart = selectedSpan ? selectedSpan.startIdx + 1 : selectedDayNum;
+    const spanEnd = selectedSpan ? selectedSpan.endIdx + 1 : selectedDayNum;
+    for (let dayNum = spanStart; dayNum <= spanEnd; dayNum++) {
       let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
       if (!targetDay) {
         targetDay = await createItineraryDay({
@@ -1204,17 +1416,17 @@ export default function SchedulePage() {
         });
       }
       if (targetDay) {
-        // Dual-write: both locationContext (text) and itineraryLocationId (FK)
         await updateItineraryDay(targetDay.id, {
           locationContext,
           ...(itineraryLocationId ? { itineraryLocationId } : {}),
         });
       }
     }
+
     setEditingLocation(false);
     setLocationTotalDays(1);
     await refreshDays();
-  }, [locationContext, locationTotalDays, selectedDayNum, tripDays, itineraryDays, activeTrip, tripLocations, refetchItineraryLocations, refreshDays]);
+  }, [locationContext, locationTotalDays, selectedDayNum, selectedSpan, tripDays, itineraryDays, activeTrip, tripLocations, refetchItineraryLocations, refreshDays, updateCurrentTrip]);
 
   // ── Ensure itinerary day exists ─────────────────────────────────────────────
   const ensureItDay = useCallback(async () => {
@@ -2175,65 +2387,166 @@ export default function SchedulePage() {
         >
           {/* ── Day pills + Location strip (sticky, never scrolls) ── */}
           {activeTrip?.status === 'research' ? (
-            <div className="flex flex-col items-center justify-center py-4 gap-2.5 text-center max-w-md mx-auto">
-              <CalendarDays size={28} className="text-muted-foreground/50" />
-              <div>
-                <h3 className="text-base font-semibold">{t('timeline.setTripDays')}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {t('timeline.setTripDaysDescription')}
-                </p>
+            <div className="flex flex-col w-full gap-3">
+              {/* ── Location pills strip ── */}
+              <div className="w-full shrink-0 pb-1 overflow-x-auto will-change-transform" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)' }}>
+                <div className="flex gap-2 pb-1" style={{ minWidth: 'max-content' }}>
+                  {researchLocations.map((il) => {
+                    const name = researchLocNameMap.get(il.id) || '?';
+                    const isSelected = selectedResearchLocId === il.id;
+                    const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
+                    const poiCount = holdingDay?.activities?.length ?? 0;
+                    return (
+                      <button
+                        key={il.id}
+                        type="button"
+                        onClick={() => setSelectedResearchLocId(il.id)}
+                        className={`relative flex flex-col items-center justify-center rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors shrink-0 min-w-[72px] ${
+                          isSelected
+                            ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                            : 'border-border bg-card text-foreground hover:border-primary/40'
+                        }`}
+                      >
+                        <MapPin size={14} className="mb-0.5" />
+                        <span className="truncate max-w-[80px]">{name}</span>
+                        {poiCount > 0 && (
+                          <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center ${
+                            isSelected ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
+                          }`}>
+                            {poiCount}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                  {/* Add location button */}
+                  <button
+                    type="button"
+                    onClick={() => setAddLocationOpen(true)}
+                    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/40 px-3 py-1.5 text-xs text-muted-foreground hover:text-primary hover:border-primary transition-colors shrink-0 min-w-[72px]"
+                  >
+                    <Plus size={14} className="mb-0.5" />
+                    <span>{t('timeline.addLocation')}</span>
+                  </button>
+                </div>
               </div>
-              <div className="w-full space-y-3">
-                <PlanningLevelPicker value={researchLevel} onChange={setResearchLevel} compact />
 
-                {researchLevel === 'planning' && (
-                  <div className="flex items-center justify-center gap-3">
-                    <Label htmlFor="resDays" className="text-sm shrink-0">{t('timeline.numberOfDays')}</Label>
-                    <Input
-                      id="resDays"
-                      type="number"
-                      min={1}
-                      max={365}
-                      placeholder="7"
-                      value={researchDays}
-                      onChange={(e) => setResearchDays(e.target.value ? parseInt(e.target.value) : '')}
-                      className="h-9 w-24"
-                    />
-                    <Button size="sm" onClick={handleResearchSubmit} disabled={researchSubmitting || !researchDays}>
-                      {t('common.confirm')}
-                    </Button>
-                  </div>
-                )}
+              {/* ── Location picker dialog ── */}
+              <Dialog open={addLocationOpen} onOpenChange={setAddLocationOpen}>
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>{t('timeline.addLocation')}</DialogTitle>
+                    <DialogDescription>{t('timeline.selectLocations')}</DialogDescription>
+                  </DialogHeader>
+                  <LocationSelector
+                    value=""
+                    onChange={(name) => handleAddResearchLocation(name)}
+                    placeholder={t('timeline.selectLocations')}
+                  />
+                </DialogContent>
+              </Dialog>
 
-                {researchLevel === 'detailed_planning' && (
-                  <div className="flex flex-wrap items-center justify-center gap-3">
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="resStart" className="text-sm shrink-0">{t('timeline.from')}</Label>
-                      <Input
-                        id="resStart"
-                        type="date"
-                        value={researchStartDate}
-                        onChange={(e) => setResearchStartDate(e.target.value)}
-                        className="h-9 w-40"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Label htmlFor="resEnd" className="text-sm shrink-0">{t('timeline.to')}</Label>
-                      <Input
-                        id="resEnd"
-                        type="date"
-                        value={researchEndDate}
-                        min={researchStartDate}
-                        onChange={(e) => setResearchEndDate(e.target.value)}
-                        className="h-9 w-40"
-                      />
-                    </div>
-                    <Button size="sm" onClick={handleResearchSubmit} disabled={researchSubmitting || !researchStartDate || !researchEndDate}>
-                      {t('common.confirm')}
-                    </Button>
+              {/* ── Selected location content ── */}
+              {selectedResearchLocId && (
+                <div className="flex-1 space-y-3">
+                  <DaySection
+                    title=""
+                    icon={null}
+                    items={researchPotential.map(i => ({ id: i.id, label: i.label, sublabel: i.sublabel || '' }))}
+                    onRemove={handleRemoveResearchPoi}
+                    availableItems={pois
+                      .filter(p => !researchPotential.some(rp => rp.id === p.id))
+                      .map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))
+                    }
+                    onAdd={(id) => handleAddResearchPoi(id)}
+                    addLabel={t('timeline.addActivity')}
+                    entityType="activity"
+                    locationContext={researchLocNameMap.get(selectedResearchLocId)}
+                    countries={activeTrip?.countries}
+                    hideHeader
+                  />
+                </div>
+              )}
+
+              {/* ── Empty state (no locations yet) ── */}
+              {researchLocations.length === 0 && !addLocationOpen && (
+                <div className="flex flex-col items-center justify-center py-8 gap-2.5 text-center max-w-md mx-auto">
+                  <MapPin size={28} className="text-muted-foreground/50" />
+                  <div>
+                    <h3 className="text-base font-semibold">{t('timeline.selectLocations')}</h3>
+                    <p className="text-xs text-muted-foreground">{t('timeline.selectLocationsDesc')}</p>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+
+              {/* ── Transition to planning ── */}
+              {researchLocations.length > 0 && (
+                <div className="flex items-center justify-center gap-3 py-2 border-t">
+                  <Button
+                    size="sm"
+                    onClick={handleLocationBasedTransition}
+                    disabled={researchSubmitting}
+                  >
+                    {t('timeline.startPlanning')}
+                  </Button>
+                </div>
+              )}
+
+              {/* ── Fallback: manual day/date inputs ── */}
+              {researchLocations.length === 0 && (
+                <div className="w-full space-y-3 max-w-md mx-auto">
+                  <p className="text-[10px] text-muted-foreground text-center">{t('timeline.orSetDaysManually')}</p>
+                  <PlanningLevelPicker value={researchLevel} onChange={setResearchLevel} compact />
+
+                  {researchLevel === 'planning' && (
+                    <div className="flex items-center justify-center gap-3">
+                      <Label htmlFor="resDays" className="text-sm shrink-0">{t('timeline.numberOfDays')}</Label>
+                      <Input
+                        id="resDays"
+                        type="number"
+                        min={1}
+                        max={365}
+                        placeholder="7"
+                        value={researchDays}
+                        onChange={(e) => setResearchDays(e.target.value ? parseInt(e.target.value) : '')}
+                        className="h-9 w-24"
+                      />
+                      <Button size="sm" onClick={handleResearchSubmit} disabled={researchSubmitting || !researchDays}>
+                        {t('common.confirm')}
+                      </Button>
+                    </div>
+                  )}
+
+                  {researchLevel === 'detailed_planning' && (
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="resStart" className="text-sm shrink-0">{t('timeline.from')}</Label>
+                        <Input
+                          id="resStart"
+                          type="date"
+                          value={researchStartDate}
+                          onChange={(e) => setResearchStartDate(e.target.value)}
+                          className="h-9 w-40"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="resEnd" className="text-sm shrink-0">{t('timeline.to')}</Label>
+                        <Input
+                          id="resEnd"
+                          type="date"
+                          value={researchEndDate}
+                          min={researchStartDate}
+                          onChange={(e) => setResearchEndDate(e.target.value)}
+                          className="h-9 w-40"
+                        />
+                      </div>
+                      <Button size="sm" onClick={handleResearchSubmit} disabled={researchSubmitting || !researchStartDate || !researchEndDate}>
+                        {t('common.confirm')}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : tripDays.length > 0 ? (
             <div className="w-full shrink-0 pb-1 overflow-x-auto will-change-transform" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)' }}>
@@ -2270,7 +2583,7 @@ export default function SchedulePage() {
                     <button
                       key={i}
                       type="button"
-                      onClick={() => { setLocationContext(span.location); setEditingLocation(true); }}
+                      onClick={() => { setLocationContext(span.location); setLocationTotalDays(span.endIdx - span.startIdx + 1); setEditingLocation(true); }}
                       disabled={!isSelected}
                       className={`absolute top-0 h-full rounded-md flex items-center px-2 overflow-hidden gap-1 transition-colors ${
                         isSelected
@@ -2310,7 +2623,7 @@ export default function SchedulePage() {
               onChange={setLocationContext}
               totalDays={locationTotalDays}
               onTotalDaysChange={setLocationTotalDays}
-              maxTotalDays={tripDays.length - selectedDayNum + 1}
+              maxTotalDays={tripDays.length + 30}
               onSave={updateLocationContext}
             />
           )}

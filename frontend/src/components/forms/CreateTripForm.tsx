@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useTripList } from '@/context/TripListContext';
 import { CountrySelector } from '@/components/trip/CountrySelector';
@@ -115,97 +116,103 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {triggerEl && <DialogTrigger asChild>{triggerEl}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[500px] sm:max-h-[85dvh] max-sm:inset-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-none max-sm:h-[100dvh] max-sm:max-h-none max-sm:rounded-none !flex flex-col overflow-hidden p-0" preventAutoFocus>
+      <DialogContent className="sm:max-w-[750px] sm:max-h-[85dvh] max-sm:inset-0 max-sm:translate-x-0 max-sm:translate-y-0 max-sm:max-w-none max-sm:h-[100dvh] max-sm:max-h-none max-sm:rounded-none !flex flex-col overflow-hidden p-0" preventAutoFocus>
         <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-0 shrink-0">
           <DialogTitle>{t('createTrip.newTrip')}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="space-y-2 sm:space-y-3 flex-1 px-4 sm:px-6 py-3">
-            {/* Name + Description row */}
-            <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
-              <Label htmlFor="name">{t('createTrip.tripName')}</Label>
-              <Input
-                id="name"
-                placeholder={t('createTrip.tripNamePlaceholder')}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
-              <Label htmlFor="description">{t('createTrip.description')}</Label>
-              <Input
-                id="description"
-                placeholder={t('createTrip.descriptionPlaceholder')}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                autoComplete="off"
-              />
-            </div>
-
-            <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
-              <Label htmlFor="trip-countries">{t('createTrip.countries')}</Label>
-              <CountrySelector
-                value={countries}
-                onChange={setCountries}
-                placeholder={t('createTrip.chooseDestinations')}
-              />
-            </div>
-
-            {/* Planning level selection */}
-            <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
-              <Label htmlFor="trip-planning-level">{t('createTrip.planningStage')}</Label>
-              <PlanningLevelPicker value={planningLevel} onChange={setPlanningLevel} compact />
-            </div>
-
-            {/* Conditional fields based on planning level */}
-            {planningLevel === 'planning' && (
-              <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
-                <Label htmlFor="numberOfDays">{t('createTrip.numberOfDays')}</Label>
-                <Input
-                  id="numberOfDays"
-                  type="number"
-                  min={1}
-                  max={365}
-                  placeholder="7"
-                  value={numberOfDays}
-                  onChange={(e) => setNumberOfDays(e.target.value ? parseInt(e.target.value) : '')}
-                  required
-                  autoComplete="off"
-                />
-              </div>
-            )}
-
-            {planningLevel === 'detailed_planning' && (
-              <div className="rounded-lg border border-border/50 bg-card/50 p-3 grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="startDate">{t('createTrip.startDate')}</Label>
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Right column (RTL) - Name & Description */}
+              <div className="space-y-3">
+                <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
+                  <Label htmlFor="name">{t('createTrip.tripName')}</Label>
                   <Input
-                    id="startDate"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    id="name"
+                    placeholder={t('createTrip.tripNamePlaceholder')}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                     required
                     autoComplete="off"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="endDate">{t('createTrip.endDate')}</Label>
-                  <Input
-                    id="endDate"
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    min={startDate}
-                    required
+
+                <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2 flex-1">
+                  <Label htmlFor="description">{t('createTrip.description')}</Label>
+                  <Textarea
+                    id="description"
+                    placeholder={t('createTrip.descriptionPlaceholder')}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     autoComplete="off"
+                    className="min-h-[120px] resize-none"
                   />
                 </div>
               </div>
-            )}
+
+              {/* Left column (RTL) - Countries & Planning */}
+              <div className="space-y-3">
+                <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
+                  <Label htmlFor="trip-countries">{t('createTrip.countries')}</Label>
+                  <CountrySelector
+                    value={countries}
+                    onChange={setCountries}
+                    placeholder={t('createTrip.chooseDestinations')}
+                  />
+                </div>
+
+                <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
+                  <Label htmlFor="trip-planning-level">{t('createTrip.planningStage')}</Label>
+                  <PlanningLevelPicker value={planningLevel} onChange={setPlanningLevel} compact />
+                </div>
+
+                {planningLevel === 'planning' && (
+                  <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
+                    <Label htmlFor="numberOfDays">{t('createTrip.numberOfDays')}</Label>
+                    <Input
+                      id="numberOfDays"
+                      type="number"
+                      min={1}
+                      max={365}
+                      placeholder="7"
+                      value={numberOfDays}
+                      onChange={(e) => setNumberOfDays(e.target.value ? parseInt(e.target.value) : '')}
+                      required
+                      autoComplete="off"
+                    />
+                  </div>
+                )}
+
+                {planningLevel === 'detailed_planning' && (
+                  <div className="rounded-lg border border-border/50 bg-card/50 p-3 grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="startDate">{t('createTrip.startDate')}</Label>
+                      <Input
+                        id="startDate"
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        required
+                        autoComplete="off"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="endDate">{t('createTrip.endDate')}</Label>
+                      <Input
+                        id="endDate"
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        min={startDate}
+                        required
+                        autoComplete="off"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 px-4 sm:px-6 py-3 border-t shrink-0 mt-auto">

@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { TripProvider } from "./context/TripProviderComposed";
 import { AuthGuard } from "./components/AuthGuard";
@@ -18,7 +18,7 @@ const ItineraryPage = lazy(() => import("./pages/Itinerary"));
 const POIsPage = lazy(() => import("./pages/POIs"));
 const POIGroupPage = lazy(() => import("./pages/POIGroup"));
 const TransportPage = lazy(() => import("./pages/Transport"));
-const RecommendationsPage = lazy(() => import("./pages/Recommendations"));
+const SourcesPage = lazy(() => import("./pages/Sources"));
 const MapPage = lazy(() => import("./pages/Map"));
 const BudgetPage = lazy(() => import("./pages/Budget"));
 const TasksPage = lazy(() => import("./pages/Tasks"));
@@ -28,8 +28,8 @@ const SchedulePage = lazy(() => import("./pages/Schedule"));
 const ShareTargetPage = lazy(() => import("./pages/ShareTarget"));
 const ContactsPage = lazy(() => import("./pages/Contacts"));
 const DocumentsPage = lazy(() => import("./pages/Documents"));
-const ResourcesPage = lazy(() => import("./pages/Resources"));
 const TripsPage = lazy(() => import("./pages/Trips"));
+const OverviewPage = lazy(() => import("./pages/Overview"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin pages (lazy-loaded)
@@ -80,11 +80,13 @@ const App = () => (
                   <TripProvider>
                     <Routes>
                       <Route path="/" element={<ErrorBoundary><SchedulePage /></ErrorBoundary>} />
+                      <Route path="/overview" element={<ErrorBoundary><OverviewPage /></ErrorBoundary>} />
                       <Route path="/itinerary" element={<ErrorBoundary><ItineraryPage /></ErrorBoundary>} />
                       <Route path="/pois" element={<ErrorBoundary><POIsPage /></ErrorBoundary>} />
                       <Route path="/pois/group" element={<ErrorBoundary><POIGroupPage /></ErrorBoundary>} />
                       <Route path="/transport" element={<ErrorBoundary><TransportPage /></ErrorBoundary>} />
-                      <Route path="/recommendations" element={<ErrorBoundary><RecommendationsPage /></ErrorBoundary>} />
+                      <Route path="/sources" element={<ErrorBoundary><SourcesPage /></ErrorBoundary>} />
+                      <Route path="/recommendations" element={<Navigate to="/sources" replace />} />
                       <Route path="/map" element={<ErrorBoundary><MapPage /></ErrorBoundary>} />
                       <Route path="/budget" element={<ErrorBoundary><BudgetPage /></ErrorBoundary>} />
                       <Route path="/tasks" element={<ErrorBoundary><TasksPage /></ErrorBoundary>} />
@@ -92,7 +94,7 @@ const App = () => (
                       <Route path="/accommodation" element={<ErrorBoundary><AccommodationPage /></ErrorBoundary>} />
                       <Route path="/contacts" element={<ErrorBoundary><ContactsPage /></ErrorBoundary>} />
                       <Route path="/documents" element={<ErrorBoundary><DocumentsPage /></ErrorBoundary>} />
-                      <Route path="/resources" element={<ErrorBoundary><ResourcesPage /></ErrorBoundary>} />
+                      <Route path="/resources" element={<Navigate to="/sources" replace />} />
                       <Route path="/trips" element={<ErrorBoundary><TripsPage /></ErrorBoundary>} />
                       <Route path="/share-target" element={<ErrorBoundary><ShareTargetPage /></ErrorBoundary>} />
                       <Route path="*" element={<NotFound />} />

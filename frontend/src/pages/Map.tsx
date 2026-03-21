@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import { ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
 import { useActiveTrip } from '@/context/ActiveTripContext';
@@ -13,56 +13,13 @@ import { AppLayout } from '@/components/layout';
 import { Badge } from '@/components/ui/badge';
 import type { POIStatus } from '@/types/trip';
 
+import { createPOIIcon, createTransportIcon, POI_COLORS, TRANSPORT_COLORS, FitBounds } from '@/components/map/mapUtils';
 import { getSubCategoryLabel, getCategoryLabel } from '@/lib/subCategoryConfig';
 import 'leaflet/dist/leaflet.css';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
-const createPOIIcon = (color: string, materialIcon?: string) => new L.DivIcon({
-  className: '',
-  html: `<div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${color};color:white;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white;">
-    <span class="material-symbols-outlined" style="font-size:16px;">${materialIcon || 'location_on'}</span>
-  </div>`,
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-});
-
-const createTransportIcon = (color: string) => new L.DivIcon({
-  className: '',
-  html: `<div style="background:${color};width:16px;height:16px;border-radius:3px;border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
-  iconSize: [16, 16],
-  iconAnchor: [8, 8],
-});
-
-const POI_COLORS: Record<string, string> = {
-  accommodation: '#0e7490',
-  eatery: '#ea580c',
-  attraction: '#16a34a',
-  service: '#7c3aed',
-};
-
-const TRANSPORT_COLORS: Record<string, string> = {
-  flight: '#1d4ed8',
-  train: '#b45309',
-  ferry: '#0891b2',
-  bus: '#65a30d',
-  taxi: '#d97706',
-  car_rental: '#6b7280',
-  default: '#64748b',
-};
-
 const ALL_STATUSES: POIStatus[] = ['suggested', 'interested', 'planned', 'scheduled', 'booked', 'visited', 'skipped'];
-
-function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
-  const map = useMap();
-  useEffect(() => {
-    if (coordinates.length > 0) {
-      const bounds = L.latLngBounds(coordinates.map(c => L.latLng(c[0], c[1])));
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [map, coordinates]);
-  return null;
-}
 
 const MapPage = () => {
   const { t } = useTranslation();

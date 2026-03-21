@@ -1,29 +1,48 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, X, MapPin, Plane, Hotel, LinkIcon } from 'lucide-react';
+import { Plus, X, MapPin, Plane, Hotel, LinkIcon, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { CreateTransportForm } from '@/components/forms/CreateTransportForm';
 import { CreateExternalRecommendationForm } from '@/components/forms/CreateExternalRecommendationForm';
-import type { POICategory } from '@/types/trip';
+import { ContactEditDialog } from '@/components/shared/ContactEditDialog';
+import { useContacts } from '@/context/ContactsContext';
+import { useActiveTrip } from '@/context/ActiveTripContext';
+import type { ContactRole } from '@/types/trip';
 
-type FormType = 'poi' | 'transport' | 'accommodation' | 'external' | null;
+type FormType = 'poi' | 'transport' | 'accommodation' | 'external' | 'contact' | 'addLocation' | null;
 
 export function MobileFAB() {
   const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeForm, setActiveForm] = useState<FormType>(null);
+  const { addContact } = useContacts();
+  const { activeTrip } = useActiveTrip();
+
+  const isResearchMode = activeTrip?.status === 'research';
 
   const openForm = (form: FormType) => {
     setMenuOpen(false);
+    if (form === 'addLocation') {
+      window.dispatchEvent(new CustomEvent('research-add-location'));
+      return;
+    }
     setActiveForm(form);
   };
 
+  const handleCreateContact = async (data: { name: string; role: ContactRole; phone?: string; email?: string; website?: string; address?: string; notes?: string }) => {
+    if (!activeTrip) return;
+    await addContact({ ...data, tripId: activeTrip.id });
+    setActiveForm(null);
+  };
+
   const menuItems = [
+    ...(isResearchMode ? [{ key: 'addLocation' as const, icon: MapPin, label: t('fab.addLocation'), color: 'text-green-500' }] : []),
     { key: 'external' as const, icon: LinkIcon, label: t('fab.external'), color: 'text-purple-500' },
     { key: 'poi' as const, icon: MapPin, label: t('fab.poi'), color: 'text-blue-500' },
     { key: 'transport' as const, icon: Plane, label: t('fab.transport'), color: 'text-orange-500' },
     { key: 'accommodation' as const, icon: Hotel, label: t('fab.accommodation'), color: 'text-teal-500' },
+    { key: 'contact' as const, icon: Users, label: t('fab.contact'), color: 'text-indigo-500' },
   ];
 
   return (
@@ -31,13 +50,13 @@ export function MobileFAB() {
       {/* Backdrop */}
       {menuOpen && (
         <div
-          className="fixed inset-0 bg-black/30 z-40 md:hidden"
+          className="fixed inset-0 bg-black/30 z-40"
           onClick={() => setMenuOpen(false)}
         />
       )}
 
       {/* Menu items — positioned above the FAB */}
-      <div className={cn("fixed bottom-[calc(8.5rem+env(safe-area-inset-bottom))] end-4 z-40 md:hidden flex flex-col-reverse items-end gap-2", !menuOpen && "pointer-events-none")}>
+      <div className={cn("fixed bottom-[calc(8.5rem+env(safe-area-inset-bottom))] md:bottom-[calc(5rem)] end-4 z-40 flex flex-col-reverse items-end gap-2", !menuOpen && "pointer-events-none")}>
         {menuItems.map((item, i) => {
           const Icon = item.icon;
           return (
@@ -62,7 +81,7 @@ export function MobileFAB() {
       {/* FAB button */}
       <button
         className={cn(
-          'fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] end-4 z-50 md:hidden',
+          'fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 end-4 z-50',
           'w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-xl',
           'flex items-center justify-center transition-transform duration-200',
           menuOpen && 'rotate-45'
@@ -90,6 +109,12 @@ export function MobileFAB() {
       <CreateExternalRecommendationForm
         open={activeForm === 'external'}
         onOpenChange={(v) => { if (!v) setActiveForm(null); }}
+      />
+      <ContactEditDialog
+        contact={null}
+        open={activeForm === 'contact'}
+        onOpenChange={(v) => { if (!v) setActiveForm(null); }}
+        onSave={handleCreateContact}
       />
     </>
   );

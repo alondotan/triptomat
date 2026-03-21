@@ -3,37 +3,27 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import {
   CalendarDays,
-  MapPin,
   Map,
-  Plane,
-  Hotel,
   MoreHorizontal,
-  Star,
   Table2,
   DollarSign,
   CheckSquare,
-  Users,
   FileText,
-  Compass,
+  LayoutDashboard,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 const primaryItems = [
+  { path: '/overview', labelKey: 'nav.home', icon: LayoutDashboard },
   { path: '/', labelKey: 'nav.timeline', icon: CalendarDays },
-  { path: '/pois', labelKey: 'nav.pois', icon: MapPin },
   { path: '/map', labelKey: 'nav.map', icon: Map },
-  { path: '/transport', labelKey: 'nav.transport', icon: Plane },
-  { path: '/accommodation', labelKey: 'nav.stay', icon: Hotel },
 ];
 
 const moreItems = [
-  { path: '/recommendations', labelKey: 'nav.recommendations', icon: Star },
-  { path: '/resources', labelKey: 'nav.resources', icon: Compass },
   { path: '/itinerary', labelKey: 'nav.itinerary', icon: Table2 },
   { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },
   { path: '/tasks', labelKey: 'nav.tasks', icon: CheckSquare },
-  { path: '/contacts', labelKey: 'nav.contacts', icon: Users },
   { path: '/documents', labelKey: 'nav.docs', icon: FileText },
 ];
 

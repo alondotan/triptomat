@@ -102,3 +102,46 @@ export function mergeResources(existing: CountryResource[], incoming: CountryRes
 export function invalidateResourceCache(country: string): void {
   resourceCache.delete(country);
 }
+
+// ── Convert recommendation videos to resources ──
+
+const VIDEO_URL_RE = /youtube\.com|youtu\.be|tiktok\.com|instagram\.com|facebook\.com|fb\.watch/i;
+
+function classifyVideoUrl(url: string): ResourceSourceType {
+  const u = url.toLowerCase();
+  if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube';
+  if (u.includes('tiktok.com')) return 'tiktok';
+  if (u.includes('instagram.com')) return 'instagram';
+  if (u.includes('facebook.com') || u.includes('fb.watch')) return 'facebook';
+  return 'other';
+}
+
+export function isVideoUrl(url: string): boolean {
+  return VIDEO_URL_RE.test(url);
+}
+
+/** Convert linked source_recommendations (video URLs) into CountryResource items */
+export function recommendationsToResources(
+  recs: Array<{
+    id: string;
+    source_url?: string;
+    source_title?: string;
+    source_image?: string;
+  }>,
+): CountryResource[] {
+  return recs
+    .filter(r => r.source_url && isVideoUrl(r.source_url))
+    .map(r => ({
+      id: r.id,
+      source_type: classifyVideoUrl(r.source_url!),
+      category: 'general' as ResourceCategory,
+      search_language: 'en' as ResourceLang,
+      title: r.source_title || r.source_url!,
+      url: r.source_url!,
+      thumbnail: r.source_image || null,
+      snippet: null,
+      channel: null,
+      published_at: null,
+      location_id: null,
+    }));
+}

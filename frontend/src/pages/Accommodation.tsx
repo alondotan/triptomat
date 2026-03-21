@@ -92,7 +92,7 @@ const AccommodationPage = () => {
               <Merge size={14} />
               {mergeMode ? t('common.cancelMerge') : t('common.merge')}
             </Button>
-            {!mergeMode && <div className="max-sm:hidden"><CreatePOIForm /></div>}
+            {/* Create via global FAB */}
           </div>
         </div>
 

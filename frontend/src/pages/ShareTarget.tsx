@@ -159,7 +159,7 @@ export default function ShareTargetPage() {
                 ? t('shareTarget.alreadyAnalyzed')
                 : t('shareTarget.analysisSubmitted')}
             </p>
-            <Button size="sm" className="gap-1.5" onClick={() => navigate('/recommendations')}>
+            <Button size="sm" className="gap-1.5" onClick={() => navigate('/sources')}>
               <ExternalLink size={14} />
               {t('shareTarget.goToRecs')}
             </Button>

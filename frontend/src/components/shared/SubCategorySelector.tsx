@@ -9,6 +9,7 @@ import {
   getSubCategoriesForPOICategory,
   getTransportSubCategories,
   getLucideIcon,
+  getSubCategoryLabel,
   loadSubCategoryConfig,
 } from '@/lib/subCategoryConfig';
 
@@ -21,7 +22,8 @@ interface SubCategorySelectorProps {
 }
 
 export function SubCategorySelector({ categoryFilter, value, onChange, placeholder }: SubCategorySelectorProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const effectivePlaceholder = placeholder ?? t('subCategorySelector.chooseType');
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -39,8 +41,8 @@ export function SubCategorySelector({ categoryFilter, value, onChange, placehold
   const filtered = useMemo(() => {
     if (!search) return entries;
     const q = search.toLowerCase();
-    return entries.filter(e => e.type.toLowerCase().includes(q));
-  }, [entries, search]);
+    return entries.filter(e => getSubCategoryLabel(e.type, lang).toLowerCase().includes(q) || e.type.toLowerCase().includes(q));
+  }, [entries, search, lang]);
 
   // Get icon for current value
   const currentEntry = entries.find(e => e.type.toLowerCase() === value.toLowerCase());
@@ -52,7 +54,7 @@ export function SubCategorySelector({ categoryFilter, value, onChange, placehold
         <Button variant="outline" className="w-full justify-between font-normal h-10" type="button">
           <span className="flex items-center gap-2 truncate">
             {CurrentIcon && <CurrentIcon size={14} className="shrink-0 text-muted-foreground" />}
-            {value || <span className="text-muted-foreground">{effectivePlaceholder}</span>}
+            {value ? getSubCategoryLabel(value, lang) : <span className="text-muted-foreground">{effectivePlaceholder}</span>}
           </span>
           <ChevronDown size={14} className="shrink-0 opacity-50" aria-hidden="true" />
         </Button>
@@ -87,7 +89,7 @@ export function SubCategorySelector({ categoryFilter, value, onChange, placehold
                 onClick={() => { onChange(entry.type); setOpen(false); setSearch(''); }}
               >
                 <Icon size={14} className="shrink-0 text-muted-foreground" />
-                <span className="truncate">{entry.type}</span>
+                <span className="truncate">{getSubCategoryLabel(entry.type, lang)}</span>
               </button>
             );
           })}
