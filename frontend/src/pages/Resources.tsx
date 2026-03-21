@@ -31,6 +31,11 @@ const PLATFORM_CONFIG: Record<string, { label: string; color: string }> = {
 
 const SOURCE_TYPES = ['all', 'youtube', 'article', 'facebook', 'instagram', 'tiktok'] as const;
 
+const LANG_CONFIG: Record<string, { label: string; flag: string }> = {
+  en: { label: 'EN', flag: '🇬🇧' },
+  he: { label: 'HE', flag: '🇮🇱' },
+};
+
 const CATEGORIES: { key: ResourceCategory | 'all'; labelKey: string; color: string }[] = [
   { key: 'all', labelKey: 'resourcesPage.allCategories', color: '' },
   { key: 'attractions', labelKey: 'resourcesPage.catAttractions', color: 'bg-amber-100 text-amber-700 border-amber-200' },
@@ -40,9 +45,34 @@ const CATEGORIES: { key: ResourceCategory | 'all'; labelKey: string; color: stri
   { key: 'general', labelKey: 'resourcesPage.catGeneral', color: 'bg-sky-100 text-sky-700 border-sky-200' },
 ];
 
-function ResourceCard({ resource }: { resource: CountryResource }) {
+function ResourceBadges({ resource }: { resource: CountryResource }) {
   const platform = PLATFORM_CONFIG[resource.source_type] || PLATFORM_CONFIG.other;
   const category = CATEGORIES.find(c => c.key === resource.category);
+  const langCfg = resource.lang ? LANG_CONFIG[resource.lang] : null;
+
+  return (
+    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+      <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${platform.color}`}>
+        {platform.label}
+      </Badge>
+      {category && category.key !== 'all' && (
+        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${category.color}`}>
+          {category.labelKey.split('.').pop()}
+        </Badge>
+      )}
+      {langCfg && (
+        <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-slate-100 text-slate-600 border-slate-200">
+          {langCfg.flag} {langCfg.label}
+        </Badge>
+      )}
+      {resource.channel && (
+        <span className="text-[10px] text-muted-foreground truncate">{resource.channel}</span>
+      )}
+    </div>
+  );
+}
+
+function ResourceCard({ resource }: { resource: CountryResource }) {
   const isVideo = ['youtube', 'tiktok', 'facebook', 'instagram'].includes(resource.source_type);
 
   return (
@@ -93,19 +123,7 @@ function ResourceCard({ resource }: { resource: CountryResource }) {
             {resource.snippet && (
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{resource.snippet}</p>
             )}
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${platform.color}`}>
-                {platform.label}
-              </Badge>
-              {category && category.key !== 'all' && (
-                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${category.color}`}>
-                  {category.labelKey.split('.').pop()}
-                </Badge>
-              )}
-              {resource.channel && (
-                <span className="text-[10px] text-muted-foreground truncate">{resource.channel}</span>
-              )}
-            </div>
+            <ResourceBadges resource={resource} />
           </div>
         </div>
       ) : (
@@ -117,20 +135,7 @@ function ResourceCard({ resource }: { resource: CountryResource }) {
           {resource.snippet && (
             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{resource.snippet}</p>
           )}
-          <div className="flex items-center gap-2 mt-2">
-            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${platform.color}`}>
-              {platform.label}
-            </Badge>
-            {category && category.key !== 'all' && (
-              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${category.color}`}>
-                {category.labelKey.split('.').pop()}
-              </Badge>
-            )}
-            {resource.channel && (
-              <span className="text-[10px] text-muted-foreground truncate">{resource.channel}</span>
-            )}
-            <ExternalLink size={10} className="text-muted-foreground ms-auto shrink-0" />
-          </div>
+          <ResourceBadges resource={resource} />
         </div>
       )}
     </a>
