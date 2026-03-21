@@ -804,6 +804,7 @@ const en = {
     draftEmpty: 'Start chatting to build your itinerary. Ask the AI to plan your days!',
     noPlaces: 'No places yet',
     dayLabel: 'Day {{n}}',
+    dayRange: 'Days {{from}}–{{to}}',
     clearDraft: 'Clear',
     updateTrip: 'Update trip',
     tripUpdated: 'Trip updated',

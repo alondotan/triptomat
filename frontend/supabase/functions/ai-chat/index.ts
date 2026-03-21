@@ -101,12 +101,28 @@ function buildSystemPrompt(tripContext?: TripContext, draft?: DraftDay[] | null)
     if (draft.length === 0) {
       draftText = '(Empty — no days planned yet)';
     } else {
-      // Compact format: "Day 1 (City): Place1, Place2, ..."
-      draftText = draft.map((d: DraftDay) => {
-        const loc = d.locationContext ? ` (${d.locationContext})` : '';
-        const places = d.places.map(p => p.name).join(', ');
-        return `Day ${d.dayNumber}${loc}: ${places || '(empty)'}`;
-      }).join('\n');
+      // Group consecutive days by location, then show days under each location
+      const spans: { location: string; days: DraftDay[] }[] = [];
+      for (const d of draft) {
+        const loc = d.locationContext || '';
+        if (spans.length > 0 && spans[spans.length - 1].location === loc) {
+          spans[spans.length - 1].days.push(d);
+        } else {
+          spans.push({ location: loc, days: [d] });
+        }
+      }
+      const lines: string[] = [];
+      for (const span of spans) {
+        if (span.location) {
+          lines.push(span.location);
+        }
+        const indent = span.location ? '  ' : '';
+        for (const d of span.days) {
+          const places = d.places.map(p => p.name).join(', ');
+          lines.push(`${indent}Day ${d.dayNumber}: ${places || '(empty)'}`);
+        }
+      }
+      draftText = lines.join('\n');
     }
 
     prompt += `\n\n## Itinerary Planner Mode

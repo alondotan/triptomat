@@ -802,6 +802,7 @@ const he = {
     draftEmpty: 'התחל לשוחח כדי לבנות מסלול. בקש מה-AI לתכנן את הימים שלך!',
     noPlaces: 'אין מקומות עדיין',
     dayLabel: 'יום {{n}}',
+    dayRange: 'ימים {{from}}–{{to}}',
     clearDraft: 'נקה',
     updateTrip: 'עדכן טיול',
     tripUpdated: 'הטיול עודכן',
