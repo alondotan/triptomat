@@ -192,6 +192,19 @@ export interface Mission {
 }
 
 // ============================================================
+// ITINERARY LOCATION
+// ============================================================
+export interface ItineraryLocation {
+  id: string;
+  tripId: string;
+  tripLocationId: string | null;  // null = "General" (default)
+  isDefault: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================================
 // ITINERARY DAY
 // ============================================================
 export interface ItineraryAccommodationOption {
@@ -222,6 +235,7 @@ export interface ItineraryDay {
   dayNumber: number;
   date?: string;
   locationContext?: string;
+  itineraryLocationId?: string;
   accommodationOptions: ItineraryAccommodationOption[];
   activities: ItineraryActivity[];
   transportationSegments: ItineraryTransportSegment[];

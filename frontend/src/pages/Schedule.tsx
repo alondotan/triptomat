@@ -5,6 +5,8 @@ import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
 import { useItinerary } from '@/context/ItineraryContext';
 import { updateItineraryDay, createItineraryDay } from '@/services/itineraryService';
+import { findOrCreateItineraryLocation } from '@/services/itineraryLocationService';
+import { findInFlatList } from '@/services/tripLocationService';
 import { rebuildPOIBookingsFromDays } from '@/services/poiService';
 import { LocationContextPicker } from '@/components/shared/LocationContextPicker';
 import { parseISO, format, addDays, subDays } from 'date-fns';
@@ -834,11 +836,11 @@ function ScheduleZone({ children, activePotentialDrag, isEmpty }: {
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function SchedulePage() {
-  const { activeTrip, updateCurrentTrip } = useActiveTrip();
+  const { activeTrip, updateCurrentTrip, tripLocations } = useActiveTrip();
   const { updateTripInList } = useTripList();
   const { pois, addPOI, updatePOI } = usePOI();
   const { transportation, deleteTransportation } = useTransport();
-  const { itineraryDays, setItineraryDays, addMission, refetchItinerary } = useItinerary();
+  const { itineraryDays, setItineraryDays, itineraryLocations, refetchItineraryLocations, addMission, refetchItinerary } = useItinerary();
   const { toast } = useToast();
   const [selectedDayNum, setSelectedDayNum] = useState(1);
   const [addTransportOpen, setAddTransportOpen] = useState(false);
@@ -937,12 +939,26 @@ export default function SchedulePage() {
   const tripDays = useTripDays();
   const { weatherByDate } = useTripWeather(activeTrip ?? undefined, itineraryDays);
 
+  // Build lookup: itinerary_location_id → location name (from trip_locations)
+  const itinLocNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const il of itineraryLocations) {
+      if (il.tripLocationId) {
+        const tl = tripLocations.find(l => l.id === il.tripLocationId);
+        if (tl) map.set(il.id, tl.name);
+      }
+    }
+    return map;
+  }, [itineraryLocations, tripLocations]);
+
   const locationSpans = useMemo(() => {
     if (tripDays.length === 0) return [];
     const spans: { location: string; startIdx: number; endIdx: number }[] = [];
     for (let i = 0; i < tripDays.length; i++) {
       const itDay = itineraryDays.find(d => d.dayNumber === i + 1);
-      const loc = itDay?.locationContext || '';
+      // Prefer resolved name from itinerary_location, fall back to locationContext
+      const loc = (itDay?.itineraryLocationId && itinLocNameMap.get(itDay.itineraryLocationId))
+        || itDay?.locationContext || '';
       if (loc && spans.length > 0 && spans[spans.length - 1].location === loc && spans[spans.length - 1].endIdx === i - 1) {
         spans[spans.length - 1].endIdx = i;
       } else if (loc) {
@@ -950,7 +966,7 @@ export default function SchedulePage() {
       }
     }
     return spans;
-  }, [tripDays, itineraryDays]);
+  }, [tripDays, itineraryDays, itinLocNameMap]);
 
   const [potential, setPotential] = useState<Item[]>([]);
   const [scheduled, setScheduled] = useState<Item[]>([]);
@@ -1159,11 +1175,24 @@ export default function SchedulePage() {
   }, [selectedDayNum, itineraryDays, setItineraryDays, refreshDays, resolveActivityTime]);
 
   const updateLocationContext = useCallback(async () => {
+    if (!activeTrip) return;
+
+    // Resolve location name to itinerary_location (FK-based)
+    let itineraryLocationId: string | undefined;
+    if (locationContext) {
+      const tripLoc = findInFlatList(tripLocations, locationContext);
+      if (tripLoc) {
+        const itinLoc = await findOrCreateItineraryLocation(activeTrip.id, tripLoc.id);
+        itineraryLocationId = itinLoc.id;
+        await refetchItineraryLocations();
+      }
+    }
+
     for (let i = 0; i < locationTotalDays; i++) {
       const dayNum = selectedDayNum + i;
       if (dayNum > tripDays.length) break;
       let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
-      if (!targetDay && activeTrip) {
+      if (!targetDay) {
         targetDay = await createItineraryDay({
           tripId: activeTrip.id,
           dayNumber: dayNum,
@@ -1174,12 +1203,18 @@ export default function SchedulePage() {
           transportationSegments: [],
         });
       }
-      if (targetDay) await updateItineraryDay(targetDay.id, { locationContext });
+      if (targetDay) {
+        // Dual-write: both locationContext (text) and itineraryLocationId (FK)
+        await updateItineraryDay(targetDay.id, {
+          locationContext,
+          ...(itineraryLocationId ? { itineraryLocationId } : {}),
+        });
+      }
     }
     setEditingLocation(false);
     setLocationTotalDays(1);
     await refreshDays();
-  }, [locationContext, locationTotalDays, selectedDayNum, tripDays, itineraryDays, activeTrip, refreshDays]);
+  }, [locationContext, locationTotalDays, selectedDayNum, tripDays, itineraryDays, activeTrip, tripLocations, refetchItineraryLocations, refreshDays]);
 
   // ── Ensure itinerary day exists ─────────────────────────────────────────────
   const ensureItDay = useCallback(async () => {
@@ -1372,7 +1407,8 @@ export default function SchedulePage() {
   }, [scheduled, potential, morningCoords, morningAccom, eveningCoords, eveningAccom]);
 
   // Actual location of the current day — for DaySection suggestions (not the edit buffer)
-  const currentDayLocation = currentItDay?.locationContext ?? '';
+  const currentDayLocation = (currentItDay?.itineraryLocationId && itinLocNameMap.get(currentItDay.itineraryLocationId))
+    || (currentItDay?.locationContext ?? '');
 
   const availableAccom = pois.filter(
     p => p.category === 'accommodation' && !p.isCancelled && !dayAccommodations.some(d => d.poi_id === p.id),

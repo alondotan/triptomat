@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Trip, Collection } from '@/types/trip';
 import { fetchItineraryDays, updateItineraryDay } from './itineraryService';
 import { seedTripLocations } from './tripLocationService';
+import { ensureDefaultItineraryLocation } from './itineraryLocationService';
 
 // ============================================================
 // TRIPS
@@ -71,6 +72,13 @@ export async function createTrip(trip: Omit<Trip, 'id' | 'createdAt' | 'updatedA
     } catch (e) {
       console.error('Failed to seed trip locations:', e);
     }
+  }
+
+  // Create default "General" itinerary location
+  try {
+    await ensureDefaultItineraryLocation(mapped.id);
+  } catch (e) {
+    console.error('Failed to create default itinerary location:', e);
   }
 
   return mapped;

@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ExternalLink, Mail, Trash2, ChevronDown, ChevronRight, Calendar, DollarSign, MapPinned, User, Hash, Hotel, Plane, MapPin } from 'lucide-react';
+import { Toggle } from '@/components/ui/toggle';
+import { ExternalLink, Mail, Trash2, ChevronDown, ChevronRight, Calendar, DollarSign, MapPinned, User, Hash, Hotel, Plane, MapPin, Filter } from 'lucide-react';
 import { getCategoryIcon } from '@/lib/subCategoryConfig';
 import { SourceEmail } from '@/types/webhook';
 import { fetchSourceEmails, deleteSourceEmail } from '@/services/webhookService';
@@ -45,12 +46,18 @@ function cleanSubject(subject: string): string {
 
 export function SourceEmailsDashboard() {
   const { t } = useTranslation();
-  const { trips } = useTripList();
+  const { trips, activeTripId } = useTripList();
   const { toast } = useToast();
   const [items, setItems] = useState<SourceEmail[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [readIds, setReadIds] = useState<Set<string>>(getStoredReadIds);
+  const [filterByTrip, setFilterByTrip] = useState(false);
+
+  const filteredItems = useMemo(() => {
+    if (!filterByTrip || !activeTripId) return items;
+    return items.filter(item => item.tripId === activeTripId);
+  }, [items, filterByTrip, activeTripId]);
 
   const loadItems = useCallback(async () => {
     try {
@@ -135,6 +142,7 @@ export function SourceEmailsDashboard() {
   };
 
   const unreadCount = items.filter(i => !readIds.has(i.id)).length;
+  const activeTripName = activeTripId ? trips.find(tr => tr.id === activeTripId)?.name : null;
 
   if (isLoading) return <Card><CardContent className="p-6 text-center" aria-live="polite">{t('common.loading')}</CardContent></Card>;
 
@@ -157,16 +165,36 @@ export function SourceEmailsDashboard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Mail className="h-5 w-5" /> {t('sourceEmails.title')}
-          <Badge variant="secondary">{items.length}</Badge>
-          {unreadCount > 0 && (
-            <Badge className="bg-blue-500 text-white hover:bg-blue-500">{unreadCount} {t('common.new')}</Badge>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5" /> {t('sourceEmails.title')}
+            <Badge variant="secondary">{filteredItems.length}</Badge>
+            {unreadCount > 0 && (
+              <Badge className="bg-blue-500 text-white hover:bg-blue-500">{unreadCount} {t('common.new')}</Badge>
+            )}
+          </CardTitle>
+          {activeTripId && (
+            <Toggle
+              pressed={filterByTrip}
+              onPressedChange={setFilterByTrip}
+              size="sm"
+              aria-label={t('sourceEmails.filterByTrip')}
+              className="gap-1.5 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+            >
+              <Filter className="h-3.5 w-3.5" />
+              <span className="text-xs">{activeTripName}</span>
+            </Toggle>
           )}
-        </CardTitle>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {items.map(item => {
+        {filteredItems.length === 0 && filterByTrip && (
+          <div className="flex flex-col items-center py-6 text-muted-foreground">
+            <Mail className="h-10 w-10 mb-2 opacity-40" aria-hidden="true" />
+            <p className="text-sm">{t('sourceEmails.noEmailsForTrip')}</p>
+          </div>
+        )}
+        {filteredItems.map(item => {
           const tripName = getTripName(item.tripId);
           const isExpanded = expandedIds.has(item.id);
           const isUnread = !readIds.has(item.id);

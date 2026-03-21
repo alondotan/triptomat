@@ -234,6 +234,28 @@ const he = {
     notificationsUnsupported: 'הדפדפן לא תומך בהתראות.',
   },
 
+  // ── AI Tier ──
+  aiTier: {
+    free: 'חינמי',
+    pro: 'PRO',
+    dialogTitle: 'מסלולי AI',
+    dialogSubtitle: 'השוואת תכונות',
+    featureUrlAnalysis: 'ניתוח קישורים (סרטונים, כתבות)',
+    featureAiChat: 'צ׳אט עוזר AI לטיול',
+    featureWhatsapp: 'אינטגרציית WhatsApp',
+    featureEmailParsing: 'ניתוח מיילים',
+    featureAdvancedModels: 'מודלי AI מתקדמים',
+    featurePriority: 'עיבוד בעדיפות',
+    limited: 'מוגבל',
+    unlimited: 'ללא הגבלה',
+    basic: 'בסיסי',
+    advanced: 'מתקדם',
+    standard: 'רגיל',
+    priority: 'עדיפות',
+    currentPlan: 'המסלול שלך',
+    comingSoon: 'בקרוב',
+  },
+
   // ── POIs Page ──
   poisPage: {
     title: 'נקודות עניין',

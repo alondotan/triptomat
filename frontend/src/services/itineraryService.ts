@@ -41,6 +41,7 @@ export async function updateItineraryDay(id: string, updates: Partial<ItineraryD
   if (updates.accommodationOptions !== undefined) updateData.accommodation_options = updates.accommodationOptions;
   if (updates.activities !== undefined) updateData.activities = updates.activities;
   if (updates.transportationSegments !== undefined) updateData.transportation_segments = updates.transportationSegments;
+  if (updates.itineraryLocationId !== undefined) updateData.itinerary_location_id = updates.itineraryLocationId;
 
   const { error } = await supabase.from('itinerary_days').update(updateData).eq('id', id);
   if (error) throw error;
@@ -58,6 +59,7 @@ function mapItineraryDay(row: Record<string, unknown>): ItineraryDay {
     dayNumber: row.day_number as number,
     date: (row.date as string) || undefined,
     locationContext: (row.location_context as string) || undefined,
+    itineraryLocationId: (row.itinerary_location_id as string) || undefined,
     accommodationOptions: (row.accommodation_options as ItineraryDay['accommodationOptions']) || [],
     activities: (row.activities as ItineraryDay['activities']) || [],
     transportationSegments: (row.transportation_segments as ItineraryDay['transportationSegments']) || [],

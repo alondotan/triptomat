@@ -64,6 +64,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Bell } from 'lucide-react';
 import { subscribeToPush, unsubscribeFromPush, isSubscribed, getPushPermissionState } from '@/services/pushNotificationService';
+import { useAiUsage } from '@/hooks/useAiUsage';
+import { Crown } from 'lucide-react';
 
 const navItems = [
   { path: '/', labelKey: 'nav.timeline', icon: CalendarDays },
@@ -124,8 +126,11 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
   const [locationTreeOpen, setLocationTreeOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [aiChatOpen, setAiChatOpen] = useState(false);
+  const [tierDialogOpen, setTierDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: aiUsage } = useAiUsage();
+  const userTier = aiUsage?.tier || 'free';
 
   // Navigate to trips page when no trips exist
   useEffect(() => {
@@ -268,6 +273,13 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setTierDialogOpen(true)}>
+                  <Crown size={14} className="mr-2" />
+                  <span className="flex-1">{t('aiTier.dialogTitle')}</span>
+                  <Badge variant={userTier === 'pro' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0 h-4 font-semibold ml-1">
+                    {userTier === 'pro' ? t('aiTier.pro') : t('aiTier.free')}
+                  </Badge>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => { setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }}>
                   <Settings size={14} className="mr-2" /> {t('nav.settings')}
                 </DropdownMenuItem>
@@ -396,6 +408,13 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setTierDialogOpen(true)}>
+                <Crown size={14} className="mr-2" />
+                <span className="flex-1">{t('aiTier.dialogTitle')}</span>
+                <Badge variant={userTier === 'pro' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0 h-4 font-semibold ml-1">
+                  {userTier === 'pro' ? t('aiTier.pro') : t('aiTier.free')}
+                </Badge>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => { setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }}>
                 <Settings size={14} className="mr-2" /> {t('nav.settings')}
               </DropdownMenuItem>
@@ -607,6 +626,59 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
               <Button variant="outline" size="sm" onClick={() => setPrefsOpen(false)}>{t('common.cancel')}</Button>
               <Button size="sm" onClick={handleSavePrefs}>{t('common.save')}</Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Tier Comparison Dialog */}
+      <Dialog open={tierDialogOpen} onOpenChange={setTierDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('aiTier.dialogTitle')}</DialogTitle>
+            <p className="text-sm text-muted-foreground">{t('aiTier.dialogSubtitle')}</p>
+          </DialogHeader>
+          <div className="pt-2">
+            {/* Column headers */}
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-0 items-center pb-2 border-b border-border mb-1">
+              <div />
+              <div className="text-center w-20">
+                <Badge variant="secondary" className="text-xs px-2 py-0.5 font-semibold">
+                  {t('aiTier.free')}
+                </Badge>
+                {userTier === 'free' && (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{t('aiTier.currentPlan')}</p>
+                )}
+              </div>
+              <div className="text-center w-20">
+                <Badge className="text-xs px-2 py-0.5 font-semibold bg-gradient-to-r from-amber-500 to-orange-500 border-0 text-white">
+                  {t('aiTier.pro')}
+                </Badge>
+                {userTier === 'pro' ? (
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{t('aiTier.currentPlan')}</p>
+                ) : (
+                  <p className="text-[10px] text-amber-600 font-medium mt-0.5">{t('aiTier.comingSoon')}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Feature rows */}
+            {[
+              { label: t('aiTier.featureUrlAnalysis'), free: t('aiTier.limited'), pro: t('aiTier.unlimited') },
+              { label: t('aiTier.featureAiChat'), free: t('aiTier.limited'), pro: t('aiTier.unlimited') },
+              { label: t('aiTier.featureWhatsapp'), free: t('aiTier.limited'), pro: t('aiTier.unlimited') },
+              { label: t('aiTier.featureEmailParsing'), free: t('aiTier.limited'), pro: t('aiTier.unlimited') },
+              { label: t('aiTier.featureAdvancedModels'), free: t('aiTier.basic'), pro: t('aiTier.advanced') },
+              { label: t('aiTier.featurePriority'), free: t('aiTier.standard'), pro: t('aiTier.priority') },
+            ].map((row, i) => (
+              <div key={i} className={cn(
+                'grid grid-cols-[1fr_auto_auto] gap-x-4 items-center py-2.5',
+                i % 2 === 0 && 'bg-muted/40 -mx-6 px-6 rounded'
+              )}>
+                <span className="text-sm">{row.label}</span>
+                <span className="text-xs text-muted-foreground text-center w-20">{row.free}</span>
+                <span className="text-xs font-medium text-center w-20">{row.pro}</span>
+              </div>
+            ))}
           </div>
         </DialogContent>
       </Dialog>

@@ -236,6 +236,28 @@ const en = {
     notificationsUnsupported: 'Notifications are not supported in this browser.',
   },
 
+  // ── AI Tier ──
+  aiTier: {
+    free: 'Free',
+    pro: 'PRO',
+    dialogTitle: 'AI Plans',
+    dialogSubtitle: 'Compare plan features',
+    featureUrlAnalysis: 'URL analysis (videos, articles)',
+    featureAiChat: 'AI trip assistant chat',
+    featureWhatsapp: 'WhatsApp integration',
+    featureEmailParsing: 'Email parsing',
+    featureAdvancedModels: 'Advanced AI models',
+    featurePriority: 'Priority processing',
+    limited: 'Limited',
+    unlimited: 'Unlimited',
+    basic: 'Basic',
+    advanced: 'Advanced',
+    standard: 'Standard',
+    priority: 'Priority',
+    currentPlan: 'Current plan',
+    comingSoon: 'Coming soon',
+  },
+
   // ── POIs Page ──
   poisPage: {
     title: 'Points of Interest',
