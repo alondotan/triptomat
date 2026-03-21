@@ -254,7 +254,7 @@ const Resources = () => {
     loadAll();
   }, [loadAll]);
 
-  // Filter resources by category + source type
+  // Filter + sort: user's language first
   const filteredResources = useMemo(() => {
     let filtered = resources;
     if (selectedCategory !== 'all') {
@@ -263,8 +263,12 @@ const Resources = () => {
     if (selectedType !== 'all') {
       filtered = filtered.filter(r => r.source_type === selectedType);
     }
-    return filtered;
-  }, [resources, selectedCategory, selectedType]);
+    return [...filtered].sort((a, b) => {
+      const aMatch = a.lang === lang ? 0 : 1;
+      const bMatch = b.lang === lang ? 0 : 1;
+      return aMatch - bMatch;
+    });
+  }, [resources, selectedCategory, selectedType, lang]);
 
   if (!activeTrip) {
     return (
