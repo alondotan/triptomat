@@ -9,7 +9,7 @@ export interface CountryResource {
   id: string;
   source_type: ResourceSourceType;
   category: ResourceCategory;
-  lang: ResourceLang;
+  search_language: ResourceLang;
   title: string;
   url: string;
   thumbnail: string | null;
@@ -22,9 +22,9 @@ export interface CountryResource {
 
 export interface CountryResourceFile {
   country: string;
+  country_he?: string;
+  country_id?: string;
   searched_at: string;
-  /** Which languages have been searched so far */
-  searched_langs: ResourceLang[];
   resources: CountryResource[];
 }
 
@@ -61,7 +61,8 @@ export function isStale(file: CountryResourceFile): boolean {
 /** Check if a specific language is missing or stale in the file */
 export function needsLangSearch(file: CountryResourceFile | null, lang: ResourceLang): boolean {
   if (!file) return true;
-  if (!file.searched_langs || !file.searched_langs.includes(lang)) return true;
+  const hasLang = file.resources.some(r => r.search_language === lang);
+  if (!hasLang) return true;
   return isStale(file);
 }
 

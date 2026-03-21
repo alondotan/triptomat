@@ -48,7 +48,7 @@ const CATEGORIES: { key: ResourceCategory | 'all'; labelKey: string; color: stri
 function ResourceBadges({ resource }: { resource: CountryResource }) {
   const platform = PLATFORM_CONFIG[resource.source_type] || PLATFORM_CONFIG.other;
   const category = CATEGORIES.find(c => c.key === resource.category);
-  const langCfg = resource.lang ? LANG_CONFIG[resource.lang] : null;
+  const langCfg = resource.search_language ? LANG_CONFIG[resource.search_language] : null;
 
   return (
     <div className="flex items-center gap-1.5 mt-2 flex-wrap">
@@ -255,7 +255,7 @@ const Resources = () => {
     loadAll();
   }, [loadAll]);
 
-  // Filter + sort: user's language first
+  // Filter + sort: user's language first, then Hebrew, then English
   const filteredResources = useMemo(() => {
     let filtered = resources;
     if (selectedCategory !== 'all') {
@@ -264,11 +264,12 @@ const Resources = () => {
     if (selectedType !== 'all') {
       filtered = filtered.filter(r => r.source_type === selectedType);
     }
-    return [...filtered].sort((a, b) => {
-      const aMatch = a.lang === lang ? 0 : 1;
-      const bMatch = b.lang === lang ? 0 : 1;
-      return aMatch - bMatch;
-    });
+    const langPriority = (r: CountryResource) => {
+      if (r.search_language === lang) return 0;
+      if (r.search_language === 'he') return 1;
+      return 2;
+    };
+    return [...filtered].sort((a, b) => langPriority(a) - langPriority(b));
   }, [resources, selectedCategory, selectedType, lang]);
 
   if (!activeTrip) {

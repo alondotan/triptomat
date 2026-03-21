@@ -39,7 +39,7 @@ interface Resource {
   id: string;
   source_type: ResourceSourceType;
   category: ResourceCategory;
-  lang: Lang;
+  search_language: Lang;
   title: string;
   url: string;
   thumbnail: string | null;
@@ -51,8 +51,9 @@ interface Resource {
 
 interface ResourceFile {
   country: string;
+  country_he?: string;
+  country_id?: string;
   searched_at: string;
-  searched_langs: Lang[];
   resources: Resource[];
 }
 
@@ -224,7 +225,7 @@ async function googleSearch(query: string, lang: Lang, category: ResourceCategor
       id: generateId(),
       source_type: classifyUrl(item.link),
       category,
-      lang,
+      search_language: lang,
       title: item.title || '',
       url: item.link,
       thumbnail: item.pagemap?.cse_thumbnail?.[0]?.src
@@ -379,18 +380,17 @@ Deno.serve(async (req) => {
     }
 
     const mergedResources = [...(existing?.resources || []), ...deduped];
-    const existingLangs = existing?.searched_langs || [];
-    const searchedLangs = existingLangs.includes(lang) ? existingLangs : [...existingLangs, lang];
 
     const file: ResourceFile = {
       country,
+      ...(existing?.country_he && { country_he: existing.country_he }),
+      ...(existing?.country_id && { country_id: existing.country_id }),
       searched_at: new Date().toISOString(),
-      searched_langs: searchedLangs,
       resources: mergedResources,
     };
 
     await saveFile(country, file);
-    console.log(`[search-country-resources] Saved ${mergedResources.length} total resources (${deduped.length} new) for ${country} [langs: ${searchedLangs.join(',')}]`);
+    console.log(`[search-country-resources] Saved ${mergedResources.length} total resources (${deduped.length} new) for ${country}`);
 
     return new Response(JSON.stringify({
       status: 'searched',
