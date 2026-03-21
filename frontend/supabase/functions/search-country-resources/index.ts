@@ -219,7 +219,8 @@ async function googleSearch(query: string, lang: Lang, category: ResourceCategor
       return [];
     }
     const data = await res.json();
-    return (data.items || []).map((item: any) => ({
+    return (data.items || [])// eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((item: any) => ({
       id: generateId(),
       source_type: classifyUrl(item.link),
       category,
@@ -260,7 +261,8 @@ async function youtubeSearch(query: string, maxResults: number, lang: Lang, cate
       return [];
     }
     const data = await res.json();
-    return (data.items || []).map((item: any) => ({
+    return (data.items || [])// eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .map((item: any) => ({
       id: generateId(),
       source_type: 'youtube' as const,
       category,

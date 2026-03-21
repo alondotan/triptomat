@@ -183,11 +183,11 @@ const Resources = () => {
       if (newResources.length > 0) {
         setResources(prev => mergeResources(prev, newResources));
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(`[resources] Search failed for ${country}:`, err);
       toast({
         title: t('resourcesPage.searchFailed', { country }),
-        description: err.message,
+        description: err instanceof Error ? err.message : String(err),
         variant: 'destructive',
       });
     } finally {
@@ -236,6 +236,7 @@ const Resources = () => {
         doSearch(country);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [countries.join(','), lang]);
 
   const handleRefresh = async () => {
