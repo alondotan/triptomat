@@ -663,20 +663,18 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
 
             {/* Feature rows */}
             {[
-              { label: t('aiTier.featureUrlAnalysis'), free: t('aiTier.limited'), pro: t('aiTier.unlimited') },
-              { label: t('aiTier.featureAiChat'), free: t('aiTier.limited'), pro: t('aiTier.unlimited') },
-              { label: t('aiTier.featureWhatsapp'), free: t('aiTier.limited'), pro: t('aiTier.unlimited') },
-              { label: t('aiTier.featureEmailParsing'), free: t('aiTier.limited'), pro: t('aiTier.unlimited') },
-              { label: t('aiTier.featureAdvancedModels'), free: t('aiTier.basic'), pro: t('aiTier.advanced') },
-              { label: t('aiTier.featurePriority'), free: t('aiTier.standard'), pro: t('aiTier.priority') },
+              { label: t('aiTier.featureUrlAnalysis'), free: 5, pro: 50 },
+              { label: t('aiTier.featureAiChat'), free: 20, pro: 200 },
+              { label: t('aiTier.featureWhatsapp'), free: 15, pro: 150 },
+              { label: t('aiTier.featureEmailParsing'), free: 10, pro: 100 },
             ].map((row, i) => (
               <div key={i} className={cn(
                 'grid grid-cols-[1fr_auto_auto] gap-x-4 items-center py-2.5',
                 i % 2 === 0 && 'bg-muted/40 -mx-6 px-6 rounded'
               )}>
                 <span className="text-sm">{row.label}</span>
-                <span className="text-xs text-muted-foreground text-center w-20">{row.free}</span>
-                <span className="text-xs font-medium text-center w-20">{row.pro}</span>
+                <span className="text-xs text-muted-foreground text-center w-20">{t('aiTier.perDay', { count: row.free })}</span>
+                <span className="text-xs font-medium text-center w-20">{t('aiTier.perDay', { count: row.pro })}</span>
               </div>
             ))}
           </div>
