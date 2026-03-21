@@ -1,7 +1,7 @@
 -- Itinerary locations: explicit location grouping for trip days
 -- Each itinerary_location links a trip to a trip_location (or is the default "General" bucket)
 
-CREATE TABLE public.itinerary_locations (
+CREATE TABLE IF NOT EXISTS public.itinerary_locations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   trip_id UUID NOT NULL REFERENCES public.trips(id) ON DELETE CASCADE,
   trip_location_id UUID REFERENCES public.trip_locations(id) ON DELETE SET NULL,
@@ -11,19 +11,20 @@ CREATE TABLE public.itinerary_locations (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Indexes
-CREATE INDEX idx_itinerary_locations_trip_id ON public.itinerary_locations(trip_id);
+-- Indexes (IF NOT EXISTS)
+CREATE INDEX IF NOT EXISTS idx_itinerary_locations_trip_id ON public.itinerary_locations(trip_id);
 
 -- Only one default per trip
-CREATE UNIQUE INDEX idx_itinerary_locations_default
+CREATE UNIQUE INDEX IF NOT EXISTS idx_itinerary_locations_default
   ON public.itinerary_locations(trip_id) WHERE is_default = true;
 
 -- No duplicate trip_location per trip
-CREATE UNIQUE INDEX idx_itinerary_locations_unique_location
+CREATE UNIQUE INDEX IF NOT EXISTS idx_itinerary_locations_unique_location
   ON public.itinerary_locations(trip_id, trip_location_id)
   WHERE trip_location_id IS NOT NULL;
 
--- Updated_at trigger
+-- Updated_at trigger (drop first to be idempotent)
+DROP TRIGGER IF EXISTS update_itinerary_locations_updated_at ON public.itinerary_locations;
 CREATE TRIGGER update_itinerary_locations_updated_at
   BEFORE UPDATE ON public.itinerary_locations
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
@@ -31,34 +32,43 @@ CREATE TRIGGER update_itinerary_locations_updated_at
 -- RLS (public access for MVP, consistent with itinerary_days)
 ALTER TABLE public.itinerary_locations ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read on itinerary_locations"
-  ON public.itinerary_locations FOR SELECT USING (true);
-
-CREATE POLICY "Allow public insert on itinerary_locations"
-  ON public.itinerary_locations FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Allow public update on itinerary_locations"
-  ON public.itinerary_locations FOR UPDATE USING (true);
-
-CREATE POLICY "Allow public delete on itinerary_locations"
-  ON public.itinerary_locations FOR DELETE USING (true);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'itinerary_locations' AND policyname = 'Allow public read on itinerary_locations') THEN
+    CREATE POLICY "Allow public read on itinerary_locations" ON public.itinerary_locations FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'itinerary_locations' AND policyname = 'Allow public insert on itinerary_locations') THEN
+    CREATE POLICY "Allow public insert on itinerary_locations" ON public.itinerary_locations FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'itinerary_locations' AND policyname = 'Allow public update on itinerary_locations') THEN
+    CREATE POLICY "Allow public update on itinerary_locations" ON public.itinerary_locations FOR UPDATE USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'itinerary_locations' AND policyname = 'Allow public delete on itinerary_locations') THEN
+    CREATE POLICY "Allow public delete on itinerary_locations" ON public.itinerary_locations FOR DELETE USING (true);
+  END IF;
+END $$;
 
 -- Realtime support
 ALTER TABLE public.itinerary_locations REPLICA IDENTITY FULL;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.itinerary_locations;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.itinerary_locations;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ── Add FK column to itinerary_days ──────────────────────────────────────────
 
-ALTER TABLE public.itinerary_days
-  ADD COLUMN itinerary_location_id UUID REFERENCES public.itinerary_locations(id) ON DELETE SET NULL;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'itinerary_days' AND column_name = 'itinerary_location_id') THEN
+    ALTER TABLE public.itinerary_days ADD COLUMN itinerary_location_id UUID REFERENCES public.itinerary_locations(id) ON DELETE SET NULL;
+  END IF;
+END $$;
 
-CREATE INDEX idx_itinerary_days_location ON public.itinerary_days(itinerary_location_id);
+CREATE INDEX IF NOT EXISTS idx_itinerary_days_location ON public.itinerary_days(itinerary_location_id);
 
 -- ── Backfill existing data ───────────────────────────────────────────────────
 
 -- 1) Create default "General" itinerary_location for each trip that has itinerary_days
 INSERT INTO public.itinerary_locations (trip_id, trip_location_id, is_default, sort_order)
-SELECT DISTINCT trip_id, NULL, true, 0
+SELECT DISTINCT trip_id, NULL::UUID, true, 0
 FROM public.itinerary_days
 ON CONFLICT DO NOTHING;
 
