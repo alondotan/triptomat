@@ -1,11 +1,12 @@
-import { useState, useCallback, useMemo, useEffect, Fragment } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, Fragment, lazy, Suspense } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
 import { useItinerary } from '@/context/ItineraryContext';
 import { updateItineraryDay, createItineraryDay } from '@/services/itineraryService';
-import { findOrCreateItineraryLocation, assignDayToLocation } from '@/services/itineraryLocationService';
+import { findOrCreateItineraryLocation, assignDayToLocation, reorderItineraryLocations, updateItineraryLocationNotes, deleteItineraryLocation } from '@/services/itineraryLocationService';
+import { geocodeLocation } from '@/services/weatherService';
 import { findInFlatList } from '@/services/tripLocationService';
 import { rebuildPOIBookingsFromDays } from '@/services/poiService';
 import { LocationContextPicker } from '@/components/shared/LocationContextPicker';
@@ -37,10 +38,18 @@ import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
+  horizontalListSortingStrategy,
   arrayMove,
+  type AnimateLayoutChanges,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Building2, CalendarDays, Check, Clock, GripVertical, MapPin, Moon, Pencil, Plus, Sun, Trash2, X } from 'lucide-react';
+
+// Disable the snap-back animation when an item is dropped
+const noReturnAnimation: AnimateLayoutChanges = () => false;
+
+import { Building2, CalendarDays, Check, Clock, GripVertical, Image as ImageIcon, MapPin, Moon, NotebookPen, Pencil, Plus, Sun, Trash2, X } from 'lucide-react';
+
+const LazyMiniMap = lazy(() => import('@/components/poi/AccommodationMiniMap').then(m => ({ default: m.AccommodationMiniMap })));
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -307,6 +316,7 @@ function SortableScheduledItem({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `sched-${item.id}`,
     disabled: isLocked || isTransport,
+    animateLayoutChanges: noReturnAnimation,
   });
 
   // Inline edit state for time_block items
@@ -834,6 +844,109 @@ function ScheduleZone({ children, activePotentialDrag, isEmpty }: {
   );
 }
 
+// ─── Sortable location pill ─────────────────────────────────────────────────────
+
+function SortableLocationPill({ id, name, isSelected, poiCount, onSelect, onDelete }: {
+  id: string;
+  name: string;
+  isSelected: boolean;
+  poiCount: number;
+  onSelect: () => void;
+  onDelete?: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, animateLayoutChanges: noReturnAnimation });
+  return (
+    <div ref={setNodeRef} className="relative shrink-0" style={{
+      transform: transform ? CSS.Transform.toString({ ...transform, y: 0 }) : undefined,
+      transition,
+    }}>
+      <button
+        type="button"
+        onClick={onSelect}
+        className={`flex flex-col items-center justify-center rounded-xl sm:rounded-2xl border-2 px-3 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm font-semibold transition-shadow min-w-[72px] sm:min-w-[100px] h-[60px] sm:h-[76px] touch-manipulation ${
+          isDragging ? 'opacity-50 z-50' : ''
+        } ${
+          isSelected
+            ? 'border-primary bg-primary text-primary-foreground shadow-lg'
+            : 'border-border bg-card text-foreground hover:border-primary/40 hover:shadow-sm'
+        }`}
+        {...attributes}
+        {...listeners}
+      >
+        <MapPin size={16} className="mb-0.5 sm:mb-1 shrink-0 sm:[&]:w-[20px] sm:[&]:h-[20px]" />
+        <span className="text-center leading-tight line-clamp-2 h-[2lh] flex items-center max-w-[70px] sm:max-w-[100px]">{name}</span>
+      </button>
+      {poiCount > 0 && (
+        <span className={`absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full text-[11px] font-bold flex items-center justify-center pointer-events-none ${
+          isSelected ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
+        }`}>
+          {poiCount}
+        </span>
+      )}
+      {isSelected && onDelete && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          className="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/80 transition-colors z-10"
+          aria-label="Delete"
+        >
+          <X size={12} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Sortable location span (planning mode Gantt strip) ─────────────────────────
+
+function SortableLocationSpan({ id, location, dayCount, isSelected, locationDayWidth, onClick }: {
+  id: string;
+  location: string;
+  dayCount: number;
+  isSelected: boolean;
+  locationDayWidth: number;
+  onClick: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, animateLayoutChanges: noReturnAnimation });
+  const width = dayCount * locationDayWidth - 8;
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        width: `${width}px`,
+        transform: transform ? CSS.Transform.toString({ ...transform, y: 0 }) : undefined,
+        transition,
+      }}
+      className={`h-full rounded-md flex items-center overflow-hidden gap-0.5 transition-colors shrink-0 ${
+        isDragging ? 'opacity-50 z-50' : ''
+      } ${
+        isSelected
+          ? 'bg-secondary border border-primary/40'
+          : 'bg-secondary border border-border'
+      }`}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="shrink-0 p-0.5 touch-none cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground"
+      >
+        <GripVertical size={10} />
+      </button>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={!isSelected}
+        className={`flex-1 min-w-0 flex items-center gap-1 h-full ${
+          isSelected ? 'cursor-pointer hover:text-primary' : 'cursor-default'
+        }`}
+      >
+        <span className="text-xs font-medium text-primary truncate">{location}</span>
+        {isSelected && <Pencil size={10} className="shrink-0 text-primary opacity-70" />}
+      </button>
+    </div>
+  );
+}
+
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function SchedulePage() {
@@ -931,10 +1044,27 @@ export default function SchedulePage() {
   };
 
   // Research mode: derived values for location strip
-  const researchLocations = useMemo(() =>
+  const [locationOrderOverride, setLocationOrderOverride] = useState<string[] | null>(null);
+  const researchLocationsBase = useMemo(() =>
     itineraryLocations.filter(il => !il.isDefault),
     [itineraryLocations],
   );
+  // Apply local order override (cleared once server data catches up)
+  const researchLocations = useMemo(() => {
+    if (!locationOrderOverride) return researchLocationsBase;
+    const byId = new Map(researchLocationsBase.map(l => [l.id, l]));
+    const ordered = locationOrderOverride.map(id => byId.get(id)).filter(Boolean) as typeof researchLocationsBase;
+    // If server added/removed items, fall back
+    if (ordered.length !== researchLocationsBase.length) return researchLocationsBase;
+    return ordered;
+  }, [researchLocationsBase, locationOrderOverride]);
+  // Clear override once server data matches
+  useEffect(() => {
+    if (!locationOrderOverride) return;
+    const serverIds = researchLocationsBase.map(l => l.id).join(',');
+    const overrideIds = locationOrderOverride.join(',');
+    if (serverIds === overrideIds) setLocationOrderOverride(null);
+  }, [researchLocationsBase, locationOrderOverride]);
 
   const researchLocNameMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -972,6 +1102,17 @@ export default function SchedulePage() {
     }
     return items;
   }, [selectedResearchDay, pois]);
+
+  // POI markers for the research map
+  const researchMapMarkers = useMemo(() => {
+    return researchPotential
+      .filter(i => i.poi?.location?.coordinates)
+      .map(i => ({
+        lat: i.poi!.location.coordinates!.lat,
+        lng: i.poi!.location.coordinates!.lng,
+        label: i.poi!.name,
+      }));
+  }, [researchPotential]);
 
   // Add a location to the research strip
   const handleAddResearchLocation = useCallback(async (locationName: string) => {
@@ -1018,6 +1159,187 @@ export default function SchedulePage() {
       toast({ title: t('common.error'), variant: 'destructive' });
     }
   }, [activeTrip, tripLocations, addSiteToHierarchy, reloadLocations, itineraryDays, researchLocations, refetchItineraryLocations, refetchItinerary, t, toast]);
+
+  // Drag-end handler for reordering research location pills
+  const handleLocationDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = researchLocations.findIndex(l => l.id === active.id);
+    const newIndex = researchLocations.findIndex(l => l.id === String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(researchLocations, oldIndex, newIndex);
+    // Apply optimistic reorder immediately so there's no flash
+    setLocationOrderOverride(reordered.map(l => l.id));
+    try {
+      await reorderItineraryLocations(
+        reordered.map((loc, i) => ({ id: loc.id, sortOrder: i + 1 })),
+      );
+      await refetchItineraryLocations();
+    } catch {
+      setLocationOrderOverride(null);
+      toast({ title: t('common.error'), variant: 'destructive' });
+    }
+  }, [researchLocations, refetchItineraryLocations, t, toast]);
+
+  // Delete a research location
+  const handleDeleteResearchLocation = useCallback(async (locId: string) => {
+    try {
+      await deleteItineraryLocation(locId);
+      await refetchItineraryLocations();
+      await refetchItinerary();
+      if (selectedResearchLocId === locId) {
+        const remaining = researchLocations.filter(l => l.id !== locId);
+        setSelectedResearchLocId(remaining.length > 0 ? remaining[0].id : null);
+      }
+    } catch {
+      toast({ title: t('common.error'), variant: 'destructive' });
+    }
+  }, [selectedResearchLocId, researchLocations, refetchItineraryLocations, refetchItinerary, t, toast]);
+
+  // Notes for the selected research location
+  const selectedResearchLocation = useMemo(() =>
+    researchLocations.find(l => l.id === selectedResearchLocId),
+    [researchLocations, selectedResearchLocId],
+  );
+  const notesSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [localNotes, setLocalNotes] = useState('');
+  // Sync local notes when selected location changes
+  useEffect(() => {
+    setLocalNotes(selectedResearchLocation?.notes || '');
+  }, [selectedResearchLocation?.id, selectedResearchLocation?.notes]);
+
+  const handleNotesChange = useCallback((value: string) => {
+    setLocalNotes(value);
+    if (notesSaveTimerRef.current) clearTimeout(notesSaveTimerRef.current);
+    notesSaveTimerRef.current = setTimeout(async () => {
+      if (!selectedResearchLocId) return;
+      try {
+        await updateItineraryLocationNotes(selectedResearchLocId, value);
+      } catch { /* silent — notes are saved optimistically */ }
+    }, 800);
+  }, [selectedResearchLocId]);
+
+  // Geocode selected research location for map + fetch boundary + image
+  const selectedLocName = selectedResearchLocId ? researchLocNameMap.get(selectedResearchLocId) : undefined;
+  const selectedTripLocation = useMemo(() => {
+    if (!selectedResearchLocId) return undefined;
+    const il = researchLocations.find(l => l.id === selectedResearchLocId);
+    return il?.tripLocationId ? tripLocations.find(tl => tl.id === il.tripLocationId) : undefined;
+  }, [selectedResearchLocId, researchLocations, tripLocations]);
+  const isCity = selectedTripLocation?.siteType === 'city' || selectedTripLocation?.siteType === 'town' || selectedTripLocation?.siteType === 'village';
+
+  const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationBoundary, setLocationBoundary] = useState<GeoJSON.GeoJsonObject | null>(null);
+  const [locationImageUrl, setLocationImageUrl] = useState<string | null>(null);
+
+  // Get image from POIs in this location, or from child locations' POIs, or Wikipedia fallback
+  useEffect(() => {
+    setLocationImageUrl(null);
+    if (!selectedResearchLocId) return;
+    let cancelled = false;
+
+    // 1. Try POIs assigned to this location's activities
+    const holdingDay = itineraryDays.find(d => d.itineraryLocationId === selectedResearchLocId);
+    const activityIds = (holdingDay?.activities || []).filter(a => a.type === 'poi').map(a => a.id);
+    for (const id of activityIds) {
+      const poi = pois.find(p => p.id === id);
+      if (poi?.imageUrl) { setLocationImageUrl(poi.imageUrl); return; }
+    }
+
+    // 2. Try any POI whose city matches this location name (or parts of compound name)
+    const locName = selectedLocName?.toLowerCase();
+    if (locName) {
+      const nameParts = [locName, ...locName.split(/\s*[&,\-–]\s*/).map(s => s.trim()).filter(Boolean)];
+      for (const part of nameParts) {
+        const match = pois.find(p => p.imageUrl && p.location?.city?.toLowerCase() === part);
+        if (match) { setLocationImageUrl(match.imageUrl); return; }
+      }
+    }
+
+    // 3. Try child locations in the trip hierarchy
+    if (selectedTripLocation) {
+      const childLocs = tripLocations.filter(tl => tl.parentId === selectedTripLocation.id);
+      for (const child of childLocs) {
+        const childName = child.name.toLowerCase();
+        const match = pois.find(p => p.imageUrl && p.location?.city?.toLowerCase() === childName);
+        if (match) { setLocationImageUrl(match.imageUrl); return; }
+      }
+    }
+
+    // 4. Fallback: Wikipedia image
+    const wikiName = selectedLocName?.split(/\s*[&,\-–]\s*/)[0].trim();
+    if (wikiName) {
+      fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiName)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!cancelled && data?.originalimage?.source) setLocationImageUrl(data.originalimage.source);
+          else if (!cancelled && data?.thumbnail?.source) setLocationImageUrl(data.thumbnail.source);
+        })
+        .catch(() => {});
+    }
+    return () => { cancelled = true; };
+  }, [selectedResearchLocId, selectedLocName, selectedTripLocation, itineraryDays, pois, tripLocations]);
+
+  // Find the country of the selected location (for geocoding disambiguation)
+  const selectedLocCountry = useMemo(() => {
+    if (!selectedTripLocation) return activeTrip?.countries?.[0];
+    // Walk up the hierarchy to find the country ancestor
+    let current = selectedTripLocation;
+    while (current.parentId) {
+      const parent = tripLocations.find(tl => tl.id === current.parentId);
+      if (!parent) break;
+      current = parent;
+    }
+    return current.siteType === 'country' ? current.name : activeTrip?.countries?.[0];
+  }, [selectedTripLocation, tripLocations, activeTrip?.countries]);
+
+  // Geocode + boundary
+  useEffect(() => {
+    setLocationCoords(null);
+    setLocationBoundary(null);
+    if (!selectedLocName) return;
+    let cancelled = false;
+    const countryCtx = selectedLocCountry ? ` ${selectedLocCountry}` : '';
+    // Try full name first, then first part before & , - as fallback
+    const tryGeocode = async (name: string) => {
+      // Try with country context first for disambiguation
+      if (countryCtx) {
+        const geo = await geocodeLocation(name + countryCtx);
+        if (geo) return geo;
+      }
+      const geo = await geocodeLocation(name);
+      if (geo) return geo;
+      const shortName = name.split(/\s*[&,\-–]\s*/)[0].trim();
+      if (shortName && shortName !== name) {
+        if (countryCtx) {
+          const geo2 = await geocodeLocation(shortName + countryCtx);
+          if (geo2) return geo2;
+        }
+        return geocodeLocation(shortName);
+      }
+      return null;
+    };
+    tryGeocode(selectedLocName).then(geo => {
+      if (!cancelled && geo) setLocationCoords({ lat: geo.latitude, lng: geo.longitude });
+    });
+    // Fetch boundary polygon — use country context for Nominatim disambiguation
+    const nominatimQuery = selectedLocName.split(/\s*[&,\-–]\s*/)[0].trim() || selectedLocName;
+    const nominatimFull = nominatimQuery + countryCtx;
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(nominatimFull)}&format=json&polygon_geojson=1&limit=1`, {
+      headers: { 'Accept': 'application/json' },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!cancelled && data?.[0]?.geojson) {
+          const geo = data[0].geojson;
+          if (geo.type === 'Polygon' || geo.type === 'MultiPolygon') {
+            setLocationBoundary(geo);
+          }
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [selectedLocName, selectedLocCountry]);
 
   // Add a POI to the selected research location
   const handleAddResearchPoi = useCallback(async (poiId: string) => {
@@ -1139,6 +1461,109 @@ export default function SchedulePage() {
     }
     return spans;
   }, [tripDays, itineraryDays, itinLocNameMap]);
+
+  // Build flex items for sortable location strip (spans + gap spacers)
+  const locationStripItems = useMemo(() => {
+    if (tripDays.length === 0 || locationSpans.length === 0) return [];
+    const items: Array<
+      | { type: 'span'; id: string; location: string; dayCount: number; spanIndex: number }
+      | { type: 'gap'; id: string; dayCount: number }
+    > = [];
+    let lastEndIdx = -1;
+    for (let i = 0; i < locationSpans.length; i++) {
+      const span = locationSpans[i];
+      if (span.startIdx > lastEndIdx + 1) {
+        items.push({ type: 'gap', id: `loc-gap-${lastEndIdx + 1}`, dayCount: span.startIdx - lastEndIdx - 1 });
+      }
+      items.push({
+        type: 'span', id: `loc-span-${i}`,
+        location: span.location,
+        dayCount: span.endIdx - span.startIdx + 1,
+        spanIndex: i,
+      });
+      lastEndIdx = span.endIdx;
+    }
+    if (lastEndIdx < tripDays.length - 1) {
+      items.push({ type: 'gap', id: `loc-gap-${lastEndIdx + 1}`, dayCount: tripDays.length - 1 - lastEndIdx });
+    }
+    return items;
+  }, [locationSpans, tripDays.length]);
+
+  const sortableSpanIds = useMemo(
+    () => locationStripItems.filter(it => it.type === 'span').map(it => it.id),
+    [locationStripItems],
+  );
+
+  // Reorder location spans: renumber itinerary days so dragged location's days move together
+  const handleLocationSpanReorder = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const activeSpanIdx = parseInt(String(active.id).replace('loc-span-', ''));
+    const overSpanIdx = parseInt(String(over.id).replace('loc-span-', ''));
+    if (isNaN(activeSpanIdx) || isNaN(overSpanIdx)) return;
+
+    const reorderedSpans = arrayMove([...locationSpans], activeSpanIdx, overSpanIdx);
+
+    // Compute new day numbers for each span's days
+    const allUpdates: { id: string; dayNumber: number }[] = [];
+    let newDayNum = 1;
+    for (const span of reorderedSpans) {
+      for (let origDayNum = span.startIdx + 1; origDayNum <= span.endIdx + 1; origDayNum++) {
+        const itDay = itineraryDays.find(d => d.dayNumber === origDayNum);
+        if (itDay) {
+          allUpdates.push({ id: itDay.id, dayNumber: newDayNum });
+        }
+        newDayNum++;
+      }
+    }
+
+    // Orphan days (not in any span) go to the end
+    const usedIds = new Set(allUpdates.map(u => u.id));
+    const orphans = itineraryDays
+      .filter(d => !usedIds.has(d.id) && d.dayNumber >= 1 && d.dayNumber <= tripDays.length)
+      .sort((a, b) => a.dayNumber - b.dayNumber);
+    for (const day of orphans) {
+      allUpdates.push({ id: day.id, dayNumber: newDayNum });
+      newDayNum++;
+    }
+
+    // Only persist where dayNumber actually changed
+    const changedUpdates = allUpdates.filter(u => {
+      const orig = itineraryDays.find(d => d.id === u.id);
+      return orig && orig.dayNumber !== u.dayNumber;
+    });
+    if (changedUpdates.length === 0) return;
+
+    // Optimistic update
+    const updateMap = new Map(allUpdates.map(u => [u.id, u.dayNumber]));
+    setItineraryDays(itineraryDays.map(d => {
+      const num = updateMap.get(d.id);
+      return num !== undefined ? { ...d, dayNumber: num } : d;
+    }));
+
+    // Follow selected day to its new position
+    const selectedItDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (selectedItDay) {
+      const newNum = updateMap.get(selectedItDay.id);
+      if (newNum !== undefined) setSelectedDayNum(newNum);
+    }
+
+    try {
+      // Phase 1: temp numbers to avoid unique constraint (trip_id, day_number)
+      await Promise.all(changedUpdates.map(u =>
+        updateItineraryDay(u.id, { dayNumber: u.dayNumber + 10000 }),
+      ));
+      // Phase 2: final numbers
+      await Promise.all(changedUpdates.map(u =>
+        updateItineraryDay(u.id, { dayNumber: u.dayNumber }),
+      ));
+      await refetchItinerary();
+    } catch {
+      toast({ title: t('common.error'), variant: 'destructive' });
+      await refetchItinerary();
+    }
+  }, [locationSpans, itineraryDays, tripDays.length, selectedDayNum, setItineraryDays, refetchItinerary, t, toast]);
 
   const [potential, setPotential] = useState<Item[]>([]);
   const [scheduled, setScheduled] = useState<Item[]>([]);
@@ -1924,6 +2349,11 @@ export default function SchedulePage() {
     useSensor(TouchSensor, { activationConstraint: { delay: 400, tolerance: 10 } }),
   );
 
+  const locationPillSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 10 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 500, tolerance: 5 } }),
+  );
+
   // Persist scheduled/potential arrays back to itineraryDay.activities + context
   const persistDayActivities = useCallback(async (newScheduled: Item[], newPotential: Item[]) => {
     const itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
@@ -2387,53 +2817,60 @@ export default function SchedulePage() {
         >
           {/* ── Day pills + Location strip (sticky, never scrolls) ── */}
           {activeTrip?.status === 'research' ? (
-            <div className="flex flex-col w-full gap-3">
-              {/* ── Location pills strip ── */}
-              <div className="w-full shrink-0 pb-1 overflow-x-auto will-change-transform" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)' }}>
-                <div className="flex gap-2 pb-1" style={{ minWidth: 'max-content' }}>
-                  {researchLocations.map((il) => {
-                    const name = researchLocNameMap.get(il.id) || '?';
-                    const isSelected = selectedResearchLocId === il.id;
-                    const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
-                    const poiCount = holdingDay?.activities?.length ?? 0;
-                    return (
-                      <button
-                        key={il.id}
-                        type="button"
-                        onClick={() => setSelectedResearchLocId(il.id)}
-                        className={`relative flex flex-col items-center justify-center rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors shrink-0 min-w-[72px] ${
-                          isSelected
-                            ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                            : 'border-border bg-card text-foreground hover:border-primary/40'
-                        }`}
-                      >
-                        <MapPin size={14} className="mb-0.5" />
-                        <span className="truncate max-w-[80px]">{name}</span>
-                        {poiCount > 0 && (
-                          <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center ${
-                            isSelected ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
-                          }`}>
-                            {poiCount}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                  {/* Add location button */}
-                  <button
-                    type="button"
-                    onClick={() => setAddLocationOpen(true)}
-                    className="flex flex-col items-center justify-center rounded-xl border border-dashed border-primary/40 px-3 py-1.5 text-xs text-muted-foreground hover:text-primary hover:border-primary transition-colors shrink-0 min-w-[72px]"
+            <div className="flex flex-col w-full gap-3 overflow-hidden" style={{ height: 'calc(100dvh - 5.5rem)' }}>
+              {/* ── Location pills strip (drag to reorder) + Start Planning ── */}
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                {/* Start Planning — pinned at the left edge */}
+                {researchLocations.length > 0 && (
+                  <Button
+                    size="sm"
+                    onClick={handleLocationBasedTransition}
+                    disabled={researchSubmitting}
+                    className="shrink-0 order-last text-xs sm:text-sm px-2.5 sm:px-3"
                   >
-                    <Plus size={14} className="mb-0.5" />
-                    <span>{t('timeline.addLocation')}</span>
-                  </button>
+                    <Check size={14} className="sm:hidden" />
+                    <span className="hidden sm:inline">{t('timeline.startPlanning')}</span>
+                  </Button>
+                )}
+                <div className="flex-1 min-w-0 pb-1 overflow-x-auto will-change-transform" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)' }}>
+                  <DndContext sensors={locationPillSensors} collisionDetection={closestCenter} onDragEnd={handleLocationDragEnd}>
+                    <SortableContext items={researchLocations.map(l => l.id)} strategy={horizontalListSortingStrategy}>
+                      <div className="flex gap-3 pb-1" style={{ minWidth: 'max-content' }}>
+                        {researchLocations.map((il) => {
+                          const name = researchLocNameMap.get(il.id) || '?';
+                          const isSelected = selectedResearchLocId === il.id;
+                          const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
+                          const poiCount = holdingDay?.activities?.length ?? 0;
+                          return (
+                            <SortableLocationPill
+                              key={il.id}
+                              id={il.id}
+                              name={name}
+                              isSelected={isSelected}
+                              poiCount={poiCount}
+                              onSelect={() => setSelectedResearchLocId(il.id)}
+                              onDelete={() => handleDeleteResearchLocation(il.id)}
+                            />
+                          );
+                        })}
+                        {/* Add location button */}
+                        <button
+                          type="button"
+                          onClick={() => setAddLocationOpen(true)}
+                          className="flex flex-col items-center justify-center rounded-xl sm:rounded-2xl border-2 border-dashed border-primary/40 px-3 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-colors shrink-0 min-w-[72px] sm:min-w-[100px] h-[60px] sm:h-[76px]"
+                        >
+                          <Plus size={16} className="mb-0.5 sm:mb-1" />
+                          <span>{t('timeline.addLocation')}</span>
+                        </button>
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 </div>
               </div>
 
               {/* ── Location picker dialog ── */}
               <Dialog open={addLocationOpen} onOpenChange={setAddLocationOpen}>
-                <DialogContent className="max-w-sm">
+                <DialogContent className="w-[min(400px,90vw)] max-w-[400px]">
                   <DialogHeader>
                     <DialogTitle>{t('timeline.addLocation')}</DialogTitle>
                     <DialogDescription>{t('timeline.selectLocations')}</DialogDescription>
@@ -2442,54 +2879,150 @@ export default function SchedulePage() {
                     value=""
                     onChange={(name) => handleAddResearchLocation(name)}
                     placeholder={t('timeline.selectLocations')}
+                    inline
                   />
                 </DialogContent>
               </Dialog>
 
               {/* ── Selected location content ── */}
               {selectedResearchLocId && (
-                <div className="flex-1 space-y-3">
-                  <DaySection
-                    title=""
-                    icon={null}
-                    items={researchPotential.map(i => ({ id: i.id, label: i.label, sublabel: i.sublabel || '' }))}
-                    onRemove={handleRemoveResearchPoi}
-                    availableItems={pois
-                      .filter(p => !researchPotential.some(rp => rp.id === p.id))
-                      .map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))
-                    }
-                    onAdd={(id) => handleAddResearchPoi(id)}
-                    addLabel={t('timeline.addActivity')}
-                    entityType="activity"
-                    locationContext={researchLocNameMap.get(selectedResearchLocId)}
-                    countries={activeTrip?.countries}
-                    hideHeader
-                  />
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  {/* ── Mobile: single column ── */}
+                  <div className="flex flex-col gap-2 h-full md:hidden overflow-y-auto">
+                    {/* Image banner (compact) */}
+                    {locationImageUrl && (
+                      <div className="rounded-lg overflow-hidden border bg-muted h-[120px] shrink-0">
+                        <img src={locationImageUrl} alt={selectedLocName || ''} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    {/* Activities */}
+                    <DaySection
+                      title=""
+                      icon={null}
+                      items={researchPotential.map(i => ({ id: i.id, label: i.label, sublabel: i.sublabel || '' }))}
+                      onRemove={handleRemoveResearchPoi}
+                      availableItems={pois
+                        .filter(p => !researchPotential.some(rp => rp.id === p.id))
+                        .map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))
+                      }
+                      onAdd={(id) => handleAddResearchPoi(id)}
+                      addLabel={t('timeline.addActivity')}
+                      entityType="activity"
+                      locationContext={researchLocNameMap.get(selectedResearchLocId)}
+                      countries={activeTrip?.countries}
+                      hideHeader
+                      onOpen={setOpenedPoiId}
+                    />
+                    {/* Notes (collapsible) */}
+                    <details className="group">
+                      <summary className="text-xs font-semibold flex items-center gap-1.5 text-muted-foreground cursor-pointer list-none">
+                        <NotebookPen size={12} /> {t('timeline.locationNotes')}
+                        {localNotes && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                      </summary>
+                      <textarea
+                        value={localNotes}
+                        onChange={e => handleNotesChange(e.target.value)}
+                        placeholder={t('timeline.locationNotesPlaceholder')}
+                        className="mt-1.5 w-full h-28 rounded-lg border bg-card p-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/50"
+                        dir="auto"
+                      />
+                    </details>
+                  </div>
+
+                  {/* ── Desktop: 3-column layout ── */}
+                  <div className="hidden md:grid md:grid-cols-[1fr_1fr_1.2fr] gap-4 h-full">
+                    {/* Column 1 (right in RTL): Activities */}
+                    <div className="flex flex-col gap-2 min-w-0 min-h-0">
+                      <h4 className="text-sm font-semibold flex items-center gap-1.5 text-muted-foreground shrink-0">
+                        <MapPin size={14} /> {t('timeline.addActivity')}
+                      </h4>
+                      <div className="flex-1 min-h-0 overflow-y-auto">
+                        <DaySection
+                          title=""
+                          icon={null}
+                          items={researchPotential.map(i => ({ id: i.id, label: i.label, sublabel: i.sublabel || '' }))}
+                          onRemove={handleRemoveResearchPoi}
+                          availableItems={pois
+                            .filter(p => !researchPotential.some(rp => rp.id === p.id))
+                            .map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))
+                          }
+                          onAdd={(id) => handleAddResearchPoi(id)}
+                          addLabel={t('timeline.addActivity')}
+                          entityType="activity"
+                          locationContext={researchLocNameMap.get(selectedResearchLocId)}
+                          countries={activeTrip?.countries}
+                          hideHeader
+                          onOpen={setOpenedPoiId}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Column 2 (center): Image on top + Notes below */}
+                    <div className="flex flex-col gap-3 min-w-0 min-h-0">
+                      <div className="shrink-0">
+                        <h4 className="text-sm font-semibold flex items-center gap-1.5 text-muted-foreground mb-1.5">
+                          <ImageIcon size={14} /> {t('timeline.locationImage')}
+                        </h4>
+                        <div className="rounded-xl overflow-hidden border bg-muted h-[160px]">
+                          {locationImageUrl ? (
+                            <img src={locationImageUrl} alt={selectedLocName || ''} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ImageIcon size={24} className="text-muted-foreground/30" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1.5 flex-1 min-h-0">
+                        <h4 className="text-sm font-semibold flex items-center gap-1.5 text-muted-foreground shrink-0">
+                          <NotebookPen size={14} /> {t('timeline.locationNotes')}
+                        </h4>
+                        <textarea
+                          value={localNotes}
+                          onChange={e => handleNotesChange(e.target.value)}
+                          placeholder={t('timeline.locationNotesPlaceholder')}
+                          className="flex-1 min-h-0 w-full rounded-xl border bg-card p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/50"
+                          dir="auto"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Column 3 (left in RTL): Map — full height */}
+                    <div className="flex flex-col gap-1.5 min-w-0 min-h-0">
+                      <h4 className="text-sm font-semibold flex items-center gap-1.5 text-muted-foreground shrink-0">
+                        <MapPin size={14} /> {t('timeline.locationMap')}
+                      </h4>
+                      <div className="rounded-xl overflow-hidden border bg-muted flex-1 min-h-[200px]">
+                        {locationCoords ? (
+                          <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Loading...</div>}>
+                            <LazyMiniMap coordinates={locationCoords} className="w-full h-full" zoom={isCity ? 13 : 9} boundary={locationBoundary ?? undefined} markers={researchMapMarkers} />
+                          </Suspense>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <MapPin size={24} className="text-muted-foreground/30" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {/* ── Empty state (no locations yet) ── */}
               {researchLocations.length === 0 && !addLocationOpen && (
-                <div className="flex flex-col items-center justify-center py-8 gap-2.5 text-center max-w-md mx-auto">
-                  <MapPin size={28} className="text-muted-foreground/50" />
-                  <div>
-                    <h3 className="text-base font-semibold">{t('timeline.selectLocations')}</h3>
-                    <p className="text-xs text-muted-foreground">{t('timeline.selectLocationsDesc')}</p>
+                <button
+                  type="button"
+                  onClick={() => setAddLocationOpen(true)}
+                  className="flex flex-col items-center justify-center py-12 gap-3 text-center max-w-md mx-auto w-full rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 hover:border-primary/60 hover:bg-primary/10 transition-colors cursor-pointer"
+                >
+                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                    <MapPin size={28} className="text-primary" />
                   </div>
-                </div>
-              )}
-
-              {/* ── Transition to planning ── */}
-              {researchLocations.length > 0 && (
-                <div className="flex items-center justify-center gap-3 py-2 border-t">
-                  <Button
-                    size="sm"
-                    onClick={handleLocationBasedTransition}
-                    disabled={researchSubmitting}
-                  >
-                    {t('timeline.startPlanning')}
-                  </Button>
-                </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">{t('timeline.selectLocations')}</h3>
+                    <p className="text-sm text-muted-foreground mt-1">{t('timeline.selectLocationsDesc')}</p>
+                  </div>
+                </button>
               )}
 
               {/* ── Fallback: manual day/date inputs ── */}
@@ -2573,35 +3106,37 @@ export default function SchedulePage() {
                 })}
               </div>
 
-              {/* Gantt-like location strip */}
-              <div className="relative h-6 mt-1 mb-1">
-                {locationSpans.map((span, i) => {
-                  const start = span.startIdx * locationDayWidth;
-                  const width = (span.endIdx - span.startIdx + 1) * locationDayWidth - 8;
-                  const isSelected = selectedSpan === span;
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => { setLocationContext(span.location); setLocationTotalDays(span.endIdx - span.startIdx + 1); setEditingLocation(true); }}
-                      disabled={!isSelected}
-                      className={`absolute top-0 h-full rounded-md flex items-center px-2 overflow-hidden gap-1 transition-colors ${
-                        isSelected
-                          ? 'bg-secondary border border-primary/40 cursor-pointer hover:border-primary'
-                          : 'bg-secondary border border-border cursor-default'
-                      }`}
-                      style={{ insetInlineStart: `${start}px`, width: `${width}px` }}
-                    >
-                      <span className="text-[11px] font-medium text-primary truncate">{span.location}</span>
-                      {isSelected && <Pencil size={9} className="shrink-0 text-primary opacity-70" />}
-                    </button>
-                  );
-                })}
+              {/* Gantt-like location strip (draggable to reorder) */}
+              <div className="relative h-8 mt-1 mb-1">
+                <DndContext sensors={locationPillSensors} collisionDetection={closestCenter} onDragEnd={handleLocationSpanReorder}>
+                  <SortableContext items={sortableSpanIds} strategy={horizontalListSortingStrategy}>
+                    <div className="flex gap-2 h-full">
+                      {locationStripItems.map(item => {
+                        if (item.type === 'gap') {
+                          return <div key={item.id} className="shrink-0" style={{ width: `${item.dayCount * locationDayWidth - 8}px` }} />;
+                        }
+                        const span = locationSpans[item.spanIndex];
+                        const isSelected = selectedSpan === span;
+                        return (
+                          <SortableLocationSpan
+                            key={item.id}
+                            id={item.id}
+                            location={item.location}
+                            dayCount={item.dayCount}
+                            isSelected={isSelected}
+                            locationDayWidth={locationDayWidth}
+                            onClick={() => { setLocationContext(span.location); setLocationTotalDays(span.endIdx - span.startIdx + 1); setEditingLocation(true); }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </SortableContext>
+                </DndContext>
                 {!selectedSpan && (
                   <button
                     type="button"
                     onClick={() => { setLocationContext(''); setEditingLocation(true); }}
-                    className="absolute top-0 h-full border border-dashed border-primary/40 rounded-md flex items-center justify-center px-1 text-[9px] sm:text-[11px] text-muted-foreground hover:text-primary hover:border-primary transition-colors whitespace-nowrap"
+                    className="absolute top-0 h-full border border-dashed border-primary/40 rounded-md flex items-center justify-center px-1 text-[10px] sm:text-xs text-muted-foreground hover:text-primary hover:border-primary transition-colors whitespace-nowrap"
                     style={{ insetInlineStart: `${selectedIdx * locationDayWidth}px`, width: `${locationDayWidth - 8}px` }}
                   >
                     + {t('timeline.location')}

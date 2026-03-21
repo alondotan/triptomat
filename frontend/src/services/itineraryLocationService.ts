@@ -67,6 +67,50 @@ export async function findOrCreateItineraryLocation(
   return mapItineraryLocation(data);
 }
 
+// ── Update notes ────────────────────────────────────────────────────────────
+
+export async function updateItineraryLocationNotes(id: string, notes: string): Promise<void> {
+  const { error } = await supabase
+    .from('itinerary_locations')
+    .update({ notes })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+// ── Delete ──────────────────────────────────────────────────────────────────
+
+export async function deleteItineraryLocation(id: string): Promise<void> {
+  // First delete any itinerary_days linked to this location
+  const { error: daysError } = await supabase
+    .from('itinerary_days')
+    .delete()
+    .eq('itinerary_location_id', id);
+  if (daysError) throw daysError;
+
+  const { error } = await supabase
+    .from('itinerary_locations')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+}
+
+// ── Reorder ─────────────────────────────────────────────────────────────────
+
+export async function reorderItineraryLocations(
+  orderedIds: { id: string; sortOrder: number }[],
+): Promise<void> {
+  // Batch update sort_order for each location
+  const promises = orderedIds.map(({ id, sortOrder }) =>
+    supabase
+      .from('itinerary_locations')
+      .update({ sort_order: sortOrder })
+      .eq('id', id),
+  );
+  const results = await Promise.all(promises);
+  const err = results.find(r => r.error);
+  if (err?.error) throw err.error;
+}
+
 // ── Assign days ─────────────────────────────────────────────────────────────
 
 export async function assignDayToLocation(dayId: string, itineraryLocationId: string): Promise<void> {
@@ -96,6 +140,7 @@ function mapItineraryLocation(row: Record<string, unknown>): ItineraryLocation {
     tripLocationId: (row.trip_location_id as string) || null,
     isDefault: row.is_default as boolean,
     sortOrder: row.sort_order as number,
+    notes: (row.notes as string) || '',
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };

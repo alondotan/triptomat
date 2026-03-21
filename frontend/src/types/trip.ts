@@ -200,6 +200,7 @@ export interface ItineraryLocation {
   tripLocationId: string | null;  // null = "General" (default)
   isDefault: boolean;
   sortOrder: number;
+  notes: string;
   createdAt: string;
   updatedAt: string;
 }

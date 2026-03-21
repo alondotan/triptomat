@@ -54,9 +54,11 @@ interface LocationSelectorProps {
   onChange: (location: string) => void;
   placeholder?: string;
   className?: string;
+  /** Render the search + tree inline (no Popover/button wrapper). Use when already inside a Dialog. */
+  inline?: boolean;
 }
 
-export function LocationSelector({ value, onChange, placeholder, className }: LocationSelectorProps) {
+export function LocationSelector({ value, onChange, placeholder, className, inline }: LocationSelectorProps) {
   const { t } = useTranslation();
   const effectivePlaceholder = placeholder ?? t('locationSelector.chooseLocation');
   const { tripLocationTree, addSiteToHierarchy } = useActiveTrip();
@@ -75,21 +77,21 @@ export function LocationSelector({ value, onChange, placeholder, className }: Lo
 
   const dropdownContent = (
     <>
-      <div className="p-2 border-b shrink-0">
+      <div className={inline ? 'pb-2 shrink-0' : 'p-2 border-b shrink-0'}>
         <div className="relative">
           <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={t('locationSelector.searchLocation')}
-            className="h-8 text-sm pr-8"
-            autoFocus={!isMobile}
+            className="h-9 text-sm pr-8"
+            autoFocus={inline || !isMobile}
             aria-label={t('locationSelector.searchLocation')}
             name="location-search"
           />
         </div>
       </div>
-      <div className="max-h-[300px] overflow-y-auto overscroll-contain p-1">
+      <div className={`overflow-y-auto overscroll-contain p-1 ${inline ? 'h-[45vh] min-h-[250px] max-h-[50vh]' : 'max-h-[300px]'}`}>
         <LocationTree
           nodes={tripLocationTree}
           search={search}
@@ -104,6 +106,15 @@ export function LocationSelector({ value, onChange, placeholder, className }: Lo
       </div>
     </>
   );
+
+  // Inline mode: render content directly (for use inside a Dialog)
+  if (inline) {
+    return (
+      <div className={cn('flex flex-col', className)} dir="rtl">
+        {dropdownContent}
+      </div>
+    );
+  }
 
   return (
     <div className={cn('flex flex-col gap-1', className)}>
@@ -330,19 +341,6 @@ function TreeNode({ node, depth, value, onSelect, onAddToTree }: TreeNodeProps) 
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
 
-  const handleClick = () => {
-    if (isCountry) {
-      setExpanded(!expanded);
-    } else {
-      onSelect(node.site);
-    }
-  };
-
-  const handleToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setExpanded(!expanded);
-  };
-
   const handleAddManual = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newName.trim();
@@ -360,27 +358,35 @@ function TreeNode({ node, depth, value, onSelect, onAddToTree }: TreeNodeProps) 
     <div>
       <div
         className={cn(
-          'flex items-center gap-1 w-full text-right rounded-md transition-colors text-sm group',
-          isCountry ? 'hover:bg-muted/50 cursor-pointer' : 'hover:bg-accent cursor-pointer',
+          'flex items-center w-full text-right rounded-md transition-colors text-sm group',
           !isCountry && value === node.site && 'bg-accent/50',
         )}
+        style={{ paddingRight: `${depth * 16 + 8}px` }}
       >
+        {/* Expand/collapse toggle — separate hit target */}
+        {hasChildren ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="shrink-0 p-2 rounded-md hover:bg-muted-foreground/20 bg-transparent border-0 cursor-pointer"
+          >
+            {expanded
+              ? <ChevronDown size={14} className="text-muted-foreground" />
+              : <ChevronLeft size={14} className="text-muted-foreground" />
+            }
+          </button>
+        ) : (
+          !isCountry && <Check className={cn('h-3.5 w-3.5 shrink-0 mx-2', value === node.site ? 'opacity-100' : 'opacity-0')} />
+        )}
+        {/* Name — selects the location (or toggles for countries) */}
         <button
           type="button"
-          onClick={handleClick}
-          className="flex items-center gap-1 flex-1 py-1.5 min-w-0"
-          style={{ paddingRight: `${depth * 16 + 8}px` }}
-        >
-          {hasChildren ? (
-            <button type="button" onClick={handleToggle} className="shrink-0 p-0.5 rounded hover:bg-muted-foreground/20 bg-transparent border-0 cursor-pointer">
-              {expanded
-                ? <ChevronDown size={14} className="text-muted-foreground" />
-                : <ChevronLeft size={14} className="text-muted-foreground" />
-              }
-            </button>
-          ) : (
-            !isCountry && <Check className={cn('h-3.5 w-3.5 shrink-0', value === node.site ? 'opacity-100' : 'opacity-0')} />
+          onClick={isCountry ? () => setExpanded(!expanded) : () => onSelect(node.site)}
+          className={cn(
+            'flex items-center gap-1 flex-1 py-2 px-2 min-w-0 bg-transparent border-0 rounded-md',
+            isCountry ? 'hover:bg-muted/50 cursor-pointer' : 'hover:bg-accent cursor-pointer',
           )}
+        >
           <span className={cn('truncate', isCountry && 'font-semibold')}>{node.site}</span>
           {!isCountry && (
             <span className="text-[10px] text-muted-foreground mr-auto shrink-0">{typeLabel}</span>

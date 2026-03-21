@@ -1,7 +1,7 @@
 const en = {
   // ── Navigation ──
   nav: {
-    timeline: 'Timeline',
+    timeline: 'Plan',
     pois: 'POIs',
     stay: 'Stay',
     transport: 'Transport',
@@ -23,7 +23,7 @@ const en = {
     triptomat: 'Triptomat',
     aiAssistant: 'AI Travel Assistant',
     resources: 'Resources',
-    home: 'Home',
+    home: 'Places',
   },
 
   // ── Common ──
@@ -693,7 +693,7 @@ const en = {
     dragItemHere: 'Drag an item here',
     addTimeWindow: 'Add time window',
     timeWindowPlaceholder: 'Window name (e.g. City tour)',
-    addLocation: '+ Location',
+    addLocation: 'Location',
     location: 'Loc',
     setLocation: 'Set Location',
     selectLocations: 'Add locations to plan your trip',
@@ -704,6 +704,10 @@ const en = {
     startPlanning: 'Start planning',
     orSetDaysManually: '— or set days manually —',
     noActiveTrip: 'No active trip',
+    locationNotes: 'Notes',
+    locationNotesPlaceholder: 'Tips, important info, links...',
+    locationImage: 'Image',
+    locationMap: 'Map',
     mapTab: 'Map',
     scheduleTab: 'Schedule',
     from: 'From:',

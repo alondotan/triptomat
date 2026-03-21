@@ -1,7 +1,7 @@
 const he = {
   // ── Navigation ──
   nav: {
-    timeline: 'לו״ז',
+    timeline: 'תכנון',
     pois: 'נק׳ עניין',
     stay: 'לינה',
     transport: 'תחבורה',
@@ -23,7 +23,7 @@ const he = {
     triptomat: 'Triptomat',
     aiAssistant: 'עוזר AI לטיולים',
     resources: 'מקורות',
-    home: 'בית',
+    home: 'מקומות',
   },
 
   // ── Common ──
@@ -691,7 +691,7 @@ const he = {
     dragItemHere: 'גרור פריט לכאן',
     addTimeWindow: 'הוסף חלון זמן',
     timeWindowPlaceholder: 'שם חלון (לדוגמה: סיור בעיר)',
-    addLocation: '+ מיקום',
+    addLocation: 'מיקום',
     location: 'מיקום',
     setLocation: 'עדכון מיקום',
     selectLocations: 'הוסיפו מקומות לתכנון הטיול',
@@ -702,6 +702,10 @@ const he = {
     startPlanning: 'התחלת תכנון',
     orSetDaysManually: '— או הגדירו ימים ידנית —',
     noActiveTrip: 'אין טיול פעיל',
+    locationNotes: 'הערות',
+    locationNotesPlaceholder: 'טיפים, מידע חשוב, קישורים...',
+    locationImage: 'תמונה',
+    locationMap: 'מפה',
     mapTab: 'מפה',
     scheduleTab: 'לו״ז',
     from: 'מ:',
