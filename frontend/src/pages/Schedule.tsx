@@ -1023,7 +1023,7 @@ export default function SchedulePage() {
   const handleAddResearchPoi = useCallback(async (poiId: string) => {
     if (!activeTrip || !selectedResearchLocId) return;
     try {
-      let holdingDay = itineraryDays.find(d => d.itineraryLocationId === selectedResearchLocId);
+      const holdingDay = itineraryDays.find(d => d.itineraryLocationId === selectedResearchLocId);
       if (!holdingDay) return;
 
       const existing = holdingDay.activities || [];
