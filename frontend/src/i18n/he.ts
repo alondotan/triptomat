@@ -706,6 +706,8 @@ const he = {
     locationNotesPlaceholder: 'טיפים, מידע חשוב, קישורים...',
     locationImage: 'תמונה',
     locationMap: 'מפה',
+    activitiesCount: '{{count}} פעילויות',
+    activity: 'פעילות',
     mapTab: 'מפה',
     scheduleTab: 'לו״ז',
     from: 'מ:',

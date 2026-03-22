@@ -708,6 +708,8 @@ const en = {
     locationNotesPlaceholder: 'Tips, important info, links...',
     locationImage: 'Image',
     locationMap: 'Map',
+    activitiesCount: '{{count}} activities',
+    activity: 'Activity',
     mapTab: 'Map',
     scheduleTab: 'Schedule',
     from: 'From:',

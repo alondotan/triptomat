@@ -47,7 +47,7 @@ import { CSS } from '@dnd-kit/utilities';
 // Disable the snap-back animation when an item is dropped
 const noReturnAnimation: AnimateLayoutChanges = () => false;
 
-import { Building2, CalendarDays, Check, Clock, GripVertical, Image as ImageIcon, MapPin, Moon, NotebookPen, Pencil, Plus, Sun, Trash2, X } from 'lucide-react';
+import { ArrowRight, Building2, CalendarDays, Check, ChevronLeft, Clock, GripVertical, Image as ImageIcon, MapPin, Moon, NotebookPen, Pencil, Plus, Sun, Trash2, X } from 'lucide-react';
 
 const LazyMiniMap = lazy(() => import('@/components/poi/AccommodationMiniMap').then(m => ({ default: m.AccommodationMiniMap })));
 import { Input } from '@/components/ui/input';
@@ -59,6 +59,7 @@ import { transitionToDetailedPlanning } from '@/services/tripStatusTransition';
 import { useTripList } from '@/context/TripListContext';
 import { DaySection } from '@/components/DaySection';
 import { getSubCategoryEntry, getSubCategoryLabel } from '@/lib/subCategoryConfig';
+import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
 import { useRouteCalculation } from '@/hooks/useRouteCalculation';
 import { RouteMapPanel } from '@/components/route/RouteMapPanel';
 import { TravelLegRow } from '@/components/route/TravelLegRow';
@@ -986,6 +987,7 @@ export default function SchedulePage() {
 
   // Research mode location strip state
   const [selectedResearchLocId, setSelectedResearchLocId] = useState<string | null>(null);
+  const [mobileDetailLocId, setMobileDetailLocId] = useState<string | null>(null);
   const [addLocationOpen, setAddLocationOpen] = useState(false);
 
   // Listen for FAB "add location" event in research mode
@@ -995,13 +997,7 @@ export default function SchedulePage() {
     return () => window.removeEventListener('research-add-location', handler);
   }, []);
 
-  // Auto-select first research location when available and none selected
-  useEffect(() => {
-    if (activeTrip?.status === 'research' && !selectedResearchLocId && itineraryLocations.length > 0) {
-      const first = itineraryLocations.find(il => !il.isDefault);
-      if (first) setSelectedResearchLocId(first.id);
-    }
-  }, [activeTrip?.status, selectedResearchLocId, itineraryLocations]);
+  // No auto-select — grid/feed view is the default landing
 
   // Day date picker dialog state (planning → detailed_planning via double-click)
   const [dateDayNum, setDateDayNum] = useState<number | null>(null);
@@ -1231,6 +1227,7 @@ export default function SchedulePage() {
       await deleteItineraryLocation(locId);
       await refetchItineraryLocations();
       await refetchItinerary();
+      if (mobileDetailLocId === locId) setMobileDetailLocId(null);
       if (selectedResearchLocId === locId) {
         const remaining = researchLocations.filter(l => l.id !== locId);
         setSelectedResearchLocId(remaining.length > 0 ? remaining[0].id : null);
@@ -1238,7 +1235,7 @@ export default function SchedulePage() {
     } catch {
       toast({ title: t('common.error'), variant: 'destructive' });
     }
-  }, [selectedResearchLocId, researchLocations, refetchItineraryLocations, refetchItinerary, t, toast]);
+  }, [selectedResearchLocId, mobileDetailLocId, researchLocations, refetchItineraryLocations, refetchItinerary, t, toast]);
 
   // Notes for the selected research location
   const selectedResearchLocation = useMemo(() =>
@@ -2815,58 +2812,417 @@ export default function SchedulePage() {
         >
           {/* ── Day pills + Location strip (sticky, never scrolls) ── */}
           {activeTrip?.status === 'research' ? (
-            <div className="flex flex-col w-full gap-3 overflow-hidden" style={{ height: 'calc(100dvh - 5.5rem)' }}>
-              {/* ── Location pills strip (drag to reorder) + Start Planning ── */}
-              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                {/* Start Planning — pinned at the left edge */}
-                {researchLocations.length > 0 && (
-                  <Button
-                    size="sm"
-                    onClick={handleLocationBasedTransition}
-                    disabled={researchSubmitting}
-                    className="shrink-0 order-last text-xs sm:text-sm px-2.5 sm:px-3"
-                  >
-                    <Check size={14} className="sm:hidden" />
-                    <span className="hidden sm:inline">{t('timeline.startPlanning')}</span>
-                  </Button>
+            <div className="flex flex-col w-full gap-3 md:overflow-hidden md:h-[calc(100dvh-5.5rem)]">
+
+              {/* ════════════════════════════════════════════════════════════════ */}
+              {/* ══ MOBILE: feed / detail view ════════════════════════════════ */}
+              {/* ════════════════════════════════════════════════════════════════ */}
+              <div className="flex flex-col md:hidden">
+                {mobileDetailLocId ? (() => {
+                  const detailLoc = researchLocations.find(l => l.id === mobileDetailLocId);
+                  const detailName = mobileDetailLocId ? researchLocNameMap.get(mobileDetailLocId) || '?' : '';
+                  const detailDay = itineraryDays.find(d => d.itineraryLocationId === mobileDetailLocId);
+                  const detailItems: Item[] = [];
+                  for (const a of detailDay?.activities || []) {
+                    if (a.type === 'poi') {
+                      const poi = pois.find(p => p.id === a.id);
+                      if (poi) detailItems.push({ id: a.id, label: poi.name, emoji: categoryEmoji(poi.category), sublabel: poi.location?.city || '', poi });
+                    }
+                  }
+                  return (
+                    <>
+                      {/* Header with back button */}
+                      <div className="flex items-center gap-2 shrink-0 pb-2">
+                        <button
+                          type="button"
+                          onClick={() => setMobileDetailLocId(null)}
+                          className="p-1.5 rounded-lg hover:bg-muted transition-colors"
+                        >
+                          <ChevronLeft size={20} className={isRTL ? 'rotate-180' : ''} />
+                        </button>
+                        <h3 className="text-base font-semibold flex-1 truncate">{detailName}</h3>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteResearchLocation(mobileDetailLocId)}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      {/* Content */}
+                      <div className="space-y-3">
+                        {/* Location image */}
+                        {detailLoc?.imageUrl && (
+                          <div className="rounded-xl overflow-hidden border bg-muted aspect-[16/9]">
+                            <img src={detailLoc.imageUrl} alt={detailName} className="w-full h-full object-cover" />
+                          </div>
+                        )}
+
+                        {/* Map */}
+                        {locationCoords && (
+                          <div className="rounded-xl overflow-hidden border bg-muted h-[200px]">
+                            <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Loading...</div>}>
+                              <LazyMiniMap
+                                coordinates={locationCoords}
+                                className="w-full h-full"
+                                zoom={isCity ? 13 : 9}
+                                boundary={locationBoundary ?? undefined}
+                                markers={detailItems
+                                  .filter(i => i.poi?.location?.coordinates)
+                                  .map(i => ({ lat: i.poi!.location.coordinates!.lat, lng: i.poi!.location.coordinates!.lng, label: i.poi!.name }))}
+                              />
+                            </Suspense>
+                          </div>
+                        )}
+
+                        {/* Horizontal POI thumbnails */}
+                        {detailItems.length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-semibold text-muted-foreground mb-1.5">{t('timeline.activitiesCount', { count: detailItems.length })}</h4>
+                            <div className="flex gap-2 overflow-x-auto pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+                              {detailItems.map(item => (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => setOpenedPoiId(item.id)}
+                                  className="shrink-0 w-24 text-center"
+                                >
+                                  <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted border">
+                                    {item.poi?.imageUrl ? (
+                                      <img src={item.poi.imageUrl} alt={item.label} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center">
+                                        <MapPin size={20} className="text-muted-foreground/30" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <p className="text-[11px] font-medium mt-1 truncate">{item.label}</p>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Add activity */}
+                        <DaySection
+                          title=""
+                          icon={null}
+                          items={[]}
+                          onRemove={handleRemoveResearchPoi}
+                          availableItems={pois
+                            .filter(p => !detailItems.some(di => di.id === p.id))
+                            .map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))
+                          }
+                          onAdd={(id) => handleAddResearchPoi(id)}
+                          addLabel={t('timeline.addActivity')}
+                          entityType="activity"
+                          locationContext={detailName}
+                          countries={activeTrip?.countries}
+                          hideHeader
+                          hideEmptyState
+                        />
+
+                        {/* Notes */}
+                        <div className="space-y-1.5">
+                          <h4 className="text-xs font-semibold flex items-center gap-1.5 text-muted-foreground">
+                            <NotebookPen size={12} /> {t('timeline.locationNotes')}
+                          </h4>
+                          <textarea
+                            value={localNotes}
+                            onChange={e => handleNotesChange(e.target.value)}
+                            placeholder={t('timeline.locationNotesPlaceholder')}
+                            className="w-full h-28 rounded-lg border bg-card p-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/50"
+                            dir="auto"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  );
+                })() : (
+                  <>
+                    {/* ── Feed: Instagram-style cards ── */}
+                    <div className="space-y-3 pb-2">
+                      {researchLocations.map((il) => {
+                        const name = researchLocNameMap.get(il.id) || '?';
+                        const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
+                        const poiCount = holdingDay?.activities?.length ?? 0;
+                        const imgUrl = il.imageUrl;
+                        return (
+                          <button
+                            key={il.id}
+                            type="button"
+                            onClick={() => { setMobileDetailLocId(il.id); setSelectedResearchLocId(il.id); }}
+                            className="w-full rounded-xl overflow-hidden border bg-card text-start relative group"
+                          >
+                            {/* Full-width image */}
+                            <div className="w-full aspect-[16/9] bg-muted">
+                              {imgUrl ? (
+                                <img src={imgUrl} alt={name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <MapPin size={32} className="text-muted-foreground/20" />
+                                </div>
+                              )}
+                            </div>
+                            {/* Overlay: name + count at bottom */}
+                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-3 pb-2.5 pt-8">
+                              <p className="text-base font-bold text-white truncate">{name}</p>
+                              {poiCount > 0 && (
+                                <p className="text-xs text-white/70">{t('timeline.activitiesCount', { count: poiCount })}</p>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                      {/* Add location card */}
+                      <button
+                        type="button"
+                        onClick={() => setAddLocationOpen(true)}
+                        className="w-full rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-colors flex flex-col items-center justify-center py-8 gap-2"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Plus size={24} className="text-primary" />
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground">{t('timeline.addLocation')}</p>
+                      </button>
+                    </div>
+                    {/* Start Planning */}
+                    {researchLocations.length > 0 && (
+                      <div className="shrink-0 pt-1 pb-1">
+                        <Button
+                          className="w-full"
+                          onClick={handleLocationBasedTransition}
+                          disabled={researchSubmitting}
+                        >
+                          {t('timeline.startPlanning')}
+                        </Button>
+                      </div>
+                    )}
+                    {/* Empty state */}
+                    {researchLocations.length === 0 && !addLocationOpen && (
+                      <button
+                        type="button"
+                        onClick={() => setAddLocationOpen(true)}
+                        className="flex flex-col items-center justify-center py-10 gap-2.5 text-center w-full rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 hover:border-primary/60 hover:bg-primary/10 transition-colors cursor-pointer"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                          <MapPin size={24} className="text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-semibold">{t('timeline.selectLocations')}</h3>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t('timeline.selectLocationsDesc')}</p>
+                        </div>
+                      </button>
+                    )}
+                  </>
                 )}
-                <div className="flex-1 min-w-0 pb-1 overflow-x-auto will-change-transform" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)' }}>
-                  <DndContext sensors={locationPillSensors} collisionDetection={closestCenter} onDragEnd={handleLocationDragEnd}>
-                    <SortableContext items={researchLocations.map(l => l.id)} strategy={horizontalListSortingStrategy}>
-                      <div className="flex gap-3 pb-1" style={{ minWidth: 'max-content' }}>
+              </div>
+
+              {/* ════════════════════════════════════════════════════════════════ */}
+              {/* ══ DESKTOP: Pinterest grid / detail view ═════════════════════ */}
+              {/* ════════════════════════════════════════════════════════════════ */}
+              <div className="hidden md:flex md:flex-col flex-1 min-h-0 overflow-hidden">
+                {selectedResearchLocId ? (() => {
+                  // Detail view (same data as mobile detail)
+                  const detailLoc = researchLocations.find(l => l.id === selectedResearchLocId);
+                  const detailName = researchLocNameMap.get(selectedResearchLocId) || '?';
+                  return (
+                    <div className="flex flex-col flex-1 min-h-0">
+                      {/* Header */}
+                      <div className="flex items-center gap-2 shrink-0 pb-3">
+                        <button type="button" onClick={() => setSelectedResearchLocId(null)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                          <ChevronLeft size={20} className={isRTL ? 'rotate-180' : ''} />
+                        </button>
+                        <h3 className="text-lg font-semibold flex-1 truncate">{detailName}</h3>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteResearchLocation(selectedResearchLocId)}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                      {/* Content: activities strip (2/3 left) + sidebar (1/3 right) */}
+                      <div className="flex-1 min-h-0 flex gap-4 overflow-hidden">
+                        {/* Left 2/3: horizontal activities strip */}
+                        <div className="flex-1 min-w-0 flex flex-col gap-2 min-h-0">
+                          <h4 className="text-sm font-semibold text-muted-foreground shrink-0">
+                            {researchPotential.length > 0
+                              ? t('timeline.activitiesCount', { count: researchPotential.length })
+                              : t('timeline.addActivity')}
+                          </h4>
+                          <div className="overflow-x-auto shrink-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+                            <div className="flex gap-3 pb-2" style={{ minWidth: 'max-content' }}>
+                              {researchPotential.map(item => (
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => setOpenedPoiId(item.id)}
+                                  className="shrink-0 w-36 rounded-xl overflow-hidden border bg-card text-start relative group hover:border-primary/40 hover:shadow-md transition-all"
+                                >
+                                  <div className="w-full aspect-[3/2] bg-muted">
+                                    {item.poi?.imageUrl ? (
+                                      <img src={item.poi.imageUrl} alt={item.label} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center">
+                                        <SubCategoryIcon type={item.poi?.subCategory || ''} size={28} className="text-muted-foreground/30" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="p-2 flex items-center gap-1.5">
+                                    <SubCategoryIcon type={item.poi?.subCategory || ''} size={13} className="shrink-0 text-muted-foreground" />
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-medium truncate">{item.label}</p>
+                                      {item.sublabel && <p className="text-[11px] text-muted-foreground truncate">{item.sublabel}</p>}
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); handleRemoveResearchPoi(item.id); }}
+                                    className="absolute top-1.5 left-1.5 w-6 h-6 rounded-full bg-black/40 text-white/70 hover:bg-destructive hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </button>
+                              ))}
+                              {/* Add activity card */}
+                              <div className="shrink-0 w-36 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-colors flex items-center justify-center aspect-[3/2] [&_div.space-y-2]:!space-y-0 [&_button]:!border-0 [&_button]:!p-0 [&_button]:!bg-transparent [&_button]:!shadow-none [&_button]:!text-primary [&_button]:!flex-col [&_button]:!gap-1.5 [&_button]:!w-full [&_button]:!h-full [&_button]:!justify-center [&_button_svg]:!w-[18px] [&_button_svg]:!h-[18px] [&_button_svg]:!bg-primary/10 [&_button_svg]:!rounded-full [&_button_svg]:!p-[5px] [&_button_svg]:!w-8 [&_button_svg]:!h-8 [&_button_svg]:!box-content">
+                                <DaySection
+                                  title="" icon={null} items={[]}
+                                  onRemove={handleRemoveResearchPoi}
+                                  availableItems={pois.filter(p => !researchPotential.some(rp => rp.id === p.id)).map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))}
+                                  onAdd={(id) => handleAddResearchPoi(id)}
+                                  addLabel={t('timeline.activity')}
+                                  entityType="activity"
+                                  locationContext={researchLocNameMap.get(selectedResearchLocId)}
+                                  countries={activeTrip?.countries} hideHeader hideEmptyState
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right 1/3: image, map, notes */}
+                        <div className="w-1/3 shrink-0 flex flex-col gap-2 min-h-0 overflow-hidden">
+                          {detailLoc?.imageUrl && (
+                            <div className="rounded-lg overflow-hidden border bg-muted h-[100px] shrink-0">
+                              <img src={detailLoc.imageUrl} alt={detailName} className="w-full h-full object-cover" />
+                            </div>
+                          )}
+                          <div className="rounded-lg overflow-hidden border bg-muted flex-1 min-h-[160px] shrink-0">
+                            {locationCoords ? (
+                              <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Loading...</div>}>
+                                <LazyMiniMap coordinates={locationCoords} className="w-full h-full" zoom={isCity ? 13 : 9} boundary={locationBoundary ?? undefined} markers={researchMapMarkers} />
+                              </Suspense>
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <MapPin size={24} className="text-muted-foreground/30" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-1 shrink-0">
+                            <h4 className="text-xs font-semibold flex items-center gap-1.5 text-muted-foreground">
+                              <NotebookPen size={12} /> {t('timeline.locationNotes')}
+                            </h4>
+                            <textarea
+                              value={localNotes}
+                              onChange={e => handleNotesChange(e.target.value)}
+                              placeholder={t('timeline.locationNotesPlaceholder')}
+                              className="h-16 w-full rounded-lg border bg-card p-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/50"
+                              dir="auto"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })() : (
+                  <>
+                    {/* Grid view header */}
+                    <div className="flex items-center gap-2 shrink-0 pb-2">
+                      <h3 className="text-sm font-semibold text-muted-foreground flex-1">{t('timeline.selectLocations')}</h3>
+                      {researchLocations.length > 0 && (
+                        <Button size="sm" onClick={handleLocationBasedTransition} disabled={researchSubmitting}>
+                          {t('timeline.startPlanning')}
+                        </Button>
+                      )}
+                    </div>
+                    {/* Pinterest grid */}
+                    <div className="flex-1 min-h-0 overflow-y-auto">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-2">
                         {researchLocations.map((il) => {
                           const name = researchLocNameMap.get(il.id) || '?';
-                          const isSelected = selectedResearchLocId === il.id;
                           const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
                           const poiCount = holdingDay?.activities?.length ?? 0;
+                          const imgUrl = il.imageUrl;
                           return (
-                            <SortableLocationPill
+                            <button
                               key={il.id}
-                              id={il.id}
-                              name={name}
-                              isSelected={isSelected}
-                              poiCount={poiCount}
-                              onSelect={() => setSelectedResearchLocId(il.id)}
-                              onDelete={() => handleDeleteResearchLocation(il.id)}
-                            />
+                              type="button"
+                              onClick={() => setSelectedResearchLocId(il.id)}
+                              className="rounded-xl overflow-hidden border bg-card text-start relative group hover:border-primary/40 hover:shadow-md transition-all"
+                            >
+                              <div className="w-full aspect-[4/3] bg-muted">
+                                {imgUrl ? (
+                                  <img src={imgUrl} alt={name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <MapPin size={28} className="text-muted-foreground/20" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-3 pb-2.5 pt-8">
+                                <p className="text-sm font-bold text-white truncate">{name}</p>
+                                {poiCount > 0 && (
+                                  <p className="text-[11px] text-white/70">{t('timeline.activitiesCount', { count: poiCount })}</p>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleDeleteResearchLocation(il.id); }}
+                                className="absolute top-1.5 left-1.5 w-6 h-6 rounded-full bg-black/40 text-white/70 hover:bg-destructive hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                              >
+                                <X size={14} />
+                              </button>
+                            </button>
                           );
                         })}
-                        {/* Add location button */}
+                        {/* Add card */}
                         <button
                           type="button"
                           onClick={() => setAddLocationOpen(true)}
-                          className="flex flex-col items-center justify-center rounded-xl sm:rounded-2xl border-2 border-dashed border-primary/40 px-3 py-2 sm:px-5 sm:py-3 text-xs sm:text-sm text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-colors shrink-0 min-w-[72px] sm:min-w-[100px] h-[60px] sm:h-[76px]"
+                          className="rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-colors flex flex-col items-center justify-center gap-2 aspect-[4/3]"
                         >
-                          <Plus size={16} className="mb-0.5 sm:mb-1" />
-                          <span>{t('timeline.addLocation')}</span>
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Plus size={20} className="text-primary" />
+                          </div>
+                          <p className="text-xs font-medium text-muted-foreground">{t('timeline.addLocation')}</p>
                         </button>
                       </div>
-                    </SortableContext>
-                  </DndContext>
-                </div>
+                    </div>
+                    {/* Empty state */}
+                    {researchLocations.length === 0 && !addLocationOpen && (
+                      <div className="flex-1 flex items-center justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setAddLocationOpen(true)}
+                          className="flex flex-col items-center justify-center py-12 gap-3 text-center max-w-md w-full rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 hover:border-primary/60 hover:bg-primary/10 transition-colors cursor-pointer"
+                        >
+                          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                            <MapPin size={28} className="text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold">{t('timeline.selectLocations')}</h3>
+                            <p className="text-sm text-muted-foreground mt-1">{t('timeline.selectLocationsDesc')}</p>
+                          </div>
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
-              {/* ── Location picker dialog ── */}
+              {/* ── Location picker dialog (shared) ── */}
               <Dialog open={addLocationOpen} onOpenChange={setAddLocationOpen}>
                 <DialogContent className="w-[min(400px,90vw)] max-w-[400px]">
                   <DialogHeader>
@@ -2881,147 +3237,6 @@ export default function SchedulePage() {
                   />
                 </DialogContent>
               </Dialog>
-
-              {/* ── Selected location content ── */}
-              {selectedResearchLocId && (
-                <div className="flex-1 min-h-0 overflow-hidden">
-                  {/* ── Mobile: single column ── */}
-                  <div className="flex flex-col gap-2 h-full md:hidden overflow-y-auto">
-                    {/* Image banner (compact) */}
-                    {locationImageUrl && (
-                      <div className="rounded-lg overflow-hidden border bg-muted h-[120px] shrink-0">
-                        <img src={locationImageUrl} alt={selectedLocName || ''} className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                    {/* Activities */}
-                    <DaySection
-                      title=""
-                      icon={null}
-                      items={researchPotential.map(i => ({ id: i.id, label: i.label, sublabel: i.sublabel || '' }))}
-                      onRemove={handleRemoveResearchPoi}
-                      availableItems={pois
-                        .filter(p => !researchPotential.some(rp => rp.id === p.id))
-                        .map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))
-                      }
-                      onAdd={(id) => handleAddResearchPoi(id)}
-                      addLabel={t('timeline.addActivity')}
-                      entityType="activity"
-                      locationContext={researchLocNameMap.get(selectedResearchLocId)}
-                      countries={activeTrip?.countries}
-                      hideHeader
-                      onOpen={setOpenedPoiId}
-                    />
-                    {/* Notes (collapsible) */}
-                    <details className="group">
-                      <summary className="text-xs font-semibold flex items-center gap-1.5 text-muted-foreground cursor-pointer list-none">
-                        <NotebookPen size={12} /> {t('timeline.locationNotes')}
-                        {localNotes && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
-                      </summary>
-                      <textarea
-                        value={localNotes}
-                        onChange={e => handleNotesChange(e.target.value)}
-                        placeholder={t('timeline.locationNotesPlaceholder')}
-                        className="mt-1.5 w-full h-28 rounded-lg border bg-card p-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/50"
-                        dir="auto"
-                      />
-                    </details>
-                  </div>
-
-                  {/* ── Desktop: 3-column layout ── */}
-                  <div className="hidden md:grid md:grid-cols-[1fr_1fr_1.2fr] gap-4 h-full">
-                    {/* Column 1 (right in RTL): Activities */}
-                    <div className="flex flex-col gap-2 min-w-0 min-h-0">
-                      <h4 className="text-sm font-semibold flex items-center gap-1.5 text-muted-foreground shrink-0">
-                        <MapPin size={14} /> {t('timeline.addActivity')}
-                      </h4>
-                      <div className="flex-1 min-h-0 overflow-y-auto">
-                        <DaySection
-                          title=""
-                          icon={null}
-                          items={researchPotential.map(i => ({ id: i.id, label: i.label, sublabel: i.sublabel || '' }))}
-                          onRemove={handleRemoveResearchPoi}
-                          availableItems={pois
-                            .filter(p => !researchPotential.some(rp => rp.id === p.id))
-                            .map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))
-                          }
-                          onAdd={(id) => handleAddResearchPoi(id)}
-                          addLabel={t('timeline.addActivity')}
-                          entityType="activity"
-                          locationContext={researchLocNameMap.get(selectedResearchLocId)}
-                          countries={activeTrip?.countries}
-                          hideHeader
-                          onOpen={setOpenedPoiId}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Column 2 (center): Image on top + Notes below */}
-                    <div className="flex flex-col gap-3 min-w-0 min-h-0">
-                      <div className="shrink-0">
-                        <h4 className="text-sm font-semibold flex items-center gap-1.5 text-muted-foreground mb-1.5">
-                          <ImageIcon size={14} /> {t('timeline.locationImage')}
-                        </h4>
-                        <div className="rounded-xl overflow-hidden border bg-muted h-[160px]">
-                          {locationImageUrl ? (
-                            <img src={locationImageUrl} alt={selectedLocName || ''} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <ImageIcon size={24} className="text-muted-foreground/30" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-1.5 flex-1 min-h-0">
-                        <h4 className="text-sm font-semibold flex items-center gap-1.5 text-muted-foreground shrink-0">
-                          <NotebookPen size={14} /> {t('timeline.locationNotes')}
-                        </h4>
-                        <textarea
-                          value={localNotes}
-                          onChange={e => handleNotesChange(e.target.value)}
-                          placeholder={t('timeline.locationNotesPlaceholder')}
-                          className="flex-1 min-h-0 w-full rounded-xl border bg-card p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-muted-foreground/50"
-                          dir="auto"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Column 3 (left in RTL): Map — full height */}
-                    <div className="flex flex-col gap-1.5 min-w-0 min-h-0">
-                      <h4 className="text-sm font-semibold flex items-center gap-1.5 text-muted-foreground shrink-0">
-                        <MapPin size={14} /> {t('timeline.locationMap')}
-                      </h4>
-                      <div className="rounded-xl overflow-hidden border bg-muted flex-1 min-h-[200px]">
-                        {locationCoords ? (
-                          <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Loading...</div>}>
-                            <LazyMiniMap coordinates={locationCoords} className="w-full h-full" zoom={isCity ? 13 : 9} boundary={locationBoundary ?? undefined} markers={researchMapMarkers} />
-                          </Suspense>
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <MapPin size={24} className="text-muted-foreground/30" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Empty state (no locations yet) ── */}
-              {researchLocations.length === 0 && !addLocationOpen && (
-                <button
-                  type="button"
-                  onClick={() => setAddLocationOpen(true)}
-                  className="flex flex-col items-center justify-center py-12 gap-3 text-center max-w-md mx-auto w-full rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 hover:border-primary/60 hover:bg-primary/10 transition-colors cursor-pointer"
-                >
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                    <MapPin size={28} className="text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">{t('timeline.selectLocations')}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">{t('timeline.selectLocationsDesc')}</p>
-                  </div>
-                </button>
-              )}
 
               {/* ── Fallback: manual day/date inputs ── */}
               {researchLocations.length === 0 && (
