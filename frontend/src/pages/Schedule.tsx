@@ -5,7 +5,7 @@ import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
 import { useItinerary } from '@/context/ItineraryContext';
 import { updateItineraryDay, createItineraryDay } from '@/services/itineraryService';
-import { findOrCreateItineraryLocation, assignDayToLocation, reorderItineraryLocations, updateItineraryLocationNotes, deleteItineraryLocation } from '@/services/itineraryLocationService';
+import { findOrCreateItineraryLocation, assignDayToLocation, reorderItineraryLocations, updateItineraryLocationNotes, updateItineraryLocationImage, deleteItineraryLocation } from '@/services/itineraryLocationService';
 import { geocodeLocation } from '@/services/weatherService';
 import { findInFlatList } from '@/services/tripLocationService';
 import { rebuildPOIBookingsFromDays } from '@/services/poiService';
@@ -1114,6 +1114,45 @@ export default function SchedulePage() {
       }));
   }, [researchPotential]);
 
+  // Fetch an image for a location and persist it
+  const fetchAndSaveLocationImage = useCallback(async (itinLocId: string, locationName: string, tripLocation?: { id: string; name: string }) => {
+    try {
+      let imageUrl: string | null = null;
+      const locName = locationName.toLowerCase();
+      const nameParts = [locName, ...locName.split(/\s*[&,\-–]\s*/).map(s => s.trim()).filter(Boolean)];
+
+      // 1. Try POIs whose city matches any part of the name
+      for (const part of nameParts) {
+        const match = pois.find(p => p.imageUrl && p.location?.city?.toLowerCase() === part);
+        if (match) { imageUrl = match.imageUrl; break; }
+      }
+
+      // 2. Try child locations in the hierarchy
+      if (!imageUrl && tripLocation) {
+        const childLocs = tripLocations.filter(tl => tl.parentId === tripLocation.id);
+        for (const child of childLocs) {
+          const match = pois.find(p => p.imageUrl && p.location?.city?.toLowerCase() === child.name.toLowerCase());
+          if (match) { imageUrl = match.imageUrl; break; }
+        }
+      }
+
+      // 3. Fallback: Wikipedia
+      if (!imageUrl) {
+        const wikiName = nameParts[0] || locationName;
+        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiName)}`);
+        if (res.ok) {
+          const data = await res.json();
+          imageUrl = data?.originalimage?.source || data?.thumbnail?.source || null;
+        }
+      }
+
+      if (imageUrl) {
+        await updateItineraryLocationImage(itinLocId, imageUrl);
+        await refetchItineraryLocations();
+      }
+    } catch { /* silent */ }
+  }, [pois, tripLocations, refetchItineraryLocations]);
+
   // Add a location to the research strip
   const handleAddResearchLocation = useCallback(async (locationName: string) => {
     if (!activeTrip) return;
@@ -1155,10 +1194,15 @@ export default function SchedulePage() {
       await refetchItineraryLocations();
       await refetchItinerary();
       setSelectedResearchLocId(itinLoc.id);
+
+      // Fetch and persist image in the background (fire-and-forget)
+      if (!itinLoc.imageUrl) {
+        fetchAndSaveLocationImage(itinLoc.id, locationName, existing);
+      }
     } catch {
       toast({ title: t('common.error'), variant: 'destructive' });
     }
-  }, [activeTrip, tripLocations, addSiteToHierarchy, reloadLocations, itineraryDays, researchLocations, refetchItineraryLocations, refetchItinerary, t, toast]);
+  }, [activeTrip, tripLocations, addSiteToHierarchy, reloadLocations, itineraryDays, researchLocations, refetchItineraryLocations, refetchItinerary, fetchAndSaveLocationImage, t, toast]);
 
   // Drag-end handler for reordering research location pills
   const handleLocationDragEnd = useCallback(async (event: DragEndEvent) => {
@@ -1230,55 +1274,9 @@ export default function SchedulePage() {
 
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locationBoundary, setLocationBoundary] = useState<GeoJSON.GeoJsonObject | null>(null);
-  const [locationImageUrl, setLocationImageUrl] = useState<string | null>(null);
 
-  // Get image from POIs in this location, or from child locations' POIs, or Wikipedia fallback
-  useEffect(() => {
-    setLocationImageUrl(null);
-    if (!selectedResearchLocId) return;
-    let cancelled = false;
-
-    // 1. Try POIs assigned to this location's activities
-    const holdingDay = itineraryDays.find(d => d.itineraryLocationId === selectedResearchLocId);
-    const activityIds = (holdingDay?.activities || []).filter(a => a.type === 'poi').map(a => a.id);
-    for (const id of activityIds) {
-      const poi = pois.find(p => p.id === id);
-      if (poi?.imageUrl) { setLocationImageUrl(poi.imageUrl); return; }
-    }
-
-    // 2. Try any POI whose city matches this location name (or parts of compound name)
-    const locName = selectedLocName?.toLowerCase();
-    if (locName) {
-      const nameParts = [locName, ...locName.split(/\s*[&,\-–]\s*/).map(s => s.trim()).filter(Boolean)];
-      for (const part of nameParts) {
-        const match = pois.find(p => p.imageUrl && p.location?.city?.toLowerCase() === part);
-        if (match) { setLocationImageUrl(match.imageUrl); return; }
-      }
-    }
-
-    // 3. Try child locations in the trip hierarchy
-    if (selectedTripLocation) {
-      const childLocs = tripLocations.filter(tl => tl.parentId === selectedTripLocation.id);
-      for (const child of childLocs) {
-        const childName = child.name.toLowerCase();
-        const match = pois.find(p => p.imageUrl && p.location?.city?.toLowerCase() === childName);
-        if (match) { setLocationImageUrl(match.imageUrl); return; }
-      }
-    }
-
-    // 4. Fallback: Wikipedia image
-    const wikiName = selectedLocName?.split(/\s*[&,\-–]\s*/)[0].trim();
-    if (wikiName) {
-      fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiName)}`)
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (!cancelled && data?.originalimage?.source) setLocationImageUrl(data.originalimage.source);
-          else if (!cancelled && data?.thumbnail?.source) setLocationImageUrl(data.thumbnail.source);
-        })
-        .catch(() => {});
-    }
-    return () => { cancelled = true; };
-  }, [selectedResearchLocId, selectedLocName, selectedTripLocation, itineraryDays, pois, tripLocations]);
+  // Image comes from the persisted imageUrl on the itinerary location
+  const locationImageUrl = selectedResearchLocation?.imageUrl || null;
 
   // Find the country of the selected location (for geocoding disambiguation)
   const selectedLocCountry = useMemo(() => {

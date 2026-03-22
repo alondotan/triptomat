@@ -77,6 +77,16 @@ export async function updateItineraryLocationNotes(id: string, notes: string): P
   if (error) throw error;
 }
 
+// ── Update image ────────────────────────────────────────────────────────────
+
+export async function updateItineraryLocationImage(id: string, imageUrl: string): Promise<void> {
+  const { error } = await supabase
+    .from('itinerary_locations')
+    .update({ image_url: imageUrl })
+    .eq('id', id);
+  if (error) throw error;
+}
+
 // ── Delete ──────────────────────────────────────────────────────────────────
 
 export async function deleteItineraryLocation(id: string): Promise<void> {
@@ -141,6 +151,7 @@ function mapItineraryLocation(row: Record<string, unknown>): ItineraryLocation {
     isDefault: row.is_default as boolean,
     sortOrder: row.sort_order as number,
     notes: (row.notes as string) || '',
+    imageUrl: (row.image_url as string) || '',
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };

@@ -201,6 +201,7 @@ export interface ItineraryLocation {
   isDefault: boolean;
   sortOrder: number;
   notes: string;
+  imageUrl: string;
   createdAt: string;
   updatedAt: string;
 }
