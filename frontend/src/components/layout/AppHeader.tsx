@@ -23,7 +23,7 @@ import {
   MoreVertical,
   ListIcon,
   FileText,
-  LayoutDashboard,
+  Globe,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -64,9 +64,10 @@ import { useAiUsage } from '@/hooks/useAiUsage';
 import { Crown } from 'lucide-react';
 
 const navItems = [
-  { path: '/overview', labelKey: 'nav.home', icon: LayoutDashboard },
+  { path: '/overview', labelKey: 'nav.home', icon: Globe },
   { path: '/', labelKey: 'nav.timeline', icon: CalendarDays },
-  { path: '/itinerary', labelKey: 'nav.itinerary', icon: Table2 },
+  // TODO: Re-enable Itinerary page when ready
+  // { path: '/itinerary', labelKey: 'nav.itinerary', icon: Table2 },
   { path: '/map', labelKey: 'nav.map', icon: Map },
   { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },
   { path: '/tasks', labelKey: 'nav.tasks', icon: CheckSquare },
@@ -126,7 +127,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
   // Navigate to trips page when no trips exist
   useEffect(() => {
     if (!tripsLoading && trips.length === 0) {
-      navigate('/trips');
+      navigate('/trips', { replace: true });
     }
   }, [tripsLoading, trips.length, navigate]);
 
@@ -243,8 +244,8 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
             >
               <Sparkles size={22} />
             </button>
-            <RouterNavLink
-              to="/inbox"
+            <button
+              onClick={() => { if (location.pathname !== '/inbox') navigate('/inbox', { replace: true }); }}
               className={cn(
                 'relative p-2 rounded-lg transition-colors',
                 location.pathname === '/inbox' ? 'text-primary' : 'text-muted-foreground'
@@ -256,7 +257,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                   {inboxUnread > 9 ? '9+' : inboxUnread}
                 </span>
               )}
-            </RouterNavLink>
+            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="p-2 rounded-lg transition-colors text-muted-foreground" aria-label={t('nav.menu')}>
@@ -363,9 +364,9 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
             const showUnread = item.path === '/inbox' && inboxUnread > 0;
 
             return (
-              <RouterNavLink
+              <button
                 key={item.path}
-                to={item.path}
+                onClick={() => { if (!isActive) navigate(item.path, { replace: true }); }}
                 className={cn(
                   'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                   isActive
@@ -382,7 +383,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
                   )}
                 </div>
                 {t(item.labelKey)}
-              </RouterNavLink>
+              </button>
             );
           })}
         </nav>
@@ -524,7 +525,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
           <AlertDialogFooter>
             <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => { deleteCurrentTrip().then(() => navigate('/trips')); setDeleteDialogOpen(false); }}
+              onClick={() => { deleteCurrentTrip().then(() => navigate('/trips', { replace: true })); setDeleteDialogOpen(false); }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {t('deleteTrip.button')}

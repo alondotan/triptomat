@@ -144,7 +144,7 @@ export default function ShareTargetPage() {
           <div className="flex flex-col items-center gap-3">
             <CheckCircle size={32} className="text-green-500" />
             <p className="text-sm text-green-600 font-medium">{message}</p>
-            <Button size="sm" className="gap-1.5" onClick={() => navigate('/pois')}>
+            <Button size="sm" className="gap-1.5" onClick={() => navigate('/pois', { replace: true })}>
               <ExternalLink size={14} />
               {t('shareTarget.goToPOIs')}
             </Button>
@@ -159,7 +159,7 @@ export default function ShareTargetPage() {
                 ? t('shareTarget.alreadyAnalyzed')
                 : t('shareTarget.analysisSubmitted')}
             </p>
-            <Button size="sm" className="gap-1.5" onClick={() => navigate('/sources')}>
+            <Button size="sm" className="gap-1.5" onClick={() => navigate('/sources', { replace: true })}>
               <ExternalLink size={14} />
               {t('shareTarget.goToRecs')}
             </Button>
@@ -170,7 +170,7 @@ export default function ShareTargetPage() {
           <div className="flex flex-col items-center gap-3">
             <AlertCircle size={32} className="text-destructive" />
             <p className="text-sm text-destructive">{message}</p>
-            <Button variant="outline" size="sm" onClick={() => navigate('/')}>
+            <Button variant="outline" size="sm" onClick={() => navigate('/', { replace: true })}>
               {t('shareTarget.backToHome')}
             </Button>
           </div>
@@ -180,7 +180,7 @@ export default function ShareTargetPage() {
           <div className="flex flex-col items-center gap-3">
             <AlertCircle size={32} className="text-muted-foreground" />
             <p className="text-sm text-muted-foreground">{t('shareTarget.noUrl')}</p>
-            <Button variant="outline" size="sm" onClick={() => navigate('/')}>
+            <Button variant="outline" size="sm" onClick={() => navigate('/', { replace: true })}>
               {t('shareTarget.backToHome')}
             </Button>
           </div>

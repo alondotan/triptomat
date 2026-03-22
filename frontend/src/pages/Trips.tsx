@@ -216,7 +216,7 @@ const TripsPage = () => {
 
   const handleSelect = (tripId: string) => {
     setActiveTrip(tripId);
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   const handleSignOut = async () => {

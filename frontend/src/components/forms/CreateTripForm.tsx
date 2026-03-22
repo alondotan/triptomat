@@ -90,7 +90,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
       });
       setOpen(false);
       resetForm();
-      navigate('/');
+      navigate('/', { replace: true });
     } finally {
       setIsSubmitting(false);
     }

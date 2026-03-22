@@ -127,7 +127,7 @@ const POIGroupPage = () => {
         const poiSub = groupBy === 'category'
           ? (poi.subCategory || '—')
           : (poi.location.city || poi.location.country || '—');
-        return subCounts[poiSub] <= 6;
+        return subCounts[poiSub] < 5;
       }
 
       if (groupBy === 'category') return (poi.subCategory || '—') === subKey;
@@ -273,7 +273,7 @@ const POIGroupPage = () => {
         {/* Header */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate('/pois')}
+            onClick={() => navigate(-1)}
             className="p-1.5 rounded-lg hover:bg-muted transition-colors"
           >
             <ArrowRight size={20} />
