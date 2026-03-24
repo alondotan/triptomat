@@ -60,7 +60,7 @@ Deno.test("isGeographicType — returns false for unknown type", () => {
 // ── TYPE_TO_CATEGORY completeness ───────────────────────────────────────────
 
 Deno.test("TYPE_TO_CATEGORY — all values are valid categories", () => {
-  const validCategories = new Set(["attraction", "accommodation", "eatery", "transportation", "service", "contact"]);
+  const validCategories = new Set(["attraction", "accommodation", "eatery", "transportation", "service", "contact", "event"]);
   for (const [type, category] of Object.entries(TYPE_TO_CATEGORY)) {
     assertEquals(validCategories.has(category), true, `Invalid category '${category}' for type '${type}'`);
   }
