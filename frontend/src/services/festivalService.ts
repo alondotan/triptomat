@@ -50,7 +50,7 @@ export async function loadFestivalData(countryName: string): Promise<FestivalDat
   if (festivalCache.has(countryName)) return festivalCache.get(countryName)!;
 
   try {
-    const res = await fetch(`/data/countries_festivals/${encodeURIComponent(countryName)}.json`);
+    const res = await fetch(`https://triptomat-media.s3.eu-central-1.amazonaws.com/geodata/countries_festivals/${encodeURIComponent(countryName)}.json`);
     if (!res.ok) {
       festivalCache.set(countryName, null);
       return null;

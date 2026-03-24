@@ -18,6 +18,11 @@ frontend/dist/
 frontend/.env
 frontend/.env.local
 
+# Country data (served from S3, not bundled)
+frontend/public/data/countries_festivals/
+frontend/public/data/countries_weather/
+frontend/public/data/countries_resources/
+
 # Temp / debug files
 *.log
 *_cookies.txt

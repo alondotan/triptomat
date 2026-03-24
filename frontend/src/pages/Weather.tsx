@@ -338,7 +338,7 @@ const WeatherPage = () => {
     Promise.all(
       countries.map(async (country) => {
         const [weatherRes, countryData] = await Promise.all([
-          fetch(`/data/countries_weather/${country}.json`).then(r => r.ok ? r.json() as Promise<WeatherData> : null).catch(() => null),
+          fetch(`https://triptomat-media.s3.eu-central-1.amazonaws.com/geodata/countries_weather/${encodeURIComponent(country)}.json`).then(r => r.ok ? r.json() as Promise<WeatherData> : null).catch(() => null),
           loadCountryData(country),
         ]);
         return { country, weather: weatherRes, countryData };
