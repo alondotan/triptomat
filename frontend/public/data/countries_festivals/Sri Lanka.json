@@ -1,0 +1,233 @@
+{
+  "country": "Sri Lanka",
+  "country_he": "סרי לנקה",
+  "country_id": "sri-lanka",
+  "country_code": "LK",
+  "generated_at": "2026-03-24T11:38:36.467707+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 26,
+    "cultural_festivals": 1,
+    "total": 27
+  },
+  "public_holidays": [
+    {
+      "name": "Duruthu Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-03",
+      "image": "https://images.pexels.com/photos/975012/pexels-photo-975012.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Tamil Thai Pongal Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-15",
+      "image": "https://images.pexels.com/photos/35763758/pexels-photo-35763758.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Navam Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-01",
+      "image": "https://images.pexels.com/photos/239107/pexels-photo-239107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-04",
+      "image": "https://images.pexels.com/photos/6303979/pexels-photo-6303979.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Mahasivarathri Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-15",
+      "image": "https://images.pexels.com/photos/3581355/pexels-photo-3581355.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Madin Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-02",
+      "image": "https://images.pexels.com/photos/239107/pexels-photo-239107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Fitr",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-21",
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Bak Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-01",
+      "image": "https://images.pexels.com/photos/239107/pexels-photo-239107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-03",
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Sinhala and Tamil New Year's Eve",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-13",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Sinhala and Tamil New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-14",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Vesak Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/239107/pexels-photo-239107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "festival_info": {
+        "description": "Celebration of Buddha's birth, enlightenment, and death with lanterns and decorations",
+        "name_he": "וסאק - יום הבודהה",
+        "typical_months": [
+          5
+        ],
+        "location_ids": [
+          "sri-lanka"
+        ]
+      }
+    },
+    {
+      "name": "May Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/7723831/pexels-photo-7723831.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day after Vesak Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-02",
+      "image": "https://images.pexels.com/photos/30263697/pexels-photo-30263697.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Adha",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-28",
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Adhi Poson Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-30",
+      "image": "https://images.pexels.com/photos/975012/pexels-photo-975012.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Poson Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-29",
+      "image": "https://images.pexels.com/photos/239107/pexels-photo-239107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Esala Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-29",
+      "image": "https://images.pexels.com/photos/239107/pexels-photo-239107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Milad-Un-Nabi",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-26",
+      "image": "https://images.pexels.com/photos/3799176/pexels-photo-3799176.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Nikini Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-27",
+      "image": "https://images.pexels.com/photos/6017481/pexels-photo-6017481.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Binara Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-26",
+      "image": "https://images.pexels.com/photos/596134/pexels-photo-596134.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Vap Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-25",
+      "image": "https://images.pexels.com/photos/239107/pexels-photo-239107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Deepavali",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-08",
+      "image": "https://images.pexels.com/photos/8819845/pexels-photo-8819845.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Il Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-24",
+      "image": "https://images.pexels.com/photos/239107/pexels-photo-239107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Unduvap Full Moon Poya Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-23",
+      "image": "https://images.pexels.com/photos/239107/pexels-photo-239107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Perahera (Kandy Esala)",
+      "type": "cultural_festival",
+      "description": "Grand procession of elephants, dancers, and fire performers in Kandy",
+      "name_he": "פרהרה - תהלוכת קנדי",
+      "typical_months": [
+        8
+      ],
+      "location_ids": [
+        "sri-lanka/kandy-hill-country/kandy"
+      ],
+      "image": "https://images.pexels.com/photos/27907343/pexels-photo-27907343.png?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

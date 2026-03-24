@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin, LayoutGrid, Search, Merge, ChevronLeft, ChevronDown, ChevronUp, ArrowUpDown, SlidersHorizontal, Sparkles } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -32,6 +32,11 @@ const POIsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [showNewOnly, setShowNewOnly] = useState(false);
+
+  // Scroll to category from URL param
+  const [searchParams, setSearchParams] = useSearchParams();
+  const scrollToCategory = searchParams.get('scrollTo');
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Merge mode
   const [mergeMode, setMergeMode] = useState(false);
@@ -177,7 +182,7 @@ const POIsPage = () => {
 
     // Second pass: split sub-groups with >6 items into separate rows
     const result: [string, PointOfInterest[]][] = [];
-    const SUB_GROUP_THRESHOLD = 6;
+    const SUB_GROUP_THRESHOLD = 5;
 
     for (const [key, pois] of Object.entries(primaryGroups)) {
       if ((groupBy === 'category' || groupBy === 'location') && !key.includes('::')) {
@@ -195,13 +200,13 @@ const POIsPage = () => {
           subMap[sub].push(poi);
         }
 
-        const largeSubs = Object.entries(subMap).filter(([, items]) => items.length > SUB_GROUP_THRESHOLD);
+        const largeSubs = Object.entries(subMap).filter(([, items]) => items.length >= SUB_GROUP_THRESHOLD);
 
         if (largeSubs.length > 0) {
           // Collect remaining items (sub-groups with <= threshold)
           const remaining: PointOfInterest[] = [];
           for (const [sub, items] of Object.entries(subMap)) {
-            if (items.length > SUB_GROUP_THRESHOLD) {
+            if (items.length >= SUB_GROUP_THRESHOLD) {
               result.push([`${key}::${sub}`, items]);
             } else {
               remaining.push(...items);
@@ -238,6 +243,17 @@ const POIsPage = () => {
 
     return result;
   }, [filteredPois, groupBy, cityRegionMap, sites, sortBy]);
+
+  useEffect(() => {
+    if (scrollToCategory) {
+      const el = sectionRefs.current[scrollToCategory];
+      if (el) {
+        const y = el.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [scrollToCategory, grouped]);
 
   const getGroupLabel = (key: string): string => {
     // Handle split sub-group keys like "category::subName"
@@ -435,7 +451,10 @@ const POIsPage = () => {
         </div>
 
         {grouped.map(([key, pois]) => (
-          <div key={key} className="space-y-2">
+          <div key={key} className="space-y-2" ref={el => {
+            const primary = key.split('::')[0];
+            if (!sectionRefs.current[primary]) sectionRefs.current[primary] = el;
+          }}>
             <button
               onClick={() => navigate(`/pois/group?groupBy=${groupBy}&key=${encodeURIComponent(key)}`)}
               className="flex items-center gap-2 hover:text-primary transition-colors group/header"

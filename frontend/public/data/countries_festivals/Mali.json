@@ -1,0 +1,164 @@
+{
+  "country": "Mali",
+  "country_he": "מאלי",
+  "country_id": "mali",
+  "country_code": "ML",
+  "generated_at": "2026-03-24T11:34:23.110412+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 14,
+    "cultural_festivals": 1,
+    "total": 15
+  },
+  "public_holidays": [
+    {
+      "name": "New Year",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "New Year Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-02",
+      "image": "https://images.pexels.com/photos/3036525/pexels-photo-3036525.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Army Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-20",
+      "image": "https://images.pexels.com/photos/1202727/pexels-photo-1202727.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Fitr",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-20",
+        "2027": "2027-03-10",
+        "2028": "2028-02-27",
+        "2029": "2029-02-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Martyrs' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-26",
+      "image": "https://images.pexels.com/photos/8011501/pexels-photo-8011501.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-06",
+        "2027": "2027-03-29",
+        "2028": "2028-04-17",
+        "2029": "2029-04-02"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Workers' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/4386498/pexels-photo-4386498.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Africa Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-25",
+      "image": "https://images.pexels.com/photos/1491282/pexels-photo-1491282.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Adha",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-27",
+        "2027": "2027-05-17",
+        "2028": "2028-05-05",
+        "2029": "2029-04-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ashura Holiday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-26",
+        "2027": "2027-06-15",
+        "2028": "2028-06-03",
+        "2029": "2029-05-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/18285745/pexels-photo-18285745.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "The Prophet's Birthday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-26",
+        "2027": "2027-08-15",
+        "2028": "2028-08-03",
+        "2029": "2029-07-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7600420/pexels-photo-7600420.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Baptism of the Prophet",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-01",
+      "image": "https://images.pexels.com/photos/16537217/pexels-photo-16537217.png?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-22",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Festival au Désert",
+      "type": "cultural_festival",
+      "description": "Music festival in the Sahara desert near Timbuktu",
+      "name_he": "פסטיבל במדבר",
+      "typical_months": [
+        1
+      ],
+      "location_ids": [
+        "mali"
+      ],
+      "image": "https://images.pexels.com/photos/19049863/pexels-photo-19049863.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

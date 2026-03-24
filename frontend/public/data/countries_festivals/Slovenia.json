@@ -1,0 +1,212 @@
+{
+  "country": "Slovenia",
+  "country_he": "סלובניה",
+  "country_id": "slovenia",
+  "country_code": "SI",
+  "generated_at": "2026-03-24T11:01:37.922264+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 19,
+    "cultural_festivals": 0,
+    "total": 19
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "novo leto",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-02",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Prešeren Day",
+      "local_name": "Prešernov dan",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-08",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Sunday",
+      "local_name": "velikonočna nedelja in ponedeljek",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-05",
+        "2027": "2027-03-28",
+        "2028": "2028-04-16",
+        "2029": "2029-04-01",
+        "2030": "2030-04-21",
+        "2031": "2031-04-13",
+        "2032": "2032-03-28",
+        "2033": "2033-04-17",
+        "2034": "2034-04-09",
+        "2035": "2035-03-25"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/41376/celebration-colored-colorful-decoration-41376.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "local_name": "velikonočna nedelja in ponedeljek",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-06",
+        "2027": "2027-03-29",
+        "2028": "2028-04-17",
+        "2029": "2029-04-02",
+        "2030": "2030-04-22",
+        "2031": "2031-04-14",
+        "2032": "2032-03-29",
+        "2033": "2033-04-18",
+        "2034": "2034-04-10",
+        "2035": "2035-03-26"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of Uprising Against Occupation",
+      "local_name": "dan upora proti okupatorju",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-27",
+      "image": "https://images.pexels.com/photos/8343677/pexels-photo-8343677.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "local_name": "praznik dela",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-02",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Primož Trubar Day",
+      "local_name": "dan Primoža Trubarja",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-02",
+      "image": "https://images.pexels.com/photos/3871/city-night-explosion-firework.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Pentecost",
+      "local_name": "binkoštna nedelja",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-24",
+        "2027": "2027-05-16",
+        "2028": "2028-06-04",
+        "2029": "2029-05-20",
+        "2030": "2030-06-09",
+        "2031": "2031-06-01",
+        "2032": "2032-05-16",
+        "2033": "2033-06-05",
+        "2034": "2034-05-28",
+        "2035": "2035-05-13"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36330285/pexels-photo-36330285.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Statehood Day",
+      "local_name": "dan državnosti",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-25",
+      "image": "https://images.pexels.com/photos/9687679/pexels-photo-9687679.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Sovereignty Day",
+      "local_name": "dan suverenosti",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-14",
+      "image": "https://images.pexels.com/photos/12000988/pexels-photo-12000988.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Assumption Day",
+      "local_name": "Marijino vnebovzetje",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-15",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Unification of Prekmurje Slovenes with the Mother Nation",
+      "local_name": "združitev prekmurskih Slovencev z matičnim narodom",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-15",
+      "image": "https://images.pexels.com/photos/1046398/pexels-photo-1046398.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Integration of Primorska into the Homeland",
+      "local_name": "priključitev Primorske k matični domovini",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-15",
+      "image": "https://images.pexels.com/photos/97509/pexels-photo-97509.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Slovenian Sports Day",
+      "local_name": "dan slovenskega športa",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-23",
+      "image": "https://images.pexels.com/photos/159728/lacrosse-lacrosse-team-champions-state-champions-159728.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Reformation Day",
+      "local_name": "dan reformacije",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-31",
+      "image": "https://images.pexels.com/photos/1103254/pexels-photo-1103254.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of the Dead",
+      "local_name": "dan spomina na mrtve",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-01",
+      "image": "https://images.pexels.com/photos/7706900/pexels-photo-7706900.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Rudolf Maister Day",
+      "local_name": "dan Rudolfa Maistra",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-23",
+      "image": "https://images.pexels.com/photos/769525/pexels-photo-769525.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "local_name": "božič",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence and Unity Day",
+      "local_name": "dan samostojnosti in enotnosti",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-26",
+      "image": "https://images.pexels.com/photos/3581355/pexels-photo-3581355.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

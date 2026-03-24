@@ -1,0 +1,206 @@
+{
+  "country": "Burkina Faso",
+  "country_he": "בורקינה פאסו",
+  "country_id": "burkina-faso",
+  "country_code": "BF",
+  "generated_at": "2026-03-24T11:30:14.816104+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 22,
+    "cultural_festivals": 0,
+    "total": 22
+  },
+  "public_holidays": [
+    {
+      "name": "New Year",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Burkina Faso Popular Uprising Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-03",
+      "image": "https://images.pexels.com/photos/15051742/pexels-photo-15051742.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "International Women's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-08",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for International Women's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-09",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Fitr",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-20",
+        "2027": "2027-03-10",
+        "2028": "2028-02-27",
+        "2029": "2029-02-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-06",
+        "2027": "2027-03-29",
+        "2028": "2028-04-17",
+        "2029": "2029-04-02"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ascension Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-14",
+        "2027": "2027-05-06",
+        "2028": "2028-05-25",
+        "2029": "2029-05-10"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/225701/pexels-photo-225701.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of Customs and Traditions",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-15",
+      "image": "https://images.pexels.com/photos/2060240/pexels-photo-2060240.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Adha",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-27",
+        "2027": "2027-05-17",
+        "2028": "2028-05-05",
+        "2029": "2029-04-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-05",
+      "image": "https://images.pexels.com/photos/6303979/pexels-photo-6303979.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Assumption of Mary",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-15",
+      "image": "https://images.pexels.com/photos/36347673/pexels-photo-36347673.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "The Prophet's Birthday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-26",
+        "2027": "2027-08-15",
+        "2028": "2028-08-03",
+        "2029": "2029-07-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7600420/pexels-photo-7600420.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Martyrs' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-31",
+      "image": "https://images.pexels.com/photos/8011501/pexels-photo-8011501.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "All Saints' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-01",
+      "image": "https://images.pexels.com/photos/7080457/pexels-photo-7080457.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for All Saints' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-02",
+      "image": "https://images.pexels.com/photos/12051289/pexels-photo-12051289.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Proclamation of Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-11",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Burkina Faso Popular Uprising Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-04",
+      "image": "https://images.pexels.com/photos/15051742/pexels-photo-15051742.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Assumption of Mary",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-16",
+      "image": "https://images.pexels.com/photos/16449839/pexels-photo-16449839.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Martyrs' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-01",
+      "image": "https://images.pexels.com/photos/35252674/pexels-photo-35252674.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for National Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-06",
+      "image": "https://images.pexels.com/photos/4786198/pexels-photo-4786198.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

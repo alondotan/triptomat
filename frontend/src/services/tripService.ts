@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Trip, Collection } from '@/types/trip';
 import { fetchItineraryDays, updateItineraryDay } from './itineraryService';
 import { seedTripLocations } from './tripLocationService';
+import { seedTripFestivals } from './festivalService';
 import { ensureDefaultItineraryLocation } from './itineraryLocationService';
 
 // ============================================================
@@ -72,6 +73,11 @@ export async function createTrip(trip: Omit<Trip, 'id' | 'createdAt' | 'updatedA
     } catch (e) {
       console.error('Failed to seed trip locations:', e);
     }
+
+    // Seed festivals/holidays (fire-and-forget)
+    seedTripFestivals(mapped.id, mapped.countries, mapped.startDate).catch(e =>
+      console.error('Failed to seed trip festivals:', e)
+    );
   }
 
   // Create default "General" itinerary location

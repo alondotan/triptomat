@@ -1,0 +1,223 @@
+{
+  "country": "Philippines",
+  "country_he": "הפיליפינים",
+  "country_id": "philippines",
+  "country_code": "PH",
+  "generated_at": "2026-03-24T11:01:37.732232+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 18,
+    "cultural_festivals": 0,
+    "total": 18
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "Bagong Taon",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Chinese New Year",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-17",
+        "2027": "2027-02-06",
+        "2028": "2028-01-26",
+        "2029": "2029-02-13",
+        "2030": "2030-02-03",
+        "2031": "2031-01-23",
+        "2032": "2032-02-11",
+        "2033": "2033-01-31",
+        "2034": "2034-02-19",
+        "2035": "2035-02-08"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/3626475/pexels-photo-3626475.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Maundy Thursday",
+      "local_name": "Huwebes Santo",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-02",
+        "2027": "2027-03-25",
+        "2028": "2028-04-13",
+        "2029": "2029-03-29",
+        "2030": "2030-04-18",
+        "2031": "2031-04-10",
+        "2032": "2032-03-25",
+        "2033": "2033-04-14",
+        "2034": "2034-04-06",
+        "2035": "2035-03-22"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36032944/pexels-photo-36032944.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "local_name": "Biyernes Santo",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30",
+        "2030": "2030-04-19",
+        "2031": "2031-04-11",
+        "2032": "2032-03-26",
+        "2033": "2033-04-15",
+        "2034": "2034-04-07",
+        "2035": "2035-03-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Holy Saturday",
+      "local_name": "Sabado de Gloria",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-04",
+        "2027": "2027-03-27",
+        "2028": "2028-04-15",
+        "2029": "2029-03-31",
+        "2030": "2030-04-20",
+        "2031": "2031-04-12",
+        "2032": "2032-03-27",
+        "2033": "2033-04-16",
+        "2034": "2034-04-08",
+        "2035": "2035-03-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/942305/pexels-photo-942305.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of Valor",
+      "local_name": "Araw ng Kagitingan",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-09",
+      "image": "https://images.pexels.com/photos/1582493/pexels-photo-1582493.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "local_name": "Araw ng Paggawa",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "local_name": "Araw ng Kalayaan",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-12",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ninoy Aquino Day",
+      "local_name": "Araw ng Kamatayan ni Senador Benigno Simeon \"Ninoy\" Aquino Jr.",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-21",
+      "image": "https://images.pexels.com/photos/32044218/pexels-photo-32044218.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Heroes Day",
+      "local_name": "Araw ng mga Bayani",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-31",
+        "2027": "2027-08-30",
+        "2028": "2028-08-28",
+        "2029": "2029-08-27",
+        "2030": "2030-08-26",
+        "2031": "2031-08-25",
+        "2032": "2032-08-30",
+        "2033": "2033-08-29",
+        "2034": "2034-08-28",
+        "2035": "2035-08-27"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/1202726/pexels-photo-1202726.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "All Saints' Day Eve",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-31",
+      "image": "https://images.pexels.com/photos/2083601/pexels-photo-2083601.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "All Saints' Day",
+      "local_name": "Araw ng mga Santo",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-01",
+      "image": "https://images.pexels.com/photos/7080457/pexels-photo-7080457.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Bonifacio Day",
+      "local_name": "Araw ni Gat Andres Bonifacio",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-30",
+      "image": "https://images.pexels.com/photos/27643708/pexels-photo-27643708.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Feast of the Immaculate Conception of Mary",
+      "local_name": "Kapistahan ng Immaculada Concepcion",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-08",
+      "image": "https://images.pexels.com/photos/6150154/pexels-photo-6150154.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Eve",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-24",
+      "image": "https://images.pexels.com/photos/63741/pexels-photo-63741.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "local_name": "Araw ng Pasko",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Rizal Day",
+      "local_name": "Araw ng Kamatayan ni Dr. Jose Rizal",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-30",
+      "image": "https://images.pexels.com/photos/18888361/pexels-photo-18888361.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Last Day of The Year",
+      "local_name": "Huling Araw ng Taon",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-31",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

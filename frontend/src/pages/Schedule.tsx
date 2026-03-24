@@ -47,7 +47,7 @@ import { CSS } from '@dnd-kit/utilities';
 // Disable the snap-back animation when an item is dropped
 const noReturnAnimation: AnimateLayoutChanges = () => false;
 
-import { ArrowRight, Building2, CalendarDays, Check, ChevronLeft, Clock, GripVertical, Image as ImageIcon, MapPin, Moon, NotebookPen, Pencil, Plus, Sun, Trash2, X } from 'lucide-react';
+import { ArrowRight, Building2, Calendar, CalendarDays, Check, ChevronLeft, Clock, GripVertical, Image as ImageIcon, MapPin, Moon, NotebookPen, Pencil, Plus, Sun, Trash2, X } from 'lucide-react';
 
 const LazyMiniMap = lazy(() => import('@/components/poi/AccommodationMiniMap').then(m => ({ default: m.AccommodationMiniMap })));
 import { Input } from '@/components/ui/input';
@@ -989,6 +989,7 @@ export default function SchedulePage() {
   const [selectedResearchLocId, setSelectedResearchLocId] = useState<string | null>(null);
   const [mobileDetailLocId, setMobileDetailLocId] = useState<string | null>(null);
   const [addLocationOpen, setAddLocationOpen] = useState(false);
+  const [addActivityOpen, setAddActivityOpen] = useState(false);
 
   // Listen for FAB "add location" event in research mode
   useEffect(() => {
@@ -1869,6 +1870,16 @@ export default function SchedulePage() {
     () => itineraryDays.find(d => d.dayNumber === selectedDayNum) ?? null,
     [itineraryDays, selectedDayNum],
   );
+
+  // ── Holidays for current day ────────────────────────────────────────────────
+  const dayHolidays = useMemo(() => {
+    const currentDay = tripDays[selectedDayNum - 1];
+    if (!currentDay?.dateStr) return [];
+    return pois.filter(p =>
+      p.category === 'event' &&
+      p.details?.event_details?.date === currentDay.dateStr
+    );
+  }, [pois, tripDays, selectedDayNum]);
 
   const dayAccommodations = useMemo(() => {
     if (!currentItDay) return [];
@@ -3086,18 +3097,27 @@ export default function SchedulePage() {
                                 </button>
                               ))}
                               {/* Add activity card */}
-                              <div className="shrink-0 w-36 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-colors flex items-center justify-center aspect-[3/2] [&_div.space-y-2]:!space-y-0 [&_button]:!border-0 [&_button]:!p-0 [&_button]:!bg-transparent [&_button]:!shadow-none [&_button]:!text-primary [&_button]:!flex-col [&_button]:!gap-1.5 [&_button]:!w-full [&_button]:!h-full [&_button]:!justify-center [&_button_svg]:!w-[18px] [&_button_svg]:!h-[18px] [&_button_svg]:!bg-primary/10 [&_button_svg]:!rounded-full [&_button_svg]:!p-[5px] [&_button_svg]:!w-8 [&_button_svg]:!h-8 [&_button_svg]:!box-content">
-                                <DaySection
-                                  title="" icon={null} items={[]}
-                                  onRemove={handleRemoveResearchPoi}
-                                  availableItems={pois.filter(p => !researchPotential.some(rp => rp.id === p.id)).map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))}
-                                  onAdd={(id) => handleAddResearchPoi(id)}
-                                  addLabel={t('timeline.activity')}
-                                  entityType="activity"
-                                  locationContext={researchLocNameMap.get(selectedResearchLocId)}
-                                  countries={activeTrip?.countries} hideHeader hideEmptyState
-                                />
-                              </div>
+                              <button
+                                onClick={() => setAddActivityOpen(true)}
+                                className="shrink-0 w-36 rounded-xl border-2 border-dashed border-primary/30 hover:border-primary/60 hover:bg-primary/5 transition-colors flex flex-col items-center justify-center aspect-[3/2] gap-1.5 cursor-pointer"
+                              >
+                                <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
+                                  <Plus size={18} className="text-primary" />
+                                </div>
+                                <span className="text-xs text-primary font-medium">{t('timeline.activity')}</span>
+                              </button>
+                              <DaySection
+                                title="" icon={null} items={[]}
+                                onRemove={handleRemoveResearchPoi}
+                                availableItems={pois.filter(p => !researchPotential.some(rp => rp.id === p.id)).map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))}
+                                onAdd={(id) => handleAddResearchPoi(id)}
+                                addLabel={t('timeline.activity')}
+                                entityType="activity"
+                                locationContext={researchLocNameMap.get(selectedResearchLocId)}
+                                countries={activeTrip?.countries} hideHeader hideEmptyState
+                                externalOpen={addActivityOpen}
+                                onExternalOpenChange={setAddActivityOpen}
+                              />
                             </div>
                           </div>
                         </div>
@@ -3503,6 +3523,23 @@ export default function SchedulePage() {
 
               {/* Timeline content */}
               <div>
+
+              {/* Holidays on this day */}
+              {dayHolidays.length > 0 && (
+                <div className="space-y-1">
+                  {dayHolidays.map(h => (
+                    <div key={h.id} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                      <Calendar size={14} className="text-purple-500 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-purple-700 dark:text-purple-300 truncate">{h.name}</p>
+                        {h.details?.event_details?.local_name && (
+                          <p className="text-xs text-purple-500/70 truncate">{h.details.event_details.local_name}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Where I wake up */}
               <div className="space-y-1.5">

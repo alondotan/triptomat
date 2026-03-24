@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MapPin, Hotel, Plane, Users, Compass, Phone, Mail, Train, Bus, Ship, Car, ChevronLeft, ChevronRight, Utensils, Play, ExternalLink as ExternalLinkIcon } from 'lucide-react';
+import { MapPin, Hotel, Plane, Users, Compass, Phone, Mail, Train, Bus, Ship, Car, ChevronLeft, ChevronRight, Utensils, Calendar, Play, ExternalLink as ExternalLinkIcon } from 'lucide-react';
 import { usePOI } from '@/context/POIContext';
 import { useTransport } from '@/context/TransportContext';
 import { useContacts } from '@/context/ContactsContext';
@@ -214,6 +214,14 @@ export function OverviewFeed() {
     pois.filter(p => p.category === 'attraction' || p.category === 'service'),
     [pois]);
 
+  const allEvents = useMemo(() =>
+    pois.filter(p => p.category === 'event'),
+    [pois]);
+
+  const eventsCarousel = useMemo(() =>
+    allEvents.slice(0, CAROUSEL_LIMIT),
+    [allEvents]);
+
   const allEateries = useMemo(() =>
     pois.filter(p => p.category === 'eatery'),
     [pois]);
@@ -252,7 +260,7 @@ export function OverviewFeed() {
           title={t('overview.attractions')}
           icon={MapPin}
           count={allAttractions.length}
-          linkTo="/pois"
+          linkTo="/pois?scrollTo=attraction"
           iconColor="text-blue-500"
         >
           {attractionsCarousel.length === 0 ? (
@@ -268,12 +276,33 @@ export function OverviewFeed() {
           )}
         </FeedSection>
 
+        {/* Events — horizontal carousel */}
+        <FeedSection
+          title={t('overview.events')}
+          icon={Calendar}
+          count={allEvents.length}
+          linkTo="/pois?scrollTo=event"
+          iconColor="text-purple-500"
+        >
+          {eventsCarousel.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-2">{t('overview.noItems')}</p>
+          ) : (
+            <HorizontalCarousel>
+              {eventsCarousel.map(poi => (
+                <div key={poi.id} className="shrink-0 w-[130px]">
+                  <POICard poi={poi} level={3} />
+                </div>
+              ))}
+            </HorizontalCarousel>
+          )}
+        </FeedSection>
+
         {/* Eateries — horizontal carousel */}
         <FeedSection
           title={t('overview.eateries')}
           icon={Utensils}
           count={allEateries.length}
-          linkTo="/pois"
+          linkTo="/pois?scrollTo=eatery"
           iconColor="text-orange-500"
         >
           {eateriesCarousel.length === 0 ? (

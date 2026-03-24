@@ -31,7 +31,10 @@ def get_web_metadata(url):
         og_image = soup.find("meta", property="og:image")
         image = og_image["content"] if og_image else ""
 
-        return {"title": title.strip(), "image": image}
+        og_desc = soup.find("meta", property="og:description")
+        description = og_desc["content"].strip() if og_desc else ""
+
+        return {"title": title.strip(), "image": image, "description": description}
     except Exception as e:
         print(f"Metadata extraction error: {e}")
         return {"title": "", "image": ""}

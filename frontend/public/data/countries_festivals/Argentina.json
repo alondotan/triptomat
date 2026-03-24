@@ -1,0 +1,227 @@
+{
+  "country": "Argentina",
+  "country_he": "ארגנטינה",
+  "country_id": "argentina",
+  "country_code": "AR",
+  "generated_at": "2026-03-24T11:01:37.066509+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 15,
+    "cultural_festivals": 1,
+    "total": 16
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "Año Nuevo",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Carnival",
+      "local_name": "Carnaval",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-17",
+        "2027": "2027-02-09",
+        "2028": "2028-02-29",
+        "2029": "2029-02-13",
+        "2030": "2030-03-05",
+        "2031": "2031-02-25",
+        "2032": "2032-02-10",
+        "2033": "2033-03-01",
+        "2034": "2034-02-21",
+        "2035": "2035-02-06"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36160778/pexels-photo-36160778.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of Remembrance for Truth and Justice",
+      "local_name": "Día Nacional de la Memoria por la Verdad y la Justicia",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-24",
+      "image": "https://images.pexels.com/photos/399610/pexels-photo-399610.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of the Veterans and Fallen of the Malvinas War",
+      "local_name": "Día del Veterano y de los Caídos en la Guerra de Malvinas",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-02",
+      "image": "https://images.pexels.com/photos/27434672/pexels-photo-27434672.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "local_name": "Viernes Santo",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30",
+        "2030": "2030-04-19",
+        "2031": "2031-04-11",
+        "2032": "2032-03-26",
+        "2033": "2033-04-15",
+        "2034": "2034-04-07",
+        "2035": "2035-03-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "local_name": "Día del Trabajador",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "May Revolution",
+      "local_name": "Día de la Revolución de Mayo",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-25",
+      "image": "https://images.pexels.com/photos/36607660/pexels-photo-36607660.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Anniversary of the Passing of General Martín Miguel de Güemes",
+      "local_name": "Paso a la Inmortalidad del General Martín Miguel de Güemes",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-15",
+        "2027": "2027-06-21",
+        "2028": "2028-06-17",
+        "2029": "2029-06-17",
+        "2030": "2030-06-17",
+        "2031": "2031-06-16",
+        "2032": "2032-06-21",
+        "2033": "2033-06-20",
+        "2034": "2034-06-17",
+        "2035": "2035-06-17"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7810954/pexels-photo-7810954.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "General Manuel Belgrano Memorial Day",
+      "local_name": "Paso a la Inmortalidad del General Manuel Belgrano",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-20",
+      "image": "https://images.pexels.com/photos/13397578/pexels-photo-13397578.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "local_name": "Día de la Independencia",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-09",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "General José de San Martín Memorial Day",
+      "local_name": "Paso a la Inmortalidad del General José de San Martín",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-17",
+        "2027": "2027-08-16",
+        "2028": "2028-08-21",
+        "2029": "2029-08-20",
+        "2030": "2030-08-17",
+        "2031": "2031-08-17",
+        "2032": "2032-08-16",
+        "2033": "2033-08-15",
+        "2034": "2034-08-21",
+        "2035": "2035-08-20"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/29263252/pexels-photo-29263252.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of Respect for Cultural Diversity",
+      "local_name": "Día del Respeto a la Diversidad Cultural",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-10-12",
+        "2027": "2027-10-11",
+        "2028": "2028-10-16",
+        "2029": "2029-10-15",
+        "2030": "2030-10-12",
+        "2031": "2031-10-12",
+        "2032": "2032-10-11",
+        "2033": "2033-10-10",
+        "2034": "2034-10-16",
+        "2035": "2035-10-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36010087/pexels-photo-36010087.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Sovereignty Day",
+      "local_name": "Día de la Soberanía Nacional",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-11-23",
+        "2027": "2027-11-20",
+        "2028": "2028-11-20",
+        "2029": "2029-11-19",
+        "2030": "2030-11-18",
+        "2031": "2031-11-24",
+        "2032": "2032-11-20",
+        "2033": "2033-11-20",
+        "2034": "2034-11-20",
+        "2035": "2035-11-19"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36179215/pexels-photo-36179215.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Immaculate Conception Day",
+      "local_name": "Día de la Inmaculada Concepción de María",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-08",
+      "image": "https://images.pexels.com/photos/36032948/pexels-photo-36032948.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "local_name": "Navidad",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Fiesta de la Vendimia",
+      "type": "cultural_festival",
+      "description": "Grape harvest festival in Mendoza with parades and wine celebrations",
+      "name_he": "פסטיבל הבציר",
+      "typical_months": [
+        3
+      ],
+      "location_ids": [
+        "argentina/cuyo-wine-region/mendoza"
+      ],
+      "image": "https://images.pexels.com/photos/36188054/pexels-photo-36188054.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

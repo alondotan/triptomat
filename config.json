@@ -2539,6 +2539,39 @@
       "categoryGroup": "landmarks"
     },
     {
+      "type": "national_holiday",
+      "icon": "flag",
+      "category": "Events",
+      "is_geo_location": false,
+      "spatial_type": "virtual",
+      "names": {
+        "en": "National Holiday",
+        "he": "חג לאומי"
+      }
+    },
+    {
+      "type": "religious_holiday",
+      "icon": "temple_hindu",
+      "category": "Events",
+      "is_geo_location": false,
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Religious Holiday",
+        "he": "חג דתי"
+      }
+    },
+    {
+      "type": "cultural_festival",
+      "icon": "festival",
+      "category": "Events",
+      "is_geo_location": false,
+      "spatial_type": "virtual",
+      "names": {
+        "en": "Cultural Festival",
+        "he": "פסטיבל תרבותי"
+      }
+    },
+    {
       "type": "festival",
       "icon": "festival",
       "category": "Events",
@@ -5114,7 +5147,7 @@
       ]
     },
     "Events": {
-      "db_name": "attraction",
+      "db_name": "event",
       "icon": "calendar",
       "color": "text-purple-500",
       "labels": [

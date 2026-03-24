@@ -1,6 +1,6 @@
 export interface DraftPlace {
   name: string;
-  category: 'accommodation' | 'eatery' | 'attraction' | 'service';
+  category: 'accommodation' | 'eatery' | 'attraction' | 'service' | 'event';
   city?: string;
   notes?: string;
   time?: string;        // "HH:mm"

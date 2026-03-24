@@ -1,0 +1,179 @@
+{
+  "country": "Afghanistan",
+  "country_he": "אפגניסטן",
+  "country_id": "afghanistan",
+  "country_code": "AF",
+  "generated_at": "2026-03-24T11:28:42.370612+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 14,
+    "cultural_festivals": 1,
+    "total": 15
+  },
+  "public_holidays": [
+    {
+      "name": "Liberation Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-15",
+      "image": "https://images.pexels.com/photos/21069107/pexels-photo-21069107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "First Day of Ramadan",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-18",
+        "2027": "2027-02-08",
+        "2028": "2028-01-28",
+        "2029": "2029-01-16"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7957127/pexels-photo-7957127.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Fitr",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-20",
+        "2027": "2027-03-10",
+        "2028": "2028-02-27",
+        "2029": "2029-02-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Fitr Holiday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-22",
+        "2027": "2027-03-12",
+        "2028": "2028-02-29",
+        "2029": "2029-02-17"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Afghan Victory Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-28",
+      "image": "https://images.pexels.com/photos/6370120/pexels-photo-6370120.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labor Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/769525/pexels-photo-769525.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of Arafat",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-26",
+        "2027": "2027-05-16",
+        "2028": "2028-05-04",
+        "2029": "2029-04-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/12765598/pexels-photo-12765598.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Qurban",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-27",
+        "2027": "2027-05-17",
+        "2028": "2028-05-05",
+        "2029": "2029-04-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/32401109/pexels-photo-32401109.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Qurban Holiday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-29",
+        "2027": "2027-05-19",
+        "2028": "2028-05-07",
+        "2029": "2029-04-26"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/32401109/pexels-photo-32401109.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ashura",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-26",
+        "2027": "2027-06-15",
+        "2028": "2028-06-03",
+        "2029": "2029-05-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/18285745/pexels-photo-18285745.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day (National Day)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-19",
+      "image": "https://images.pexels.com/photos/3581355/pexels-photo-3581355.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "The Prophet's Birthday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-26",
+        "2027": "2027-08-15",
+        "2028": "2028-08-03",
+        "2029": "2029-07-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7600420/pexels-photo-7600420.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Anniversary of the Withdrawal of Foreign Troops",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-31",
+      "image": "https://images.pexels.com/photos/27794292/pexels-photo-27794292.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Martyrs and Ahmad Shah Masoud Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-09",
+      "image": "https://images.pexels.com/photos/32049488/pexels-photo-32049488.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Nowruz",
+      "type": "cultural_festival",
+      "description": "Persian New Year marking the spring equinox, celebrated across Central Asia",
+      "name_he": "נורוז - ראש השנה הפרסי",
+      "typical_months": [
+        3
+      ],
+      "location_ids": [
+        "afghanistan"
+      ],
+      "image": "https://images.pexels.com/photos/7158619/pexels-photo-7158619.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

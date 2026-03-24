@@ -299,8 +299,8 @@ def lambda_handler(event, context):
 
                 if msg_type == "link":
                     handle_link(wa_user, message, phone)
-                elif msg_type in ("command", "location"):
-                    handle_command(wa_user, message, phone)
+                elif msg_type in ("command", "location") or msg_type.startswith("cmd:"):
+                    handle_command(wa_user, message, phone, intent=msg_type)
                 elif msg_type == "image_booking":
                     handle_file(wa_user, message, phone)
                 elif msg_type == "booking":

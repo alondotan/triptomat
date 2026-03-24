@@ -1,0 +1,254 @@
+{
+  "country": "Kyrgyzstan",
+  "country_he": "קירגיזסטן",
+  "country_id": "kyrgyzstan",
+  "country_code": "KG",
+  "generated_at": "2026-03-24T11:33:10.405509+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 29,
+    "cultural_festivals": 1,
+    "total": 30
+  },
+  "public_holidays": [
+    {
+      "name": "New Year",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "New Year Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-06",
+      "image": "https://images.pexels.com/photos/3036525/pexels-photo-3036525.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Orthodox Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-07",
+      "image": "https://images.pexels.com/photos/19616268/pexels-photo-19616268.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Defender of the Fatherland Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-23",
+      "image": "https://images.pexels.com/photos/13316037/pexels-photo-13316037.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "International Women's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-08",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "International Women's Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-09",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Orozo Ait",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-20",
+        "2027": "2027-03-10",
+        "2028": "2028-02-27",
+        "2029": "2029-02-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/6771186/pexels-photo-6771186.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Nooruz National Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-21",
+      "image": "https://images.pexels.com/photos/3871/city-night-explosion-firework.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "April People's Revolution Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-07",
+      "image": "https://images.pexels.com/photos/5570005/pexels-photo-5570005.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "May Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/7723831/pexels-photo-7723831.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "May Day Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-04",
+      "image": "https://images.pexels.com/photos/5738083/pexels-photo-5738083.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Constitution Day of the Kyrgyz Republic",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-05",
+      "image": "https://images.pexels.com/photos/13316037/pexels-photo-13316037.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Constitution Day Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-07",
+      "image": "https://images.pexels.com/photos/8850743/pexels-photo-8850743.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Victory Day Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-08",
+      "image": "https://images.pexels.com/photos/6370120/pexels-photo-6370120.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Victory Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-09",
+      "image": "https://images.pexels.com/photos/163534/baseball-victory-game-sport-163534.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Kurman Ait",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-27",
+        "2027": "2027-05-17",
+        "2028": "2028-05-05",
+        "2029": "2029-04-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/6771186/pexels-photo-6771186.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day of the Kyrgyz Republic",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-31",
+      "image": "https://images.pexels.com/photos/4786198/pexels-photo-4786198.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Days of History and Memory of Ancestors",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-07",
+      "image": "https://images.pexels.com/photos/6841551/pexels-photo-6841551.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Days of History and Memory of Ancestors Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-08",
+      "image": "https://images.pexels.com/photos/6841551/pexels-photo-6841551.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Holiday \"Nooruz\"",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-21",
+      "image": "https://images.pexels.com/photos/1387577/pexels-photo-1387577.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Holiday \"Nooruz\" Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-22",
+      "image": "https://images.pexels.com/photos/1387577/pexels-photo-1387577.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for May Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-03",
+      "image": "https://images.pexels.com/photos/4350739/pexels-photo-4350739.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Victory Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-10",
+      "image": "https://images.pexels.com/photos/6370120/pexels-photo-6370120.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Days of History and Memory of Ancestors",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-09",
+      "image": "https://images.pexels.com/photos/6841551/pexels-photo-6841551.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for New Year",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-03",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Orozo Ait",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-28",
+      "image": "https://images.pexels.com/photos/570018/pexels-photo-570018.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Orthodox Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-08",
+      "image": "https://images.pexels.com/photos/19616268/pexels-photo-19616268.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for April People's Revolution Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-09",
+      "image": "https://images.pexels.com/photos/5789323/pexels-photo-5789323.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Constitution Day of the Kyrgyz Republic",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-07",
+      "image": "https://images.pexels.com/photos/13316037/pexels-photo-13316037.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Nowruz",
+      "type": "cultural_festival",
+      "description": "Persian New Year marking the spring equinox, celebrated across Central Asia",
+      "name_he": "נורוז - ראש השנה הפרסי",
+      "typical_months": [
+        3
+      ],
+      "location_ids": [
+        "kyrgyzstan"
+      ],
+      "image": "https://images.pexels.com/photos/7158733/pexels-photo-7158733.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

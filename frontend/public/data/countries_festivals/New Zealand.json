@@ -1,0 +1,235 @@
+{
+  "country": "New Zealand",
+  "country_he": "New Zealand",
+  "country_id": "new-zealand",
+  "country_code": "NZ",
+  "generated_at": "2026-03-24T11:01:37.679927+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 11,
+    "cultural_festivals": 0,
+    "total": 11
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-01-01",
+        "2027": "2027-01-01",
+        "2028": "2028-01-03",
+        "2029": "2029-01-01",
+        "2030": "2030-01-01",
+        "2031": "2031-01-01",
+        "2032": "2032-01-01",
+        "2033": "2033-01-03",
+        "2034": "2034-01-02",
+        "2035": "2035-01-01"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day after New Year's Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-01-02",
+        "2027": "2027-01-04",
+        "2028": "2028-01-04",
+        "2029": "2029-01-02",
+        "2030": "2030-01-02",
+        "2031": "2031-01-02",
+        "2032": "2032-01-02",
+        "2033": "2033-01-04",
+        "2034": "2034-01-03",
+        "2035": "2035-01-02"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Waitangi Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-06",
+        "2027": "2027-02-08",
+        "2028": "2028-02-07",
+        "2029": "2029-02-06",
+        "2030": "2030-02-06",
+        "2031": "2031-02-06",
+        "2032": "2032-02-06",
+        "2033": "2033-02-07",
+        "2034": "2034-02-06",
+        "2035": "2035-02-06"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/3687322/pexels-photo-3687322.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30",
+        "2030": "2030-04-19",
+        "2031": "2031-04-11",
+        "2032": "2032-03-26",
+        "2033": "2033-04-15",
+        "2034": "2034-04-07",
+        "2035": "2035-03-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-06",
+        "2027": "2027-03-29",
+        "2028": "2028-04-17",
+        "2029": "2029-04-02",
+        "2030": "2030-04-22",
+        "2031": "2031-04-14",
+        "2032": "2032-03-29",
+        "2033": "2033-04-18",
+        "2034": "2034-04-10",
+        "2035": "2035-03-26"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Anzac Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-27",
+        "2027": "2027-04-26",
+        "2028": "2028-04-25",
+        "2029": "2029-04-25",
+        "2030": "2030-04-25",
+        "2031": "2031-04-25",
+        "2032": "2032-04-26",
+        "2033": "2033-04-25",
+        "2034": "2034-04-25",
+        "2035": "2035-04-25"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36293185/pexels-photo-36293185.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "King's Birthday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-01",
+        "2027": "2027-06-07",
+        "2028": "2028-06-05",
+        "2029": "2029-06-04",
+        "2030": "2030-06-03",
+        "2031": "2031-06-02",
+        "2032": "2032-06-07",
+        "2033": "2033-06-06",
+        "2034": "2034-06-05",
+        "2035": "2035-06-04"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7600420/pexels-photo-7600420.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Matariki",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-07-10",
+        "2027": "2027-06-25",
+        "2028": "2028-07-14",
+        "2029": "2029-07-06",
+        "2030": "2030-06-21",
+        "2031": "2031-07-11",
+        "2032": "2032-07-02",
+        "2033": "2033-06-24",
+        "2034": "2034-07-07",
+        "2035": "2035-06-29"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/1209843/pexels-photo-1209843.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "festival_info": {
+        "description": "Māori New Year celebrating the rising of the Pleiades star cluster",
+        "name_he": "מטריקי - ראש השנה המאורי",
+        "typical_months": [
+          6
+        ],
+        "location_ids": [
+          "new-zealand"
+        ]
+      }
+    },
+    {
+      "name": "Labour Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-10-26",
+        "2027": "2027-10-25",
+        "2028": "2028-10-23",
+        "2029": "2029-10-22",
+        "2030": "2030-10-28",
+        "2031": "2031-10-27",
+        "2032": "2032-10-25",
+        "2033": "2033-10-24",
+        "2034": "2034-10-23",
+        "2035": "2035-10-22"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-12-25",
+        "2027": "2027-12-27",
+        "2028": "2028-12-25",
+        "2029": "2029-12-25",
+        "2030": "2030-12-25",
+        "2031": "2031-12-25",
+        "2032": "2032-12-27",
+        "2033": "2033-12-26",
+        "2034": "2034-12-25",
+        "2035": "2035-12-25"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Boxing Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-12-28",
+        "2027": "2027-12-28",
+        "2028": "2028-12-26",
+        "2029": "2029-12-26",
+        "2030": "2030-12-26",
+        "2031": "2031-12-26",
+        "2032": "2032-12-28",
+        "2033": "2033-12-27",
+        "2034": "2034-12-26",
+        "2035": "2035-12-26"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/3797/black-and-white-sport-fight-boxer.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

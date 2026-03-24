@@ -1,0 +1,256 @@
+{
+  "country": "Haiti",
+  "country_he": "האיטי",
+  "country_id": "haiti",
+  "country_code": "HT",
+  "generated_at": "2026-03-24T11:01:37.437362+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 19,
+    "cultural_festivals": 0,
+    "total": 19
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "Jour de l'an",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ancestry Day",
+      "local_name": "Jour des Aieux",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-02",
+      "image": "https://images.pexels.com/photos/10182084/pexels-photo-10182084.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Epiphany",
+      "local_name": "Le Jour des Rois",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-06",
+      "image": "https://images.pexels.com/photos/3996466/pexels-photo-3996466.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Carnival",
+      "local_name": "Carnaval",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-17",
+        "2027": "2027-02-09",
+        "2028": "2028-02-29",
+        "2029": "2029-02-13",
+        "2030": "2030-03-05",
+        "2031": "2031-02-25",
+        "2032": "2032-02-10",
+        "2033": "2033-03-01",
+        "2034": "2034-02-21",
+        "2035": "2035-02-06"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36160778/pexels-photo-36160778.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ash Wednesday",
+      "local_name": "Mercredi Des Cendres",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-18",
+        "2027": "2027-02-10",
+        "2028": "2028-03-01",
+        "2029": "2029-02-14",
+        "2030": "2030-03-06",
+        "2031": "2031-02-26",
+        "2032": "2032-02-11",
+        "2033": "2033-03-02",
+        "2034": "2034-02-22",
+        "2035": "2035-02-07"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/297952/pexels-photo-297952.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Maundy Thursday",
+      "local_name": "Jeudi saint",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-02",
+        "2027": "2027-03-25",
+        "2028": "2028-04-13",
+        "2029": "2029-03-29",
+        "2030": "2030-04-18",
+        "2031": "2031-04-10",
+        "2032": "2032-03-25",
+        "2033": "2033-04-14",
+        "2034": "2034-04-06",
+        "2035": "2035-03-22"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36032944/pexels-photo-36032944.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "local_name": "Vendredi saint",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30",
+        "2030": "2030-04-19",
+        "2031": "2031-04-11",
+        "2032": "2032-03-26",
+        "2033": "2033-04-15",
+        "2034": "2034-04-07",
+        "2035": "2035-03-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Sunday",
+      "local_name": "Pâques",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-05",
+        "2027": "2027-03-28",
+        "2028": "2028-04-16",
+        "2029": "2029-04-01",
+        "2030": "2030-04-21",
+        "2031": "2031-04-13",
+        "2032": "2032-03-28",
+        "2033": "2033-04-17",
+        "2034": "2034-04-09",
+        "2035": "2035-03-25"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/41376/celebration-colored-colorful-decoration-41376.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour and Agriculture Day",
+      "local_name": "Fête du Travail / Fête des Travailleurs",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/4543993/pexels-photo-4543993.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ascension Day",
+      "local_name": "Ascension",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-14",
+        "2027": "2027-05-06",
+        "2028": "2028-05-25",
+        "2029": "2029-05-10",
+        "2030": "2030-05-30",
+        "2031": "2031-05-22",
+        "2032": "2032-05-06",
+        "2033": "2033-05-26",
+        "2034": "2034-05-18",
+        "2035": "2035-05-03"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/225701/pexels-photo-225701.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Flag and Universities Day",
+      "local_name": "Jour du Drapeau et de l'Université",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-18",
+      "image": "https://images.pexels.com/photos/4786198/pexels-photo-4786198.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Corpus Christi",
+      "local_name": "Fête-Dieu",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-04",
+        "2027": "2027-05-27",
+        "2028": "2028-06-15",
+        "2029": "2029-05-31",
+        "2030": "2030-06-20",
+        "2031": "2031-06-12",
+        "2032": "2032-05-27",
+        "2033": "2033-06-16",
+        "2034": "2034-06-08",
+        "2035": "2035-05-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36330285/pexels-photo-36330285.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Assumption of Mary",
+      "local_name": "L'Assomption de Marie",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-15",
+      "image": "https://images.pexels.com/photos/36347673/pexels-photo-36347673.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Dessalines Day",
+      "local_name": "Anniversaire de la mort de Dessalines",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-17",
+      "image": "https://images.pexels.com/photos/196664/pexels-photo-196664.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "All Saints Day",
+      "local_name": "La Toussaint",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-01",
+      "image": "https://images.pexels.com/photos/7080457/pexels-photo-7080457.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "All Souls' Day",
+      "local_name": "Jour des Morts",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-02",
+      "image": "https://images.pexels.com/photos/36105523/pexels-photo-36105523.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Battle of Vertières Day",
+      "local_name": "Vertières",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-18",
+      "image": "https://images.pexels.com/photos/25755/pexels-photo.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Discovery Day",
+      "local_name": "Découverte d'Haïti",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-05",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "local_name": "Noël",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

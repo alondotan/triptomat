@@ -691,6 +691,51 @@ Deno.serve(async (req) => {
       if (linkedEntities.length > 0) {
         await supabase.from('source_emails').update({ linked_entities: linkedEntities }).eq('id', sourceEmailId);
       }
+
+      // Send push + WhatsApp notifications to all trip members (fire-and-forget)
+      const { data: members } = await supabase
+        .from('trip_members')
+        .select('user_id')
+        .eq('trip_id', matchedTripId);
+      if (members?.length) {
+        const entityName = linkedEntities[0]?.description || metadata.category;
+        const subject = source_email_info?.subject || entityName;
+        const actionLabel = action === 'cancel' ? 'Cancelled' : linkedEntities.some(e => e.description.includes('updated')) ? 'Updated' : 'New';
+        const categoryLabel = metadata.category === 'transportation' ? 'transport' : metadata.category;
+
+        const title = `${actionLabel} ${categoryLabel}`;
+        const body = `${subject}`;
+
+        fetch(new URL('/functions/v1/send-notification', Deno.env.get('SUPABASE_URL')!).toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!}`,
+          },
+          body: JSON.stringify({
+            user_ids: members.map(m => m.user_id),
+            title,
+            body,
+            url: '/inbox',
+            tag: `email-${sourceEmailId}`,
+          }),
+        }).catch(e => console.error('Push notification failed:', e));
+
+        fetch(new URL('/functions/v1/whatsapp-notify', Deno.env.get('SUPABASE_URL')!).toString(), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!}`,
+          },
+          body: JSON.stringify({
+            user_ids: members.map(m => m.user_id),
+            type: 'booking_confirmed',
+            text: `📧 ${title}: ${body}`,
+            template_name: 'booking_confirmed',
+            template_params: [title, body],
+          }),
+        }).catch(e => console.error('WhatsApp notification failed:', e));
+      }
     }
 
     // ── Save attachments to documents table (regardless of trip match) ──

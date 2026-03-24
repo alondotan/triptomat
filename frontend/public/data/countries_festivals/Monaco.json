@@ -1,0 +1,210 @@
+{
+  "country": "Monaco",
+  "country_he": "מונקו",
+  "country_id": "monaco",
+  "country_code": "MC",
+  "generated_at": "2026-03-24T11:01:37.649444+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 12,
+    "cultural_festivals": 0,
+    "total": 12
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "Le jour de l’An",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-01-01",
+        "2027": "2027-01-01",
+        "2028": "2028-01-01",
+        "2029": "2029-01-01",
+        "2030": "2030-01-01",
+        "2031": "2031-01-01",
+        "2032": "2032-01-01",
+        "2033": "2033-01-01",
+        "2034": "2034-01-02",
+        "2035": "2035-01-01"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Saint Devota's Day",
+      "local_name": "La Sainte Dévote",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-27",
+      "image": "https://images.pexels.com/photos/3851731/pexels-photo-3851731.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-06",
+        "2027": "2027-03-29",
+        "2028": "2028-04-17",
+        "2029": "2029-04-02",
+        "2030": "2030-04-22",
+        "2031": "2031-04-14",
+        "2032": "2032-03-29",
+        "2033": "2033-04-18",
+        "2034": "2034-04-10",
+        "2035": "2035-03-26"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "May Day",
+      "local_name": "Le 1er mai",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/7723831/pexels-photo-7723831.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ascension Day",
+      "local_name": "L’Ascension",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-14",
+        "2027": "2027-05-06",
+        "2028": "2028-05-25",
+        "2029": "2029-05-10",
+        "2030": "2030-05-30",
+        "2031": "2031-05-22",
+        "2032": "2032-05-06",
+        "2033": "2033-05-26",
+        "2034": "2034-05-18",
+        "2035": "2035-05-03"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/225701/pexels-photo-225701.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Whit Monday",
+      "local_name": "Le lundi de Pentecôte",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-25",
+        "2027": "2027-05-17",
+        "2028": "2028-06-05",
+        "2029": "2029-05-21",
+        "2030": "2030-06-10",
+        "2031": "2031-06-02",
+        "2032": "2032-05-17",
+        "2033": "2033-06-06",
+        "2034": "2034-05-29",
+        "2035": "2035-05-14"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/34364418/pexels-photo-34364418.png?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Corpus Christi",
+      "local_name": "La Fête Dieu",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-04",
+        "2027": "2027-05-27",
+        "2028": "2028-06-15",
+        "2029": "2029-05-31",
+        "2030": "2030-06-20",
+        "2031": "2031-06-12",
+        "2032": "2032-05-27",
+        "2033": "2033-06-16",
+        "2034": "2034-06-08",
+        "2035": "2035-05-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36330285/pexels-photo-36330285.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Assumption Day",
+      "local_name": "L'Assomption de Marie",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-15",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "All Saints Day",
+      "local_name": "La Toussaint",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-11-02",
+        "2027": "2027-11-01",
+        "2028": "2028-11-01",
+        "2029": "2029-11-01",
+        "2030": "2030-11-01",
+        "2031": "2031-11-01",
+        "2032": "2032-11-01",
+        "2033": "2033-11-01",
+        "2034": "2034-11-01",
+        "2035": "2035-11-01"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7080457/pexels-photo-7080457.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Day",
+      "local_name": "La Fête du Prince",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-11-19",
+        "2027": "2027-11-19",
+        "2028": "2028-11-20",
+        "2029": "2029-11-19",
+        "2030": "2030-11-19",
+        "2031": "2031-11-19",
+        "2032": "2032-11-19",
+        "2033": "2033-11-19",
+        "2034": "2034-11-20",
+        "2035": "2035-11-19"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/6303979/pexels-photo-6303979.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "The Immaculate Conception",
+      "local_name": "L’Immaculée Conception",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-08",
+      "image": "https://images.pexels.com/photos/2098578/pexels-photo-2098578.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "​Christmas Day",
+      "local_name": "Noël​",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-12-25",
+        "2027": "2027-12-25",
+        "2028": "2028-12-25",
+        "2029": "2029-12-25",
+        "2030": "2030-12-25",
+        "2031": "2031-12-25",
+        "2032": "2032-12-25",
+        "2033": "2033-12-26",
+        "2034": "2034-12-25",
+        "2035": "2035-12-25"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/3186667/pexels-photo-3186667.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

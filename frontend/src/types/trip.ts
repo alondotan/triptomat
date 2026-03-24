@@ -2,7 +2,7 @@
 
 export type Currency = string;
 export type TripStatus = 'research' | 'planning' | 'detailed_planning' | 'active' | 'completed';
-export type POICategory = 'accommodation' | 'eatery' | 'attraction' | 'service';
+export type POICategory = 'accommodation' | 'eatery' | 'attraction' | 'service' | 'event';
 export type EntityStatus = 'suggested' | 'interested' | 'planned' | 'scheduled' | 'booked' | 'visited' | 'skipped';
 export type POIStatus = EntityStatus;
 export type TransportStatus = EntityStatus;
@@ -69,6 +69,17 @@ export interface ActivityDetails {
   opening_hours?: string;
 }
 
+export interface EventDetails {
+  date?: string;                          // resolved date for the trip year (ISO)
+  fixed_date?: boolean;                   // true = same date every year (e.g. Christmas 12-25)
+  dates_by_year?: Record<string, string>; // year → ISO date for variable holidays
+  typical_months?: number[];              // for festivals without exact dates
+  local_name?: string;
+  description?: string;
+  is_festival?: boolean;                  // true when the event is a festival (cultural_festival or holiday with festival_info)
+  location_ids?: string[];                // IDs from country data location tree (e.g. "ireland", "dublin")
+}
+
 export interface POIDetails {
   cost?: POICost;
   order_number?: string;
@@ -76,6 +87,7 @@ export interface POIDetails {
   bookings?: POIBooking[];
   accommodation_details?: AccommodationDetails;
   activity_details?: ActivityDetails;
+  event_details?: EventDetails;
   notes?: { user_summary?: string; raw_notes?: string };
 }
 
@@ -317,5 +329,5 @@ export interface MapMarker {
   id: string;
   position: [number, number];
   label: string;
-  type: 'accommodation' | 'activity' | 'transport' | 'eatery' | 'service';
+  type: 'accommodation' | 'activity' | 'transport' | 'eatery' | 'service' | 'event';
 }

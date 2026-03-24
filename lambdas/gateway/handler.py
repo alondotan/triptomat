@@ -317,6 +317,11 @@ def lambda_handler(event, context):
                     text = extract_text_from_url(url)
                     source_metadata = get_web_metadata(url)
 
+                    # If scraped text is too short, supplement with og:description
+                    og_desc = source_metadata.get("description", "")
+                    if og_desc and (not text or len(text.strip()) < 100):
+                        text = f"{text or ''}\n{og_desc}".strip()
+
                     with safe_span(tracer, "gateway.sqs_dispatch", {
                         "sqs.queue_name": "analysis",
                         "gateway.source_type": source_type,

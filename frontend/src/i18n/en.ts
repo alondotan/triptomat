@@ -24,6 +24,7 @@ const en = {
     aiAssistant: 'AI Travel Assistant',
     resources: 'Resources',
     home: 'Places',
+    weather: 'Weather',
   },
 
   // ── Common ──
@@ -980,6 +981,7 @@ const en = {
   // ── Overview ──
   overview: {
     attractions: 'Attractions',
+    events: 'Events & Holidays',
     eateries: 'Eat & Drink',
     hotels: 'Hotels',
     transport: 'Transport',
@@ -996,6 +998,12 @@ const en = {
     feed: 'Feed',
     map: 'Map',
     plan: 'Plan',
+  },
+
+  // ── Weather Page ──
+  weatherPage: {
+    title: 'Weather',
+    noData: 'No weather data available for this trip\'s countries',
   },
 };
 

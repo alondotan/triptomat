@@ -54,6 +54,8 @@ export interface DaySectionProps {
   tripDays?: Date[];
   selectedDayNum?: number;
   onOpen?: (id: string) => void;
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
 }
 
 
@@ -75,9 +77,12 @@ export function DaySection({
   onCreateNew, onToggleSelected, addLabel, entityType, maxNights, locationSuggestions,
   showBookingMissionOption, locationContext, countries,
   hideHeader, hideEmptyState, onMoveToSchedule, onMoveToDay, tripDays, selectedDayNum, onOpen,
+  externalOpen, onExternalOpenChange,
 }: DaySectionProps) {
   const { t } = useTranslation();
-  const [showPicker, setShowPicker] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const showPicker = externalOpen ?? internalOpen;
+  const setShowPicker = onExternalOpenChange ?? setInternalOpen;
   const [nights, setNights] = useState(1);
   const [createBookingMission, setCreateBookingMission] = useState(false);
 
@@ -185,11 +190,13 @@ export function DaySection({
       ))}
 
       <Dialog open={showPicker} onOpenChange={setShowPicker}>
-        <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1 mr-0 sm:mr-6 text-xs">
-            <Plus size={14} /> {addLabel}
-          </Button>
-        </DialogTrigger>
+        {externalOpen === undefined && (
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1 mr-0 sm:mr-6 text-xs">
+              <Plus size={14} /> {addLabel}
+            </Button>
+          </DialogTrigger>
+        )}
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>{addLabel}</DialogTitle>

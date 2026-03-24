@@ -24,6 +24,7 @@ import {
   ListIcon,
   FileText,
   Globe,
+  CloudSun,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -69,6 +70,7 @@ const navItems = [
   // TODO: Re-enable Itinerary page when ready
   // { path: '/itinerary', labelKey: 'nav.itinerary', icon: Table2 },
   { path: '/map', labelKey: 'nav.map', icon: Map },
+  { path: '/weather', labelKey: 'nav.weather', icon: CloudSun },
   { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },
   { path: '/tasks', labelKey: 'nav.tasks', icon: CheckSquare },
   { path: '/documents', labelKey: 'nav.docs', icon: FileText },

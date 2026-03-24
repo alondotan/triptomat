@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Check, ChevronLeft, ChevronRight, ChevronsUpDown, X, Globe, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,14 @@ export function CountrySelector({ value, onChange, placeholder = 'Choose destina
   const [navPath, setNavPath] = useState<WorldTreeNode[]>([]);
   const [searchFocused, setSearchFocused] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus search input on desktop when dialog opens
+  useEffect(() => {
+    if (open && window.matchMedia('(min-width: 640px)').matches) {
+      requestAnimationFrame(() => searchInputRef.current?.focus());
+    }
+  }, [open]);
 
   const currentNode = navPath.length > 0 ? navPath[navPath.length - 1] : tree;
   const currentChildren = currentNode?.children ?? [];
@@ -239,6 +247,7 @@ export function CountrySelector({ value, onChange, placeholder = 'Choose destina
             <div className="flex items-center border rounded-md px-3">
               <Search className="h-4 w-4 shrink-0 opacity-50 mr-2" />
               <input
+                ref={searchInputRef}
                 placeholder="Search country or region..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

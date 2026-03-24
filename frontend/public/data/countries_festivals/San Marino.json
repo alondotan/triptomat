@@ -1,0 +1,186 @@
+{
+  "country": "San Marino",
+  "country_he": "סן מרינו",
+  "country_id": "san-marino",
+  "country_code": "SM",
+  "generated_at": "2026-03-24T11:01:37.896399+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 18,
+    "cultural_festivals": 0,
+    "total": 18
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Epiphany",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-06",
+      "image": "https://images.pexels.com/photos/3996466/pexels-photo-3996466.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Feast of Saint Agatha",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-05",
+      "image": "https://images.pexels.com/photos/7084085/pexels-photo-7084085.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Anniversary of the Arengo",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-25",
+      "image": "https://images.pexels.com/photos/7867785/pexels-photo-7867785.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Sunday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-05",
+        "2027": "2027-03-28",
+        "2028": "2028-04-16",
+        "2029": "2029-04-01",
+        "2030": "2030-04-21",
+        "2031": "2031-04-13",
+        "2032": "2032-03-28",
+        "2033": "2033-04-17",
+        "2034": "2034-04-09",
+        "2035": "2035-03-25"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/41376/celebration-colored-colorful-decoration-41376.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-06",
+        "2027": "2027-03-29",
+        "2028": "2028-04-17",
+        "2029": "2029-04-02",
+        "2030": "2030-04-22",
+        "2031": "2031-04-14",
+        "2032": "2032-03-29",
+        "2033": "2033-04-18",
+        "2034": "2034-04-10",
+        "2035": "2035-03-26"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Corpus Christi",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-04",
+        "2027": "2027-05-27",
+        "2028": "2028-06-15",
+        "2029": "2029-05-31",
+        "2030": "2030-06-20",
+        "2031": "2031-06-12",
+        "2032": "2032-05-27",
+        "2033": "2033-06-16",
+        "2034": "2034-06-08",
+        "2035": "2035-05-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36330285/pexels-photo-36330285.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Liberation from Fascism",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-28",
+      "image": "https://images.pexels.com/photos/9643283/pexels-photo-9643283.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ferragosto (Assumption)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-15",
+      "image": "https://images.pexels.com/photos/16449839/pexels-photo-16449839.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "The Feast of San Marino and the Republic",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-03",
+      "image": "https://images.pexels.com/photos/18876845/pexels-photo-18876845.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "All Saints' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-01",
+      "image": "https://images.pexels.com/photos/7080457/pexels-photo-7080457.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Commemoration of all those who died at war",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-02",
+      "image": "https://images.pexels.com/photos/26570843/pexels-photo-26570843.png?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Immaculate Conception",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-08",
+      "image": "https://images.pexels.com/photos/36032948/pexels-photo-36032948.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Eve",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-24",
+      "image": "https://images.pexels.com/photos/63741/pexels-photo-63741.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "St. Stephen's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-26",
+      "image": "https://images.pexels.com/photos/7016482/pexels-photo-7016482.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "New Year's Eve",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-31",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

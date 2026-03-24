@@ -1,0 +1,128 @@
+{
+  "country": "Equatorial Guinea",
+  "country_he": "גינאה המשוונית",
+  "country_id": "equatorial-guinea",
+  "country_code": "GQ",
+  "generated_at": "2026-03-24T11:31:00.880919+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 13,
+    "cultural_festivals": 0,
+    "total": 13
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "International Women's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-08",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labor Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/769525/pexels-photo-769525.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Corpus Christi",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-04",
+        "2027": "2027-05-27",
+        "2028": "2028-06-15",
+        "2029": "2029-05-31"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36330285/pexels-photo-36330285.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "President's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-05",
+      "image": "https://images.pexels.com/photos/18815727/pexels-photo-18815727.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Freedom Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-03",
+      "image": "https://images.pexels.com/photos/1509944/pexels-photo-1509944.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Constitution Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-15",
+      "image": "https://images.pexels.com/photos/1252509/pexels-photo-1252509.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-12",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Feast of the Immaculate Conception",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-08",
+      "image": "https://images.pexels.com/photos/5847876/pexels-photo-5847876.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labor Day / May Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/4350739/pexels-photo-4350739.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Constitution Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-16",
+      "image": "https://images.pexels.com/photos/1046398/pexels-photo-1046398.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

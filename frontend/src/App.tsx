@@ -30,6 +30,7 @@ const ContactsPage = lazy(() => import("./pages/Contacts"));
 const DocumentsPage = lazy(() => import("./pages/Documents"));
 const TripsPage = lazy(() => import("./pages/Trips"));
 const OverviewPage = lazy(() => import("./pages/Overview"));
+const WeatherPage = lazy(() => import("./pages/Weather"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Admin pages (lazy-loaded)
@@ -88,6 +89,7 @@ const App = () => (
                       <Route path="/sources" element={<ErrorBoundary><SourcesPage /></ErrorBoundary>} />
                       <Route path="/recommendations" element={<Navigate to="/sources" replace />} />
                       <Route path="/map" element={<ErrorBoundary><MapPage /></ErrorBoundary>} />
+                      <Route path="/weather" element={<ErrorBoundary><WeatherPage /></ErrorBoundary>} />
                       <Route path="/budget" element={<ErrorBoundary><BudgetPage /></ErrorBoundary>} />
                       <Route path="/tasks" element={<ErrorBoundary><TasksPage /></ErrorBoundary>} />
                       <Route path="/inbox" element={<ErrorBoundary><InboxPage /></ErrorBoundary>} />

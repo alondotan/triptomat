@@ -1,0 +1,151 @@
+{
+  "country": "Morocco",
+  "country_he": "מרוקו",
+  "country_id": "morocco",
+  "country_code": "MA",
+  "generated_at": "2026-03-24T11:01:37.661317+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 10,
+    "cultural_festivals": 4,
+    "total": 14
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "Ras l' âm",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Proclamation of Independence",
+      "local_name": "Takdim watikat al-istiqlal",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-11",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Amazigh New Year",
+      "local_name": "Id Yennayer",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-14",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "local_name": "Eid Ash-Shughl",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Enthronement",
+      "local_name": "Eid Al-Ârch",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-30",
+      "image": "https://images.pexels.com/photos/7810949/pexels-photo-7810949.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Zikra Oued Ed-Dahab",
+      "local_name": "Oued Ed-Dahab Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-14",
+      "image": "https://images.pexels.com/photos/1143302/pexels-photo-1143302.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Revolution of the King and the People",
+      "local_name": "Thawrat al malik wa shâab",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-20",
+      "image": "https://images.pexels.com/photos/36204114/pexels-photo-36204114.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Youth Day",
+      "local_name": "Eid Al Chabab",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-21",
+      "image": "https://images.pexels.com/photos/36429785/pexels-photo-36429785.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Green March",
+      "local_name": "Eid Al Massira Al Khadra",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-06",
+      "image": "https://images.pexels.com/photos/36665764/pexels-photo-36665764.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "local_name": "Eid Al Istiqulal",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-18",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Ramadan",
+      "type": "religious_holiday",
+      "description": "Muslim holy month of fasting, prayer, and reflection",
+      "name_he": "רמדאן",
+      "location_ids": [
+        "morocco"
+      ],
+      "image": "https://images.pexels.com/photos/36231252/pexels-photo-36231252.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Fitr",
+      "type": "religious_holiday",
+      "description": "Festival of breaking the fast at the end of Ramadan",
+      "name_he": "עיד אל-פיטר",
+      "location_ids": [
+        "morocco"
+      ],
+      "image": "https://images.pexels.com/photos/6920322/pexels-photo-6920322.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Adha",
+      "type": "religious_holiday",
+      "description": "Festival of sacrifice - one of the most important Islamic holidays",
+      "name_he": "עיד אל-אדחא",
+      "location_ids": [
+        "morocco"
+      ],
+      "image": "https://images.pexels.com/photos/6920322/pexels-photo-6920322.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Fes Festival of World Sacred Music",
+      "type": "cultural_festival",
+      "description": "Prestigious world music festival in the ancient medina of Fes",
+      "name_he": "פסטיבל המוזיקה הקדושה פז",
+      "typical_months": [
+        6
+      ],
+      "location_ids": [
+        "morocco/fes-meknes/fs"
+      ],
+      "image": "https://images.pexels.com/photos/36186123/pexels-photo-36186123.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

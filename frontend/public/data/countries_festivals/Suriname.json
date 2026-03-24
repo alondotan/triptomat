@@ -1,0 +1,208 @@
+{
+  "country": "Suriname",
+  "country_he": "סורינאם",
+  "country_id": "suriname",
+  "country_code": "SR",
+  "generated_at": "2026-03-24T11:01:37.966384+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 18,
+    "cultural_festivals": 0,
+    "total": 18
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Three Kings Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-06",
+      "image": "https://images.pexels.com/photos/1597584/pexels-photo-1597584.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "World Religion Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-01-18",
+        "2027": "2027-01-17",
+        "2028": "2028-01-16",
+        "2029": "2029-01-21",
+        "2030": "2030-01-20",
+        "2031": "2031-01-19",
+        "2032": "2032-01-18",
+        "2033": "2033-01-16",
+        "2034": "2034-01-15",
+        "2035": "2035-01-21"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/672630/pexels-photo-672630.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Chinese New Year",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-17",
+        "2027": "2027-02-06",
+        "2028": "2028-01-26",
+        "2029": "2029-02-13",
+        "2030": "2030-02-03",
+        "2031": "2031-01-23",
+        "2032": "2032-02-11",
+        "2033": "2033-01-31",
+        "2034": "2034-02-19",
+        "2035": "2035-02-08"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/3626475/pexels-photo-3626475.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of the Revolution",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-25",
+      "image": "https://images.pexels.com/photos/5570005/pexels-photo-5570005.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30",
+        "2030": "2030-04-19",
+        "2031": "2031-04-11",
+        "2032": "2032-03-26",
+        "2033": "2033-04-15",
+        "2034": "2034-04-07",
+        "2035": "2035-03-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Sunday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-05",
+        "2027": "2027-03-28",
+        "2028": "2028-04-16",
+        "2029": "2029-04-01",
+        "2030": "2030-04-21",
+        "2031": "2031-04-13",
+        "2032": "2032-03-28",
+        "2033": "2033-04-17",
+        "2034": "2034-04-09",
+        "2035": "2035-03-25"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/41376/celebration-colored-colorful-decoration-41376.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ascension Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-14",
+        "2027": "2027-05-06",
+        "2028": "2028-05-25",
+        "2029": "2029-05-10",
+        "2030": "2030-05-30",
+        "2031": "2031-05-22",
+        "2032": "2032-05-06",
+        "2033": "2033-05-26",
+        "2034": "2034-05-18",
+        "2035": "2035-05-03"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/225701/pexels-photo-225701.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Indian Arrival Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-05",
+      "image": "https://images.pexels.com/photos/3687322/pexels-photo-3687322.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Keti Koti",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-01",
+      "image": "https://images.pexels.com/photos/1209843/pexels-photo-1209843.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Javanese Arrival Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-08",
+      "image": "https://images.pexels.com/photos/13529791/pexels-photo-13529791.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Indigenous People's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-09",
+      "image": "https://images.pexels.com/photos/27868802/pexels-photo-27868802.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of the Maroons",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-10",
+      "image": "https://images.pexels.com/photos/6554693/pexels-photo-6554693.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Chinese Arrival day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-20",
+      "image": "https://images.pexels.com/photos/3626475/pexels-photo-3626475.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-25",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Boxing Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-26",
+      "image": "https://images.pexels.com/photos/3797/black-and-white-sport-fight-boxer.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

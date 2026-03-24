@@ -1,0 +1,150 @@
+{
+  "country": "Saint Vincent and the Grenadines",
+  "country_he": "סנט וינסנט והגרנדינים",
+  "country_id": "saint-vincent-and-the-grenadines",
+  "country_code": "VC",
+  "generated_at": "2026-03-24T11:37:17.341354+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 14,
+    "cultural_festivals": 0,
+    "total": 14
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Heroes Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-14",
+      "image": "https://images.pexels.com/photos/1202726/pexels-photo-1202726.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-06",
+        "2027": "2027-03-29",
+        "2028": "2028-04-17",
+        "2029": "2029-04-02"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Workers Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/4786198/pexels-photo-4786198.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Spiritual Baptist Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-21",
+      "image": "https://images.pexels.com/photos/8026691/pexels-photo-8026691.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Pentecost Monday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-25",
+        "2027": "2027-05-17",
+        "2028": "2028-06-05",
+        "2029": "2029-05-21"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5632362/pexels-photo-5632362.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Carnival Monday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-07-06",
+        "2027": "2027-07-05",
+        "2028": "2028-07-10",
+        "2029": "2029-07-09"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/57397/carnival-the-witch-mask-colorful-57397.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Carnival Tuesday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-07-07",
+        "2027": "2027-07-06",
+        "2028": "2028-07-11",
+        "2029": "2029-07-10"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/3823442/pexels-photo-3823442.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Emancipation Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-01",
+      "image": "https://images.pexels.com/photos/247851/pexels-photo-247851.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-27",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Boxing Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-26",
+      "image": "https://images.pexels.com/photos/3797/black-and-white-sport-fight-boxer.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-03",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

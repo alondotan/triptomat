@@ -1,0 +1,149 @@
+{
+  "country": "São Tomé and Príncipe",
+  "country_he": "סאו טומה ופרינסיפה",
+  "country_id": "so-tom-and-prncipe",
+  "country_code": "ST",
+  "generated_at": "2026-03-24T15:18:56.567107+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 17,
+    "cultural_festivals": 0,
+    "total": 17
+  },
+  "public_holidays": [
+    {
+      "name": "New Year",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of King Amador",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-04",
+      "image": "https://images.pexels.com/photos/8791201/pexels-photo-8791201.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Day of King Amador",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-05",
+      "image": "https://images.pexels.com/photos/8791201/pexels-photo-8791201.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Commemoration of the Batepá Massacre",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-03",
+      "image": "https://images.pexels.com/photos/36547443/pexels-photo-36547443.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-12",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-13",
+      "image": "https://images.pexels.com/photos/3581355/pexels-photo-3581355.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Armed Forces' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-06",
+      "image": "https://images.pexels.com/photos/41161/soldier-uniform-army-weapon-41161.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Armed Forces' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-07",
+      "image": "https://images.pexels.com/photos/41161/soldier-uniform-army-weapon-41161.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Nationalization of the Roças",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-30",
+      "image": "https://images.pexels.com/photos/1387577/pexels-photo-1387577.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "São Tomé Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-21",
+      "image": "https://images.pexels.com/photos/577582/pexels-photo-577582.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Labour Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-30",
+      "image": "https://images.pexels.com/photos/18512792/pexels-photo-18512792.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-24",
+      "image": "https://images.pexels.com/photos/3186667/pexels-photo-3186667.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for New Year",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-31",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Nationalization of the Roças",
+      "type": "national_holiday",
+      "dates": {
+        "2028": "2028-09-29",
+        "2029": "2029-10-01"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/1550340/pexels-photo-1550340.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Commemoration of the Batepá Massacre",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-02",
+      "image": "https://images.pexels.com/photos/32933062/pexels-photo-32933062.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

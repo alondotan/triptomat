@@ -1,0 +1,194 @@
+{
+  "country": "Trinidad and Tobago",
+  "country_he": "טרינידד וטובגו",
+  "country_id": "trinidad-and-tobago",
+  "country_code": "TT",
+  "generated_at": "2026-03-24T11:39:29.169544+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 19,
+    "cultural_festivals": 1,
+    "total": 20
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Fitr",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-20",
+        "2027": "2027-03-10",
+        "2028": "2028-02-27",
+        "2029": "2029-02-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Spiritual Baptist Liberation Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-30",
+      "image": "https://images.pexels.com/photos/9291016/pexels-photo-9291016.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-06",
+        "2027": "2027-03-29",
+        "2028": "2028-04-17",
+        "2029": "2029-04-02"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Indian Arrival Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-30",
+      "image": "https://images.pexels.com/photos/3687322/pexels-photo-3687322.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Corpus Christi",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-04",
+        "2027": "2027-05-27",
+        "2028": "2028-06-15",
+        "2029": "2029-05-31"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36330285/pexels-photo-36330285.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-19",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "African Emancipation Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-01",
+      "image": "https://images.pexels.com/photos/6567674/pexels-photo-6567674.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-31",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Republic Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-24",
+      "image": "https://images.pexels.com/photos/36677172/pexels-photo-36677172.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Divali",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-08",
+      "image": "https://images.pexels.com/photos/7181925/pexels-photo-7181925.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Divali Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-09",
+      "image": "https://images.pexels.com/photos/2034892/pexels-photo-2034892.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Boxing Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-26",
+      "image": "https://images.pexels.com/photos/3797/black-and-white-sport-fight-boxer.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Indian Arrival Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-31",
+      "image": "https://images.pexels.com/photos/3687322/pexels-photo-3687322.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "African Emancipation Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-02",
+      "image": "https://images.pexels.com/photos/6567674/pexels-photo-6567674.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Boxing Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-27",
+      "image": "https://images.pexels.com/photos/3797/black-and-white-sport-fight-boxer.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Republic Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-25",
+      "image": "https://images.pexels.com/photos/4786198/pexels-photo-4786198.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Trinidad Carnival",
+      "type": "cultural_festival",
+      "description": "One of the Caribbean's biggest carnivals with soca music and elaborate costumes",
+      "name_he": "קרנבל טרינידד",
+      "typical_months": [
+        2
+      ],
+      "location_ids": [
+        "trinidad-and-tobago"
+      ],
+      "image": "https://images.pexels.com/photos/3823442/pexels-photo-3823442.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

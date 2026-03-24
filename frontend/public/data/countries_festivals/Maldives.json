@@ -1,0 +1,208 @@
+{
+  "country": "Maldives",
+  "country_he": "האיים המלדיביים",
+  "country_id": "maldives",
+  "country_code": "MV",
+  "generated_at": "2026-03-24T11:34:13.771054+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 19,
+    "cultural_festivals": 0,
+    "total": 19
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ramadan Start",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-18",
+        "2027": "2027-02-08",
+        "2028": "2028-01-28",
+        "2029": "2029-01-16"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7957127/pexels-photo-7957127.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-ul-Fithr",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-20",
+        "2027": "2027-03-10",
+        "2028": "2028-02-27",
+        "2029": "2029-02-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/32727307/pexels-photo-32727307.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-ul-Fithr Holiday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-22",
+        "2027": "2027-03-12",
+        "2028": "2028-02-29",
+        "2029": "2029-02-17"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/32727307/pexels-photo-32727307.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labor Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/769525/pexels-photo-769525.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Hajj Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-26",
+        "2027": "2027-05-16",
+        "2028": "2028-05-04",
+        "2029": "2029-04-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/4346403/pexels-photo-4346403.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-ul Al'haa",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-27",
+        "2027": "2027-05-17",
+        "2028": "2028-05-05",
+        "2029": "2029-04-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/32727307/pexels-photo-32727307.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-ul Al'haa Holiday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-30",
+        "2027": "2027-05-20",
+        "2028": "2028-05-08",
+        "2029": "2029-04-27"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/8489276/pexels-photo-8489276.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Muharram",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-17",
+      "image": "https://images.pexels.com/photos/18285745/pexels-photo-18285745.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-26",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-27",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-15",
+        "2027": "2027-08-04",
+        "2028": "2028-07-23",
+        "2029": "2029-07-13"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/6303979/pexels-photo-6303979.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Milad un Nabi",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-26",
+      "image": "https://images.pexels.com/photos/3799176/pexels-photo-3799176.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "The Day Maldives Embraced Islam",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-09-14",
+        "2027": "2027-09-03",
+        "2028": "2028-08-22",
+        "2029": "2029-08-12"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/2245208/pexels-photo-2245208.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Victory Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-03",
+      "image": "https://images.pexels.com/photos/163534/baseball-victory-game-sport-163534.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Republic Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-11",
+      "image": "https://images.pexels.com/photos/36677172/pexels-photo-36677172.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labor Day / May Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/4350739/pexels-photo-4350739.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Muharram/Islamic New Year",
+      "type": "national_holiday",
+      "dates": {
+        "2027": "2027-06-06",
+        "2028": "2028-05-25",
+        "2029": "2029-05-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/634694/pexels-photo-634694.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Milad un Nabi (Mawlid)",
+      "type": "national_holiday",
+      "dates": {
+        "2027": "2027-08-15",
+        "2028": "2028-08-03",
+        "2029": "2029-07-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/3799176/pexels-photo-3799176.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

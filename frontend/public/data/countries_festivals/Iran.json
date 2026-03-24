@@ -1,0 +1,315 @@
+{
+  "country": "Iran",
+  "country_he": "איראן",
+  "country_id": "iran",
+  "country_code": "IR",
+  "generated_at": "2026-03-24T11:32:25.393672+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 27,
+    "cultural_festivals": 1,
+    "total": 28
+  },
+  "public_holidays": [
+    {
+      "name": "Birthday of Imam Ali and Father's Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-12-23",
+        "2027": "2027-12-12",
+        "2028": "2028-11-30",
+        "2029": "2029-11-20"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7600420/pexels-photo-7600420.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Prophet's Ascension",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-01-17",
+        "2027": "2027-12-26",
+        "2028": "2028-12-14",
+        "2029": "2029-12-04"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/3890524/pexels-photo-3890524.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Imam Mahdi's birthday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-03",
+        "2027": "2027-01-24",
+        "2028": "2028-01-13",
+        "2029": "2029-12-21"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/1857157/pexels-photo-1857157.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Revolution Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-11",
+      "image": "https://images.pexels.com/photos/36607660/pexels-photo-36607660.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Martyrdom of Imam Ali",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-11",
+        "2027": "2027-02-28",
+        "2028": "2028-02-17",
+        "2029": "2029-02-05"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/35696733/pexels-photo-35696733.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Oil Nationalization Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-19",
+        "2027": "2027-03-20"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/4786198/pexels-photo-4786198.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-e-Fetr",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-20",
+      "image": "https://images.pexels.com/photos/7249181/pexels-photo-7249181.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-e-Fetr Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-21",
+      "image": "https://images.pexels.com/photos/7249181/pexels-photo-7249181.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Islamic Republic Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-01",
+      "image": "https://images.pexels.com/photos/3351448/pexels-photo-3351448.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Martyrdom of Imam Sadeq",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-13",
+        "2027": "2027-04-03",
+        "2028": "2028-03-22",
+        "2029": "2029-03-11"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/26841371/pexels-photo-26841371.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-e-Ghorban",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-27",
+      "image": "https://images.pexels.com/photos/7249181/pexels-photo-7249181.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-e-Ghadir",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-04",
+        "2027": "2027-05-25",
+        "2028": "2028-05-13",
+        "2029": "2029-05-02"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7249181/pexels-photo-7249181.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Anniversary of Khomeini's Death",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-04",
+      "image": "https://images.pexels.com/photos/6841579/pexels-photo-6841579.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Revolt of Khordad 15",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-05",
+      "image": "https://images.pexels.com/photos/15502140/pexels-photo-15502140.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Tassoua",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-24",
+        "2027": "2027-06-14",
+        "2028": "2028-06-03",
+        "2029": "2029-05-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/634694/pexels-photo-634694.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ashura",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-25",
+        "2027": "2027-06-15",
+        "2028": "2028-06-04",
+        "2029": "2029-05-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/18285745/pexels-photo-18285745.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Arbaeen",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-04",
+        "2027": "2027-07-25",
+        "2028": "2028-07-13",
+        "2029": "2029-07-03"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/17340981/pexels-photo-17340981.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Demise of Prophet Muhammad and Martyrdom of Imam Hassan",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-12",
+        "2027": "2027-08-02",
+        "2028": "2028-07-21",
+        "2029": "2029-07-11"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/3890524/pexels-photo-3890524.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Martyrdom of Imam Reza",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-14",
+        "2027": "2027-08-03",
+        "2028": "2028-07-22",
+        "2029": "2029-07-12"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/18509546/pexels-photo-18509546.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Martyrdom of Imam Hasan al-Askari",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-21",
+        "2027": "2027-08-11",
+        "2028": "2028-07-31",
+        "2029": "2029-07-20"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/26841371/pexels-photo-26841371.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Birthday of Prophet Muhammad and Imam Sadeq",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-30",
+        "2027": "2027-08-20",
+        "2028": "2028-08-09",
+        "2029": "2029-07-29"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/29102586/pexels-photo-29102586.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Martyrdom of Hazrat Fatima",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-11-13",
+        "2027": "2027-11-03",
+        "2028": "2028-10-22",
+        "2029": "2029-10-12"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7818419/pexels-photo-7818419.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-e-Fetr (End of Ramadan)",
+      "type": "national_holiday",
+      "dates": {
+        "2027": "2027-03-10",
+        "2028": "2028-02-27",
+        "2029": "2029-02-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7957127/pexels-photo-7957127.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-e-Fetr (Additional Holiday)",
+      "type": "national_holiday",
+      "dates": {
+        "2027": "2027-03-11",
+        "2028": "2028-02-28",
+        "2029": "2029-02-16"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7249181/pexels-photo-7249181.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-e-Ghorban (Feast of Sacrifice)",
+      "type": "national_holiday",
+      "dates": {
+        "2027": "2027-05-17",
+        "2028": "2028-05-05",
+        "2029": "2029-04-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7249708/pexels-photo-7249708.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Demise of Imam Khomeini",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-04",
+      "image": "https://images.pexels.com/photos/11648289/pexels-photo-11648289.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Khordad National Uprising",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-05",
+      "image": "https://images.pexels.com/photos/6965846/pexels-photo-6965846.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Nowruz",
+      "type": "cultural_festival",
+      "description": "Persian New Year marking the spring equinox, celebrated across Central Asia",
+      "name_he": "נורוז - ראש השנה הפרסי",
+      "typical_months": [
+        3
+      ],
+      "location_ids": [
+        "iran"
+      ],
+      "image": "https://images.pexels.com/photos/7158733/pexels-photo-7158733.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

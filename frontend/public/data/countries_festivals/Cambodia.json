@@ -1,0 +1,146 @@
+{
+  "country": "Cambodia",
+  "country_he": "קמבודיה",
+  "country_id": "cambodia",
+  "country_code": "KH",
+  "generated_at": "2026-03-24T11:30:26.401315+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 15,
+    "cultural_festivals": 1,
+    "total": 16
+  },
+  "public_holidays": [
+    {
+      "name": "New Year",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Victory over Genocide Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-07",
+      "image": "https://images.pexels.com/photos/6370120/pexels-photo-6370120.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "International Women Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-08",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Khmer New Year Day (Day 1)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-14",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Khmer New Year Day (Day 2)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-15",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Khmer New Year Day (Day 3)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-16",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Royal Plowing Ceremony",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-05",
+      "image": "https://images.pexels.com/photos/30214743/pexels-photo-30214743.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "King's Birthday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-14",
+      "image": "https://images.pexels.com/photos/7600420/pexels-photo-7600420.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Visak Bochea Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-22",
+      "image": "https://images.pexels.com/photos/15286/pexels-photo.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Constitutional Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-24",
+      "image": "https://images.pexels.com/photos/1046398/pexels-photo-1046398.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Commemoration Day of King's Father",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-15",
+      "image": "https://images.pexels.com/photos/8454242/pexels-photo-8454242.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "King's Coronation Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-29",
+      "image": "https://images.pexels.com/photos/189528/pexels-photo-189528.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-09",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Peace Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-29",
+      "image": "https://images.pexels.com/photos/15286/pexels-photo.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Pchum Ben",
+      "type": "cultural_festival",
+      "description": "Cambodian ancestor festival - 15 days of offerings at pagodas",
+      "name_he": "פצ'ום בן",
+      "typical_months": [
+        10
+      ],
+      "location_ids": [
+        "cambodia"
+      ],
+      "image": "https://images.pexels.com/photos/19153799/pexels-photo-19153799.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

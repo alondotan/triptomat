@@ -1,0 +1,144 @@
+{
+  "country": "Mauritius",
+  "country_he": "מאוריציוס",
+  "country_id": "mauritius",
+  "country_code": "MU",
+  "generated_at": "2026-03-24T11:34:49.656013+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 16,
+    "cultural_festivals": 0,
+    "total": 16
+  },
+  "public_holidays": [
+    {
+      "name": "New Year",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "New Year (Day 2)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-02",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Abolition of Slavery",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-01",
+      "image": "https://images.pexels.com/photos/1327891/pexels-photo-1327891.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Thaipoosam Cavadee",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-01",
+      "image": "https://images.pexels.com/photos/15286/pexels-photo.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Maha Shivaratree",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-15",
+      "image": "https://images.pexels.com/photos/30218192/pexels-photo-30218192.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Chinese Spring Festival",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-17",
+      "image": "https://images.pexels.com/photos/7364211/pexels-photo-7364211.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-12",
+      "image": "https://images.pexels.com/photos/6303979/pexels-photo-6303979.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ougadi",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-19",
+      "image": "https://images.pexels.com/photos/758898/pexels-photo-758898.png?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Fitr",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-20",
+        "2027": "2027-03-10",
+        "2028": "2028-02-27",
+        "2029": "2029-02-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Assumption of Mary",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-15",
+      "image": "https://images.pexels.com/photos/36347673/pexels-photo-36347673.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ganesh Chaturthi",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-16",
+      "image": "https://images.pexels.com/photos/28770070/pexels-photo-28770070.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Arrival of Indentured Labourers",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-02",
+      "image": "https://images.pexels.com/photos/1730808/pexels-photo-1730808.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Diwali",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-08",
+      "image": "https://images.pexels.com/photos/7686304/pexels-photo-7686304.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "All Saints Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-01",
+      "image": "https://images.pexels.com/photos/7080457/pexels-photo-7080457.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

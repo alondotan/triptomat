@@ -1,0 +1,100 @@
+{
+  "country": "Laos",
+  "country_he": "לאוס",
+  "country_id": "laos",
+  "country_code": "LA",
+  "generated_at": "2026-03-24T11:33:19.603976+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 10,
+    "cultural_festivals": 0,
+    "total": 10
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "International Women's Day (Women Only)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-08",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for International Women's Day (Women Only)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-09",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Lao New Year",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-14",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Lao New Year Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-16",
+      "image": "https://images.pexels.com/photos/3626475/pexels-photo-3626475.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labor Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/769525/pexels-photo-769525.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Lao Women Union's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-20",
+      "image": "https://images.pexels.com/photos/10333227/pexels-photo-10333227.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-02",
+      "image": "https://images.pexels.com/photos/6303979/pexels-photo-6303979.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labor Day / May Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/4350739/pexels-photo-4350739.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for National Day",
+      "type": "national_holiday",
+      "dates": {
+        "2028": "2028-12-04",
+        "2029": "2029-12-03"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/4786198/pexels-photo-4786198.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

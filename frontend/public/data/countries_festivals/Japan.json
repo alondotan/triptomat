@@ -1,0 +1,372 @@
+{
+  "country": "Japan",
+  "country_he": "יפן",
+  "country_id": "japan",
+  "country_code": "JP",
+  "generated_at": "2026-03-24T11:01:37.506992+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 16,
+    "cultural_festivals": 3,
+    "total": 19
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "元日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-01-01",
+        "2027": "2027-01-01",
+        "2028": "2028-01-01",
+        "2029": "2029-01-01",
+        "2030": "2030-01-01",
+        "2031": "2031-01-01",
+        "2032": "2032-01-01",
+        "2033": "2033-01-01",
+        "2034": "2034-01-02",
+        "2035": "2035-01-01"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Coming of Age Day",
+      "local_name": "成人の日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-01-12",
+        "2027": "2027-01-11",
+        "2028": "2028-01-10",
+        "2029": "2029-01-08",
+        "2030": "2030-01-14",
+        "2031": "2031-01-13",
+        "2032": "2032-01-12",
+        "2033": "2033-01-10",
+        "2034": "2034-01-09",
+        "2035": "2035-01-08"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5498399/pexels-photo-5498399.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Foundation Day",
+      "local_name": "建国記念の日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-11",
+        "2027": "2027-02-11",
+        "2028": "2028-02-11",
+        "2029": "2029-02-12",
+        "2030": "2030-02-11",
+        "2031": "2031-02-11",
+        "2032": "2032-02-11",
+        "2033": "2033-02-11",
+        "2034": "2034-02-11",
+        "2035": "2035-02-12"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "The Emperor's Birthday",
+      "local_name": "天皇誕生日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-23",
+        "2027": "2027-02-23",
+        "2028": "2028-02-23",
+        "2029": "2029-02-23",
+        "2030": "2030-02-23",
+        "2031": "2031-02-24",
+        "2032": "2032-02-23",
+        "2033": "2033-02-23",
+        "2034": "2034-02-23",
+        "2035": "2035-02-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7580801/pexels-photo-7580801.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Vernal Equinox Day",
+      "local_name": "春分の日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-20",
+        "2027": "2027-03-21",
+        "2028": "2028-03-20",
+        "2029": "2029-03-20",
+        "2030": "2030-03-20",
+        "2031": "2031-03-21",
+        "2032": "2032-03-20",
+        "2033": "2033-03-20",
+        "2034": "2034-03-20",
+        "2035": "2035-03-21"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36662755/pexels-photo-36662755.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Shōwa Day",
+      "local_name": "昭和の日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-29",
+        "2027": "2027-04-29",
+        "2028": "2028-04-29",
+        "2029": "2029-04-30",
+        "2030": "2030-04-29",
+        "2031": "2031-04-29",
+        "2032": "2032-04-29",
+        "2033": "2033-04-29",
+        "2034": "2034-04-29",
+        "2035": "2035-04-30"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36309129/pexels-photo-36309129.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Constitution Memorial Day",
+      "local_name": "憲法記念日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-04",
+        "2027": "2027-05-03",
+        "2028": "2028-05-03",
+        "2029": "2029-05-03",
+        "2030": "2030-05-03",
+        "2031": "2031-05-03",
+        "2032": "2032-05-03",
+        "2033": "2033-05-03",
+        "2034": "2034-05-03",
+        "2035": "2035-05-03"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/8710497/pexels-photo-8710497.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Greenery Day",
+      "local_name": "みどりの日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-04",
+        "2027": "2027-05-04",
+        "2028": "2028-05-04",
+        "2029": "2029-05-04",
+        "2030": "2030-05-04",
+        "2031": "2031-05-06",
+        "2032": "2032-05-04",
+        "2033": "2033-05-04",
+        "2034": "2034-05-04",
+        "2035": "2035-05-04"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7061608/pexels-photo-7061608.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Children's Day",
+      "local_name": "こどもの日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-05",
+        "2027": "2027-05-05",
+        "2028": "2028-05-05",
+        "2029": "2029-05-05",
+        "2030": "2030-05-06",
+        "2031": "2031-05-05",
+        "2032": "2032-05-05",
+        "2033": "2033-05-05",
+        "2034": "2034-05-05",
+        "2035": "2035-05-05"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36662753/pexels-photo-36662753.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Marine Day",
+      "local_name": "海の日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-07-20",
+        "2027": "2027-07-19",
+        "2028": "2028-07-17",
+        "2029": "2029-07-16",
+        "2030": "2030-07-15",
+        "2031": "2031-07-21",
+        "2032": "2032-07-19",
+        "2033": "2033-07-18",
+        "2034": "2034-07-17",
+        "2035": "2035-07-16"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/1252509/pexels-photo-1252509.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Mountain Day",
+      "local_name": "山の日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-11",
+        "2027": "2027-08-11",
+        "2028": "2028-08-11",
+        "2029": "2029-08-11",
+        "2030": "2030-08-12",
+        "2031": "2031-08-11",
+        "2032": "2032-08-11",
+        "2033": "2033-08-11",
+        "2034": "2034-08-11",
+        "2035": "2035-08-11"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5274504/pexels-photo-5274504.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Respect for the Aged Day",
+      "local_name": "敬老の日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-09-21",
+        "2027": "2027-09-20",
+        "2028": "2028-09-18",
+        "2029": "2029-09-17",
+        "2030": "2030-09-16",
+        "2031": "2031-09-15",
+        "2032": "2032-09-20",
+        "2033": "2033-09-19",
+        "2034": "2034-09-18",
+        "2035": "2035-09-17"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/6692079/pexels-photo-6692079.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Autumnal Equinox Day",
+      "local_name": "秋分の日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-09-23",
+        "2027": "2027-09-23",
+        "2028": "2028-09-22",
+        "2029": "2029-09-23",
+        "2030": "2030-09-23",
+        "2031": "2031-09-23",
+        "2032": "2032-09-22",
+        "2033": "2033-09-23",
+        "2034": "2034-09-23",
+        "2035": "2035-09-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36105523/pexels-photo-36105523.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Sports Day",
+      "local_name": "スポーツの日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-10-12",
+        "2027": "2027-10-11",
+        "2028": "2028-10-09",
+        "2029": "2029-10-08",
+        "2030": "2030-10-14",
+        "2031": "2031-10-13",
+        "2032": "2032-10-11",
+        "2033": "2033-10-10",
+        "2034": "2034-10-09",
+        "2035": "2035-10-08"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/159728/lacrosse-lacrosse-team-champions-state-champions-159728.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Culture Day",
+      "local_name": "文化の日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-11-03",
+        "2027": "2027-11-03",
+        "2028": "2028-11-03",
+        "2029": "2029-11-03",
+        "2030": "2030-11-04",
+        "2031": "2031-11-03",
+        "2032": "2032-11-03",
+        "2033": "2033-11-03",
+        "2034": "2034-11-03",
+        "2035": "2035-11-03"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36432411/pexels-photo-36432411.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Thanksgiving Day",
+      "local_name": "勤労感謝の日",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-11-23",
+        "2027": "2027-11-23",
+        "2028": "2028-11-23",
+        "2029": "2029-11-23",
+        "2030": "2030-11-23",
+        "2031": "2031-11-24",
+        "2032": "2032-11-23",
+        "2033": "2033-11-23",
+        "2034": "2034-11-23",
+        "2035": "2035-11-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5847660/pexels-photo-5847660.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Cherry Blossom Season (Hanami)",
+      "type": "cultural_festival",
+      "description": "Traditional flower viewing season when cherry trees bloom across Japan",
+      "name_he": "עונת פריחת הדובדבן (הנאמי)",
+      "typical_months": [
+        3,
+        4
+      ],
+      "location_ids": [
+        "japan"
+      ],
+      "image": "https://images.pexels.com/photos/2187417/pexels-photo-2187417.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Obon Festival",
+      "type": "cultural_festival",
+      "description": "Buddhist festival honoring ancestors with lanterns and traditional dances",
+      "name_he": "פסטיבל אובון",
+      "typical_months": [
+        8
+      ],
+      "location_ids": [
+        "japan"
+      ],
+      "image": "https://images.pexels.com/photos/748886/pexels-photo-748886.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Gion Matsuri",
+      "type": "cultural_festival",
+      "description": "Kyoto's most famous festival with grand float processions",
+      "name_he": "פסטיבל גיון",
+      "typical_months": [
+        7
+      ],
+      "location_ids": [
+        "japan/kyoto-kansai/kyto"
+      ],
+      "image": "https://images.pexels.com/photos/3077791/pexels-photo-3077791.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

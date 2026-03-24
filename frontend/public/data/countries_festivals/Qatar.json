@@ -1,0 +1,137 @@
+{
+  "country": "Qatar",
+  "country_he": "קטאר",
+  "country_id": "qatar",
+  "country_code": "QA",
+  "generated_at": "2026-03-24T11:36:40.921301+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 8,
+    "cultural_festivals": 1,
+    "total": 9
+  },
+  "public_holidays": [
+    {
+      "name": "National Sports Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-10",
+        "2027": "2027-02-09",
+        "2028": "2028-02-08",
+        "2029": "2029-02-13"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/4786198/pexels-photo-4786198.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Fitr",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-20",
+        "2027": "2027-03-10",
+        "2028": "2028-02-27",
+        "2029": "2029-02-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "festival_info": {
+        "description": "Festival of breaking the fast at the end of Ramadan",
+        "name_he": "עיד אל-פיטר",
+        "location_ids": [
+          "qatar"
+        ]
+      }
+    },
+    {
+      "name": "Eid al-Fitr Holiday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-22",
+        "2027": "2027-03-12",
+        "2028": "2028-02-29",
+        "2029": "2029-02-17"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Adha (Feast of Sacrifice)",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-27",
+        "2027": "2027-05-17",
+        "2028": "2028-05-05",
+        "2029": "2029-04-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/32401115/pexels-photo-32401115.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Adha Holiday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-29",
+        "2027": "2027-05-19",
+        "2028": "2028-05-07",
+        "2029": "2029-04-26"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "festival_info": {
+        "description": "Festival of sacrifice - one of the most important Islamic holidays",
+        "name_he": "עיד אל-אדחא",
+        "location_ids": [
+          "qatar"
+        ]
+      }
+    },
+    {
+      "name": "National Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-18",
+      "image": "https://images.pexels.com/photos/6303979/pexels-photo-6303979.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "March Bank Holiday",
+      "type": "national_holiday",
+      "dates": {
+        "2027": "2027-03-07",
+        "2028": "2028-03-05",
+        "2029": "2029-03-04"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/13316037/pexels-photo-13316037.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Ramadan",
+      "type": "religious_holiday",
+      "description": "Muslim holy month of fasting, prayer, and reflection",
+      "name_he": "רמדאן",
+      "location_ids": [
+        "qatar"
+      ],
+      "image": "https://images.pexels.com/photos/7957127/pexels-photo-7957127.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

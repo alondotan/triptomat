@@ -1,0 +1,168 @@
+{
+  "country": "Ethiopia",
+  "country_he": "אתיופיה",
+  "country_id": "ethiopia",
+  "country_code": "ET",
+  "generated_at": "2026-03-24T11:31:21.017136+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 13,
+    "cultural_festivals": 0,
+    "total": 13
+  },
+  "public_holidays": [
+    {
+      "name": "Ethiopian Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-07",
+      "image": "https://images.pexels.com/photos/17272177/pexels-photo-17272177.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Epiphany / Timkat",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-01-19",
+        "2027": "2027-01-19",
+        "2028": "2028-01-20",
+        "2029": "2029-01-19"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/390052/church-window-window-church-stained-glass-390052.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "festival_info": {
+        "description": "Ethiopian Orthodox celebration of Epiphany with colorful processions",
+        "name_he": "טימקט - חג ההטבלה",
+        "typical_months": [
+          1
+        ],
+        "location_ids": [
+          "ethiopia"
+        ]
+      }
+    },
+    {
+      "name": "Adwa Victory Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-02",
+      "image": "https://images.pexels.com/photos/6370120/pexels-photo-6370120.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Fitr",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-20",
+        "2027": "2027-03-10",
+        "2028": "2028-02-27",
+        "2029": "2029-02-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ethiopian Good Friday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-10",
+        "2027": "2027-04-30",
+        "2028": "2028-04-14",
+        "2029": "2029-04-06"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/20865974/pexels-photo-20865974.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Fasika",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-12",
+        "2027": "2027-05-02",
+        "2028": "2028-04-16",
+        "2029": "2029-04-08"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/1209843/pexels-photo-1209843.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "International Labor Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Patriots' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-05",
+      "image": "https://images.pexels.com/photos/1069000/pexels-photo-1069000.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Adha",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-27",
+        "2027": "2027-05-17",
+        "2028": "2028-05-05",
+        "2029": "2029-04-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "The Prophet's Birthday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-26",
+        "2027": "2027-08-15",
+        "2028": "2028-08-03",
+        "2029": "2029-07-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7600420/pexels-photo-7600420.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ethiopian New Year",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-09-11",
+        "2027": "2027-09-12",
+        "2028": "2028-09-11",
+        "2029": "2029-09-11"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/634694/pexels-photo-634694.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Meskel",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-09-27",
+        "2027": "2027-09-28",
+        "2028": "2028-09-27",
+        "2029": "2029-09-27"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/20865955/pexels-photo-20865955.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Derg Downfall Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-28",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

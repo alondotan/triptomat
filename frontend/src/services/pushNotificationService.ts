@@ -37,7 +37,7 @@ export async function subscribeToPush(): Promise<boolean> {
 
   if (!subscription) {
     subscription = await registration.pushManager.subscribe({
-      userVisuallyIndicatesInterest: true,
+      userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
     });
   }

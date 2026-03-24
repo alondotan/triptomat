@@ -4,12 +4,12 @@ import { ensureItineraryDayForDate } from '@/services/itineraryService';
 
 // ── Helpers ──────────────────────────────────────────────────────
 
-function daysBetween(start: string, end: string): number {
+export function daysBetween(start: string, end: string): number {
   return Math.max(1, Math.ceil((new Date(end).getTime() - new Date(start).getTime()) / 86400000));
 }
 
 /** Deep merge: newer non-null/non-undefined values win. Arrays replaced entirely. */
-function deepMerge(old: any, incoming: any): any {
+export function deepMerge(old: any, incoming: any): any {
   if (incoming === null || incoming === undefined) return old;
   if (typeof incoming !== 'object' || Array.isArray(incoming)) return incoming;
   if (typeof old !== 'object' || old === null || Array.isArray(old)) return incoming;
@@ -22,7 +22,7 @@ function deepMerge(old: any, incoming: any): any {
   return result;
 }
 
-function addEmailToSourceRefs(existingRefs: any, emailId: string): any {
+export function addEmailToSourceRefs(existingRefs: any, emailId: string): any {
   const refs = existingRefs || { email_ids: [], recommendation_ids: [] };
   const emailIds = refs.email_ids || [];
   if (!emailIds.includes(emailId)) emailIds.push(emailId);

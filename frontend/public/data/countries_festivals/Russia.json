@@ -1,0 +1,113 @@
+{
+  "country": "Russia",
+  "country_he": "רוסיה",
+  "country_id": "russia",
+  "country_code": "RU",
+  "generated_at": "2026-03-24T11:01:37.793231+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 9,
+    "cultural_festivals": 1,
+    "total": 10
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "Новый год",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "New Year holiday",
+      "local_name": "Новогодние каникулы",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-06",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day (Orthodox)",
+      "local_name": "Рождество Христово",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-07",
+      "image": "https://images.pexels.com/photos/6184932/pexels-photo-6184932.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Defender of the Fatherland Day",
+      "local_name": "День защитника Отечества",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-23",
+      "image": "https://images.pexels.com/photos/13316037/pexels-photo-13316037.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "International Women's Day",
+      "local_name": "Международный женский день",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-08",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "local_name": "День труда",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Victory Day",
+      "local_name": "День Победы",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-09",
+      "image": "https://images.pexels.com/photos/163534/baseball-victory-game-sport-163534.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Russia Day",
+      "local_name": "День России",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-12",
+      "image": "https://images.pexels.com/photos/73869/honor-guard-15s-guard-russian-73869.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Unity Day",
+      "local_name": "День народного единства",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-04",
+      "image": "https://images.pexels.com/photos/13316037/pexels-photo-13316037.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "White Nights Festival",
+      "type": "cultural_festival",
+      "description": "Arts and cultural festival during St. Petersburg's midnight sun period",
+      "name_he": "פסטיבל הלילות הלבנים",
+      "typical_months": [
+        6
+      ],
+      "location_ids": [
+        "russia"
+      ],
+      "image": "https://images.pexels.com/photos/3810900/pexels-photo-3810900.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "country": "Burundi",
+  "country_he": "בורונדי",
+  "country_id": "burundi",
+  "country_code": "BI",
+  "generated_at": "2026-03-24T11:30:21.711876+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 18,
+    "cultural_festivals": 0,
+    "total": 18
+  },
+  "public_holidays": [
+    {
+      "name": "New Year",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Unity Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-05",
+      "image": "https://images.pexels.com/photos/13316037/pexels-photo-13316037.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid ul Fitr",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-20",
+        "2027": "2027-03-10",
+        "2028": "2028-02-27",
+        "2029": "2029-02-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/12049052/pexels-photo-12049052.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "President Ntaryamira Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-06",
+      "image": "https://images.pexels.com/photos/28279114/pexels-photo-28279114.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ascension Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-14",
+        "2027": "2027-05-06",
+        "2028": "2028-05-25",
+        "2029": "2029-05-10"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/225701/pexels-photo-225701.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Adha",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-27",
+        "2027": "2027-05-17",
+        "2028": "2028-05-05",
+        "2029": "2029-04-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "President Pierre Nkurunziza Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-08",
+      "image": "https://images.pexels.com/photos/161892/memorial-lincoln-president-monument-161892.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-01",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Assumption of Mary",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-15",
+      "image": "https://images.pexels.com/photos/36347673/pexels-photo-36347673.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Prince Louis Rwagasore Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-13",
+      "image": "https://images.pexels.com/photos/30867299/pexels-photo-30867299.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "President Ndadaye's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-21",
+      "image": "https://images.pexels.com/photos/28279114/pexels-photo-28279114.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "All Saints' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-01",
+      "image": "https://images.pexels.com/photos/7080457/pexels-photo-7080457.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for All Saints' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-02",
+      "image": "https://images.pexels.com/photos/12051289/pexels-photo-12051289.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Assumption of Mary",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-16",
+      "image": "https://images.pexels.com/photos/16449839/pexels-photo-16449839.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-02",
+      "image": "https://images.pexels.com/photos/3581355/pexels-photo-3581355.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for President Ndadaye's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-22",
+      "image": "https://images.pexels.com/photos/28279114/pexels-photo-28279114.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

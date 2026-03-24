@@ -1838,6 +1838,100 @@
               ],
               "flag": "https://flagcdn.com/w640/mc.png",
               "image": "https://images.pexels.com/photos/11892586/pexels-photo-11892586.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+            },
+            {
+              "name": "Italy",
+              "name_he": "איטליה",
+              "type": "country",
+              "country_code": "IT",
+              "children": [
+                {
+                  "name": "Rome & Lazio",
+                  "name_he": "רומא ולאציו",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Milan & Lombardy",
+                  "name_he": "מילאנו ולומברדיה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Venice & Northeast",
+                  "name_he": "ונציה וצפון-מזרח",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Tuscany & Florence",
+                  "name_he": "טוסקנה ופירנצה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "South & Naples",
+                  "name_he": "דרום ונאפולי",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Sicily & Sardinia",
+                  "name_he": "סיציליה וסרדיניה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Piedmont & Northwest",
+                  "name_he": "פיימונטה וצפון-מערב",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Emilia-Romagna",
+                  "name_he": "אמיליה-רומאניה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Central & Umbria/Marche",
+                  "name_he": "מרכז ואומבריה/מארקה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Aosta Valley & Alps",
+                  "name_he": "עמק אאוסטה והאלפים",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Calabria & South",
+                  "name_he": "קלבריה והדרום",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Apulia & Bari",
+                  "name_he": "פוליה ובארי",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Abruzzo & Molise",
+                  "name_he": "אברוצו ומוליזה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Extra",
+                  "name_he": "נוספים",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ],
+              "flag": "https://flagcdn.com/w640/it.png",
+              "image": "https://images.pexels.com/photos/2064827/pexels-photo-2064827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
             }
           ],
           "image": "https://images.pexels.com/photos/13806417/pexels-photo-13806417.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
@@ -2866,6 +2960,52 @@
               ],
               "flag": "https://flagcdn.com/w640/bg.png",
               "image": "https://images.pexels.com/photos/13741445/pexels-photo-13741445.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+            },
+            {
+              "name": "Kosovo",
+              "name_he": "קוסובו",
+              "type": "country",
+              "country_code": "XK",
+              "children": [
+                {
+                  "name": "Priština & Central",
+                  "name_he": "פרישטינה ומרכז",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/16711027/pexels-photo-16711027.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "North & Mitrovica",
+                  "name_he": "צפון ומיטרוביצה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/16711027/pexels-photo-16711027.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "West & Peja",
+                  "name_he": "מערב ופחה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/16711027/pexels-photo-16711027.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "South & Prizren",
+                  "name_he": "דרום ופריזרן",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/16711027/pexels-photo-16711027.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "East",
+                  "name_he": "מזרח",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/16711027/pexels-photo-16711027.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Srbica",
+                  "name_he": "סרביצה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/16711027/pexels-photo-16711027.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ],
+              "flag": "https://flagcdn.com/w640/xk.png",
+              "image": "https://images.pexels.com/photos/16711027/pexels-photo-16711027.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
             }
           ],
           "image": "https://images.pexels.com/photos/32460754/pexels-photo-32460754.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
@@ -3823,7 +3963,145 @@
               "type": "country",
               "country_code": "CV",
               "flag": "https://flagcdn.com/w640/cv.png",
-              "image": "https://images.pexels.com/photos/30258610/pexels-photo-30258610.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+              "image": "https://images.pexels.com/photos/30258610/pexels-photo-30258610.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+              "children": [
+                {
+                  "name": "Entire Cape Verde",
+                  "name_he": "Cape Verde כולה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/30258610/pexels-photo-30258610.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ]
+            },
+            {
+              "name": "Burkina Faso",
+              "name_he": "בורקינה פאסו",
+              "type": "country",
+              "country_code": "BF",
+              "children": [
+                {
+                  "name": "Ouagadougou & Central",
+                  "name_he": "ואגאדוגו ומרכז",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "West & Bobo-Dioulasso",
+                  "name_he": "מערב ובובו-דיאולסו",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "East & Sahel",
+                  "name_he": "מזרח וסאהל",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "South",
+                  "name_he": "דרום",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ],
+              "flag": "https://flagcdn.com/w640/bf.png",
+              "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+            },
+            {
+              "name": "Mali",
+              "name_he": "מאלי",
+              "type": "country",
+              "country_code": "ML",
+              "children": [
+                {
+                  "name": "Bamako & Southwest",
+                  "name_he": "במקו ודרום-מערב",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Dogon Country & Mopti",
+                  "name_he": "ארץ הדוגון ומופטי",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Timbuktu & North",
+                  "name_he": "טימבוקטו וצפון",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "South & Sikasso",
+                  "name_he": "דרום וסיקאסו",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ],
+              "flag": "https://flagcdn.com/w640/ml.png",
+              "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+            },
+            {
+              "name": "Mauritania",
+              "name_he": "מאוריטניה",
+              "type": "country",
+              "country_code": "MR",
+              "children": [
+                {
+                  "name": "Nouakchott & Coastal",
+                  "name_he": "נואקשוט והחוף",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Northern Desert & Adrar",
+                  "name_he": "המדבר הצפוני ואדרר",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Central Plateau",
+                  "name_he": "הרמה המרכזית",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Southern Senegal River Valley",
+                  "name_he": "עמק נהר סנגל הדרומי",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ],
+              "flag": "https://flagcdn.com/w640/mr.png",
+              "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+            },
+            {
+              "name": "Niger",
+              "name_he": "ניז'ר",
+              "type": "country",
+              "country_code": "NE",
+              "children": [
+                {
+                  "name": "Niamey & Southwest",
+                  "name_he": "ניאמיי ודרום-מערב",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "South & Zinder",
+                  "name_he": "דרום וזינדר",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "North & Agadez",
+                  "name_he": "צפון ואגדז",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ],
+              "flag": "https://flagcdn.com/w640/ne.png",
+              "image": "https://images.pexels.com/photos/14434228/pexels-photo-14434228.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
             }
           ],
           "image": "https://images.pexels.com/photos/5349640/pexels-photo-5349640.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
@@ -4064,6 +4342,40 @@
               ],
               "flag": "https://flagcdn.com/w640/st.png",
               "image": "https://images.pexels.com/photos/803104/pexels-photo-803104.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+            },
+            {
+              "name": "Chad",
+              "name_he": "צ'אד",
+              "type": "country",
+              "country_code": "TD",
+              "children": [
+                {
+                  "name": "N'Djamena & Central",
+                  "name_he": "נג'מנה ומרכז",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/12241231/pexels-photo-12241231.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Sahel & East",
+                  "name_he": "הסאהל ומזרח",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/12241231/pexels-photo-12241231.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Sahara North",
+                  "name_he": "מדבר סהרה צפון",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/12241231/pexels-photo-12241231.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "South",
+                  "name_he": "דרום",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/12241231/pexels-photo-12241231.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ],
+              "flag": "https://flagcdn.com/w640/td.png",
+              "image": "https://images.pexels.com/photos/12241231/pexels-photo-12241231.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
             }
           ],
           "image": "https://images.pexels.com/photos/29309323/pexels-photo-29309323.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
@@ -4441,7 +4753,15 @@
               "type": "country",
               "country_code": "SS",
               "flag": "https://flagcdn.com/w640/ss.png",
-              "image": "https://images.pexels.com/photos/10970368/pexels-photo-10970368.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+              "image": "https://images.pexels.com/photos/10970368/pexels-photo-10970368.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+              "children": [
+                {
+                  "name": "Entire South Sudan",
+                  "name_he": "South Sudan כולה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/10970368/pexels-photo-10970368.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ]
             }
           ],
           "image": "https://images.pexels.com/photos/2063890/pexels-photo-2063890.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
@@ -4755,7 +5075,15 @@
               "type": "country",
               "country_code": "LS",
               "flag": "https://flagcdn.com/w640/ls.png",
-              "image": "https://images.pexels.com/photos/32423814/pexels-photo-32423814.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+              "image": "https://images.pexels.com/photos/32423814/pexels-photo-32423814.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+              "children": [
+                {
+                  "name": "Entire Lesotho",
+                  "name_he": "Lesotho כולה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/32423814/pexels-photo-32423814.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ]
             },
             {
               "name": "Eswatini",
@@ -4763,7 +5091,15 @@
               "type": "country",
               "country_code": "SZ",
               "flag": "https://flagcdn.com/w640/sz.png",
-              "image": "https://images.pexels.com/photos/34040096/pexels-photo-34040096.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+              "image": "https://images.pexels.com/photos/34040096/pexels-photo-34040096.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+              "children": [
+                {
+                  "name": "Entire Eswatini",
+                  "name_he": "Eswatini כולה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/34040096/pexels-photo-34040096.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ]
             },
             {
               "name": "Angola",
@@ -7045,7 +7381,15 @@
               "type": "country",
               "country_code": "SB",
               "flag": "https://flagcdn.com/w640/sb.png",
-              "image": "https://images.pexels.com/photos/29643273/pexels-photo-29643273.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+              "image": "https://images.pexels.com/photos/29643273/pexels-photo-29643273.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+              "children": [
+                {
+                  "name": "Entire Solomon Islands",
+                  "name_he": "Solomon Islands כולה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/29643273/pexels-photo-29643273.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ]
             },
             {
               "name": "Vanuatu",
@@ -7122,6 +7466,14 @@
               "name_he": "מיקרונזיה",
               "type": "country",
               "country_code": "FM",
+              "children": [
+                {
+                  "name": "Entire Micronesia",
+                  "name_he": "כל מיקרונזיה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/3854024/pexels-photo-3854024.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ],
               "flag": "https://flagcdn.com/w640/fm.png",
               "image": "https://images.pexels.com/photos/3854024/pexels-photo-3854024.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
             },
@@ -7131,7 +7483,15 @@
               "type": "country",
               "country_code": "MH",
               "flag": "https://flagcdn.com/w640/mh.png",
-              "image": "https://images.pexels.com/photos/18885701/pexels-photo-18885701.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+              "image": "https://images.pexels.com/photos/18885701/pexels-photo-18885701.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+              "children": [
+                {
+                  "name": "Entire Marshall Islands",
+                  "name_he": "Marshall Islands כולה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/18885701/pexels-photo-18885701.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ]
             },
             {
               "name": "Palau",
@@ -7139,7 +7499,15 @@
               "type": "country",
               "country_code": "PW",
               "flag": "https://flagcdn.com/w640/pw.png",
-              "image": "https://images.pexels.com/photos/10743907/pexels-photo-10743907.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+              "image": "https://images.pexels.com/photos/10743907/pexels-photo-10743907.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+              "children": [
+                {
+                  "name": "Entire Palau",
+                  "name_he": "Palau כולה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/10743907/pexels-photo-10743907.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ]
             },
             {
               "name": "Kiribati",
@@ -7147,7 +7515,15 @@
               "type": "country",
               "country_code": "KI",
               "flag": "https://flagcdn.com/w640/ki.png",
-              "image": "https://images.pexels.com/photos/8828452/pexels-photo-8828452.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+              "image": "https://images.pexels.com/photos/8828452/pexels-photo-8828452.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+              "children": [
+                {
+                  "name": "Entire Kiribati",
+                  "name_he": "Kiribati כולה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/8828452/pexels-photo-8828452.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ]
             },
             {
               "name": "Nauru",
@@ -7155,7 +7531,21 @@
               "type": "country",
               "country_code": "NR",
               "flag": "https://flagcdn.com/w640/nr.png",
-              "image": "https://images.pexels.com/photos/28299491/pexels-photo-28299491.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+              "image": "https://images.pexels.com/photos/28299491/pexels-photo-28299491.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+              "children": [
+                {
+                  "name": "Entire Nauru",
+                  "name_he": "Nauru כולה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/28299491/pexels-photo-28299491.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ]
+            },
+            {
+              "name": "Entire Micronesia",
+              "name_he": "Micronesia כולה",
+              "type": "tourism_region",
+              "image": "https://images.pexels.com/photos/3854024/pexels-photo-3854024.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
             }
           ],
           "image": "https://images.pexels.com/photos/3854024/pexels-photo-3854024.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
@@ -7193,7 +7583,15 @@
               "type": "country",
               "country_code": "TO",
               "flag": "https://flagcdn.com/w640/to.png",
-              "image": "https://images.pexels.com/photos/4802101/pexels-photo-4802101.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+              "image": "https://images.pexels.com/photos/4802101/pexels-photo-4802101.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+              "children": [
+                {
+                  "name": "Entire Tonga",
+                  "name_he": "Tonga כולה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/4802101/pexels-photo-4802101.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ]
             },
             {
               "name": "Tuvalu",
@@ -7201,7 +7599,49 @@
               "type": "country",
               "country_code": "TV",
               "flag": "https://flagcdn.com/w640/tv.png",
-              "image": "https://images.pexels.com/photos/16983655/pexels-photo-16983655.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+              "image": "https://images.pexels.com/photos/16983655/pexels-photo-16983655.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+              "children": [
+                {
+                  "name": "Entire Tuvalu",
+                  "name_he": "Tuvalu כולה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/16983655/pexels-photo-16983655.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ]
+            },
+            {
+              "name": "French Polynesia",
+              "name_he": "פולינזיה הצרפתית",
+              "type": "country",
+              "country_code": "PF",
+              "children": [
+                {
+                  "name": "Society Islands (Tahiti & Bora Bora)",
+                  "name_he": "איי החברה (טהיטי ובורה בורה)",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/5033921/pexels-photo-5033921.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Tuamotu & Gambier Atolls",
+                  "name_he": "איי טואמוטו וגמבייה",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/5033921/pexels-photo-5033921.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Marquesas Archipelago",
+                  "name_he": "איי מרקיז",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/5033921/pexels-photo-5033921.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                },
+                {
+                  "name": "Austral Islands",
+                  "name_he": "איי אוסטרל",
+                  "type": "tourism_region",
+                  "image": "https://images.pexels.com/photos/5033921/pexels-photo-5033921.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+                }
+              ],
+              "flag": "https://flagcdn.com/w640/pf.png",
+              "image": "https://images.pexels.com/photos/5033921/pexels-photo-5033921.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
             }
           ],
           "image": "https://images.pexels.com/photos/5033921/pexels-photo-5033921.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"

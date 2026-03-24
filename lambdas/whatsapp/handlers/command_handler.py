@@ -154,8 +154,8 @@ def _set_active_trip(phone: str, trip_id: str, trip_name: str) -> None:
 
 # ── Command routing ──────────────────────────────────────────────────────────
 
-def handle_command(wa_user: dict, message: dict, phone: str) -> None:
-    """Route slash commands and interactive responses."""
+def handle_command(wa_user: dict, message: dict, phone: str, intent: str = "command") -> None:
+    """Route slash commands, natural language intents, and interactive responses."""
     msg_type = message.get("type", "text")
 
     # Interactive button/list reply
@@ -178,7 +178,6 @@ def handle_command(wa_user: dict, message: dict, phone: str) -> None:
         location = message.get("location", {})
         lat = location.get("latitude", 0)
         lng = location.get("longitude", 0)
-        # Construct a Google Maps URL and treat as a link
         from handlers.link_handler import handle_link
         fake_msg = {
             "type": "text",
@@ -188,10 +187,15 @@ def handle_command(wa_user: dict, message: dict, phone: str) -> None:
         handle_link(wa_user, fake_msg, phone)
         return
 
-    # Slash commands
     raw_text = _get_text(message).strip()
     text = raw_text.lower()
 
+    # Natural language intents (from classifier)
+    if intent.startswith("cmd:"):
+        _route_intent(intent, wa_user, phone, raw_text)
+        return
+
+    # Slash commands
     if text == "/help":
         _cmd_help(phone)
     elif text == "/trip" or text == "/trips":
@@ -201,7 +205,6 @@ def handle_command(wa_user: dict, message: dict, phone: str) -> None:
     elif text == "/tasks":
         _cmd_tasks(wa_user, phone)
     elif text.startswith("/task "):
-        # Use raw text to preserve original casing for the task title
         title = raw_text[6:].strip()
         _cmd_add_task(wa_user, phone, title)
     elif text.startswith("/done "):
@@ -216,6 +219,69 @@ def handle_command(wa_user: dict, message: dict, phone: str) -> None:
         )
     else:
         meta_api.send_text(phone, f"Unknown command: {text}\nType /help for available commands.")
+
+
+def _route_intent(intent: str, wa_user: dict, phone: str, raw_text: str) -> None:
+    """Route natural language intents to the appropriate command."""
+    if intent == "cmd:help":
+        _cmd_help(phone)
+    elif intent == "cmd:tasks":
+        _cmd_tasks(wa_user, phone)
+    elif intent == "cmd:add_task":
+        title = _extract_task_title(raw_text)
+        if title:
+            _cmd_add_task(wa_user, phone, title)
+        else:
+            meta_api.send_text(phone, "What task would you like to add?\nExample: /task Buy sunscreen")
+    elif intent == "cmd:done":
+        query = _extract_done_query(raw_text)
+        if query:
+            _cmd_done_task(wa_user, phone, query)
+        else:
+            _cmd_tasks(wa_user, phone)
+    elif intent == "cmd:budget":
+        _cmd_budget(wa_user, phone)
+    elif intent == "cmd:trip":
+        _cmd_trip(wa_user, phone)
+    elif intent == "cmd:status":
+        _cmd_status(wa_user, phone)
+
+
+def _extract_task_title(text: str) -> str:
+    """Extract the task title from natural language add-task messages."""
+    import re
+    # Try to extract what comes after the intent phrase
+    patterns = [
+        r"(?i)^/task\s+(.+)",
+        r"(?i)(?:תוסיף|הוסף)\s*משימה\s*:?\s*(.+)",
+        r"(?i)משימה\s*חדשה\s*:?\s*(.+)",
+        r"(?i)תזכיר\s*לי\s*(?:ל|ש)(.+)",
+        r"(?i)תוסיף\s*ל?רשימה\s*:?\s*(.+)",
+        r"(?i)(?:add|new)\s*task\s*:?\s*(.+)",
+        r"(?i)remind\s*me\s*to\s+(.+)",
+        r"(?i)צריך\s*(?:לזכור|לא\s*לשכוח)\s*(?:ל|ש)(.+)",
+    ]
+    for p in patterns:
+        m = re.search(p, text)
+        if m:
+            return m.group(1).strip()
+    return ""
+
+
+def _extract_done_query(text: str) -> str:
+    """Extract the task reference from natural language done messages."""
+    import re
+    patterns = [
+        r"(?i)^/done\s+(.+)",
+        r"(?i)(?:סיימתי|עשיתי|ביצעתי)\s+(.+)",
+        r"(?i)(?:completed?|finished|done\s*with)\s+(.+)",
+        r"(?i)תסמן\s*(?:כ|ש)?\s*(.+)",
+    ]
+    for p in patterns:
+        m = re.search(p, text)
+        if m:
+            return m.group(1).strip()
+    return ""
 
 
 def _handle_interactive_reply(wa_user: dict, reply_id: str, phone: str) -> None:

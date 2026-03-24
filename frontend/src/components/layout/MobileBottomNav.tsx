@@ -10,6 +10,7 @@ import {
   CheckSquare,
   FileText,
   Globe,
+  CloudSun,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -23,6 +24,7 @@ const primaryItems = [
 const moreItems = [
   // TODO: Re-enable Itinerary page when ready
   // { path: '/itinerary', labelKey: 'nav.itinerary', icon: Table2 },
+  { path: '/weather', labelKey: 'nav.weather', icon: CloudSun },
   { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },
   { path: '/tasks', labelKey: 'nav.tasks', icon: CheckSquare },
   { path: '/documents', labelKey: 'nav.docs', icon: FileText },

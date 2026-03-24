@@ -1,0 +1,212 @@
+{
+  "country": "Nepal",
+  "country_he": "נפאל",
+  "country_id": "nepal",
+  "country_code": "NP",
+  "generated_at": "2026-03-24T11:35:54.090524+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 25,
+    "cultural_festivals": 0,
+    "total": 25
+  },
+  "public_holidays": [
+    {
+      "name": "Maghe Sankranti",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-15",
+      "image": "https://images.pexels.com/photos/34753111/pexels-photo-34753111.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Sonam Losar",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-19",
+      "image": "https://images.pexels.com/photos/32031273/pexels-photo-32031273.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Maha Shivaratri",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-15",
+      "image": "https://images.pexels.com/photos/36631777/pexels-photo-36631777.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Democracy Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-19",
+      "image": "https://images.pexels.com/photos/4386426/pexels-photo-4386426.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Election Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-06",
+      "image": "https://images.pexels.com/photos/1550336/pexels-photo-1550336.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Nari Dibas",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-08",
+      "image": "https://images.pexels.com/photos/36703382/pexels-photo-36703382.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ram Navami",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-27",
+      "image": "https://images.pexels.com/photos/15902534/pexels-photo-15902534.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Nepali New Year",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-14",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Majdoor Divas",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/4722485/pexels-photo-4722485.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Buddha Jayanti",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/937465/pexels-photo-937465.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ganatantra Diwas",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-29",
+      "image": "https://images.pexels.com/photos/190589/pexels-photo-190589.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Janai Purnima",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-28",
+      "image": "https://images.pexels.com/photos/13958675/pexels-photo-13958675.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Shree Krishna Janmashtami",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-04",
+      "image": "https://images.pexels.com/photos/16058266/pexels-photo-16058266.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Constitution Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-19",
+      "image": "https://images.pexels.com/photos/1252509/pexels-photo-1252509.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ghatasthapana (Dashain)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-11",
+      "image": "https://images.pexels.com/photos/2477357/pexels-photo-2477357.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Phulpati (Dashain)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-17",
+      "image": "https://images.pexels.com/photos/2477357/pexels-photo-2477357.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Astami (Dashain)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-19",
+      "image": "https://images.pexels.com/photos/2477357/pexels-photo-2477357.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "festival_info": {
+        "description": "Nepal's biggest festival celebrating the triumph of good over evil",
+        "name_he": "דאשיין",
+        "typical_months": [
+          10
+        ],
+        "location_ids": [
+          "nepal"
+        ]
+      }
+    },
+    {
+      "name": "Nawami (Dashain)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-20",
+      "image": "https://images.pexels.com/photos/2064485/pexels-photo-2064485.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Dashami (Dashain)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-21",
+      "image": "https://images.pexels.com/photos/33274086/pexels-photo-33274086.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ekadashi (Dashain)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-22",
+      "image": "https://images.pexels.com/photos/2477357/pexels-photo-2477357.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Duwadashi (Dashain)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-23",
+      "image": "https://images.pexels.com/photos/2477357/pexels-photo-2477357.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Laxmi Puja (Tihar)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-08",
+      "image": "https://images.pexels.com/photos/34422681/pexels-photo-34422681.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Gobhardan Pujan (Tihar)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-09",
+      "image": "https://images.pexels.com/photos/35429180/pexels-photo-35429180.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Bhai Tika (Tihar)",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-10",
+      "image": "https://images.pexels.com/photos/8791229/pexels-photo-8791229.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Chhat Parwa",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-15",
+      "image": "https://images.pexels.com/photos/4206616/pexels-photo-4206616.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

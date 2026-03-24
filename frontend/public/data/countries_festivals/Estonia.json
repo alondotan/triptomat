@@ -1,0 +1,156 @@
+{
+  "country": "Estonia",
+  "country_he": "אסטוניה",
+  "country_id": "estonia",
+  "country_code": "EE",
+  "generated_at": "2026-03-24T11:01:37.361090+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 12,
+    "cultural_festivals": 0,
+    "total": 12
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "uusaasta",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "local_name": "iseseisvuspäev",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-24",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "local_name": "suur reede",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30",
+        "2030": "2030-04-19",
+        "2031": "2031-04-11",
+        "2032": "2032-03-26",
+        "2033": "2033-04-15",
+        "2034": "2034-04-07",
+        "2035": "2035-03-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Sunday",
+      "local_name": "ülestõusmispühade 1. püha",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-05",
+        "2027": "2027-03-28",
+        "2028": "2028-04-16",
+        "2029": "2029-04-01",
+        "2030": "2030-04-21",
+        "2031": "2031-04-13",
+        "2032": "2032-03-28",
+        "2033": "2033-04-17",
+        "2034": "2034-04-09",
+        "2035": "2035-03-25"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/41376/celebration-colored-colorful-decoration-41376.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Spring Day",
+      "local_name": "kevadpüha",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/6474379/pexels-photo-6474379.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Pentecost",
+      "local_name": "nelipühade 1. püha",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-24",
+        "2027": "2027-05-16",
+        "2028": "2028-06-04",
+        "2029": "2029-05-20",
+        "2030": "2030-06-09",
+        "2031": "2031-06-01",
+        "2032": "2032-05-16",
+        "2033": "2033-06-05",
+        "2034": "2034-05-28",
+        "2035": "2035-05-13"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36330285/pexels-photo-36330285.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Victory Day",
+      "local_name": "võidupüha and jaanilaupäev",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-23",
+      "image": "https://images.pexels.com/photos/163534/baseball-victory-game-sport-163534.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Midsummer Day",
+      "local_name": "jaanipäev",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-24",
+      "image": "https://images.pexels.com/photos/1168563/pexels-photo-1168563.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of Restoration of Independence",
+      "local_name": "taasiseseisvumispäev",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-20",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Eve",
+      "local_name": "jõululaupäev",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-24",
+      "image": "https://images.pexels.com/photos/63741/pexels-photo-63741.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "local_name": "esimene jõulupüha",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "St. Stephen's Day",
+      "local_name": "teine jõulupüha",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-26",
+      "image": "https://images.pexels.com/photos/7016482/pexels-photo-7016482.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

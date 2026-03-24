@@ -1,0 +1,110 @@
+{
+  "country": "Belarus",
+  "country_he": "בלארוס",
+  "country_id": "belarus",
+  "country_code": "BY",
+  "generated_at": "2026-03-24T11:01:37.097958+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 9,
+    "cultural_festivals": 0,
+    "total": 9
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "Новы год",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-02",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day (Orthodox)",
+      "local_name": "Каляды праваслаўныя",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-07",
+      "image": "https://images.pexels.com/photos/6184932/pexels-photo-6184932.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "International Women's Day",
+      "local_name": "Мiжнародны жаночы дзень",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-08",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Commemoration Day",
+      "local_name": "Радунiца",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-21",
+        "2027": "2027-05-11",
+        "2028": "2028-04-25",
+        "2029": "2029-04-17",
+        "2030": "2030-05-07",
+        "2031": "2031-04-22",
+        "2032": "2032-05-11",
+        "2033": "2033-05-03",
+        "2034": "2034-04-18",
+        "2035": "2035-05-08"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/1046399/pexels-photo-1046399.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "local_name": "Дзень працы",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Victory Day",
+      "local_name": "Дзень Перамогi",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-09",
+      "image": "https://images.pexels.com/photos/163534/baseball-victory-game-sport-163534.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "local_name": "Дзень Незалежнасцi",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-03",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "October Revolution Day",
+      "local_name": "Дзень Кастрычніцкай рэвалюцыі",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-07",
+      "image": "https://images.pexels.com/photos/5859427/pexels-photo-5859427.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Catholic Christmas Day",
+      "local_name": "Каляды каталiцкiя",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/3186667/pexels-photo-3186667.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

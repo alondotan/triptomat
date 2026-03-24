@@ -1,0 +1,158 @@
+{
+  "country": "Vatican City",
+  "country_he": "קריית הוותיקן",
+  "country_id": "vatican-city",
+  "country_code": "VA",
+  "generated_at": "2026-03-24T11:01:38.118370+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 15,
+    "cultural_festivals": 0,
+    "total": 15
+  },
+  "public_holidays": [
+    {
+      "name": "Solemnity of Mary, Mother of God",
+      "local_name": "Maria Santissima Madre di Dio",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/51524/pexels-photo-51524.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Epiphany",
+      "local_name": "Epifania del Signore",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-06",
+      "image": "https://images.pexels.com/photos/3996466/pexels-photo-3996466.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Anniversary of the foundation of Vatican City",
+      "local_name": "Anniversario della istituzione dello Stato della Città del Vaticano",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-11",
+      "image": "https://images.pexels.com/photos/19248421/pexels-photo-19248421.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Anniversary of the election of Pope Francis",
+      "local_name": "Anniversario dell'Elezione del Santo Padre",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-13",
+      "image": "https://images.pexels.com/photos/35761559/pexels-photo-35761559.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Saint Joseph's Day",
+      "local_name": "San Giuseppe",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-19",
+      "image": "https://images.pexels.com/photos/7015868/pexels-photo-7015868.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "local_name": "Lunedì dell'Angelo",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-06",
+        "2027": "2027-03-29",
+        "2028": "2028-04-17",
+        "2029": "2029-04-02",
+        "2030": "2030-04-22",
+        "2031": "2031-04-14",
+        "2032": "2032-03-29",
+        "2033": "2033-04-18",
+        "2034": "2034-04-10",
+        "2035": "2035-03-26"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Saint George",
+      "local_name": "Onomastico del Santo Padre",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-23",
+      "image": "https://images.pexels.com/photos/7809921/pexels-photo-7809921.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Saint Joseph the Worker",
+      "local_name": "San Giuseppe lavoratore",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/1652555/pexels-photo-1652555.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Saint Peter and Saint Paul",
+      "local_name": "Santi Pietro e Paolo",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-29",
+      "image": "https://images.pexels.com/photos/7080387/pexels-photo-7080387.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Assumption Day",
+      "local_name": "Assunzione di Maria in Cielo",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-15",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Nativity of Mary",
+      "local_name": "Festa della natività della madonna",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-08",
+      "image": "https://images.pexels.com/photos/6150154/pexels-photo-6150154.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "All Saints Day",
+      "local_name": "Tutti i santi, Ognissanti",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-01",
+      "image": "https://images.pexels.com/photos/7080457/pexels-photo-7080457.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Immaculate Conception",
+      "local_name": "Immacolata Concezione",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-08",
+      "image": "https://images.pexels.com/photos/36032948/pexels-photo-36032948.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "local_name": "Natale",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "St. Stephen's Day",
+      "local_name": "Santo Stefano",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-26",
+      "image": "https://images.pexels.com/photos/7016482/pexels-photo-7016482.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

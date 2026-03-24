@@ -1,0 +1,135 @@
+{
+  "country": "Israel",
+  "country_he": "ישראל",
+  "country_id": "israel",
+  "country_code": "IL",
+  "generated_at": "2026-03-24T11:26:05.085029+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 9,
+    "cultural_festivals": 0,
+    "total": 9
+  },
+  "public_holidays": [
+    {
+      "name": "Passover (Day 1)",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-02",
+        "2027": "2027-04-22",
+        "2028": "2028-04-11",
+        "2029": "2029-03-31"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/6054134/pexels-photo-6054134.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Passover (Day 7)",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-08",
+        "2027": "2027-04-28",
+        "2028": "2028-04-17",
+        "2029": "2029-04-06"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/6054134/pexels-photo-6054134.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Yom HaAtzmaut",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-22",
+        "2027": "2027-05-12",
+        "2028": "2028-05-02",
+        "2029": "2029-04-19"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/16305208/pexels-photo-16305208.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Shavuot",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-22",
+        "2027": "2027-06-11",
+        "2028": "2028-05-31",
+        "2029": "2029-05-20"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/8439339/pexels-photo-8439339.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Rosh Hashana",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-09-12",
+        "2027": "2027-10-02",
+        "2028": "2028-09-21",
+        "2029": "2029-09-10"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/16305208/pexels-photo-16305208.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Rosh Hashana (Day 2)",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-09-13",
+        "2027": "2027-10-03",
+        "2028": "2028-09-22",
+        "2029": "2029-09-11"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/10453586/pexels-photo-10453586.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Yom Kippur",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-09-21",
+        "2027": "2027-10-11",
+        "2028": "2028-09-30",
+        "2029": "2029-09-19"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/16305208/pexels-photo-16305208.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Sukkot (Day 1)",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-09-26",
+        "2027": "2027-10-16",
+        "2028": "2028-10-05",
+        "2029": "2029-09-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/6116271/pexels-photo-6116271.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Shemini Atzeret / Simchat Torah",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-10-03",
+        "2027": "2027-10-23",
+        "2028": "2028-10-12",
+        "2029": "2029-10-01"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5986499/pexels-photo-5986499.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

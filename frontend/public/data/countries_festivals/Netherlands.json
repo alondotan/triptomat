@@ -1,0 +1,202 @@
+{
+  "country": "Netherlands",
+  "country_he": "הולנד",
+  "country_id": "netherlands",
+  "country_code": "NL",
+  "generated_at": "2026-03-24T11:01:37.678531+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 11,
+    "cultural_festivals": 0,
+    "total": 11
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "Nieuwjaarsdag",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "local_name": "Goede Vrijdag",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30",
+        "2030": "2030-04-19",
+        "2031": "2031-04-11",
+        "2032": "2032-03-26",
+        "2033": "2033-04-15",
+        "2034": "2034-04-07",
+        "2035": "2035-03-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Sunday",
+      "local_name": "Eerste Paasdag",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-05",
+        "2027": "2027-03-28",
+        "2028": "2028-04-16",
+        "2029": "2029-04-01",
+        "2030": "2030-04-21",
+        "2031": "2031-04-13",
+        "2032": "2032-03-28",
+        "2033": "2033-04-17",
+        "2034": "2034-04-09",
+        "2035": "2035-03-25"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/41376/celebration-colored-colorful-decoration-41376.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "local_name": "Tweede Paasdag",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-06",
+        "2027": "2027-03-29",
+        "2028": "2028-04-17",
+        "2029": "2029-04-02",
+        "2030": "2030-04-22",
+        "2031": "2031-04-14",
+        "2032": "2032-03-29",
+        "2033": "2033-04-18",
+        "2034": "2034-04-10",
+        "2035": "2035-03-26"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "King's Day",
+      "local_name": "Koningsdag",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-27",
+        "2027": "2027-04-27",
+        "2028": "2028-04-27",
+        "2029": "2029-04-27",
+        "2030": "2030-04-27",
+        "2031": "2031-04-26",
+        "2032": "2032-04-27",
+        "2033": "2033-04-27",
+        "2034": "2034-04-27",
+        "2035": "2035-04-27"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36463886/pexels-photo-36463886.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+      "festival_info": {
+        "description": "Netherlands' biggest national celebration with orange-themed street parties",
+        "name_he": "יום המלך",
+        "typical_months": [
+          4
+        ],
+        "location_ids": [
+          "netherlands"
+        ]
+      }
+    },
+    {
+      "name": "Liberation Day",
+      "local_name": "Bevrijdingsdag",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-05",
+      "image": "https://images.pexels.com/photos/21069107/pexels-photo-21069107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ascension Day",
+      "local_name": "Hemelvaartsdag",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-14",
+        "2027": "2027-05-06",
+        "2028": "2028-05-25",
+        "2029": "2029-05-10",
+        "2030": "2030-05-30",
+        "2031": "2031-05-22",
+        "2032": "2032-05-06",
+        "2033": "2033-05-26",
+        "2034": "2034-05-18",
+        "2035": "2035-05-03"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/225701/pexels-photo-225701.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Pentecost",
+      "local_name": "Eerste Pinksterdag",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-24",
+        "2027": "2027-05-16",
+        "2028": "2028-06-04",
+        "2029": "2029-05-20",
+        "2030": "2030-06-09",
+        "2031": "2031-06-01",
+        "2032": "2032-05-16",
+        "2033": "2033-06-05",
+        "2034": "2034-05-28",
+        "2035": "2035-05-13"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36330285/pexels-photo-36330285.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Whit Monday",
+      "local_name": "Tweede Pinksterdag",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-25",
+        "2027": "2027-05-17",
+        "2028": "2028-06-05",
+        "2029": "2029-05-21",
+        "2030": "2030-06-10",
+        "2031": "2031-06-02",
+        "2032": "2032-05-17",
+        "2033": "2033-06-06",
+        "2034": "2034-05-29",
+        "2035": "2035-05-14"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/34364418/pexels-photo-34364418.png?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "local_name": "Eerste Kerstdag",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "St. Stephen's Day",
+      "local_name": "Tweede Kerstdag",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-26",
+      "image": "https://images.pexels.com/photos/7016482/pexels-photo-7016482.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

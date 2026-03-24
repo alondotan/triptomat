@@ -1,0 +1,171 @@
+{
+  "country": "Germany",
+  "country_he": "גרמניה",
+  "country_id": "germany",
+  "country_code": "DE",
+  "generated_at": "2026-03-24T11:01:37.402579+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 9,
+    "cultural_festivals": 2,
+    "total": 11
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "Neujahr",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "local_name": "Karfreitag",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30",
+        "2030": "2030-04-19",
+        "2031": "2031-04-11",
+        "2032": "2032-03-26",
+        "2033": "2033-04-15",
+        "2034": "2034-04-07",
+        "2035": "2035-03-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "local_name": "Ostermontag",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-06",
+        "2027": "2027-03-29",
+        "2028": "2028-04-17",
+        "2029": "2029-04-02",
+        "2030": "2030-04-22",
+        "2031": "2031-04-14",
+        "2032": "2032-03-29",
+        "2033": "2033-04-18",
+        "2034": "2034-04-10",
+        "2035": "2035-03-26"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "local_name": "Tag der Arbeit",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ascension Day",
+      "local_name": "Christi Himmelfahrt",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-14",
+        "2027": "2027-05-06",
+        "2028": "2028-05-25",
+        "2029": "2029-05-10",
+        "2030": "2030-05-30",
+        "2031": "2031-05-22",
+        "2032": "2032-05-06",
+        "2033": "2033-05-26",
+        "2034": "2034-05-18",
+        "2035": "2035-05-03"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/225701/pexels-photo-225701.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Whit Monday",
+      "local_name": "Pfingstmontag",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-25",
+        "2027": "2027-05-17",
+        "2028": "2028-06-05",
+        "2029": "2029-05-21",
+        "2030": "2030-06-10",
+        "2031": "2031-06-02",
+        "2032": "2032-05-17",
+        "2033": "2033-06-06",
+        "2034": "2034-05-29",
+        "2035": "2035-05-14"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/34364418/pexels-photo-34364418.png?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "German Unity Day",
+      "local_name": "Tag der Deutschen Einheit",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-03",
+      "image": "https://images.pexels.com/photos/6842437/pexels-photo-6842437.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "local_name": "Erster Weihnachtstag",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "St. Stephen's Day",
+      "local_name": "Zweiter Weihnachtstag",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-26",
+      "image": "https://images.pexels.com/photos/7016482/pexels-photo-7016482.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Oktoberfest",
+      "type": "cultural_festival",
+      "description": "World's largest beer festival and folk festival in Munich",
+      "name_he": "אוקטוברפסט",
+      "typical_months": [
+        9,
+        10
+      ],
+      "location_ids": [
+        "germany/south-bavaria/munich"
+      ],
+      "image": "https://images.pexels.com/photos/9827/pexels-photo-9827.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Carnival of Cologne",
+      "type": "cultural_festival",
+      "description": "One of Germany's largest carnival celebrations with parades and costumes",
+      "name_he": "קרנבל קלן",
+      "typical_months": [
+        2
+      ],
+      "location_ids": [
+        "germany/west-ruhr/cologne"
+      ],
+      "image": "https://images.pexels.com/photos/2763381/pexels-photo-2763381.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

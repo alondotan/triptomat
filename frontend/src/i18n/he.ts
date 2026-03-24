@@ -24,6 +24,7 @@ const he = {
     aiAssistant: 'עוזר AI לטיולים',
     resources: 'מקורות',
     home: 'מקומות',
+    weather: 'מזג אוויר',
   },
 
   // ── Common ──
@@ -980,6 +981,7 @@ const he = {
   // ── Overview ──
   overview: {
     attractions: 'אטרקציות',
+    events: 'אירועים וחגים',
     eateries: 'אוכל ושתייה',
     hotels: 'מלונות',
     transport: 'תחבורה',
@@ -996,6 +998,12 @@ const he = {
     feed: 'פיד',
     map: 'מפה',
     plan: 'תוכנית',
+  },
+
+  // ── Weather Page ──
+  weatherPage: {
+    title: 'מזג אוויר',
+    noData: 'אין נתוני מזג אוויר למדינות הטיול',
   },
 };
 

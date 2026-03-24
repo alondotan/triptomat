@@ -1,0 +1,181 @@
+{
+  "country": "Pakistan",
+  "country_he": "פקיסטן",
+  "country_id": "pakistan",
+  "country_code": "PK",
+  "generated_at": "2026-03-24T11:36:22.224389+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 17,
+    "cultural_festivals": 0,
+    "total": 17
+  },
+  "public_holidays": [
+    {
+      "name": "Kashmir Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-05",
+      "image": "https://images.pexels.com/photos/3351448/pexels-photo-3351448.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-ul-Fitr",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-21",
+        "2027": "2027-03-10",
+        "2028": "2028-02-27",
+        "2029": "2029-02-15"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/12049052/pexels-photo-12049052.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid-ul-Fitr Holiday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-03-23",
+        "2027": "2027-03-12",
+        "2028": "2028-02-29",
+        "2029": "2029-02-17"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/12049052/pexels-photo-12049052.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Pakistan Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-23",
+      "image": "https://images.pexels.com/photos/1297483/pexels-photo-1297483.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Adha",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-27",
+        "2027": "2027-05-17",
+        "2028": "2028-05-05",
+        "2029": "2029-04-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid al-Adha Holiday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-29",
+        "2027": "2027-05-19",
+        "2028": "2028-05-07",
+        "2029": "2029-04-26"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/9127752/pexels-photo-9127752.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Youm-i-Takbeer",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-28",
+      "image": "https://images.pexels.com/photos/935789/pexels-photo-935789.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ashura",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-24",
+        "2027": "2027-06-14",
+        "2028": "2028-06-03",
+        "2029": "2029-05-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/18285745/pexels-photo-18285745.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Ashura Holiday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-25",
+        "2027": "2027-06-15",
+        "2028": "2028-06-04",
+        "2029": "2029-05-25"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/18285745/pexels-photo-18285745.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-14",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eid Milad un-Nabi",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-08-25",
+        "2027": "2027-08-14",
+        "2028": "2028-08-03",
+        "2029": "2029-07-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7249181/pexels-photo-7249181.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Iqbal Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-09",
+      "image": "https://images.pexels.com/photos/36704398/pexels-photo-36704398.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Quaid-e-Azam Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/13023363/pexels-photo-13023363.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Youm-e-Takbeer",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-28",
+      "image": "https://images.pexels.com/photos/230544/pexels-photo-230544.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Defence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-06",
+      "image": "https://images.pexels.com/photos/31351552/pexels-photo-31351552.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

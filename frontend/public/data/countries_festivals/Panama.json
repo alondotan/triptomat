@@ -1,0 +1,134 @@
+{
+  "country": "Panama",
+  "country_he": "פנמה",
+  "country_id": "panama",
+  "country_code": "PA",
+  "generated_at": "2026-03-24T11:01:37.715533+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 12,
+    "cultural_festivals": 0,
+    "total": 12
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Martyr's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-09",
+      "image": "https://images.pexels.com/photos/8011501/pexels-photo-8011501.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Carnival",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-17",
+        "2027": "2027-02-09",
+        "2028": "2028-02-29",
+        "2029": "2029-02-13",
+        "2030": "2030-03-05",
+        "2031": "2031-02-25",
+        "2032": "2032-02-10",
+        "2033": "2033-03-01",
+        "2034": "2034-02-21",
+        "2035": "2035-02-06"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36160778/pexels-photo-36160778.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30",
+        "2030": "2030-04-19",
+        "2031": "2031-04-11",
+        "2032": "2032-03-26",
+        "2033": "2033-04-15",
+        "2034": "2034-04-07",
+        "2035": "2035-03-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Separation Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-03",
+      "image": "https://images.pexels.com/photos/5874703/pexels-photo-5874703.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Flag Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-04",
+      "image": "https://images.pexels.com/photos/4786198/pexels-photo-4786198.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Colon Day",
+      "local_name": "Colón Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-05",
+      "image": "https://images.pexels.com/photos/8474994/pexels-photo-8474994.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Shout in Villa de los Santos",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-10",
+      "image": "https://images.pexels.com/photos/10781211/pexels-photo-10781211.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-28",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Mother's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-08",
+      "image": "https://images.pexels.com/photos/2072160/pexels-photo-2072160.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

@@ -1,0 +1,218 @@
+{
+  "country": "Romania",
+  "country_he": "רומניה",
+  "country_id": "romania",
+  "country_code": "RO",
+  "generated_at": "2026-03-24T11:01:37.747503+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 17,
+    "cultural_festivals": 0,
+    "total": 17
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "local_name": "Anul Nou",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day after New Year's Day",
+      "local_name": "Anul Nou",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-02",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Epiphany",
+      "local_name": "Bobotează",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-06",
+      "image": "https://images.pexels.com/photos/3996466/pexels-photo-3996466.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Saint John the Baptist",
+      "local_name": "Sfântul Ion",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-07",
+      "image": "https://images.pexels.com/photos/10619928/pexels-photo-10619928.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Union Day/Small Union",
+      "local_name": "Unirea Principatelor Române/Mica Unire",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-24",
+      "image": "https://images.pexels.com/photos/10074704/pexels-photo-10074704.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "local_name": "Vinerea mare",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-10",
+        "2027": "2027-04-30",
+        "2028": "2028-04-14",
+        "2029": "2029-04-06",
+        "2030": "2030-04-26",
+        "2031": "2031-04-11",
+        "2032": "2032-04-30",
+        "2033": "2033-04-22",
+        "2034": "2034-04-07",
+        "2035": "2035-04-27"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Sunday",
+      "local_name": "Paștele",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-12",
+        "2027": "2027-05-02",
+        "2028": "2028-04-16",
+        "2029": "2029-04-08",
+        "2030": "2030-04-28",
+        "2031": "2031-04-13",
+        "2032": "2032-05-02",
+        "2033": "2033-04-24",
+        "2034": "2034-04-09",
+        "2035": "2035-04-29"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/41376/celebration-colored-colorful-decoration-41376.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "local_name": "Paștele",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-13",
+        "2027": "2027-05-03",
+        "2028": "2028-04-17",
+        "2029": "2029-04-09",
+        "2030": "2030-04-29",
+        "2031": "2031-04-14",
+        "2032": "2032-05-03",
+        "2033": "2033-04-25",
+        "2034": "2034-04-10",
+        "2035": "2035-04-30"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "local_name": "Ziua Muncii",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Pentecost",
+      "local_name": "Rusaliile",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-05-31",
+        "2027": "2027-06-20",
+        "2028": "2028-06-04",
+        "2029": "2029-05-27",
+        "2030": "2030-06-16",
+        "2031": "2031-06-01",
+        "2032": "2032-06-20",
+        "2033": "2033-06-12",
+        "2034": "2034-05-28",
+        "2035": "2035-06-17"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36330285/pexels-photo-36330285.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Children's Day",
+      "local_name": "Ziua Copilului",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-01",
+      "image": "https://images.pexels.com/photos/36662753/pexels-photo-36662753.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Whit Monday",
+      "local_name": "Rusaliile",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-01",
+        "2027": "2027-06-21",
+        "2028": "2028-06-05",
+        "2029": "2029-05-28",
+        "2030": "2030-06-17",
+        "2031": "2031-06-02",
+        "2032": "2032-06-21",
+        "2033": "2033-06-13",
+        "2034": "2034-05-29",
+        "2035": "2035-06-18"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/34364418/pexels-photo-34364418.png?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Dormition of the Theotokos",
+      "local_name": "Adormirea Maicii Domnului/Sfânta Maria Mare",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-15",
+      "image": "https://images.pexels.com/photos/12607604/pexels-photo-12607604.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "St. Andrew's Day",
+      "local_name": "Sfântul Andrei",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-30",
+      "image": "https://images.pexels.com/photos/4551718/pexels-photo-4551718.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Day/Great Union",
+      "local_name": "Ziua Națională/Marea Unire",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-01",
+      "image": "https://images.pexels.com/photos/6476047/pexels-photo-6476047.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "local_name": "Crăciunul",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "St. Stephen's Day",
+      "local_name": "Crăciunul",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-26",
+      "image": "https://images.pexels.com/photos/7016482/pexels-photo-7016482.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

@@ -1,0 +1,230 @@
+{
+  "country": "Nauru",
+  "country_he": "נאורו",
+  "country_id": "nauru",
+  "country_code": "NR",
+  "generated_at": "2026-03-24T11:35:31.211718+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 26,
+    "cultural_festivals": 0,
+    "total": 26
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-31",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-01",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-02",
+      "image": "https://images.pexels.com/photos/3581355/pexels-photo-3581355.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Independence Day Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-03",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "International Women's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-08",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "International Women's Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-09",
+      "image": "https://images.pexels.com/photos/4833957/pexels-photo-4833957.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Monday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-06",
+        "2027": "2027-03-29",
+        "2028": "2028-04-17",
+        "2029": "2029-04-02"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/7149613/pexels-photo-7149613.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Tuesday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-07",
+        "2027": "2027-03-30",
+        "2028": "2028-04-18",
+        "2029": "2029-04-03"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/953075/pexels-photo-953075.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Constitution Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-17",
+      "image": "https://images.pexels.com/photos/1252509/pexels-photo-1252509.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Constitution Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-18",
+      "image": "https://images.pexels.com/photos/1046398/pexels-photo-1046398.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Eigugu Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-26",
+      "image": "https://images.pexels.com/photos/758898/pexels-photo-758898.png?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Remembrance Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-29",
+      "image": "https://images.pexels.com/photos/7706288/pexels-photo-7706288.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "RONPhos Handover",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "07-01",
+      "image": "https://images.pexels.com/photos/7489107/pexels-photo-7489107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of the Tribes",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-19",
+      "image": "https://images.pexels.com/photos/35034045/pexels-photo-35034045.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Sir Hammer DeRoburt Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-25",
+      "image": "https://images.pexels.com/photos/175039/pexels-photo-175039.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Angam Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-26",
+      "image": "https://images.pexels.com/photos/758898/pexels-photo-758898.png?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Boxing Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-26",
+      "image": "https://images.pexels.com/photos/3797/black-and-white-sport-fight-boxer.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Boxing Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-28",
+      "image": "https://images.pexels.com/photos/3797/black-and-white-sport-fight-boxer.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Sir Hammer DeRoburt Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-27",
+      "image": "https://images.pexels.com/photos/175039/pexels-photo-175039.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-27",
+      "image": "https://images.pexels.com/photos/3186667/pexels-photo-3186667.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-03",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for RONPhos Handover",
+      "type": "national_holiday",
+      "dates": {
+        "2028": "2028-07-03",
+        "2029": "2029-07-02"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/12585927/pexels-photo-12585927.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day of the Tribes Observed",
+      "type": "national_holiday",
+      "dates": {
+        "2028": "2028-08-21",
+        "2029": "2029-08-20"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/35034045/pexels-photo-35034045.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

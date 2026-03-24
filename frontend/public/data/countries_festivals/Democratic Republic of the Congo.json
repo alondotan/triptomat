@@ -1,0 +1,104 @@
+{
+  "country": "Democratic Republic of the Congo",
+  "country_he": "הרפובליקה הדמוקרטית של קונגו",
+  "country_id": "democratic-republic-of-the-congo",
+  "country_code": "CD",
+  "generated_at": "2026-03-24T11:01:37.324208+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 11,
+    "cultural_festivals": 0,
+    "total": 11
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Martyrs Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-04",
+      "image": "https://images.pexels.com/photos/8011501/pexels-photo-8011501.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Laurent-Désiré Kabila Assassination",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-16",
+      "image": "https://images.pexels.com/photos/6045018/pexels-photo-6045018.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Patrice Lumumba Assassination",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-17",
+      "image": "https://images.pexels.com/photos/6816920/pexels-photo-6816920.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Kimbangu's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-06",
+      "image": "https://images.pexels.com/photos/6203/food-sweet-cake-candles-6203.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labour Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5882255/pexels-photo-5882255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Liberation Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-17",
+      "image": "https://images.pexels.com/photos/21069107/pexels-photo-21069107.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-30",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Parents' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-01",
+      "image": "https://images.pexels.com/photos/2133/man-person-cute-young.jpg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Congolese Genocide Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "08-02",
+      "image": "https://images.pexels.com/photos/11785747/pexels-photo-11785747.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}

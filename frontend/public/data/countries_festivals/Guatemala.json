@@ -1,0 +1,176 @@
+{
+  "country": "Guatemala",
+  "country_he": "גואטמלה",
+  "country_id": "guatemala",
+  "country_code": "GT",
+  "generated_at": "2026-03-24T11:01:37.422222+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 13,
+    "cultural_festivals": 1,
+    "total": 14
+  },
+  "public_holidays": [
+    {
+      "name": "New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Maundy Thursday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-02",
+        "2027": "2027-03-25",
+        "2028": "2028-04-13",
+        "2029": "2029-03-29",
+        "2030": "2030-04-18",
+        "2031": "2031-04-10",
+        "2032": "2032-03-25",
+        "2033": "2033-04-14",
+        "2034": "2034-04-06",
+        "2035": "2035-03-22"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/36032944/pexels-photo-36032944.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Good Friday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-03",
+        "2027": "2027-03-26",
+        "2028": "2028-04-14",
+        "2029": "2029-03-30",
+        "2030": "2030-04-19",
+        "2031": "2031-04-11",
+        "2032": "2032-03-26",
+        "2033": "2033-04-15",
+        "2034": "2034-04-07",
+        "2035": "2035-03-23"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5872354/pexels-photo-5872354.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Holy Saturday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-04",
+        "2027": "2027-03-27",
+        "2028": "2028-04-15",
+        "2029": "2029-03-31",
+        "2030": "2030-04-20",
+        "2031": "2031-04-12",
+        "2032": "2032-03-27",
+        "2033": "2033-04-16",
+        "2034": "2034-04-08",
+        "2035": "2035-03-24"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/942305/pexels-photo-942305.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Easter Sunday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-05",
+        "2027": "2027-03-28",
+        "2028": "2028-04-16",
+        "2029": "2029-04-01",
+        "2030": "2030-04-21",
+        "2031": "2031-04-13",
+        "2032": "2032-03-28",
+        "2033": "2033-04-17",
+        "2034": "2034-04-09",
+        "2035": "2035-03-25"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/41376/celebration-colored-colorful-decoration-41376.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "International Workers' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/5321320/pexels-photo-5321320.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Army Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "06-30",
+      "image": "https://images.pexels.com/photos/1202727/pexels-photo-1202727.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Independence Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-15",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Revolution Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-20",
+      "image": "https://images.pexels.com/photos/36607660/pexels-photo-36607660.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "All Saints' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "11-01",
+      "image": "https://images.pexels.com/photos/7080457/pexels-photo-7080457.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Eve",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-24",
+      "image": "https://images.pexels.com/photos/63741/pexels-photo-63741.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Christmas Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/6518759/pexels-photo-6518759.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "New Year's Eve",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-31",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": [
+    {
+      "name": "Semana Santa (Antigua)",
+      "type": "cultural_festival",
+      "description": "Elaborate Holy Week celebrations with colorful sawdust carpets in Antigua",
+      "name_he": "סמנה סנטה - שבוע הקדוש",
+      "typical_months": [
+        4
+      ],
+      "location_ids": [
+        "guatemala"
+      ],
+      "image": "https://images.pexels.com/photos/19213853/pexels-photo-19213853.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ]
+}

@@ -1,0 +1,225 @@
+{
+  "country": "Taiwan",
+  "country_he": "טייוואן",
+  "country_id": "taiwan",
+  "country_code": "TW",
+  "generated_at": "2026-03-24T11:38:51.580699+00:00",
+  "years": [
+    2026,
+    2027,
+    2028,
+    2029,
+    2030,
+    2031,
+    2032,
+    2033,
+    2034,
+    2035
+  ],
+  "stats": {
+    "public_holidays": 24,
+    "cultural_festivals": 0,
+    "total": 24
+  },
+  "public_holidays": [
+    {
+      "name": "Republic Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/36677172/pexels-photo-36677172.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Lunar New Year Holiday",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-22",
+        "2027": "2027-02-10",
+        "2028": "2028-01-30",
+        "2029": "2029-02-17"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/3626475/pexels-photo-3626475.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Lunar New Year's Eve",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-16",
+        "2027": "2027-02-05",
+        "2028": "2028-01-25",
+        "2029": "2029-02-12"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/2800041/pexels-photo-2800041.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Lunar New Year's Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-02-17",
+        "2027": "2027-02-06",
+        "2028": "2028-01-26",
+        "2029": "2029-02-13"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/3626475/pexels-photo-3626475.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Peace Memorial Day Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-27",
+      "image": "https://images.pexels.com/photos/3303614/pexels-photo-3303614.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Peace Memorial Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "02-28",
+      "image": "https://images.pexels.com/photos/4252754/pexels-photo-4252754.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Children's Day Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-03",
+      "image": "https://images.pexels.com/photos/6437852/pexels-photo-6437852.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Children's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-04",
+      "image": "https://images.pexels.com/photos/36662753/pexels-photo-36662753.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Tomb Sweeping Day",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-04-05",
+        "2027": "2027-04-05",
+        "2028": "2028-04-04",
+        "2029": "2029-04-05"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/6220181/pexels-photo-6220181.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Tomb Sweeping Day Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-06",
+      "image": "https://images.pexels.com/photos/6220181/pexels-photo-6220181.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labor Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "05-01",
+      "image": "https://images.pexels.com/photos/769525/pexels-photo-769525.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Dragon Boat Festival",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-06-19",
+        "2027": "2027-06-09",
+        "2028": "2028-05-28",
+        "2029": "2029-06-16"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/4206619/pexels-photo-4206619.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Mid-Autumn Festival",
+      "type": "national_holiday",
+      "dates": {
+        "2026": "2026-09-25",
+        "2027": "2027-09-15",
+        "2028": "2028-10-03",
+        "2029": "2029-09-22"
+      },
+      "fixed_date": false,
+      "image": "https://images.pexels.com/photos/5372794/pexels-photo-5372794.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Teachers' Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "09-28",
+      "image": "https://images.pexels.com/photos/7005691/pexels-photo-7005691.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Day Holiday",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-09",
+      "image": "https://images.pexels.com/photos/4786198/pexels-photo-4786198.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-10",
+      "image": "https://images.pexels.com/photos/6303979/pexels-photo-6303979.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Day off for Taiwan's Retrocession Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-26",
+      "image": "https://images.pexels.com/photos/1128115/pexels-photo-1128115.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Constitution Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-25",
+      "image": "https://images.pexels.com/photos/1252509/pexels-photo-1252509.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Republic Day/New Year's Day",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "01-01",
+      "image": "https://images.pexels.com/photos/50556/fireworks-rockets-colors-explosion-50556.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Peace Memorial Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "03-01",
+      "image": "https://images.pexels.com/photos/29913484/pexels-photo-29913484.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Children's Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-05",
+      "image": "https://images.pexels.com/photos/375905/pexels-photo-375905.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Labor Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "04-30",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "National Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "10-11",
+      "image": "https://images.pexels.com/photos/4786198/pexels-photo-4786198.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    },
+    {
+      "name": "Republic Day/New Year's Day Observed",
+      "type": "national_holiday",
+      "fixed_date": true,
+      "date": "12-31",
+      "image": "https://images.pexels.com/photos/949592/pexels-photo-949592.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+    }
+  ],
+  "cultural_festivals": []
+}
