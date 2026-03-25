@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
+import { useToggleLike } from '@/hooks/useToggleLike';
 import { useItinerary } from '@/context/ItineraryContext';
 import { useFinance } from '@/context/FinanceContext';
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -50,7 +51,8 @@ const POIGroupPage = () => {
   const groupKey = searchParams.get('key') || '';
 
   const { activeTrip, tripLocations } = useActiveTrip();
-  const { pois, updatePOI } = usePOI();
+  const { pois } = usePOI();
+  const { toggleLike } = useToggleLike();
   const { itineraryDays } = useItinerary();
   const { formatDualCurrency } = useFinance();
   const { t } = useTranslation();
@@ -258,9 +260,7 @@ const POIGroupPage = () => {
 
   const handleToggleLike = async (poi: PointOfInterest, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(poi.status)) return;
-    const newStatus: POIStatus = poi.status === 'interested' ? 'suggested' : 'interested';
-    await updatePOI({ ...poi, status: newStatus });
+    await toggleLike(poi);
   };
 
   if (!activeTrip) {

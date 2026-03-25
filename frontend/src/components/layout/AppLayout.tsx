@@ -10,6 +10,10 @@ interface AppLayoutProps {
   hideHero?: boolean;
   /** When true, children fill all available height (no scroll on mobile) */
   fillHeight?: boolean;
+  /** Override the hero image URL (e.g. with a location image instead of country) */
+  heroImageOverride?: string | null;
+  /** Override the hero/header title (e.g. "Country — City" instead of trip name) */
+  heroTitleOverride?: string;
 }
 
 // Persists across page navigations (AppLayout remounts per page)
@@ -20,7 +24,7 @@ function getHeroHeight() {
   return window.innerWidth >= 768 ? HERO_HEIGHT : HERO_HEIGHT_MOBILE;
 }
 
-export function AppLayout({ children, hideHero = false, fillHeight = false }: AppLayoutProps) {
+export function AppLayout({ children, hideHero = false, fillHeight = false, heroImageOverride, heroTitleOverride }: AppLayoutProps) {
   const { activeTripId } = useTripList();
   const destinationImageUrl = useDestinationImageUrl();
   const hasHero = !hideHero && !!destinationImageUrl;
@@ -93,8 +97,8 @@ export function AppLayout({ children, hideHero = false, fillHeight = false }: Ap
   // Normal pages: native document scroll (most reliable on mobile)
   return (
     <>
-      {!hideHero && <DestinationHero />}
-      <AppHeader heroScrolledPast={hideHero ? true : heroScrolledPast} hasHero={hasHero} />
+      {!hideHero && <DestinationHero heroImageOverride={heroImageOverride} heroTitleOverride={heroTitleOverride} />}
+      <AppHeader heroScrolledPast={hideHero ? true : heroScrolledPast} hasHero={hasHero} heroTitleOverride={heroTitleOverride} />
       <main className="container px-1.5 sm:px-6 py-4 sm:py-6 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-6 min-h-screen">
         {children}
       </main>

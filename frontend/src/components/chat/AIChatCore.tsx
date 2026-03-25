@@ -55,9 +55,11 @@ interface AIChatCoreProps {
   /** Compact mode for embedded panels — smaller text, less padding */
   compact?: boolean;
   className?: string;
+  /** Pre-fill the input with this message when the chat opens */
+  initialMessage?: string;
 }
 
-export function AIChatCore({ tripContext, compact = false, className }: AIChatCoreProps) {
+export function AIChatCore({ tripContext, compact = false, className, initialMessage }: AIChatCoreProps) {
   const { t } = useTranslation();
   const tripId = tripContext.tripId;
   const [messages, setMessages] = useState<Message[]>(() =>
@@ -108,6 +110,15 @@ export function AIChatCore({ tripContext, compact = false, className }: AIChatCo
       tripSessions.set(tripId, messages);
     }
   }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pre-fill input when initialMessage is provided
+  useEffect(() => {
+    if (initialMessage) {
+      setInput(initialMessage);
+      // Focus the input after a tick so the sheet is visible
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [initialMessage]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {

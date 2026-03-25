@@ -36,6 +36,8 @@ interface AIChatSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tripContext: TripContext | null;
+  /** Pre-fill the input with this message when the chat opens */
+  initialMessage?: string;
 }
 
 const MAX_INPUT = 2000;
@@ -69,7 +71,7 @@ If the conversation is NOT about a multi-day plan (just general recommendations)
 In both cases, start with Line 1: A short summary of what the user wanted (e.g. "The user asked for a 3-day itinerary in Tokyo" or "The user asked for romantic restaurants in Tel Aviv"), then an empty line, then the places.
 No descriptions, no tips, no extra text — just the summary line and the place names (grouped by day if applicable).`;
 
-export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProps) {
+export function AIChatSheet({ open, onOpenChange, tripContext, initialMessage }: AIChatSheetProps) {
   const { t } = useTranslation();
   const tripId = tripContext?.tripId || null;
   const [messages, setMessages] = useState<Message[]>(() =>
@@ -124,6 +126,14 @@ export function AIChatSheet({ open, onOpenChange, tripContext }: AIChatSheetProp
       tripSessions.set(tripId, messages);
     }
   }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Pre-fill input when initialMessage is provided
+  useEffect(() => {
+    if (initialMessage) {
+      setInput(initialMessage);
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [initialMessage]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {

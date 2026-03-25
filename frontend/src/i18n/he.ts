@@ -680,6 +680,8 @@ const he = {
     selected: 'נבחר',
     markAsSelected: 'סמן כנבחר',
     otherPlaces: 'מקומות אחרים',
+    recommendAttractions: 'תמליץ לי על אטרקציות',
+    recommendPrompt: 'תמליץ לי על אטרקציות ב{{location}}',
     noItemsAvailable: 'אין פריטים זמינים',
     accommodation: 'לינה',
     createBookingTask: 'צור משימת הזמנה',

@@ -1260,20 +1260,25 @@ export default function SchedulePage() {
     }, 800);
   }, [selectedResearchLocId]);
 
+  // Active detail location (desktop or mobile)
+  const activeDetailLocId = selectedResearchLocId || mobileDetailLocId;
+  const activeDetailLoc = useMemo(() =>
+    activeDetailLocId ? researchLocations.find(l => l.id === activeDetailLocId) : undefined,
+    [researchLocations, activeDetailLocId],
+  );
+  const locationImageUrl = activeDetailLoc?.imageUrl || null;
+
   // Geocode selected research location for map + fetch boundary + image
-  const selectedLocName = selectedResearchLocId ? researchLocNameMap.get(selectedResearchLocId) : undefined;
+  const selectedLocName = activeDetailLocId ? researchLocNameMap.get(activeDetailLocId) : undefined;
   const selectedTripLocation = useMemo(() => {
-    if (!selectedResearchLocId) return undefined;
-    const il = researchLocations.find(l => l.id === selectedResearchLocId);
+    if (!activeDetailLocId) return undefined;
+    const il = researchLocations.find(l => l.id === activeDetailLocId);
     return il?.tripLocationId ? tripLocations.find(tl => tl.id === il.tripLocationId) : undefined;
-  }, [selectedResearchLocId, researchLocations, tripLocations]);
+  }, [activeDetailLocId, researchLocations, tripLocations]);
   const isCity = selectedTripLocation?.siteType === 'city' || selectedTripLocation?.siteType === 'town' || selectedTripLocation?.siteType === 'village';
 
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locationBoundary, setLocationBoundary] = useState<GeoJSON.GeoJsonObject | null>(null);
-
-  // Image comes from the persisted imageUrl on the itinerary location
-  const locationImageUrl = selectedResearchLocation?.imageUrl || null;
 
   // Find the country of the selected location (for geocoding disambiguation)
   const selectedLocCountry = useMemo(() => {
@@ -1373,6 +1378,11 @@ export default function SchedulePage() {
       toast({ title: t('common.error'), variant: 'destructive' });
     }
   }, [selectedResearchDay, refetchItinerary, t, toast]);
+
+  // Open AI chat with a recommendation request for a location
+  const handleRecommendAttractions = useCallback((locationName: string) => {
+    window.dispatchEvent(new CustomEvent('research-recommend', { detail: { locationName } }));
+  }, []);
 
   // Transition from research to planning (location-aware)
   const handleLocationBasedTransition = useCallback(async () => {
@@ -2810,7 +2820,7 @@ export default function SchedulePage() {
   const groups = buildGroups(scheduled, lockedIds);
 
   return (
-    <AppLayout>
+    <AppLayout heroImageOverride={locationImageUrl} heroTitleOverride={selectedLocName ? `${selectedLocCountry || ''} — ${selectedLocName}` : undefined}>
       <div className="flex flex-col gap-3 w-full px-1 sm:px-4 md:h-full" dir={isRTL ? 'rtl' : 'ltr'}>
 
         <DndContext
@@ -2850,7 +2860,7 @@ export default function SchedulePage() {
                         >
                           <ChevronLeft size={20} className={isRTL ? 'rotate-180' : ''} />
                         </button>
-                        <h3 className="text-base font-semibold flex-1 truncate">{detailName}</h3>
+                        <div className="flex-1" />
                         <button
                           type="button"
                           onClick={() => handleDeleteResearchLocation(mobileDetailLocId)}
@@ -2861,13 +2871,6 @@ export default function SchedulePage() {
                       </div>
                       {/* Content */}
                       <div className="space-y-3">
-                        {/* Location image */}
-                        {detailLoc?.imageUrl && (
-                          <div className="rounded-xl overflow-hidden border bg-muted aspect-[16/9]">
-                            <img src={detailLoc.imageUrl} alt={detailName} className="w-full h-full object-cover" />
-                          </div>
-                        )}
-
                         {/* Map */}
                         {locationCoords && (
                           <div className="rounded-xl overflow-hidden border bg-muted h-[200px]">
@@ -2930,6 +2933,8 @@ export default function SchedulePage() {
                           countries={activeTrip?.countries}
                           hideHeader
                           hideEmptyState
+                          hideOtherLocations
+                          onRecommend={() => handleRecommendAttractions(detailName)}
                         />
 
                         {/* Notes */}
@@ -3015,7 +3020,7 @@ export default function SchedulePage() {
                         <button type="button" onClick={() => setSelectedResearchLocId(null)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
                           <ChevronLeft size={20} className={isRTL ? 'rotate-180' : ''} />
                         </button>
-                        <h3 className="text-lg font-semibold flex-1 truncate">{detailName}</h3>
+                        <div className="flex-1" />
                         <button
                           type="button"
                           onClick={() => handleDeleteResearchLocation(selectedResearchLocId)}
@@ -3088,6 +3093,8 @@ export default function SchedulePage() {
                                 countries={activeTrip?.countries} hideHeader hideEmptyState
                                 externalOpen={addActivityOpen}
                                 onExternalOpenChange={setAddActivityOpen}
+                                hideOtherLocations
+                                onRecommend={() => handleRecommendAttractions(researchLocNameMap.get(selectedResearchLocId) || '')}
                               />
                             </div>
                           </div>
@@ -3095,11 +3102,6 @@ export default function SchedulePage() {
 
                         {/* Right 1/3: image, map, notes */}
                         <div className="w-1/3 shrink-0 flex flex-col gap-2 min-h-0 overflow-hidden">
-                          {detailLoc?.imageUrl && (
-                            <div className="rounded-lg overflow-hidden border bg-muted h-[100px] shrink-0">
-                              <img src={detailLoc.imageUrl} alt={detailName} className="w-full h-full object-cover" />
-                            </div>
-                          )}
                           <div className="rounded-lg overflow-hidden border bg-muted flex-1 min-h-[160px] shrink-0">
                             {locationCoords ? (
                               <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Loading...</div>}>

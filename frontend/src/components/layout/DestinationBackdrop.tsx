@@ -51,10 +51,11 @@ export function useDestinationImageUrl(): string | null {
   }, [tree, activeTrip]);
 }
 
-export function DestinationHero() {
+export function DestinationHero({ heroImageOverride, heroTitleOverride }: { heroImageOverride?: string | null; heroTitleOverride?: string } = {}) {
   const { trips, activeTripId } = useTripList();
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId) || null, [trips, activeTripId]);
-  const imageUrl = useDestinationImageUrl();
+  const defaultImageUrl = useDestinationImageUrl();
+  const imageUrl = heroImageOverride || defaultImageUrl;
 
   if (!imageUrl) return null;
 
@@ -75,9 +76,9 @@ export function DestinationHero() {
         <div className="absolute inset-0 flex items-end">
           <div className="container px-6 pb-8">
             <h1 className="text-2xl font-bold text-white drop-shadow-lg">
-              {activeTrip?.name}
+              {heroTitleOverride || activeTrip?.name}
             </h1>
-            {activeTrip?.countries && activeTrip.countries.length > 0 && (
+            {!heroTitleOverride && activeTrip?.countries && activeTrip.countries.length > 0 && (
               <p className="text-sm text-white/80 mt-1 drop-shadow">
                 {activeTrip.countries.join(' · ')}
               </p>
@@ -101,9 +102,9 @@ export function DestinationHero() {
         <div className="absolute inset-0 flex items-end">
           <div className="px-4 pb-3">
             <h1 className="text-lg font-bold text-white drop-shadow-lg">
-              {activeTrip?.name}
+              {heroTitleOverride || activeTrip?.name}
             </h1>
-            {activeTrip?.countries && activeTrip.countries.length > 0 && (
+            {!heroTitleOverride && activeTrip?.countries && activeTrip.countries.length > 0 && (
               <p className="text-xs text-white/80 drop-shadow">
                 {activeTrip.countries.join(' · ')}
               </p>

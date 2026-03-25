@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, X, Star, Moon, Heart, ArrowRight, CalendarDays } from 'lucide-react';
+import { Plus, X, Star, Moon, Heart, ArrowRight, CalendarDays, Sparkles } from 'lucide-react';
 import { LocationSelector } from '@/components/shared/LocationSelector';
 import { SubCategorySelector } from '@/components/shared/SubCategorySelector';
 import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
@@ -56,6 +56,10 @@ export interface DaySectionProps {
   onOpen?: (id: string) => void;
   externalOpen?: boolean;
   onExternalOpenChange?: (open: boolean) => void;
+  /** Hide items from other locations (show only local) */
+  hideOtherLocations?: boolean;
+  /** Callback to request AI recommendations for the current location */
+  onRecommend?: () => void;
 }
 
 
@@ -78,6 +82,7 @@ export function DaySection({
   showBookingMissionOption, locationContext, countries,
   hideHeader, hideEmptyState, onMoveToSchedule, onMoveToDay, tripDays, selectedDayNum, onOpen,
   externalOpen, onExternalOpenChange,
+  hideOtherLocations, onRecommend,
 }: DaySectionProps) {
   const { t } = useTranslation();
   const [internalOpen, setInternalOpen] = useState(false);
@@ -245,25 +250,41 @@ export function DaySection({
                       ))}
                     </>
                   )}
-                  {localItems.length > 0 && otherItems.length > 0 && (
-                    <div className="border-t my-1" />
+                  {!hideOtherLocations && (
+                    <>
+                      {localItems.length > 0 && otherItems.length > 0 && (
+                        <div className="border-t my-1" />
+                      )}
+                      {otherItems.length > 0 && locationContext && localItems.length > 0 && (
+                        <p className="text-xs font-semibold text-muted-foreground px-3 pt-1">{t('timeline.otherPlaces')}</p>
+                      )}
+                      {otherItems.map(item => (
+                        <button
+                          key={item.id}
+                          onClick={() => { onAdd(item.id, entityType === 'accommodation' ? nights : undefined, createBookingMission); setShowPicker(false); setNights(1); setCreateBookingMission(false); }}
+                          className="w-full text-right px-3 py-2 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
+                        >
+                          {item.status !== 'suggested' && <Heart size={12} className="text-red-500 shrink-0" fill="currentColor" />}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{item.label}</p>
+                            {item.sublabel && <p className="text-xs text-muted-foreground">{item.sublabel}</p>}
+                          </div>
+                        </button>
+                      ))}
+                    </>
                   )}
-                  {otherItems.length > 0 && locationContext && localItems.length > 0 && (
-                    <p className="text-xs font-semibold text-muted-foreground px-3 pt-1">{t('timeline.otherPlaces')}</p>
+                  {onRecommend && (
+                    <>
+                      <div className="border-t my-1" />
+                      <button
+                        onClick={() => { onRecommend(); setShowPicker(false); }}
+                        className="w-full text-right px-3 py-2.5 rounded-lg hover:bg-primary/10 transition-colors flex items-center gap-2 text-primary"
+                      >
+                        <Sparkles size={14} className="shrink-0" />
+                        <span className="text-sm font-medium">{t('timeline.recommendAttractions')}</span>
+                      </button>
+                    </>
                   )}
-                  {otherItems.map(item => (
-                    <button
-                      key={item.id}
-                      onClick={() => { onAdd(item.id, entityType === 'accommodation' ? nights : undefined, createBookingMission); setShowPicker(false); setNights(1); setCreateBookingMission(false); }}
-                      className="w-full text-right px-3 py-2 rounded-lg hover:bg-muted transition-colors flex items-center gap-2"
-                    >
-                      {item.status !== 'suggested' && <Heart size={12} className="text-red-500 shrink-0" fill="currentColor" />}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{item.label}</p>
-                        {item.sublabel && <p className="text-xs text-muted-foreground">{item.sublabel}</p>}
-                      </div>
-                    </button>
-                  ))}
                 </div>
               )}
               {showBookingMissionOption && (

@@ -682,6 +682,8 @@ const en = {
     selected: 'Selected',
     markAsSelected: 'Mark as selected',
     otherPlaces: 'Other places',
+    recommendAttractions: 'Recommend attractions',
+    recommendPrompt: 'Recommend attractions in {{location}}',
     noItemsAvailable: 'No items available',
     accommodation: 'Accommodation',
     createBookingTask: 'Create booking task',

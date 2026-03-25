@@ -11,6 +11,7 @@ import { BoundaryLayer } from '@/components/map/BoundaryLayer';
 import { MapBreadcrumb } from '@/components/map/MapBreadcrumb';
 import { AppLayout } from '@/components/layout';
 import { Badge } from '@/components/ui/badge';
+import { useToggleLike } from '@/hooks/useToggleLike';
 import type { POIStatus } from '@/types/trip';
 
 import { createPOIIcon, createTransportIcon, POI_COLORS, TRANSPORT_COLORS, FitBounds } from '@/components/map/mapUtils';
@@ -24,7 +25,8 @@ const ALL_STATUSES: POIStatus[] = ['suggested', 'interested', 'planned', 'schedu
 const MapPage = () => {
   const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
-  const { pois, updatePOI } = usePOI();
+  const { pois } = usePOI();
+  const { toggleLike } = useToggleLike();
   const { transportation } = useTransport();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [legendOpen, setLegendOpen] = useState(false);
@@ -221,9 +223,7 @@ const MapPage = () => {
                             onClick={(e) => {
                               e.stopPropagation(); e.preventDefault();
                               L.DomEvent.stopPropagation(e.nativeEvent);
-                              if (!canToggle) return;
-                              const newStatus = m.status === 'interested' ? 'suggested' : 'interested';
-                              updatePOI({ ...m.poiRef, status: newStatus });
+                              toggleLike(m.poiRef);
                             }}
                             style={{
                               background: 'none', border: 'none', cursor: canToggle ? 'pointer' : 'default',

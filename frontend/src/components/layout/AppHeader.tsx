@@ -93,6 +93,7 @@ const COMMON_CURRENCIES = [
 interface AppHeaderProps {
   heroScrolledPast?: boolean;
   hasHero?: boolean;
+  heroTitleOverride?: string;
 }
 
 const LANGUAGE_OPTIONS = [
@@ -100,7 +101,7 @@ const LANGUAGE_OPTIONS = [
   { code: 'en' as const, label: 'English' },
 ];
 
-export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHeaderProps) {
+export function AppHeader({ heroScrolledPast = false, hasHero = false, heroTitleOverride }: AppHeaderProps) {
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
   const location = useLocation();
@@ -120,6 +121,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
   const [locationTreeOpen, setLocationTreeOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [aiChatOpen, setAiChatOpen] = useState(false);
+  const [aiChatInitialMessage, setAiChatInitialMessage] = useState<string | undefined>();
   const [tierDialogOpen, setTierDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -145,6 +147,19 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
     window.addEventListener('inboxUnreadChanged', handler);
     return () => window.removeEventListener('inboxUnreadChanged', handler);
   }, []);
+
+  // Listen for research-recommend event to open AI chat with a pre-filled message
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const locationName = (e as CustomEvent).detail?.locationName;
+      if (locationName) {
+        setAiChatInitialMessage(t('timeline.recommendPrompt', { location: locationName }));
+        setAiChatOpen(true);
+      }
+    };
+    window.addEventListener('research-recommend', handler);
+    return () => window.removeEventListener('research-recommend', handler);
+  }, [t]);
 
   // Recalculate unread count from DB — called on mount + real-time changes
   const refreshUnread = useCallback(async () => {
@@ -233,7 +248,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
               'font-bold text-base truncate transition-opacity duration-300',
               hasHero && !heroScrolledPast ? 'opacity-0' : 'opacity-100'
             )}>
-              {activeTrip?.name || t('nav.triptomat')}
+              {heroTitleOverride || activeTrip?.name || t('nav.triptomat')}
             </span>
           </div>
 
@@ -354,7 +369,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
             'hidden md:block font-bold text-base truncate max-w-[200px] transition-all duration-300',
             heroScrolledPast ? 'opacity-100' : 'opacity-0'
           )}>
-            {activeTrip.name}
+            {heroTitleOverride || activeTrip.name}
           </span>
         )}
 
@@ -548,7 +563,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
       {/* AI Chat */}
       <AIChatSheet
         open={aiChatOpen}
-        onOpenChange={setAiChatOpen}
+        onOpenChange={(open) => { setAiChatOpen(open); if (!open) setAiChatInitialMessage(undefined); }}
         tripContext={activeTrip ? {
           tripId: activeTrip.id,
           tripName: activeTrip.name,
@@ -560,6 +575,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
           currency: activeTrip.currency,
           locations: (tripLocationTree || []).flatMap(n => [n.site, ...(n.sub_sites || []).flatMap(s => [s.site, ...(s.sub_sites || []).map(c => c.site)])]),
         } : null}
+        initialMessage={aiChatInitialMessage}
       />
 
       {/* User Preferences Dialog */}
