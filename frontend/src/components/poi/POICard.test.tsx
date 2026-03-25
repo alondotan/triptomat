@@ -9,6 +9,11 @@ vi.mock("react-i18next", () => ({
 
 vi.mock("@/context/POIContext", () => ({
   usePOI: () => ({ updatePOI: vi.fn() }),
+  POIContext: { Provider: ({ children }: { children: unknown }) => children },
+}));
+
+vi.mock("@/hooks/useResearchAutoAssign", () => ({
+  useResearchAutoAssign: () => ({ autoAssign: vi.fn(), isResearchMode: false }),
 }));
 
 vi.mock("@/lib/subCategoryConfig", () => ({
