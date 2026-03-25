@@ -212,41 +212,6 @@ function buildLocationIdMap(nodes: CountryLocationNode[]): Map<string, string> {
   return map;
 }
 
-// Fallback: legacy country-sites.json
-let countrySitesCache: { world_hierarchy: SiteNode[] } | null = null;
-
-async function loadCountrySites(): Promise<{ world_hierarchy: SiteNode[] }> {
-  if (countrySitesCache) return countrySitesCache;
-  const res = await fetch('/data/country-sites.json');
-  countrySitesCache = await res.json();
-  return countrySitesCache!;
-}
-
-const COUNTRY_ALIASES: Record<string, string> = {
-  'usa': 'united states of america',
-  'uk': 'united kingdom',
-  'uae': 'united arab emirates',
-};
-
-function findCountryNode(nodes: SiteNode[], countryName: string): SiteNode | null {
-  const lower = COUNTRY_ALIASES[countryName.toLowerCase()] || countryName.toLowerCase();
-  let partialMatch: SiteNode | null = null;
-
-  for (const node of nodes) {
-    if (node.site_type === 'country') {
-      const nodeLower = node.site.toLowerCase();
-      if (nodeLower === lower) return node;
-      if (!partialMatch && (nodeLower.startsWith(lower) || lower.startsWith(nodeLower))) {
-        partialMatch = node;
-      }
-    }
-    if (node.sub_sites) {
-      const found = findCountryNode(node.sub_sites, countryName);
-      if (found) return found;
-    }
-  }
-  return partialMatch;
-}
 
 export async function seedTripLocations(tripId: string, countries: string[]): Promise<void> {
   console.log('[seedTripLocations] Starting seed for trip', tripId, 'countries:', countries);
@@ -276,15 +241,7 @@ export async function seedTripLocations(tripId: string, countries: string[]): Pr
         });
       }
     } else {
-      // Fallback to legacy country-sites.json
-      const legacy = await loadCountrySites();
-      const node = findCountryNode(legacy.world_hierarchy, country);
-      if (node) {
-        countryNodes.push(node);
-        console.log(`[seedTripLocations] Fallback to country-sites.json: ${node.site}`);
-      } else {
-        console.warn(`[seedTripLocations] Country not found: "${country}"`);
-      }
+      console.warn(`[seedTripLocations] No per-country file found for: "${country}"`);
     }
   }
 

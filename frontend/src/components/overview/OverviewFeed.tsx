@@ -260,7 +260,7 @@ export function OverviewFeed() {
           title={t('overview.attractions')}
           icon={MapPin}
           count={allAttractions.length}
-          linkTo="/pois?scrollTo=attraction"
+          linkTo="/attractions"
           iconColor="text-blue-500"
         >
           {attractionsCarousel.length === 0 ? (
@@ -281,7 +281,7 @@ export function OverviewFeed() {
           title={t('overview.events')}
           icon={Calendar}
           count={allEvents.length}
-          linkTo="/pois?scrollTo=event"
+          linkTo="/events"
           iconColor="text-purple-500"
         >
           {eventsCarousel.length === 0 ? (
@@ -302,7 +302,7 @@ export function OverviewFeed() {
           title={t('overview.eateries')}
           icon={Utensils}
           count={allEateries.length}
-          linkTo="/pois?scrollTo=eatery"
+          linkTo="/eateries"
           iconColor="text-orange-500"
         >
           {eateriesCarousel.length === 0 ? (

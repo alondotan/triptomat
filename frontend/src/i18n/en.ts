@@ -2,8 +2,10 @@ const en = {
   // ── Navigation ──
   nav: {
     timeline: 'Plan',
-    pois: 'POIs',
-    stay: 'Stay',
+    attractions: 'Attractions',
+    events: 'Events',
+    eateries: 'Restaurants',
+    stay: 'Accommodation',
     transport: 'Transport',
     recs: 'Recs',
     itinerary: 'Itinerary',
@@ -23,7 +25,7 @@ const en = {
     triptomat: 'Triptomat',
     aiAssistant: 'AI Travel Assistant',
     resources: 'Resources',
-    home: 'Places',
+    home: 'Recommendations',
     weather: 'Weather',
   },
 
@@ -55,6 +57,7 @@ const en = {
     tryAgain: 'Try Again',
     somethingWentWrong: 'Something went wrong',
     noResults: 'No results',
+    back: 'Back',
   },
 
   // ── POI Statuses ──
@@ -254,6 +257,15 @@ const en = {
   },
 
   // ── POIs Page ──
+  attractionsPage: {
+    title: 'Attractions',
+  },
+  eventsPage: {
+    title: 'Events',
+  },
+  eateriesPage: {
+    title: 'Restaurants',
+  },
   poisPage: {
     title: 'Points of Interest',
     filterSortSearch: 'Filter, Sort & Search',
@@ -274,6 +286,7 @@ const en = {
   // ── Create POI Form ──
   createPOI: {
     title: 'Add Point of Interest',
+    editTitle: 'Edit Point of Interest',
     basicInfo: 'Basic Info',
     name: 'Name *',
     namePlaceholder: 'e.g. Eiffel Tower',
@@ -314,6 +327,7 @@ const en = {
     cannotUndo: 'This action cannot be undone.',
     category: 'Category',
     subCategory: 'Sub-category',
+    country: 'Country',
     location: 'Location',
     address: 'Address',
     cost: 'Cost',

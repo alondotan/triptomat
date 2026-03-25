@@ -37,9 +37,12 @@ const STATUS_KEYS: Record<string, string> = {
 import { supabase } from '@/integrations/supabase/client';
 
 interface POIDetailDialogProps {
-  poi: PointOfInterest;
+  /** Existing POI to edit. When omitted, the dialog is in create mode. */
+  poi?: PointOfInterest;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Create mode only: pre-fill the category (e.g. 'accommodation' from FAB) */
+  initialCategory?: POICategory;
 }
 
 interface RecommendationQuote {
@@ -48,91 +51,122 @@ interface RecommendationQuote {
   recommendationId: string;
 }
 
-export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProps) {
+export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: POIDetailDialogProps) {
   const { t } = useTranslation();
-  const { updatePOI, deletePOI } = usePOI();
+  const { addPOI, updatePOI, deletePOI } = usePOI();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const { activeTrip } = useActiveTrip();
   const { refetchItinerary } = useItinerary();
   const { isResearch, isPlanning } = useTripMode();
 
-  // Editable fields
-  const [name, setName] = useState(poi.name);
-  const [category, setCategory] = useState<POICategory>(poi.category);
-  const [subCategory, setSubCategory] = useState(poi.subCategory || '');
-  const [isBooked, setIsBooked] = useState(poi.status === 'booked');
-  const [city, setCity] = useState(poi.location.city || '');
-  const [country, setCountry] = useState(poi.location.country || '');
-  const [address, setAddress] = useState(poi.location.address || '');
-  const [costAmount, setCostAmount] = useState(poi.details.cost?.amount?.toString() || '');
-  const [costCurrency, setCostCurrency] = useState(poi.details.cost?.currency || activeTrip?.currency || 'ILS');
-  const [isPaid, setIsPaid] = useState(poi.isPaid);
-  const [notes, setNotes] = useState(poi.details.notes?.user_summary || '');
+  const isCreateMode = !poi;
+  const tripCountries = activeTrip?.countries || [];
+  const defaultCountry = tripCountries.length === 1 ? tripCountries[0] : '';
 
-  // Accommodation fields
-  const [checkinDate, setCheckinDate] = useState(poi.details.accommodation_details?.checkin?.date || '');
-  const [checkinHour, setCheckinHour] = useState(poi.details.accommodation_details?.checkin?.hour || '');
-  const [checkoutDate, setCheckoutDate] = useState(poi.details.accommodation_details?.checkout?.date || '');
-  const [checkoutHour, setCheckoutHour] = useState(poi.details.accommodation_details?.checkout?.hour || '');
-  const [roomType, setRoomType] = useState(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
-  const [occupancy, setOccupancy] = useState(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
-  const [freeCancellationUntil, setFreeCancellationUntil] = useState(() => {
-    const val = poi.details.accommodation_details?.free_cancellation_until
-      || poi.details.free_cancellation_until;
-    return val ? val.slice(0, 16) : '';
-  });
-
-  // Booking fields (multiple time slots)
-  const [bookings, setBookings] = useState<Array<{ date: string; hour: string }>>(
-    (poi.details.bookings || []).map(b => ({
+  // Helper: get field defaults from poi or blank
+  const defaults = () => ({
+    name: poi?.name || '',
+    category: poi?.category || initialCategory || 'attraction' as POICategory,
+    subCategory: poi?.subCategory || '',
+    isBooked: poi?.status === 'booked',
+    city: poi?.location.city || '',
+    country: poi?.location.country || defaultCountry,
+    address: poi?.location.address || '',
+    costAmount: poi?.details.cost?.amount?.toString() || '',
+    costCurrency: poi?.details.cost?.currency || activeTrip?.currency || 'ILS',
+    isPaid: poi?.isPaid || false,
+    notes: poi?.details.notes?.user_summary || '',
+    checkinDate: poi?.details.accommodation_details?.checkin?.date || '',
+    checkinHour: poi?.details.accommodation_details?.checkin?.hour || '',
+    checkoutDate: poi?.details.accommodation_details?.checkout?.date || '',
+    checkoutHour: poi?.details.accommodation_details?.checkout?.hour || '',
+    roomType: poi?.details.accommodation_details?.rooms?.[0]?.room_type || '',
+    occupancy: poi?.details.accommodation_details?.rooms?.[0]?.occupancy || '',
+    freeCancellationUntil: (() => {
+      const val = poi?.details.accommodation_details?.free_cancellation_until
+        || poi?.details.free_cancellation_until;
+      return val ? val.slice(0, 16) : '';
+    })(),
+    bookings: (poi?.details.bookings || []).map(b => ({
       date: b.reservation_date || (b.trip_day_number != null ? String(b.trip_day_number) : ''),
       hour: b.reservation_hour || '',
-    }))
-  );
-  const [orderNumber, setOrderNumber] = useState(poi.details.order_number || '');
-  const [duration, setDuration] = useState(poi.details.activity_details?.duration?.toString() || '');
+    })),
+    orderNumber: poi?.details.order_number || '',
+    duration: poi?.details.activity_details?.duration?.toString() || '',
+  });
+
+  // Editable fields
+  const [name, setName] = useState('');
+  const [category, setCategory] = useState<POICategory>('attraction');
+  const [subCategory, setSubCategory] = useState('');
+  const [isBooked, setIsBooked] = useState(false);
+  const [city, setCity] = useState('');
+  const [country, setCountry] = useState('');
+  const [manualCountry, setManualCountry] = useState(false);
+  const [address, setAddress] = useState('');
+  const [costAmount, setCostAmount] = useState('');
+  const [costCurrency, setCostCurrency] = useState(activeTrip?.currency || 'ILS');
+  const [isPaid, setIsPaid] = useState(false);
+  const [notes, setNotes] = useState('');
+
+  // Accommodation fields
+  const [checkinDate, setCheckinDate] = useState('');
+  const [checkinHour, setCheckinHour] = useState('');
+  const [checkoutDate, setCheckoutDate] = useState('');
+  const [checkoutHour, setCheckoutHour] = useState('');
+  const [roomType, setRoomType] = useState('');
+  const [occupancy, setOccupancy] = useState('');
+  const [freeCancellationUntil, setFreeCancellationUntil] = useState('');
+
+  // Booking fields (multiple time slots)
+  const [bookings, setBookings] = useState<Array<{ date: string; hour: string }>>([]);
+  const [orderNumber, setOrderNumber] = useState('');
+  const [duration, setDuration] = useState('');
   const DURATION_PRESETS = ['30','60','90','120','180','480'];
-  const [isCustomDuration, setIsCustomDuration] = useState(duration !== '' && !DURATION_PRESETS.includes(duration));
+  const [isCustomDuration, setIsCustomDuration] = useState(false);
 
   // Recommendation quotes
   const [quotes, setQuotes] = useState<RecommendationQuote[]>([]);
 
-  // Reset fields when poi changes
-  useEffect(() => {
-    setName(poi.name);
-    setCategory(poi.category);
-    setSubCategory(poi.subCategory || '');
-    setIsBooked(poi.status === 'booked');
-    setCity(poi.location.city || '');
-    setCountry(poi.location.country || '');
-    setAddress(poi.location.address || '');
-    setCostAmount(poi.details.cost?.amount?.toString() || '');
-    setCostCurrency(poi.details.cost?.currency || activeTrip?.currency || 'ILS');
-    setIsPaid(poi.isPaid);
-    setNotes(poi.details.notes?.user_summary || '');
-    setCheckinDate(poi.details.accommodation_details?.checkin?.date || '');
-    setCheckinHour(poi.details.accommodation_details?.checkin?.hour || '');
-    setCheckoutDate(poi.details.accommodation_details?.checkout?.date || '');
-    setCheckoutHour(poi.details.accommodation_details?.checkout?.hour || '');
-    setRoomType(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
-    setOccupancy(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
-    setBookings((poi.details.bookings || []).map(b => ({
-      date: b.reservation_date || (b.trip_day_number != null ? String(b.trip_day_number) : ''),
-      hour: b.reservation_hour || '',
-    })));
-    setOrderNumber(poi.details.order_number || '');
-    const fcVal = poi.details.accommodation_details?.free_cancellation_until
-      || poi.details.free_cancellation_until;
-    setFreeCancellationUntil(fcVal ? fcVal.slice(0, 16) : '');
-    const dur = poi.details.activity_details?.duration?.toString() || '';
-    setDuration(dur);
-    setIsCustomDuration(dur !== '' && !DURATION_PRESETS.includes(dur));
-  }, [poi]);
+  // Reset all fields from defaults when dialog opens or poi changes
+  const resetFields = () => {
+    const d = defaults();
+    setName(d.name);
+    setCategory(d.category);
+    setSubCategory(d.subCategory);
+    setIsBooked(d.isBooked);
+    setCity(d.city);
+    setCountry(d.country);
+    setManualCountry(false);
+    setAddress(d.address);
+    setCostAmount(d.costAmount);
+    setCostCurrency(d.costCurrency);
+    setIsPaid(d.isPaid);
+    setNotes(d.notes);
+    setCheckinDate(d.checkinDate);
+    setCheckinHour(d.checkinHour);
+    setCheckoutDate(d.checkoutDate);
+    setCheckoutHour(d.checkoutHour);
+    setRoomType(d.roomType);
+    setOccupancy(d.occupancy);
+    setFreeCancellationUntil(d.freeCancellationUntil);
+    setBookings(d.bookings);
+    setOrderNumber(d.orderNumber);
+    setDuration(d.duration);
+    setIsCustomDuration(d.duration !== '' && !DURATION_PRESETS.includes(d.duration));
+    setEditingName(false);
+    setShowDeleteConfirm(false);
+  };
 
-  // Fetch recommendation quotes
+  // Reset fields when dialog opens or poi changes
   useEffect(() => {
-    if (!open) return;
+    if (open) resetFields();
+  }, [open, poi?.id]);
+
+  // Fetch recommendation quotes (edit mode only)
+  useEffect(() => {
+    if (!open || !poi) { setQuotes([]); return; }
     const recIds = poi.sourceRefs.recommendation_ids || [];
     const detailQuotes: RecommendationQuote[] = [];
 
@@ -180,113 +214,130 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     } else {
       setQuotes(detailQuotes);
     }
-  }, [open, poi]);
+  }, [open, poi?.id]);
 
   const handleSave = async () => {
+    if (!activeTrip) return;
+    if (!name.trim()) return;
+
     // Auto-compute status from bookings and booked toggle
-    let finalStatus: POIStatus = poi.status;
+    let finalStatus: POIStatus = poi?.status || 'suggested';
     if (isBooked) {
       finalStatus = 'booked';
-    } else if (!['visited', 'skipped'].includes(poi.status)) {
+    } else if (!poi || !['visited', 'skipped'].includes(poi.status)) {
       const hasTime = bookings.some(b => b.date && b.hour);
-      const hasDate = bookings.some(b => b.date); // date holds either a date string or day number string
+      const hasDate = bookings.some(b => b.date);
       if (hasTime) finalStatus = 'scheduled';
       else if (hasDate) finalStatus = 'planned';
-      else if (poi.status === 'booked' || poi.status === 'scheduled' || poi.status === 'planned') {
-        // Was booked/scheduled/planned but all dates/times removed → downgrade to interested
+      else if (poi && (poi.status === 'booked' || poi.status === 'scheduled' || poi.status === 'planned')) {
         finalStatus = 'interested';
       }
     }
 
-    const updatedPOI: PointOfInterest = {
-      ...poi,
-      isPaid,
-      name,
-      category,
-      subCategory: subCategory || undefined,
-      status: finalStatus,
-      location: {
-        ...poi.location,
-        city: city || undefined,
-        country: country || undefined,
-        address: address || undefined,
-      },
-      details: {
-        ...poi.details,
-        cost: costAmount ? { amount: parseFloat(costAmount), currency: costCurrency } : poi.details.cost,
-        notes: notes ? { ...poi.details.notes, user_summary: notes } : poi.details.notes,
-        order_number: orderNumber || poi.details.order_number,
-        free_cancellation_until: category !== 'accommodation'
-          ? (freeCancellationUntil ? `${freeCancellationUntil}:00` : null)
-          : poi.details.free_cancellation_until,
-        bookings: bookings.filter(b => b.date).map(b => ({
-          ...(isPlanning
-            ? { trip_day_number: parseInt(b.date) }
-            : { reservation_date: b.date }),
-          reservation_hour: b.hour || undefined,
-        })),
-        activity_details: (category === 'eatery' || category === 'attraction') ? {
-          ...poi.details.activity_details,
-          duration: duration ? parseInt(duration) : undefined,
-        } : poi.details.activity_details,
-        accommodation_details: category === 'accommodation' ? {
-          ...poi.details.accommodation_details,
-          checkin: (checkinDate || checkinHour) ? { date: checkinDate || undefined, hour: checkinHour || undefined } : poi.details.accommodation_details?.checkin,
-          checkout: (checkoutDate || checkoutHour) ? { date: checkoutDate || undefined, hour: checkoutHour || undefined } : poi.details.accommodation_details?.checkout,
-          rooms: roomType ? [{ room_type: roomType, occupancy: occupancy || undefined }] : poi.details.accommodation_details?.rooms,
-          free_cancellation_until: freeCancellationUntil ? `${freeCancellationUntil}:00` : null,
-        } : poi.details.accommodation_details,
-      },
-    };
+    const builtBookings = bookings.filter(b => b.date).map(b => ({
+      ...(isPlanning
+        ? { trip_day_number: parseInt(b.date) }
+        : { reservation_date: b.date }),
+      reservation_hour: b.hour || undefined,
+    }));
 
-    await updatePOI(updatedPOI);
+    if (isCreateMode) {
+      // --- Create mode ---
+      await addPOI({
+        tripId: activeTrip.id,
+        category,
+        subCategory: subCategory || undefined,
+        name: name.trim(),
+        status: finalStatus,
+        location: {
+          city: city || undefined,
+          country: country || undefined,
+          address: address || undefined,
+        },
+        sourceRefs: { email_ids: [], recommendation_ids: [] },
+        details: {
+          cost: costAmount ? { amount: parseFloat(costAmount), currency: costCurrency } : undefined,
+          notes: notes ? { user_summary: notes } : undefined,
+          order_number: orderNumber || undefined,
+          bookings: builtBookings,
+          activity_details: (category === 'eatery' || category === 'attraction') && duration
+            ? { duration: parseInt(duration) } : undefined,
+          accommodation_details: category === 'accommodation' ? {
+            checkin: (checkinDate || checkinHour) ? { date: checkinDate || undefined, hour: checkinHour || undefined } : undefined,
+            checkout: (checkoutDate || checkoutHour) ? { date: checkoutDate || undefined, hour: checkoutHour || undefined } : undefined,
+            rooms: roomType ? [{ room_type: roomType, occupancy: occupancy || undefined }] : undefined,
+            free_cancellation_until: freeCancellationUntil ? `${freeCancellationUntil}:00` : undefined,
+          } : undefined,
+        },
+        isCancelled: false,
+        isPaid,
+      });
+    } else {
+      // --- Edit mode ---
+      const updatedPOI: PointOfInterest = {
+        ...poi,
+        isPaid,
+        name: name.trim(),
+        category,
+        subCategory: subCategory || undefined,
+        status: finalStatus,
+        location: {
+          ...poi.location,
+          city: city || undefined,
+          country: country || undefined,
+          address: address || undefined,
+        },
+        details: {
+          ...poi.details,
+          cost: costAmount ? { amount: parseFloat(costAmount), currency: costCurrency } : poi.details.cost,
+          notes: notes ? { ...poi.details.notes, user_summary: notes } : poi.details.notes,
+          order_number: orderNumber || poi.details.order_number,
+          free_cancellation_until: category !== 'accommodation'
+            ? (freeCancellationUntil ? `${freeCancellationUntil}:00` : null)
+            : poi.details.free_cancellation_until,
+          bookings: builtBookings,
+          activity_details: (category === 'eatery' || category === 'attraction') ? {
+            ...poi.details.activity_details,
+            duration: duration ? parseInt(duration) : undefined,
+          } : poi.details.activity_details,
+          accommodation_details: category === 'accommodation' ? {
+            ...poi.details.accommodation_details,
+            checkin: (checkinDate || checkinHour) ? { date: checkinDate || undefined, hour: checkinHour || undefined } : poi.details.accommodation_details?.checkin,
+            checkout: (checkoutDate || checkoutHour) ? { date: checkoutDate || undefined, hour: checkoutHour || undefined } : poi.details.accommodation_details?.checkout,
+            rooms: roomType ? [{ room_type: roomType, occupancy: occupancy || undefined }] : poi.details.accommodation_details?.rooms,
+            free_cancellation_until: freeCancellationUntil ? `${freeCancellationUntil}:00` : null,
+          } : poi.details.accommodation_details,
+        },
+      };
 
-    // Sync bookings to itinerary days (add/move/remove from days by date)
-    if (category === 'eatery' || category === 'attraction') {
-      const savedBookings: POIBooking[] = updatedPOI.details.bookings || [];
-      await syncActivityBookingsToDays(poi.tripId, poi.id, savedBookings);
-      await refetchItinerary();
+      await updatePOI(updatedPOI);
+
+      // Sync bookings to itinerary days (add/move/remove from days by date)
+      if (category === 'eatery' || category === 'attraction') {
+        const savedBookings: POIBooking[] = updatedPOI.details.bookings || [];
+        await syncActivityBookingsToDays(poi.tripId, poi.id, savedBookings);
+        await refetchItinerary();
+      }
     }
 
     onOpenChange(false);
   };
 
   const handleCancel = () => {
-    // Reset all fields to original poi values
-    setName(poi.name);
-    setCategory(poi.category);
-    setSubCategory(poi.subCategory || '');
-    setIsBooked(poi.status === 'booked');
-    setCity(poi.location.city || '');
-    setCountry(poi.location.country || '');
-    setAddress(poi.location.address || '');
-    setCostAmount(poi.details.cost?.amount?.toString() || '');
-    setCostCurrency(poi.details.cost?.currency || activeTrip?.currency || 'ILS');
-    setIsPaid(poi.isPaid);
-    setNotes(poi.details.notes?.user_summary || '');
-    setCheckinDate(poi.details.accommodation_details?.checkin?.date || '');
-    setCheckinHour(poi.details.accommodation_details?.checkin?.hour || '');
-    setCheckoutDate(poi.details.accommodation_details?.checkout?.date || '');
-    setCheckoutHour(poi.details.accommodation_details?.checkout?.hour || '');
-    setRoomType(poi.details.accommodation_details?.rooms?.[0]?.room_type || '');
-    setOccupancy(poi.details.accommodation_details?.rooms?.[0]?.occupancy || '');
-    setBookings((poi.details.bookings || []).map(b => ({
-      date: b.reservation_date || (b.trip_day_number != null ? String(b.trip_day_number) : ''),
-      hour: b.reservation_hour || '',
-    })));
-    setOrderNumber(poi.details.order_number || '');
-    setDuration(poi.details.activity_details?.duration?.toString() || '');
+    resetFields();
     onOpenChange(false);
   };
 
   const handleDelete = async () => {
-    await deletePOI(poi.id);
-    onOpenChange(false);
+    if (poi) {
+      await deletePOI(poi.id);
+      onOpenChange(false);
+    }
   };
 
   const isMobile = useIsMobile();
   const isAccommodation = category === 'accommodation';
-  const hasCoordinates = !!poi.location.coordinates;
+  const hasCoordinates = !!poi?.location.coordinates;
 
   // --- Shared JSX sections ---
 
@@ -334,6 +385,33 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
 
   const locationSection = (
     <div className="rounded-xl bg-secondary/40 p-3 space-y-2">
+      <div className="space-y-1">
+        <Label>{t('poiDetail.country')}</Label>
+        {manualCountry ? (
+          <div className="flex gap-1">
+            <Input name="country" value={country} onChange={e => setCountry(e.target.value)} placeholder={t('createPOI.enterCountryManually')} className="flex-1" autoComplete="off" />
+            <Button type="button" variant="ghost" size="sm" className="shrink-0 text-xs" onClick={() => setManualCountry(false)}>
+              {t('createPOI.list')}
+            </Button>
+          </div>
+        ) : tripCountries.length > 0 ? (
+          <div className="flex gap-1">
+            <Select value={country} onValueChange={v => { setCountry(v); setCity(''); }}>
+              <SelectTrigger className="flex-1"><SelectValue placeholder={t('createPOI.chooseCountry')} /></SelectTrigger>
+              <SelectContent>
+                {tripCountries.map(c => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button type="button" variant="ghost" size="icon" className="shrink-0 h-9 w-9" onClick={() => setManualCountry(true)} title={t('createPOI.enterCountryManually')} aria-label={t('createPOI.editCountry')}>
+              <Pencil size={14} />
+            </Button>
+          </div>
+        ) : (
+          <Input name="country" value={country} onChange={e => setCountry(e.target.value)} placeholder={t('poiDetail.country')} autoComplete="off" />
+        )}
+      </div>
       <div className="space-y-1">
         <Label>{t('poiDetail.location')}</Label>
         <LocationSelector
@@ -551,7 +629,11 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           <div className="flex items-center justify-between px-6 pt-3 pb-2 shrink-0">
             <div className="flex items-center gap-3 min-w-0 flex-1">
               <DialogHeader className="p-0 flex-1 min-w-0">
-                {editingName ? (
+                {isCreateMode ? (
+                  <DialogTitle className="text-xl font-semibold">
+                    {t('createPOI.title')}
+                  </DialogTitle>
+                ) : editingName ? (
                   <Input
                     value={name}
                     onChange={e => setName(e.target.value)}
@@ -567,76 +649,99 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
                   </DialogTitle>
                 )}
               </DialogHeader>
-              <Badge variant={poi.status === 'booked' ? 'default' : 'secondary'} className="shrink-0">
-                {STATUS_KEYS[poi.status] ? t(STATUS_KEYS[poi.status]) : poi.status}
-              </Badge>
+              {poi && (
+                <Badge variant={poi.status === 'booked' ? 'default' : 'secondary'} className="shrink-0">
+                  {STATUS_KEYS[poi.status] ? t(STATUS_KEYS[poi.status]) : poi.status}
+                </Badge>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-                <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-1.5 text-destructive hover:text-destructive">
-                    <Trash2 size={14} /> {t('common.delete')}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>{t('poiDetail.deleteConfirm', { name: poi.name })}</AlertDialogTitle>
-                    <AlertDialogDescription>{t('poiDetail.cannotUndo')}</AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('common.delete')}</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              {poi && (
+                <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="sm" className="gap-1.5 text-destructive hover:text-destructive">
+                      <Trash2 size={14} /> {t('common.delete')}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>{t('poiDetail.deleteConfirm', { name: poi.name })}</AlertDialogTitle>
+                      <AlertDialogDescription>{t('poiDetail.cannotUndo')}</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('common.delete')}</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
               <Button variant="outline" size="sm" onClick={handleCancel}>
                 {t('common.cancel')}
               </Button>
               <Button onClick={handleSave} size="sm" className="gap-1.5">
-                <Save size={14} /> {t('common.save')}
+                <Save size={14} /> {isCreateMode ? t('createPOI.addPOI') : t('common.save')}
               </Button>
             </div>
           </div>
 
           {/* Three-column body */}
-          <div className="grid grid-cols-3 gap-0 px-6 pb-4 min-h-0 flex-1">
+          <div className={`gap-0 px-6 pb-4 min-h-0 flex-1 ${isCreateMode ? 'grid grid-cols-2' : 'grid grid-cols-3'}`}>
             {/* Left column — visual panel + location */}
             <div className="pe-4 space-y-3 overflow-y-auto min-h-0">
-              {poi.imageUrl && (
+              {isCreateMode && (
+                <div className="space-y-2">
+                  <Label>{t('createPOI.name')} *</Label>
+                  <Input name="name" value={name} onChange={e => setName(e.target.value)} placeholder={t('createPOI.namePlaceholder')} autoComplete="off" autoFocus />
+                </div>
+              )}
+              {poi?.imageUrl && (
                 <div className="w-full h-40 overflow-hidden rounded-xl">
                   <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" />
                 </div>
               )}
-              {hasCoordinates && (
+              {hasCoordinates && poi && (
                 <AccommodationMiniMap coordinates={poi.location.coordinates} className="w-full h-40" />
               )}
               {locationSection}
             </div>
 
-            {/* Middle column — categories, schedule, recommendations */}
-            <div className="flex flex-col gap-3 px-4 border-x min-h-0">
-              {/* 1. Categories — fixed */}
-              <div className="shrink-0">
+            {isCreateMode ? (
+              /* Create mode: single right column with all fields */
+              <div className="space-y-3 ps-4 border-s overflow-y-auto min-h-0">
                 {detailsSection}
-              </div>
-              {/* 2. Schedule / Accommodation — fixed */}
-              <div className="shrink-0">
+                {costSection}
                 {isAccommodation && accommodationFields}
                 {scheduleSection}
+                {notesSection}
               </div>
-              {/* 3. Recommendations — scrollable */}
-              {quotes.length > 0 && (
-                <div className="min-h-0 flex-1 overflow-y-auto">
-                  {quotesSection}
+            ) : (
+              <>
+                {/* Middle column — categories, schedule, recommendations */}
+                <div className="flex flex-col gap-3 px-4 border-x min-h-0">
+                  {/* 1. Categories — fixed */}
+                  <div className="shrink-0">
+                    {detailsSection}
+                  </div>
+                  {/* 2. Schedule / Accommodation — fixed */}
+                  <div className="shrink-0">
+                    {isAccommodation && accommodationFields}
+                    {scheduleSection}
+                  </div>
+                  {/* 3. Recommendations — scrollable */}
+                  {quotes.length > 0 && (
+                    <div className="min-h-0 flex-1 overflow-y-auto">
+                      {quotesSection}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Right column — cost & notes */}
-            <div className="space-y-3 ps-4 overflow-y-auto min-h-0">
-              {costSection}
-              {notesSection}
-            </div>
+                {/* Right column — cost & notes */}
+                <div className="space-y-3 ps-4 overflow-y-auto min-h-0">
+                  {costSection}
+                  {notesSection}
+                </div>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -648,7 +753,9 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-sm:h-[100dvh] max-sm:max-h-[100dvh] max-sm:w-full max-sm:max-w-full max-sm:rounded-none max-sm:border-0 max-sm:translate-y-0 max-sm:top-0 max-sm:left-0 max-sm:translate-x-0 !flex !flex-col overflow-hidden" onOpenAutoFocus={e => e.preventDefault()}>
         <DialogHeader className="pe-8">
-          {editingName ? (
+          {isCreateMode ? (
+            <DialogTitle className="text-lg">{t('createPOI.title')}</DialogTitle>
+          ) : editingName ? (
             <Input
               value={name}
               onChange={e => setName(e.target.value)}
@@ -666,7 +773,14 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
         </DialogHeader>
 
         <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pb-4">
-          {poi.imageUrl && (
+          {isCreateMode && (
+            <div className="space-y-2">
+              <Label>{t('createPOI.name')} *</Label>
+              <Input name="name" value={name} onChange={e => setName(e.target.value)} placeholder={t('createPOI.namePlaceholder')} autoComplete="off" autoFocus />
+            </div>
+          )}
+
+          {poi?.imageUrl && (
             <div className="w-full h-48 overflow-hidden rounded-lg">
               <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" />
             </div>
@@ -677,7 +791,7 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
           {locationSection}
 
           {/* Mini map after location */}
-          {hasCoordinates && (
+          {hasCoordinates && poi && (
             <AccommodationMiniMap coordinates={poi.location.coordinates} className="w-full h-40" />
           )}
 
@@ -688,28 +802,30 @@ export function POIDetailDialog({ poi, open, onOpenChange }: POIDetailDialogProp
 
           <div className="flex gap-2">
             <Button onClick={handleSave} size="sm" className="flex-1 gap-1">
-              <Save size={14} /> {t('common.save')}
+              <Save size={14} /> {isCreateMode ? t('createPOI.addPOI') : t('common.save')}
             </Button>
             <Button variant="outline" size="sm" onClick={handleCancel} className="flex-1">
               {t('common.cancel')}
             </Button>
-            <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="flex-1 gap-1 text-destructive border-destructive/30 hover:text-destructive hover:bg-destructive/10">
-                  <Trash2 size={14} /> {t('common.delete')}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('poiDetail.deleteConfirm', { name: poi.name })}</AlertDialogTitle>
-                  <AlertDialogDescription>{t('poiDetail.cannotUndo')}</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('common.delete')}</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {poi && (
+              <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex-1 gap-1 text-destructive border-destructive/30 hover:text-destructive hover:bg-destructive/10">
+                    <Trash2 size={14} /> {t('common.delete')}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t('poiDetail.deleteConfirm', { name: poi.name })}</AlertDialogTitle>
+                    <AlertDialogDescription>{t('poiDetail.cannotUndo')}</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{t('common.delete')}</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         </div>
       </DialogContent>

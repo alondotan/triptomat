@@ -144,7 +144,7 @@ export default function ShareTargetPage() {
           <div className="flex flex-col items-center gap-3">
             <CheckCircle size={32} className="text-green-500" />
             <p className="text-sm text-green-600 font-medium">{message}</p>
-            <Button size="sm" className="gap-1.5" onClick={() => navigate('/pois', { replace: true })}>
+            <Button size="sm" className="gap-1.5" onClick={() => navigate('/attractions', { replace: true })}>
               <ExternalLink size={14} />
               {t('shareTarget.goToPOIs')}
             </Button>

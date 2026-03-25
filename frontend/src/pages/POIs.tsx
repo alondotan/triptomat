@@ -4,9 +4,8 @@ import { useActiveTrip } from '@/context/ActiveTripContext';
 import { usePOI } from '@/context/POIContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Badge } from '@/components/ui/badge';
-import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, LayoutGrid, Search, Merge, ChevronLeft, ChevronDown, ChevronUp, ArrowUpDown, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { MapPin, LayoutGrid, Search, Merge, ChevronLeft, ChevronDown, ChevronUp, ArrowUpDown, SlidersHorizontal, Sparkles, ArrowRight } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -20,14 +19,23 @@ import { getCategoryIcon, getCategoryLabel, getSubCategoryLabel, getCategoryGrou
 type GroupBy = 'category' | 'location' | 'status';
 type SortBy = 'name' | 'updated_at' | 'created_at';
 
-const POIsPage = () => {
+interface POIsPageProps {
+  /** Restrict to specific categories. If omitted, shows all non-accommodation POIs. */
+  allowedCategories?: POICategory[];
+  /** Page title override (i18n key or string). */
+  titleKey?: string;
+  /** Path for back navigation (shown as a back button). */
+  backTo?: string;
+}
+
+const POIsPage = ({ allowedCategories, titleKey, backTo }: POIsPageProps = {}) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { activeTrip, tripLocations } = useActiveTrip();
   const { pois, mergePOIs } = usePOI();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [categoryFilters, setCategoryFilters] = useState<Set<POICategory | 'all'>>(new Set(['all']));
-  const [groupBy, setGroupBy] = useState<GroupBy>('category');
+  const [groupBy, setGroupBy] = useState<GroupBy>(allowedCategories && allowedCategories.length === 1 ? 'location' : 'category');
   const [sortBy, setSortBy] = useState<SortBy>('name');
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -100,7 +108,10 @@ const POIsPage = () => {
     return map;
   }, [sites]);
 
-  const nonAccommodationPois = useMemo(() => pois.filter(p => p.category !== 'accommodation'), [pois]);
+  const nonAccommodationPois = useMemo(() => {
+    if (allowedCategories) return pois.filter(p => allowedCategories.includes(p.category));
+    return pois.filter(p => p.category !== 'accommodation');
+  }, [pois, allowedCategories]);
 
   const NEW_THRESHOLD_MS = 90 * 60 * 1000;
 
@@ -299,9 +310,18 @@ const POIsPage = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
+        {backTo && (
+          <button
+            onClick={() => navigate(backTo)}
+            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-1"
+          >
+            <ArrowRight size={14} />
+            <span>{t('common.back')}</span>
+          </button>
+        )}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold">{t('poisPage.title')}</h2>
+            <h2 className="text-2xl font-bold">{titleKey ? t(titleKey) : t('poisPage.title')}</h2>
             <p className="text-muted-foreground">{filteredPois.length} / {nonAccommodationPois.length} {t('common.items')}</p>
           </div>
           <div className="flex items-center gap-2">
@@ -419,7 +439,8 @@ const POIsPage = () => {
                 </div>
               )}
 
-              {/* Category Filters */}
+              {/* Category Filters — hide when pre-filtered to specific categories */}
+              {!(allowedCategories && allowedCategories.length <= 1) && (
               <div className="space-y-1.5">
                 <span className="text-xs text-muted-foreground font-medium">{t('poisPage.categoryLabel')}</span>
                 <div className="flex gap-1 flex-wrap">
@@ -446,6 +467,7 @@ const POIsPage = () => {
                   })}
                 </div>
               </div>
+              )}
             </div>
           )}
         </div>
@@ -522,4 +544,5 @@ const POIsPage = () => {
   );
 };
 
+export { POIsPage };
 export default POIsPage;

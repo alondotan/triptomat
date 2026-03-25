@@ -5,6 +5,7 @@ import { SubCategoryIcon } from '../shared/SubCategoryIcon';
 import { POIDetailDialog } from './POIDetailDialog';
 import { getSubCategoryEntry, getSubCategoryLabel } from '@/lib/subCategoryConfig';
 import { usePOI } from '@/context/POIContext';
+import { useResearchAutoAssign } from '@/hooks/useResearchAutoAssign';
 import type { PointOfInterest, POIStatus } from '@/types/trip';
 
 function formatDuration(minutes: number): string {
@@ -49,6 +50,7 @@ export function POICard({
 }: POICardProps) {
   const { t } = useTranslation();
   const { updatePOI } = usePOI();
+  const { autoAssign } = useResearchAutoAssign();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   // Level 2 inline edit state
@@ -286,6 +288,7 @@ export function POICard({
     if (['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(poi.status)) return;
     const newStatus: POIStatus = poi.status === 'interested' ? 'suggested' : 'interested';
     await updatePOI({ ...poi, status: newStatus });
+    if (newStatus === 'interested') autoAssign(poi);
   };
 
   return (

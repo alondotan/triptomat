@@ -15,7 +15,9 @@ const AuthCallbackPage = lazy(() => import("./pages/AuthCallback"));
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 
 const ItineraryPage = lazy(() => import("./pages/Itinerary"));
-const POIsPage = lazy(() => import("./pages/POIs"));
+const AttractionsPage = lazy(() => import("./pages/Attractions"));
+const EventsPage = lazy(() => import("./pages/Events"));
+const EateriesPage = lazy(() => import("./pages/Eateries"));
 const POIGroupPage = lazy(() => import("./pages/POIGroup"));
 const TransportPage = lazy(() => import("./pages/Transport"));
 const SourcesPage = lazy(() => import("./pages/Sources"));
@@ -83,7 +85,10 @@ const App = () => (
                       <Route path="/" element={<ErrorBoundary><SchedulePage /></ErrorBoundary>} />
                       <Route path="/overview" element={<ErrorBoundary><OverviewPage /></ErrorBoundary>} />
                       <Route path="/itinerary" element={<ErrorBoundary><ItineraryPage /></ErrorBoundary>} />
-                      <Route path="/pois" element={<ErrorBoundary><POIsPage /></ErrorBoundary>} />
+                      <Route path="/attractions" element={<ErrorBoundary><AttractionsPage /></ErrorBoundary>} />
+                      <Route path="/events" element={<ErrorBoundary><EventsPage /></ErrorBoundary>} />
+                      <Route path="/eateries" element={<ErrorBoundary><EateriesPage /></ErrorBoundary>} />
+                      <Route path="/pois" element={<Navigate to="/attractions" replace />} />
                       <Route path="/pois/group" element={<ErrorBoundary><POIGroupPage /></ErrorBoundary>} />
                       <Route path="/transport" element={<ErrorBoundary><TransportPage /></ErrorBoundary>} />
                       <Route path="/sources" element={<ErrorBoundary><SourcesPage /></ErrorBoundary>} />

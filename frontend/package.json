@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "copy:config": "cp ../config.json public/data/sub-categories.json",
-    "generate:categories": "node scripts/generate-categories.mjs && npm run copy:config"
+    "generate:categories": "node scripts/generate-categories.mjs && npm run copy:config",
+    "sync:geodata": "aws s3 sync public/data/countries/ s3://triptomat-media/geodata/countries/ --profile triptomat && aws s3 sync public/data/countries_festivals/ s3://triptomat-media/geodata/countries_festivals/ --profile triptomat && aws s3 sync public/data/countries_weather/ s3://triptomat-media/geodata/countries_weather/ --profile triptomat && aws s3 sync public/data/countries_resources/ s3://triptomat-media/geodata/countries_resources/ --profile triptomat"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

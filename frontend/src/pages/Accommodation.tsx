@@ -6,11 +6,11 @@ import { useFinance } from '@/context/FinanceContext';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
 import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Building2, CalendarDays, BedDouble, Trash2, ArrowRight, Search, Clock, Merge } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { BookingActions } from '@/components/BookingActions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
@@ -19,6 +19,7 @@ import type { PointOfInterest } from '@/types/trip';
 const AccommodationPage = () => {
   const { t } = useTranslation();
   const { activeTrip, sourceEmailMap } = useActiveTrip();
+  const navigate = useNavigate();
   const { pois, deletePOI, mergePOIs } = usePOI();
   const { formatDualCurrency } = useFinance();
   const [selectedPOI, setSelectedPOI] = useState<PointOfInterest | null>(null);
@@ -77,6 +78,13 @@ const AccommodationPage = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
+        <button
+          onClick={() => navigate('/overview')}
+          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-1"
+        >
+          <ArrowRight size={14} />
+          <span>{t('common.back')}</span>
+        </button>
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold">{t('accommodationPage.title')}</h2>

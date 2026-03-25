@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, X, MapPin, Plane, Hotel, LinkIcon, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { CreatePOIForm } from '@/components/forms/CreatePOIForm';
+import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
 import { CreateTransportForm } from '@/components/forms/CreateTransportForm';
 import { CreateExternalRecommendationForm } from '@/components/forms/CreateExternalRecommendationForm';
 import { ContactEditDialog } from '@/components/shared/ContactEditDialog';
@@ -93,11 +93,11 @@ export function MobileFAB() {
       </button>
 
       {/* Forms */}
-      <CreatePOIForm
+      <POIDetailDialog
         open={activeForm === 'poi'}
         onOpenChange={(v) => { if (!v) setActiveForm(null); }}
       />
-      <CreatePOIForm
+      <POIDetailDialog
         open={activeForm === 'accommodation'}
         onOpenChange={(v) => { if (!v) setActiveForm(null); }}
         initialCategory="accommodation"

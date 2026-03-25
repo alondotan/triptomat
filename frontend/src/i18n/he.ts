@@ -2,7 +2,9 @@ const he = {
   // ── Navigation ──
   nav: {
     timeline: 'תכנון',
-    pois: 'נק׳ עניין',
+    attractions: 'אטרקציות',
+    events: 'אירועים',
+    eateries: 'מסעדות',
     stay: 'לינה',
     transport: 'תחבורה',
     recs: 'המלצות',
@@ -23,7 +25,7 @@ const he = {
     triptomat: 'Triptomat',
     aiAssistant: 'עוזר AI לטיולים',
     resources: 'מקורות',
-    home: 'מקומות',
+    home: 'המלצות',
     weather: 'מזג אוויר',
   },
 
@@ -55,6 +57,7 @@ const he = {
     tryAgain: 'נסה שוב',
     somethingWentWrong: 'משהו השתבש',
     noResults: 'אין תוצאות',
+    back: 'חזרה',
   },
 
   // ── POI Statuses ──
@@ -252,6 +255,15 @@ const he = {
   },
 
   // ── POIs Page ──
+  attractionsPage: {
+    title: 'אטרקציות',
+  },
+  eventsPage: {
+    title: 'אירועים',
+  },
+  eateriesPage: {
+    title: 'מסעדות',
+  },
   poisPage: {
     title: 'נקודות עניין',
     filterSortSearch: 'סינון, מיון וחיפוש',
@@ -272,6 +284,7 @@ const he = {
   // ── Create POI Form ──
   createPOI: {
     title: 'הוספת נקודת עניין',
+    editTitle: 'עריכת נקודת עניין',
     basicInfo: 'מידע בסיסי',
     name: 'שם *',
     namePlaceholder: 'למשל: מגדל אייפל',
@@ -312,6 +325,7 @@ const he = {
     cannotUndo: 'פעולה זו לא ניתנת לביטול.',
     category: 'קטגוריה',
     subCategory: 'תת-קטגוריה',
+    country: 'מדינה',
     location: 'מיקום',
     address: 'כתובת',
     cost: 'עלות',

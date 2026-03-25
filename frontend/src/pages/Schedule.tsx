@@ -1190,7 +1190,6 @@ export default function SchedulePage() {
 
       await refetchItineraryLocations();
       await refetchItinerary();
-      setSelectedResearchLocId(itinLoc.id);
 
       // Fetch and persist image in the background (fire-and-forget)
       if (!itinLoc.imageUrl) {
@@ -2997,34 +2996,6 @@ export default function SchedulePage() {
                         <p className="text-sm font-medium text-muted-foreground">{t('timeline.addLocation')}</p>
                       </button>
                     </div>
-                    {/* Start Planning */}
-                    {researchLocations.length > 0 && (
-                      <div className="shrink-0 pt-1 pb-1">
-                        <Button
-                          className="w-full"
-                          onClick={handleLocationBasedTransition}
-                          disabled={researchSubmitting}
-                        >
-                          {t('timeline.startPlanning')}
-                        </Button>
-                      </div>
-                    )}
-                    {/* Empty state */}
-                    {researchLocations.length === 0 && !addLocationOpen && (
-                      <button
-                        type="button"
-                        onClick={() => setAddLocationOpen(true)}
-                        className="flex flex-col items-center justify-center py-10 gap-2.5 text-center w-full rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 hover:border-primary/60 hover:bg-primary/10 transition-colors cursor-pointer"
-                      >
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <MapPin size={24} className="text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="text-base font-semibold">{t('timeline.selectLocations')}</h3>
-                          <p className="text-xs text-muted-foreground mt-0.5">{t('timeline.selectLocationsDesc')}</p>
-                        </div>
-                      </button>
-                    )}
                   </>
                 )}
               </div>
@@ -3161,11 +3132,6 @@ export default function SchedulePage() {
                     {/* Grid view header */}
                     <div className="flex items-center gap-2 shrink-0 pb-2">
                       <h3 className="text-sm font-semibold text-muted-foreground flex-1">{t('timeline.selectLocations')}</h3>
-                      {researchLocations.length > 0 && (
-                        <Button size="sm" onClick={handleLocationBasedTransition} disabled={researchSubmitting}>
-                          {t('timeline.startPlanning')}
-                        </Button>
-                      )}
                     </div>
                     {/* Pinterest grid */}
                     <div className="flex-1 min-h-0 overflow-y-auto">
@@ -3220,24 +3186,6 @@ export default function SchedulePage() {
                         </button>
                       </div>
                     </div>
-                    {/* Empty state */}
-                    {researchLocations.length === 0 && !addLocationOpen && (
-                      <div className="flex-1 flex items-center justify-center">
-                        <button
-                          type="button"
-                          onClick={() => setAddLocationOpen(true)}
-                          className="flex flex-col items-center justify-center py-12 gap-3 text-center max-w-md w-full rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 hover:border-primary/60 hover:bg-primary/10 transition-colors cursor-pointer"
-                        >
-                          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                            <MapPin size={28} className="text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold">{t('timeline.selectLocations')}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">{t('timeline.selectLocationsDesc')}</p>
-                          </div>
-                        </button>
-                      </div>
-                    )}
                   </>
                 )}
               </div>
@@ -3258,61 +3206,6 @@ export default function SchedulePage() {
                 </DialogContent>
               </Dialog>
 
-              {/* ── Fallback: manual day/date inputs ── */}
-              {researchLocations.length === 0 && (
-                <div className="w-full space-y-3 max-w-md mx-auto">
-                  <p className="text-[10px] text-muted-foreground text-center">{t('timeline.orSetDaysManually')}</p>
-                  <PlanningLevelPicker value={researchLevel} onChange={setResearchLevel} compact />
-
-                  {researchLevel === 'planning' && (
-                    <div className="flex items-center justify-center gap-3">
-                      <Label htmlFor="resDays" className="text-sm shrink-0">{t('timeline.numberOfDays')}</Label>
-                      <Input
-                        id="resDays"
-                        type="number"
-                        min={1}
-                        max={365}
-                        placeholder="7"
-                        value={researchDays}
-                        onChange={(e) => setResearchDays(e.target.value ? parseInt(e.target.value) : '')}
-                        className="h-9 w-24"
-                      />
-                      <Button size="sm" onClick={handleResearchSubmit} disabled={researchSubmitting || !researchDays}>
-                        {t('common.confirm')}
-                      </Button>
-                    </div>
-                  )}
-
-                  {researchLevel === 'detailed_planning' && (
-                    <div className="flex flex-wrap items-center justify-center gap-3">
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="resStart" className="text-sm shrink-0">{t('timeline.from')}</Label>
-                        <Input
-                          id="resStart"
-                          type="date"
-                          value={researchStartDate}
-                          onChange={(e) => setResearchStartDate(e.target.value)}
-                          className="h-9 w-40"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Label htmlFor="resEnd" className="text-sm shrink-0">{t('timeline.to')}</Label>
-                        <Input
-                          id="resEnd"
-                          type="date"
-                          value={researchEndDate}
-                          min={researchStartDate}
-                          onChange={(e) => setResearchEndDate(e.target.value)}
-                          className="h-9 w-40"
-                        />
-                      </div>
-                      <Button size="sm" onClick={handleResearchSubmit} disabled={researchSubmitting || !researchStartDate || !researchEndDate}>
-                        {t('common.confirm')}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           ) : tripDays.length > 0 ? (
             <div className="w-full shrink-0 pb-1 overflow-x-auto will-change-transform" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)' }}>

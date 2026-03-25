@@ -19,7 +19,7 @@ import {
   Check,
   Network,
   Share2,
-  Sparkles,
+  Bot,
   MoreVertical,
   ListIcon,
   FileText,
@@ -65,7 +65,7 @@ import { useAiUsage } from '@/hooks/useAiUsage';
 import { Crown } from 'lucide-react';
 
 const navItems = [
-  { path: '/overview', labelKey: 'nav.home', icon: Globe },
+  { path: '/overview', labelKey: 'nav.home', icon: Compass },
   { path: '/', labelKey: 'nav.timeline', icon: CalendarDays },
   // TODO: Re-enable Itinerary page when ready
   // { path: '/itinerary', labelKey: 'nav.itinerary', icon: Table2 },
@@ -244,7 +244,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
               className="relative p-2 rounded-lg transition-colors text-muted-foreground"
               aria-label="AI Chat"
             >
-              <Sparkles size={22} />
+              <Bot size={22} />
             </button>
             <button
               onClick={() => { if (location.pathname !== '/inbox') navigate('/inbox', { replace: true }); }}
@@ -393,7 +393,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false }: AppHead
         {/* Desktop user actions */}
         <div className="hidden md:flex items-center gap-1">
           <Button variant="ghost" size="icon" onClick={() => setAiChatOpen(true)} aria-label="AI Chat" title={t('nav.aiAssistant')} className="relative">
-            <Sparkles size={18} />
+            <Bot size={18} />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
