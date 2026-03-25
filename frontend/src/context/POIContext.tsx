@@ -41,7 +41,7 @@ interface POIContextType {
   mergePOIs: (primaryId: string, secondaryId: string) => Promise<void>;
 }
 
-const POIContext = createContext<POIContextType | undefined>(undefined);
+export const POIContext = createContext<POIContextType | undefined>(undefined);
 
 export function POIProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();

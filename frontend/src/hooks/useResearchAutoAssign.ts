@@ -1,8 +1,9 @@
 import { useCallback, useContext } from 'react';
 import { ActiveTripContext } from '@/context/ActiveTripContext';
 import { ItineraryContext } from '@/context/ItineraryContext';
-import { getDescendantNames } from '@/services/tripLocationService';
-import { findOrCreateItineraryLocation, assignDayToLocation } from '@/services/itineraryLocationService';
+import { POIContext } from '@/context/POIContext';
+import { getDescendantNames, type TripLocation } from '@/services/tripLocationService';
+import { findOrCreateItineraryLocation, assignDayToLocation, updateItineraryLocationImage } from '@/services/itineraryLocationService';
 import { createItineraryDay, updateItineraryDay } from '@/services/itineraryService';
 import type { PointOfInterest } from '@/types/trip';
 
@@ -15,9 +16,11 @@ import type { PointOfInterest } from '@/types/trip';
 export function useResearchAutoAssign() {
   const tripCtx = useContext(ActiveTripContext);
   const itinCtx = useContext(ItineraryContext);
+  const poiCtx = useContext(POIContext);
 
   const activeTrip = tripCtx?.activeTrip;
   const tripLocations = tripCtx?.tripLocations ?? [];
+  const pois = poiCtx?.pois ?? [];
   const itineraryLocations = itinCtx?.itineraryLocations ?? [];
   const itineraryDays = itinCtx?.itineraryDays ?? [];
   const refetchItineraryLocations = itinCtx?.refetchItineraryLocations;
@@ -26,6 +29,45 @@ export function useResearchAutoAssign() {
   const isResearchMode = activeTrip?.status === 'research';
 
   const researchLocations = itineraryLocations.filter(il => !il.isDefault);
+
+  // Fire-and-forget: find an image for the new research location
+  const fetchLocationImage = useCallback(async (locationName: string, tripLoc: TripLocation, itinLocId: string) => {
+    try {
+      let imageUrl: string | null = null;
+      const locName = locationName.toLowerCase();
+      const nameParts = [locName, ...locName.split(/\s*[&,\-–]\s*/).map(s => s.trim()).filter(Boolean)];
+
+      // 1. Try POIs whose city matches
+      for (const part of nameParts) {
+        const match = pois.find(p => p.imageUrl && p.location?.city?.toLowerCase() === part);
+        if (match) { imageUrl = match.imageUrl!; break; }
+      }
+
+      // 2. Try child locations in the hierarchy
+      if (!imageUrl) {
+        const childLocs = tripLocations.filter(tl => tl.parentId === tripLoc.id);
+        for (const child of childLocs) {
+          const match = pois.find(p => p.imageUrl && p.location?.city?.toLowerCase() === child.name.toLowerCase());
+          if (match) { imageUrl = match.imageUrl!; break; }
+        }
+      }
+
+      // 3. Fallback: Wikipedia
+      if (!imageUrl) {
+        const wikiName = nameParts[0] || locationName;
+        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiName)}`);
+        if (res.ok) {
+          const data = await res.json();
+          imageUrl = data?.originalimage?.source || data?.thumbnail?.source || null;
+        }
+      }
+
+      if (imageUrl) {
+        await updateItineraryLocationImage(itinLocId, imageUrl);
+        await refetchItineraryLocations?.();
+      }
+    } catch { /* silent */ }
+  }, [pois, tripLocations, refetchItineraryLocations]);
 
   const autoAssign = useCallback(async (poi: PointOfInterest) => {
     if (!activeTrip || !isResearchMode) return;
@@ -107,12 +149,17 @@ export function useResearchAutoAssign() {
           });
         }
         await refetchItineraryLocations?.();
+
+        // Fetch and persist location image in the background
+        if (!itinLoc.imageUrl) {
+          fetchLocationImage(city, cityTripLoc, itinLoc.id);
+        }
       }
       await refetchItinerary?.();
     } catch (e) {
       console.error('Failed to auto-assign POI to research location:', e);
     }
-  }, [activeTrip, isResearchMode, researchLocations, tripLocations, itineraryDays, refetchItineraryLocations, refetchItinerary]);
+  }, [activeTrip, isResearchMode, researchLocations, tripLocations, itineraryDays, refetchItineraryLocations, refetchItinerary, fetchLocationImage]);
 
   return { autoAssign, isResearchMode };
 }
