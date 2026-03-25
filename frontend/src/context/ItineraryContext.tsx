@@ -54,7 +54,7 @@ interface ItineraryContextType {
   refetchItinerary: () => Promise<void>;
 }
 
-const ItineraryContext = createContext<ItineraryContextType | undefined>(undefined);
+export const ItineraryContext = createContext<ItineraryContextType | undefined>(undefined);
 
 export function ItineraryProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();

@@ -66,7 +66,7 @@ interface ActiveTripContextType {
   reloadLocations: () => Promise<void>;
 }
 
-const ActiveTripContext = createContext<ActiveTripContextType | undefined>(undefined);
+export const ActiveTripContext = createContext<ActiveTripContextType | undefined>(undefined);
 
 export function ActiveTripProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();

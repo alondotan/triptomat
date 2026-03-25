@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
-import { useActiveTrip } from '@/context/ActiveTripContext';
-import { useItinerary } from '@/context/ItineraryContext';
+import { useCallback, useContext } from 'react';
+import { ActiveTripContext } from '@/context/ActiveTripContext';
+import { ItineraryContext } from '@/context/ItineraryContext';
 import { getDescendantNames } from '@/services/tripLocationService';
 import { findOrCreateItineraryLocation, assignDayToLocation } from '@/services/itineraryLocationService';
 import { createItineraryDay, updateItineraryDay } from '@/services/itineraryService';
@@ -10,10 +10,18 @@ import type { PointOfInterest } from '@/types/trip';
  * In research mode, auto-assigns a POI to the matching research location when liked.
  * Searches the trip location hierarchy for a match (ancestor or descendant),
  * or creates a new research location for the POI's city.
+ * Safe to use outside of providers (returns a no-op).
  */
 export function useResearchAutoAssign() {
-  const { activeTrip, tripLocations } = useActiveTrip();
-  const { itineraryLocations, itineraryDays, refetchItineraryLocations, refetchItinerary } = useItinerary();
+  const tripCtx = useContext(ActiveTripContext);
+  const itinCtx = useContext(ItineraryContext);
+
+  const activeTrip = tripCtx?.activeTrip;
+  const tripLocations = tripCtx?.tripLocations ?? [];
+  const itineraryLocations = itinCtx?.itineraryLocations ?? [];
+  const itineraryDays = itinCtx?.itineraryDays ?? [];
+  const refetchItineraryLocations = itinCtx?.refetchItineraryLocations;
+  const refetchItinerary = itinCtx?.refetchItinerary;
 
   const isResearchMode = activeTrip?.status === 'research';
 
@@ -98,9 +106,9 @@ export function useResearchAutoAssign() {
             activities: [...activities, { order: activities.length + 1, type: 'poi' as const, id: poi.id, schedule_state: 'potential' as const }],
           });
         }
-        await refetchItineraryLocations();
+        await refetchItineraryLocations?.();
       }
-      await refetchItinerary();
+      await refetchItinerary?.();
     } catch (e) {
       console.error('Failed to auto-assign POI to research location:', e);
     }
