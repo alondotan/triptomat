@@ -50,7 +50,7 @@ export function CountrySelector({ value, onChange, placeholder = 'Choose destina
     const lower = search.toLowerCase();
     const results: WorldTreeNode[] = [];
     function walk(node: WorldTreeNode) {
-      if (node.type !== 'world') {
+      if (node.type === 'country') {
         const matchName = node.name.toLowerCase().includes(lower);
         const matchHe = node.name_he.toLowerCase().includes(lower);
         if (matchName || matchHe) {
