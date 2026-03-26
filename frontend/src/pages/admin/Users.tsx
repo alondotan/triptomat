@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Users as UsersIcon, Search, Loader2, AlertTriangle, RefreshCw, Trash2, Sparkles } from 'lucide-react';
-import { formatDate } from '@/utils/adminUtils';
-import { useUsers } from '@/hooks/useAdminQueries';
-import { deleteUser, updateUserTier } from '@/services/adminService';
-import type { UserInfo, UserTier } from '@/services/adminService';
+import { formatDate } from '@/features/admin/adminUtils';
+import { useUsers } from '@/features/admin/useAdminQueries';
+import { deleteUser, updateUserTier } from '@/features/admin/adminService';
+import type { UserInfo, UserTier } from '@/features/admin/adminService';
 
 // ── Helpers ────────────────────────────────────────────────────
 

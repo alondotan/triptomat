@@ -3,11 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, GeoJSON, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import type { GeoJSON as GeoJSONType } from 'geojson';
-import { useActiveTrip } from '@/context/ActiveTripContext';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { AppLayout } from '@/components/layout';
+import { AppLayout } from '@/shared/components/layout';
 import { Slider } from '@/components/ui/slider';
-import { loadCountryData, type CountryData } from '@/services/tripLocationService';
+import { loadCountryData, type CountryData } from '@/features/trip/tripLocationService';
 import 'leaflet/dist/leaflet.css';
 
 // ── Types ────────────────────────────────────────

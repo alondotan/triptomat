@@ -14,8 +14,8 @@ import {
   CalendarDays,
   ArrowRight,
 } from 'lucide-react';
-import { useFunnel } from '@/hooks/useAdminQueries';
-import type { FunnelData, LinkageData } from '@/services/adminService';
+import { useFunnel } from '@/features/admin/useAdminQueries';
+import type { FunnelData, LinkageData } from '@/features/admin/adminService';
 
 // -- Helpers ----------------------------------------------------------------
 

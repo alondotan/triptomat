@@ -23,6 +23,11 @@ frontend/public/data/countries_festivals/
 frontend/public/data/countries_weather/
 frontend/public/data/countries_resources/
 
+# Legacy / generated files
+ARCHITECTURE.html
+map_viewer.html
+frontend/public/data/countries/
+
 # Temp / debug files
 *.log
 *_cookies.txt

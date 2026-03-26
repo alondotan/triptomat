@@ -1,24 +1,24 @@
 import { useState, useCallback, useMemo, useEffect, useRef, Fragment, lazy, Suspense } from 'react';
-import { AppLayout } from '@/components/layout/AppLayout';
-import { useActiveTrip } from '@/context/ActiveTripContext';
-import { usePOI } from '@/context/POIContext';
-import { useTransport } from '@/context/TransportContext';
-import { useItinerary } from '@/context/ItineraryContext';
-import { updateItineraryDay, createItineraryDay } from '@/services/itineraryService';
-import { findOrCreateItineraryLocation, assignDayToLocation, reorderItineraryLocations, updateItineraryLocationNotes, updateItineraryLocationImage, deleteItineraryLocation } from '@/services/itineraryLocationService';
-import { geocodeLocation } from '@/services/weatherService';
-import { findInFlatList } from '@/services/tripLocationService';
-import { rebuildPOIBookingsFromDays } from '@/services/poiService';
-import { LocationContextPicker } from '@/components/shared/LocationContextPicker';
-import { LocationSelector } from '@/components/shared/LocationSelector';
+import { AppLayout } from '@/shared/components/layout/AppLayout';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { usePOI } from '@/features/poi/POIContext';
+import { useTransport } from '@/features/transport/TransportContext';
+import { useItinerary } from '@/features/itinerary/ItineraryContext';
+import { updateItineraryDay, createItineraryDay } from '@/features/itinerary/itineraryService';
+import { findOrCreateItineraryLocation, assignDayToLocation, reorderItineraryLocations, updateItineraryLocationNotes, updateItineraryLocationImage, deleteItineraryLocation } from '@/features/itinerary/itineraryLocationService';
+import { geocodeLocation } from '@/features/geodata/weatherService';
+import { findInFlatList } from '@/features/trip/tripLocationService';
+import { rebuildPOIBookingsFromDays } from '@/features/poi/poiService';
+import { LocationContextPicker } from '@/shared/components/LocationContextPicker';
+import { LocationSelector } from '@/shared/components/LocationSelector';
 import { parseISO, format, addDays, subDays } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { useTripDays, tripDayDate } from '@/hooks/useTripDays';
+import { useTripDays, tripDayDate } from '@/shared/hooks/useTripDays';
 import type { ItineraryActivity, ItineraryDay, PointOfInterest } from '@/types/trip';
-import { POICard } from '@/components/poi/POICard';
-import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
-import { CreateTransportForm } from '@/components/forms/CreateTransportForm';
-import { TransportDetailDialog } from '@/components/transport/TransportDetailDialog';
+import { POICard } from '@/features/poi/POICard';
+import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
+import { CreateTransportForm } from '@/features/transport/CreateTransportForm';
+import { TransportDetailDialog } from '@/features/transport/TransportDetailDialog';
 import {
   DndContext,
   DragEndEvent,
@@ -49,26 +49,26 @@ const noReturnAnimation: AnimateLayoutChanges = () => false;
 
 import { ArrowRight, Building2, Calendar, CalendarDays, Check, ChevronLeft, Clock, GripVertical, Image as ImageIcon, Loader2, MapPin, Moon, NotebookPen, Pencil, Plus, Sun, Trash2, X } from 'lucide-react';
 
-const LazyMiniMap = lazy(() => import('@/components/poi/AccommodationMiniMap').then(m => ({ default: m.AccommodationMiniMap })));
+const LazyMiniMap = lazy(() => import('@/features/poi/AccommodationMiniMap').then(m => ({ default: m.AccommodationMiniMap })));
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { PlanningLevelPicker, type PlanningLevel } from '@/components/shared/PlanningLevelPicker';
-import { useToast } from '@/hooks/use-toast';
-import { transitionToDetailedPlanning } from '@/services/tripStatusTransition';
-import { useTripList } from '@/context/TripListContext';
-import { DaySection } from '@/components/DaySection';
-import { getSubCategoryEntry, getSubCategoryLabel } from '@/lib/subCategoryConfig';
-import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
-import { useRouteCalculation } from '@/hooks/useRouteCalculation';
-import { RouteMapPanel } from '@/components/route/RouteMapPanel';
-import { TravelLegRow } from '@/components/route/TravelLegRow';
-import { TRANSPORT_CATEGORY_CONFIG, formatDuration, type RouteLeg, type LegOverride } from '@/services/routeService';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { PlanningLevelPicker, type PlanningLevel } from '@/shared/components/PlanningLevelPicker';
+import { useToast } from '@/shared/hooks/use-toast';
+import { transitionToDetailedPlanning } from '@/features/trip/tripStatusTransition';
+import { useTripList } from '@/features/trip/TripListContext';
+import { DaySection } from '@/features/schedule/DaySection';
+import { getSubCategoryEntry, getSubCategoryLabel } from '@/shared/lib/subCategoryConfig';
+import { SubCategoryIcon } from '@/shared/components/SubCategoryIcon';
+import { useRouteCalculation } from '@/features/transport/useRouteCalculation';
+import { RouteMapPanel } from '@/features/transport/RouteMapPanel';
+import { TravelLegRow } from '@/features/transport/TravelLegRow';
+import { TRANSPORT_CATEGORY_CONFIG, formatDuration, type RouteLeg, type LegOverride } from '@/features/transport/routeService';
+import { useIsMobile } from '@/shared/hooks/use-mobile';
 import { useLanguage } from '@/context/LanguageContext';
 import { useTranslation } from 'react-i18next';
-import { useTripWeather } from '@/hooks/useWeather';
-import { weatherCodeToIcon } from '@/services/weatherService';
+import { useTripWeather } from '@/features/geodata/useWeather';
+import { weatherCodeToIcon } from '@/features/geodata/weatherService';
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 

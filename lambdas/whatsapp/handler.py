@@ -37,6 +37,7 @@ from handlers.file_handler import handle_file
 from handlers.notify_handler import handle_sqs_notifications
 import meta_api
 
+from core.http_utils import api_response
 from core.pipeline_events import report_event
 from core.telemetry import (
     init_telemetry, get_tracer, get_meter,
@@ -85,11 +86,8 @@ def _mask_phone(phone: str) -> str:
 
 
 def _response(status_code: int, body: dict) -> dict:
-    return {
-        "statusCode": status_code,
-        "headers": {"Content-Type": "application/json"},
-        "body": json.dumps(body),
-    }
+    """Build a plain API Gateway response (no CORS headers needed)."""
+    return api_response(status_code, body)
 
 
 def _verify_signature(event: dict) -> bool:

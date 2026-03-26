@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useActiveTrip } from '@/context/ActiveTripContext';
-import { useFinance } from '@/context/FinanceContext';
-import { usePOI } from '@/context/POIContext';
-import { useTransport } from '@/context/TransportContext';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { useFinance } from '@/features/finance/FinanceContext';
+import { usePOI } from '@/features/poi/POIContext';
+import { useTransport } from '@/features/transport/TransportContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -12,8 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plane, Building2, MapPin, DollarSign, Wrench, Trash2, Pencil, X, Check, CheckCircle2, Clock } from 'lucide-react';
-import { AppLayout } from '@/components/layout';
-import { CreateExpenseForm } from '@/components/forms/CreateExpenseForm';
+import { AppLayout } from '@/shared/components/layout';
+import { CreateExpenseForm } from '@/features/finance/CreateExpenseForm';
 import type { Expense } from '@/types/trip';
 
 type PaidFilter = 'all' | 'paid' | 'unpaid';

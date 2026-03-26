@@ -29,9 +29,9 @@ import {
   Link2,
   BarChart3,
 } from 'lucide-react';
-import { useEmails, useEmailRaw, useEmailStats } from '@/hooks/useAdminQueries';
-import type { AdminSourceEmail } from '@/services/adminService';
-import { formatDateTime } from '@/utils/adminUtils';
+import { useEmails, useEmailRaw, useEmailStats } from '@/features/admin/useAdminQueries';
+import type { AdminSourceEmail } from '@/features/admin/adminService';
+import { formatDateTime } from '@/features/admin/adminUtils';
 
 // ── Helpers ──────────────────────────────────────────────────────
 

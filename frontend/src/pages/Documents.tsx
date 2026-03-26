@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useActiveTrip } from '@/context/ActiveTripContext';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
-import { AppLayout } from '@/components/layout';
-import { DocumentUploadDialog } from '@/components/documents/DocumentUploadDialog';
-import { FolderSidebar, type FolderPath } from '@/components/documents/FolderSidebar';
-import { FileExplorerContent } from '@/components/documents/FileExplorerContent';
-import { useToast } from '@/hooks/use-toast';
+import { AppLayout } from '@/shared/components/layout';
+import { DocumentUploadDialog } from '@/features/documents/DocumentUploadDialog';
+import { FolderSidebar, type FolderPath } from '@/features/documents/FolderSidebar';
+import { FileExplorerContent } from '@/features/documents/FileExplorerContent';
+import { useToast } from '@/shared/hooks/use-toast';
 import {
   fetchTripDocuments,
   fetchGeneralDocuments,
@@ -15,7 +15,7 @@ import {
   deleteDocument as deleteDocumentApi,
   getDocumentUrl,
   updateDocument,
-} from '@/services/documentService';
+} from '@/features/documents/documentService';
 import type { TripDocument, DocumentCategory } from '@/types/trip';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,

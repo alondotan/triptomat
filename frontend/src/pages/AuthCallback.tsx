@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { exchangeCodeForTokens } from '@/lib/cognito';
+import { exchangeCodeForTokens } from '@/integrations/cognito';
 
 export default function AuthCallbackPage() {
   const { t } = useTranslation();

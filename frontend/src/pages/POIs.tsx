@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useActiveTrip } from '@/context/ActiveTripContext';
-import { usePOI } from '@/context/POIContext';
-import { AppLayout } from '@/components/layout/AppLayout';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { usePOI } from '@/features/poi/POIContext';
+import { AppLayout } from '@/shared/components/layout/AppLayout';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin, LayoutGrid, Search, Merge, ChevronLeft, ChevronDown, ChevronUp, ArrowUpDown, SlidersHorizontal, Sparkles, ArrowRight } from 'lucide-react';
@@ -10,11 +10,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
+import { MergeConfirmDialog } from '@/features/inbox/MergeConfirmDialog';
 import type { PointOfInterest, POIStatus, POICategory } from '@/types/trip';
-import { flattenTripLocations } from '@/services/tripLocationService';
-import { POICard } from '@/components/poi/POICard';
-import { getCategoryIcon, getCategoryLabel, getSubCategoryLabel, getCategoryGroupLabel, getSubCategoryGroup, getPOICategories } from '@/lib/subCategoryConfig';
+import { flattenTripLocations } from '@/features/trip/tripLocationService';
+import { POICard } from '@/features/poi/POICard';
+import { getCategoryIcon, getCategoryLabel, getSubCategoryLabel, getCategoryGroupLabel, getSubCategoryGroup, getPOICategories } from '@/shared/lib/subCategoryConfig';
 
 type GroupBy = 'category' | 'location' | 'status';
 type SortBy = 'name' | 'updated_at' | 'created_at';

@@ -6,9 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from core.http_utils import resolve_cors_origin as _resolve_cors_origin, DecimalEncoder as _DecimalEncoder
 from lambdas.gateway.handler import (
-    _resolve_cors_origin,
-    _DecimalEncoder,
     _response,
     lambda_handler,
     ALLOWED_ORIGINS,

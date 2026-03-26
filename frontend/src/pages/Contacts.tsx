@@ -1,19 +1,19 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useActiveTrip } from '@/context/ActiveTripContext';
-import { useContacts } from '@/context/ContactsContext';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { useContacts } from '@/features/itinerary/ItineraryContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Users, Plus, Trash2, Phone, Mail, Globe, Search, Smartphone, Pencil, MapPin } from 'lucide-react';
-import { AppLayout } from '@/components/layout';
-import { ContactEditDialog } from '@/components/shared/ContactEditDialog';
+import { AppLayout } from '@/shared/components/layout';
+import { ContactEditDialog } from '@/shared/components/ContactEditDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/shared/hooks/use-toast';
 import type { Contact, ContactRole } from '@/types/trip';
 
 const ROLE_VALUES: ContactRole[] = ['guide', 'host', 'rental', 'restaurant', 'driver', 'agency', 'emergency', 'other'];

@@ -1,5 +1,5 @@
 import type { SourceRecommendation } from '@/types/webhook';
-import type { CountryResource } from '@/services/resourceService';
+import type { CountryResource } from '@/features/geodata/resourceService';
 
 export type UnifiedSource =
   | { kind: 'recommendation'; data: SourceRecommendation }

@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import { AppLayout } from '@/components/layout';
-import { PendingInbox } from '@/components/inbox/PendingInbox';
-import { SourceEmailsDashboard } from '@/components/inbox/SourceEmailsDashboard';
+import { AppLayout } from '@/shared/components/layout';
+import { PendingInbox } from '@/features/inbox/PendingInbox';
+import { SourceEmailsDashboard } from '@/features/inbox/SourceEmailsDashboard';
 
 const InboxPage = () => {
   const { t } = useTranslation();

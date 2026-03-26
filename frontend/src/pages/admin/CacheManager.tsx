@@ -16,10 +16,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Database, Trash2, RefreshCw, Search, Loader2, AlertTriangle } from 'lucide-react';
-import { formatDateTime } from '@/utils/adminUtils';
-import { useCacheEntries, useDeleteCacheEntries, useReprocessUrl } from '@/hooks/useAdminQueries';
-import { toast } from '@/hooks/use-toast';
-import type { CacheEntry, CacheDeleteResponse, ReprocessResponse } from '@/services/adminService';
+import { formatDateTime } from '@/features/admin/adminUtils';
+import { useCacheEntries, useDeleteCacheEntries, useReprocessUrl } from '@/features/admin/useAdminQueries';
+import { toast } from '@/shared/hooks/use-toast';
+import type { CacheEntry, CacheDeleteResponse, ReprocessResponse } from '@/features/admin/adminService';
 
 // ── Helpers ────────────────────────────────────────────────────
 

@@ -1,18 +1,18 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useActiveTrip } from '@/context/ActiveTripContext';
-import { usePOI } from '@/context/POIContext';
-import { useTransport } from '@/context/TransportContext';
-import { useContacts } from '@/context/ContactsContext';
-import { AppLayout } from '@/components/layout';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { usePOI } from '@/features/poi/POIContext';
+import { useTransport } from '@/features/transport/TransportContext';
+import { useContacts } from '@/features/itinerary/ItineraryContext';
+import { AppLayout } from '@/shared/components/layout';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
-import { ContactEditDialog } from '@/components/shared/ContactEditDialog';
-import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
+import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
+import { ContactEditDialog } from '@/shared/components/ContactEditDialog';
+import { SubCategoryIcon } from '@/shared/components/SubCategoryIcon';
 import {
   ExternalLink, Youtube, Globe, Loader2, RefreshCw, Sparkles,
   X, FileText, ThumbsUp, ThumbsDown, Trash2, ChevronDown, ChevronUp,
@@ -33,14 +33,14 @@ import {
   type CountryResource,
   type ResourceCategory,
   type ResourceLang,
-} from '@/services/resourceService';
-import { fetchTripRecommendations, deleteRecommendation } from '@/services/recommendationService';
+} from '@/features/geodata/resourceService';
+import { fetchTripRecommendations, deleteRecommendation } from '@/features/inbox/recommendationService';
 import type { SourceRecommendation } from '@/types/webhook';
 import type { PointOfInterest, Contact } from '@/types/trip';
 import type { UnifiedSource, SourceSection } from '@/types/source';
 import { getSourceSection, getSourceUrl } from '@/types/source';
 import { useLanguage } from '@/context/LanguageContext';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/shared/hooks/use-toast';
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;

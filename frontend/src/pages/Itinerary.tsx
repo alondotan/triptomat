@@ -1,16 +1,16 @@
 import { useTranslation } from 'react-i18next';
-import { useActiveTrip } from '@/context/ActiveTripContext';
-import { useItinerary } from '@/context/ItineraryContext';
-import { usePOI } from '@/context/POIContext';
-import { useTransport } from '@/context/TransportContext';
-import { useFinance } from '@/context/FinanceContext';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { useItinerary } from '@/features/itinerary/ItineraryContext';
+import { usePOI } from '@/features/poi/POIContext';
+import { useTransport } from '@/features/transport/TransportContext';
+import { useFinance } from '@/features/finance/FinanceContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AppLayout } from '@/components/layout';
+import { AppLayout } from '@/shared/components/layout';
 import { Building2, MapPin, Plane, CalendarDays } from 'lucide-react';
-import { SubCategoryIcon } from '@/components/shared/SubCategoryIcon';
-import { getSubCategoryLabel } from '@/lib/subCategoryConfig';
-import { useTripDays } from '@/hooks/useTripDays';
+import { SubCategoryIcon } from '@/shared/components/SubCategoryIcon';
+import { getSubCategoryLabel } from '@/shared/lib/subCategoryConfig';
+import { useTripDays } from '@/shared/hooks/useTripDays';
 
 const ItineraryPage = () => {
   const { t } = useTranslation();

@@ -1,19 +1,19 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useActiveTrip } from '@/context/ActiveTripContext';
-import { usePOI } from '@/context/POIContext';
-import { useFinance } from '@/context/FinanceContext';
-import { AppLayout } from '@/components/layout/AppLayout';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { usePOI } from '@/features/poi/POIContext';
+import { useFinance } from '@/features/finance/FinanceContext';
+import { AppLayout } from '@/shared/components/layout/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { POIDetailDialog } from '@/components/poi/POIDetailDialog';
+import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Building2, CalendarDays, BedDouble, Trash2, ArrowRight, Search, Clock, Merge } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { BookingActions } from '@/components/BookingActions';
+import { BookingActions } from '@/features/schedule/BookingActions';
 import { Checkbox } from '@/components/ui/checkbox';
-import { MergeConfirmDialog } from '@/components/MergeConfirmDialog';
+import { MergeConfirmDialog } from '@/features/inbox/MergeConfirmDialog';
 import type { PointOfInterest } from '@/types/trip';
 
 const AccommodationPage = () => {

@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PanelLeftOpen, PanelRightOpen, PanelLeftClose, PanelRightClose } from 'lucide-react';
-import { AppLayout } from '@/components/layout';
-import { useActiveTrip } from '@/context/ActiveTripContext';
-import { OverviewFeed } from '@/components/overview/OverviewFeed';
-import { OverviewMap } from '@/components/overview/OverviewMap';
-import { OverviewItineraryPanel } from '@/components/overview/OverviewItineraryPanel';
-import { OverviewChatPanel } from '@/components/overview/OverviewChatPanel';
-import type { TripContext } from '@/components/chat/AIChatSheet';
+import { AppLayout } from '@/shared/components/layout';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { OverviewFeed } from '@/features/overview/OverviewFeed';
+import { OverviewMap } from '@/features/overview/OverviewMap';
+import { OverviewItineraryPanel } from '@/features/overview/OverviewItineraryPanel';
+import { OverviewChatPanel } from '@/features/overview/OverviewChatPanel';
+import type { TripContext } from '@/features/chat/AIChatSheet';
 import { Button } from '@/components/ui/button';
 
 const OverviewPage = () => {

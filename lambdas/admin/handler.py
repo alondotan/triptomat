@@ -24,13 +24,13 @@ import logging
 import os
 import re
 from datetime import datetime, timedelta, timezone
-from decimal import Decimal
 from typing import Any
 
 import boto3
 from botocore.exceptions import ClientError
 from supabase import create_client
 
+from core.http_utils import resolve_cors_origin, api_response
 from core.url_helpers import is_video_url
 
 # ---------------------------------------------------------------------------
@@ -113,35 +113,13 @@ _cors_origin: str = ""
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-class _DecimalEncoder(json.JSONEncoder):
-    """Encode DynamoDB Decimal values as float for JSON serialisation."""
-    def default(self, o: object) -> Any:
-        if isinstance(o, Decimal):
-            return float(o)
-        return super().default(o)
-
-
-def _resolve_cors_origin(event: dict) -> str:
-    """Return the request Origin if it is in the allow-list, else the first allowed origin."""
-    headers = event.get("headers") or {}
-    origin = headers.get("Origin") or headers.get("origin") or ""
-    if origin in ALLOWED_ORIGINS:
-        return origin
-    return next(iter(ALLOWED_ORIGINS), "")
-
-
 def _response(status_code: int, body: dict) -> dict:
-    """Build an API Gateway proxy response."""
-    return {
-        "statusCode": status_code,
-        "headers": {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": _cors_origin,
-            "Access-Control-Allow-Headers": "Content-Type,Authorization",
-            "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
-        },
-        "body": json.dumps(body, cls=_DecimalEncoder),
-    }
+    """Build an API Gateway proxy response with CORS headers."""
+    return api_response(
+        status_code, body,
+        cors_origin=_cors_origin,
+        allowed_methods="GET,POST,DELETE,OPTIONS",
+    )
 
 
 def _authenticate(event: dict) -> bool:
@@ -244,7 +222,7 @@ def _route(event: dict) -> dict:
 def lambda_handler(event: dict, context: Any) -> dict:
     """API Gateway entry point for the admin API."""
     global _cors_origin
-    _cors_origin = _resolve_cors_origin(event)
+    _cors_origin = resolve_cors_origin(event, ALLOWED_ORIGINS)
 
     method, path = _extract_method_path(event)
     logger.info("Admin request: %s %s", method, path)

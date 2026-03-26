@@ -16,9 +16,7 @@ import json
 import logging
 import os
 import time
-import traceback
 import uuid
-from decimal import Decimal
 from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
@@ -28,6 +26,7 @@ import boto3
 from botocore.exceptions import ClientError
 from pydantic import ValidationError
 
+from core.http_utils import resolve_cors_origin, api_response
 from core.schemas import GatewayRequest
 from core.url_helpers import is_google_maps_url, is_video_url
 from core.scrapers import extract_text_from_url, get_final_maps_url, get_web_metadata, MapsService
@@ -78,15 +77,6 @@ table = dynamodb.Table(DYNAMODB_TABLE)
 maps = MapsService(MAP_GOOGLE_API_KEY) if MAP_GOOGLE_API_KEY else None
 
 
-def _resolve_cors_origin(event):
-    """Return the request Origin if it's in the allow-list, else the first allowed origin."""
-    headers = event.get("headers") or {}
-    origin = headers.get("Origin") or headers.get("origin") or ""
-    if origin in ALLOWED_ORIGINS:
-        return origin
-    return next(iter(ALLOWED_ORIGINS), "")
-
-
 def _check_rate_limit(identifier):
     """Increment a per-minute counter in DynamoDB. Returns (within_limit, count)."""
     now = int(time.time())
@@ -111,7 +101,7 @@ def _check_rate_limit(identifier):
 def lambda_handler(event, context):
     """API Gateway entry point. Checks cache, classifies URL, dispatches to queues."""
     global _cors_origin
-    _cors_origin = _resolve_cors_origin(event)
+    _cors_origin = resolve_cors_origin(event, ALLOWED_ORIGINS)
 
     try:
         # Handle CORS preflight
@@ -375,21 +365,10 @@ def lambda_handler(event, context):
         flush_telemetry()
 
 
-class _DecimalEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, Decimal):
-            return float(o)
-        return super().default(o)
-
-
 def _response(status_code, body):
-    return {
-        "statusCode": status_code,
-        "headers": {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": _cors_origin,
-            "Access-Control-Allow-Headers": "Content-Type,Authorization",
-            "Access-Control-Allow-Methods": "POST,OPTIONS",
-        },
-        "body": json.dumps(body, cls=_DecimalEncoder)
-    }
+    """Thin wrapper that injects the per-invocation _cors_origin."""
+    return api_response(
+        status_code, body,
+        cors_origin=_cors_origin,
+        allowed_methods="POST,OPTIONS",
+    )

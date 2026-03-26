@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { redirectToCognitoLogin } from '@/lib/cognito';
+import { redirectToCognitoLogin } from '@/integrations/cognito';
 import { Button } from '@/components/ui/button';
 import { Compass } from 'lucide-react';
 

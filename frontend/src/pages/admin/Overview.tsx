@@ -11,14 +11,14 @@ import {
   AlertTriangle,
   RefreshCw,
 } from 'lucide-react';
-import { useAdminStats, useCloudWatchMetrics } from '@/hooks/useAdminQueries';
+import { useAdminStats, useCloudWatchMetrics } from '@/features/admin/useAdminQueries';
 import type {
   AdminStats,
   CloudWatchMetricsResponse,
   S3BucketStats,
   LambdaFunctionMetrics,
-} from '@/services/adminService';
-import { formatFileSize } from '@/utils/adminUtils';
+} from '@/features/admin/adminService';
+import { formatFileSize } from '@/features/admin/adminUtils';
 
 // ── Helpers ──────────────────────────────────────────────────────
 

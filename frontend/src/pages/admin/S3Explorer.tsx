@@ -15,10 +15,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { HardDrive, Trash2, FolderOpen, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
-import { formatDateTime, formatFileSize } from '@/utils/adminUtils';
-import { useS3Objects, useDeleteS3Objects } from '@/hooks/useAdminQueries';
-import { toast } from '@/hooks/use-toast';
-import type { S3Object, S3ListResponse, S3DeleteResponse } from '@/services/adminService';
+import { formatDateTime, formatFileSize } from '@/features/admin/adminUtils';
+import { useS3Objects, useDeleteS3Objects } from '@/features/admin/useAdminQueries';
+import { toast } from '@/shared/hooks/use-toast';
+import type { S3Object, S3ListResponse, S3DeleteResponse } from '@/features/admin/adminService';
 
 // ── Bucket Table Component ─────────────────────────────────────
 

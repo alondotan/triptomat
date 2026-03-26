@@ -8,7 +8,7 @@ import {
   ChevronDown, ChevronUp, ExternalLink, Video, Globe, MapPin, Mail, FileText,
   CheckCircle2, XCircle, Hourglass,
 } from 'lucide-react';
-import { usePipelineMonitor, type PipelineJob, type PipelineEvent } from '@/hooks/usePipelineMonitor';
+import { usePipelineMonitor, type PipelineJob, type PipelineEvent } from '@/features/admin/usePipelineMonitor';
 
 // ── Helpers ────────────────────────────────────────────────────
 

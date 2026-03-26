@@ -16,8 +16,8 @@ import {
   Map,
   Globe,
 } from 'lucide-react';
-import { useCosts } from '@/hooks/useAdminQueries';
-import type { CostResponse } from '@/services/adminService';
+import { useCosts } from '@/features/admin/useAdminQueries';
+import type { CostResponse } from '@/features/admin/adminService';
 
 // ---------------------------------------------------------------------------
 // Helpers

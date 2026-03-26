@@ -1,15 +1,14 @@
 import React, { ReactNode } from 'react';
-import { TripListProvider } from './TripListContext';
-import { ActiveTripProvider } from './ActiveTripContext';
-import { POIProvider } from './POIContext';
-import { TransportProvider } from './TransportContext';
-import { ItineraryProvider } from './ItineraryContext';
-import { FinanceProvider } from './FinanceContext';
-import { ContactsProvider } from './ContactsContext';
+import { TripListProvider } from '@/features/trip/TripListContext';
+import { ActiveTripProvider } from '@/features/trip/ActiveTripContext';
+import { POIProvider } from '@/features/poi/POIContext';
+import { TransportProvider } from '@/features/transport/TransportContext';
+import { ItineraryProvider } from '@/features/itinerary/ItineraryContext';
+import { FinanceProvider } from '@/features/finance/FinanceContext';
 
 /**
  * Composed provider that nests all domain contexts in the correct order.
- * Drop-in replacement for the old monolithic TripProvider.
+ * Contacts are now part of ItineraryProvider (6 providers instead of 7).
  */
 export function TripProvider({ children }: { children: ReactNode }) {
   return (
@@ -19,9 +18,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
           <TransportProvider>
             <ItineraryProvider>
               <FinanceProvider>
-                <ContactsProvider>
-                  {children}
-                </ContactsProvider>
+                {children}
               </FinanceProvider>
             </ItineraryProvider>
           </TransportProvider>

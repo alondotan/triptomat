@@ -22,9 +22,9 @@ import {
   ChevronRight,
   RotateCcw,
 } from 'lucide-react';
-import { useDlqMessages, useRedriveDlqMessage, useDeleteDlqMessage } from '@/hooks/useAdminQueries';
-import { toast } from '@/hooks/use-toast';
-import type { DlqMessage, DlqQueue, DlqRedriveResponse, DlqDeleteResponse } from '@/services/adminService';
+import { useDlqMessages, useRedriveDlqMessage, useDeleteDlqMessage } from '@/features/admin/useAdminQueries';
+import { toast } from '@/shared/hooks/use-toast';
+import type { DlqMessage, DlqQueue, DlqRedriveResponse, DlqDeleteResponse } from '@/features/admin/adminService';
 
 // -- Helpers ----------------------------------------------------------------
 

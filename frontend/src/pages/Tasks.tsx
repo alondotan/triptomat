@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useActiveTrip } from '@/context/ActiveTripContext';
-import { useItinerary } from '@/context/ItineraryContext';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { Mission } from '@/types/trip';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Plus, Trash2, AlertCircle, Pencil } from 'lucide-react';
-import { AppLayout } from '@/components/layout';
+import { AppLayout } from '@/shared/components/layout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';

@@ -1,21 +1,21 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useTripList } from '@/context/TripListContext';
-import { useActiveTrip } from '@/context/ActiveTripContext';
-import { useWorldTree, type WorldTreeNode } from '@/hooks/useWorldTree';
+import { useTripList } from '@/features/trip/TripListContext';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { useWorldTree, type WorldTreeNode } from '@/features/geodata/useWorldTree';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CalendarDays, MapPin, Check, Settings, LogOut, MoreVertical, Plus, Compass, Trash2 } from 'lucide-react';
-import { CreateTripForm } from '@/components/forms/CreateTripForm';
+import { CreateTripForm } from '@/features/trip/CreateTripForm';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+import { cn } from '@/shared/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { deleteTrip } from '@/services/tripService';
+import { useToast } from '@/shared/hooks/use-toast';
+import { deleteTrip } from '@/features/trip/tripService';
 import type { Trip } from '@/types/trip';
 
 const COMMON_CURRENCIES = [
@@ -221,7 +221,7 @@ const TripsPage = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    const { getCognitoLogoutUrl } = await import('@/lib/cognito');
+    const { getCognitoLogoutUrl } = await import('@/integrations/cognito');
     window.location.href = getCognitoLogoutUrl();
   };
 
