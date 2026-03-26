@@ -2,7 +2,7 @@ import { ReactNode, useState, useEffect, useLayoutEffect } from 'react';
 import { AppHeader } from './AppHeader';
 import { MobileBottomNav } from './MobileBottomNav';
 import { MobileFAB } from './MobileFAB';
-import { DestinationHero, HERO_HEIGHT, HERO_HEIGHT_MOBILE, useDestinationImageUrl } from './DestinationBackdrop';
+import { DestinationHero, HERO_HEIGHT, HERO_HEIGHT_MOBILE } from './DestinationBackdrop';
 import { useTripList } from '@/context/TripListContext';
 
 interface AppLayoutProps {
@@ -25,9 +25,12 @@ function getHeroHeight() {
 }
 
 export function AppLayout({ children, hideHero = false, fillHeight = false, heroImageOverride, heroTitleOverride }: AppLayoutProps) {
-  const { activeTripId } = useTripList();
-  const destinationImageUrl = useDestinationImageUrl();
-  const hasHero = !hideHero && !!destinationImageUrl;
+  const { trips, activeTripId } = useTripList();
+  const activeTrip = trips.find(t => t.id === activeTripId) || null;
+  // A hero is expected when the trip has countries (or an override is provided),
+  // even before the image URL resolves — this prevents the header title from
+  // flashing briefly before the hero image loads.
+  const hasHero = !hideHero && !!(heroImageOverride || activeTrip?.countries?.length);
 
   // Reset when trip changes
   const isNewTrip = activeTripId !== persistedTripId;
