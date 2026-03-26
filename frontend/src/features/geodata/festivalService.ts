@@ -1,4 +1,5 @@
 import { createOrMergePOI } from '@/features/poi/poiService';
+import { loadCountryData, buildLocationIdMap } from '@/features/trip/tripLocationService';
 import type { PointOfInterest } from '@/types/trip';
 
 // ── Festival JSON types ─────────────────────────
@@ -98,20 +99,37 @@ export async function seedTripFestivals(
       continue;
     }
 
+    // Build locationId → name map from country location tree
+    const countryData = await loadCountryData(country);
+    const locationIdMap = countryData ? buildLocationIdMap(countryData.locations) : new Map<string, string>();
+
+    // Resolve the most specific location_id to a city name
+    const resolveCity = (locationIds?: string[]): string | undefined => {
+      if (!locationIds || locationIds.length === 0 || locationIdMap.size === 0) return undefined;
+      // Pick the most specific (longest path) location_id
+      const sorted = [...locationIds].sort((a, b) => b.length - a.length);
+      for (const id of sorted) {
+        const name = locationIdMap.get(id);
+        if (name) return name;
+      }
+      return undefined;
+    };
+
     // Seed public holidays that have festival info (skip plain holidays)
     for (const holiday of data.public_holidays) {
       const fi = holiday.festival_info;
       if (!fi) continue;
 
       const resolvedDate = resolveHolidayDate(holiday, year);
+      const city = resolveCity(fi.location_ids);
 
       const poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'> = {
         tripId,
         category: 'event',
-        subCategory: holiday.type,
+        subCategory: 'cultural_festival',
         name: holiday.name,
         status: 'suggested',
-        location: { country: data.country },
+        location: { country: data.country, ...(city ? { city } : {}) },
         sourceRefs: { email_ids: [], recommendation_ids: [] },
         details: {
           event_details: {
@@ -138,13 +156,15 @@ export async function seedTripFestivals(
 
     // Seed cultural festivals
     for (const festival of data.cultural_festivals) {
+      const city = resolveCity(festival.location_ids);
+
       const poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'> = {
         tripId,
         category: 'event',
         subCategory: festival.type,
         name: festival.name,
         status: 'suggested',
-        location: { country: data.country },
+        location: { country: data.country, ...(city ? { city } : {}) },
         sourceRefs: { email_ids: [], recommendation_ids: [] },
         details: {
           event_details: {

@@ -202,7 +202,7 @@ function countryLocationToSiteNode(node: CountryLocationNode): SiteNode {
 }
 
 /** Build a flat map of locationId → node name from the country locations tree */
-function buildLocationIdMap(nodes: CountryLocationNode[]): Map<string, string> {
+export function buildLocationIdMap(nodes: CountryLocationNode[]): Map<string, string> {
   const map = new Map<string, string>();
   function walk(node: CountryLocationNode) {
     map.set(node.id, node.name);
