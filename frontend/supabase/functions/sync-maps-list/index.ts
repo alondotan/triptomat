@@ -219,7 +219,7 @@ serve(async (req) => {
     const enriched = await enrichWithGooglePlaces(dedupedRaw);
     console.log(`[sync] Enriched ${enriched.length} places`);
 
-    // ── Step 5: classify with Gemini / OpenAI ──
+    // ── Step 5: classify with Gemini ──
     const aiOutput = await classifyWithAI(enriched);
     console.log(`[sync] AI returned ${aiOutput.recommendations.length} recommendations`);
     console.log("[sync] sites_hierarchy:", JSON.stringify(aiOutput.sites_hierarchy));
@@ -557,7 +557,7 @@ async function enrichWithGooglePlaces(rawPlaces: RawPlace[]): Promise<EnrichedPl
   return result;
 }
 
-// ─── Step 3: AI classification (Gemini preferred, OpenAI fallback) ────────────
+// ─── Step 3: AI classification (Gemini) ───────────────────────────────────────
 
 function buildPrompt(places: EnrichedPlace[]): string {
 return `
@@ -629,10 +629,9 @@ const BATCH_SIZE = 20;
 
 async function classifyWithAI(enrichedPlaces: EnrichedPlace[]): Promise<AiOutput> {
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
-  const openaiKey = Deno.env.get("OPENAI_API_KEY");
 
-  if (!geminiKey && !openaiKey) {
-    console.error("[sync] No AI key found (GEMINI_API_KEY or OPENAI_API_KEY)");
+  if (!geminiKey) {
+    console.error("[sync] No GEMINI_API_KEY found");
     return { sites_hierarchy: [], recommendations: [] };
   }
 
@@ -650,12 +649,7 @@ async function classifyWithAI(enrichedPlaces: EnrichedPlace[]): Promise<AiOutput
     const prompt = buildPrompt(batch);
     console.log(`[sync] Batch ${i + 1}/${batches.length}: ${batch.length} places, prompt length: ${prompt.length}`);
 
-    let result: AiOutput;
-    if (geminiKey) {
-      result = await callGemini(prompt, geminiKey);
-    } else {
-      result = await callOpenAI(prompt, openaiKey!);
-    }
+    const result = await callGemini(prompt, geminiKey);
 
     merged.recommendations.push(...result.recommendations);
     mergeHierarchies(merged.sites_hierarchy, result.sites_hierarchy);
@@ -709,34 +703,6 @@ async function callGemini(prompt: string, apiKey: string): Promise<AiOutput> {
     return JSON.parse(text.replace(/^```json\n?/, "").replace(/\n?```$/, "").trim());
   } catch (e) {
     console.error("[sync] Gemini JSON parse error:", e);
-    return { sites_hierarchy: [], recommendations: [] };
-  }
-}
-
-async function callOpenAI(prompt: string, apiKey: string): Promise<AiOutput> {
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are a travel data classifier. Return valid JSON only." },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0,
-    }),
-  });
-  const data = await res.json();
-  console.log("[sync] OpenAI response preview:", JSON.stringify(data).substring(0, 500));
-  if (data.error) {
-    console.error("[sync] OpenAI error:", data.error);
-    return { sites_hierarchy: [], recommendations: [] };
-  }
-  try {
-    return JSON.parse(data.choices[0].message.content);
-  } catch (e) {
-    console.error("[sync] OpenAI JSON parse error:", e);
     return { sites_hierarchy: [], recommendations: [] };
   }
 }

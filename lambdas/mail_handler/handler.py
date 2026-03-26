@@ -4,8 +4,7 @@ Required env vars:
   MAIL_WEBHOOK_URL       — Supabase travel-webhook Edge Function URL (prod)
   SUPABASE_URL           — Supabase project URL (for user lookup)
   SUPABASE_SERVICE_KEY   — Supabase service-role key
-  OPENAI_API_KEY         — OpenAI API key for email analysis
-  GOOGLE_API_KEY         — Google Gemini API key (for reconciliation)
+  GOOGLE_API_KEY         — Google Gemini API key (for email analysis + reconciliation)
 
 Optional env vars:
   STAGE_MAIL_WEBHOOK_URL — Webhook URL for stage environment
@@ -55,7 +54,7 @@ parse_duration_hist = meter.create_histogram(
 )
 ai_analysis_duration_hist = meter.create_histogram(
     "triptomat.mail_handler.ai_analysis_duration_ms",
-    description="OpenAI analysis duration in milliseconds",
+    description="Gemini analysis duration in milliseconds",
 )
 
 # ── AWS clients & config ────────────────────────────────────────────────────
@@ -66,7 +65,7 @@ WEBHOOK_URL = os.environ.get('MAIL_WEBHOOK_URL', '')
 STAGE_WEBHOOK_URL = os.environ.get('STAGE_MAIL_WEBHOOK_URL', '')
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
 SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', '')
 MEDIA_BUCKET = os.environ.get('MEDIA_BUCKET', 'triptomat-media')
 
 
@@ -272,11 +271,11 @@ def lambda_handler(event, context):
                 # ── AI analysis ─────────────────────────────────────────────
                 clean_html = clean_html_for_ai(html_content)
 
-                with safe_span(tracer, "mail_handler.openai_analysis", {
-                    "ai.model_name": "gpt-4o-mini",
+                with safe_span(tracer, "mail_handler.gemini_analysis", {
+                    "ai.model_name": "gemini-2.0-flash",
                 }) as ai_span:
                     ai_start = time_ms()
-                    travel_data = call_openai(clean_html, ALLOWED_TYPES, GEO_ONLY_TYPES)
+                    travel_data = call_gemini(clean_html, ALLOWED_TYPES, GEO_ONLY_TYPES)
                     ai_duration = time_ms() - ai_start
                     record_histogram(ai_analysis_duration_hist, ai_duration)
 
@@ -432,10 +431,10 @@ def clean_html_for_ai(html):
     return re.sub(r'\s+', ' ', clean).strip()[:15000]
 
 
-def call_openai(html_text, allowed_types, geo_types):
+def call_gemini(html_text, allowed_types, geo_types):
     today = datetime.date.today()
 
-    system_prompt = f"""You are a data extraction agent. Analyze the email and return ONLY a valid JSON object.
+    prompt = f"""You are a data extraction agent. Analyze the email and return ONLY a valid JSON object.
             Current date for reference: {today.strftime("%B %d, %Y")}.
 
             ### Extraction Rules:
@@ -526,30 +525,32 @@ def call_openai(html_text, allowed_types, geo_types):
                                 "free_cancellation_until": "ISO8601|null"
                             }},
             "additional_info": {{ "summary": "", "raw_notes": "" }}
-            }}"""
+            }}
 
-    data = {
-        "model": "gpt-4o-mini",
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"HTML: {html_text}"}
-        ],
-        "response_format": {"type": "json_object"},
-        "temperature": 0
-    }
+            HTML: {html_text}"""
 
-    req = urllib.request.Request(
-        "https://api.openai.com/v1/chat/completions",
-        data=json.dumps(data).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
-        },
+    url = (
+        "https://generativelanguage.googleapis.com/v1beta/"
+        "models/gemini-2.0-flash:generateContent"
+        f"?key={GOOGLE_API_KEY}"
     )
-
-    with urllib.request.urlopen(req) as res:
-        res_payload = json.loads(res.read().decode("utf-8"))
-        return json.loads(res_payload['choices'][0]['message']['content'])
+    body = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "temperature": 0,
+        },
+    }
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=60) as res:
+        result = json.loads(res.read().decode("utf-8"))
+        text = result["candidates"][0]["content"]["parts"][0]["text"]
+        return json.loads(text)
 
 
 def get_webhook_token_for_email(email):

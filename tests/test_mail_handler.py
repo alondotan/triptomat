@@ -150,11 +150,11 @@ class TestMailLambdaHandler:
     @patch("lambdas.mail_handler.handler.report_event")
     @patch("lambdas.mail_handler.handler.reconcile", side_effect=lambda d, *a, **kw: d)
     @patch("lambdas.mail_handler.handler.send_to_webhook")
-    @patch("lambdas.mail_handler.handler.call_openai")
+    @patch("lambdas.mail_handler.handler.call_gemini")
     @patch("lambdas.mail_handler.handler.get_webhook_token_for_email", return_value="tok-1")
     @patch("lambdas.mail_handler.handler.s3_client")
     def test_success_processes_and_sends_webhook(self, mock_s3, mock_get_token,
-                                                  mock_openai, mock_send_wh,
+                                                  mock_gemini, mock_send_wh,
                                                   mock_reconcile, mock_report):
         email_content = (
             "From: user@example.com\r\n"
@@ -167,7 +167,7 @@ class TestMailLambdaHandler:
         mock_s3.get_object.return_value = {
             "Body": MagicMock(read=MagicMock(return_value=email_content.encode()))
         }
-        mock_openai.return_value = {
+        mock_gemini.return_value = {
             "metadata": {"category": "accommodation", "sub_category": "hotel", "action": "create"},
             "sites_hierarchy": [],
         }

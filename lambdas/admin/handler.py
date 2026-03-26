@@ -1242,7 +1242,7 @@ def _handle_emails_stats(event: dict) -> dict:
 # Rough per-call cost estimates (USD)
 _COST_GEMINI_VIDEO = 0.003       # Gemini 2.5-flash (video analysis)
 _COST_GEMINI_OTHER = 0.001       # Gemini 2.0-flash (text/maps/web)
-_COST_OPENAI_EMAIL = 0.002       # GPT-4o-mini (email parsing)
+_COST_GEMINI_EMAIL = 0.001       # Gemini 2.0-flash (email parsing)
 _COST_GEOCODING_CALL = 0.005     # Google Maps Geocoding API
 _COST_STATIC_MAP_CALL = 0.002    # Google Maps Static Maps API
 _COST_LAMBDA_INVOCATION = 0.0000002  # AWS Lambda per-invocation
@@ -1403,7 +1403,7 @@ def _handle_costs(event: dict) -> dict:
     gemini_other_cost = round(
         (text_analyses + maps_analyses + web_analyses) * _COST_GEMINI_OTHER, 4
     )
-    openai_email_cost = round(email_analyses * _COST_OPENAI_EMAIL, 4)
+    gemini_email_cost = round(email_analyses * _COST_GEMINI_EMAIL, 4)
     geocoding_cost = round(
         total_analyses * _GEOCODING_CALLS_PER_ANALYSIS * _COST_GEOCODING_CALL, 4
     )
@@ -1423,7 +1423,7 @@ def _handle_costs(event: dict) -> dict:
     )
 
     total_cost = round(
-        gemini_video_cost + gemini_other_cost + openai_email_cost
+        gemini_video_cost + gemini_other_cost + gemini_email_cost
         + geocoding_cost + static_maps_cost
         + lambda_cost + s3_cost + dynamo_cost,
         4,
@@ -1446,9 +1446,7 @@ def _handle_costs(event: dict) -> dict:
             "gemini": {
                 "video": gemini_video_cost,
                 "text_maps_web": gemini_other_cost,
-            },
-            "openai": {
-                "email": openai_email_cost,
+                "email": gemini_email_cost,
             },
             "google_maps": {
                 "geocoding": geocoding_cost,

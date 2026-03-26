@@ -235,8 +235,7 @@ export interface CostUsage {
 
 /** GET /admin/costs — estimated costs breakdown */
 export interface EstimatedCosts {
-  gemini: { video: number; text_maps_web: number };
-  openai: { email: number };
+  gemini: { video: number; text_maps_web: number; email: number };
   google_maps: { geocoding: number; static_maps: number };
   aws_lambda: number;
   aws_s3: number;

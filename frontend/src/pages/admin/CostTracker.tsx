@@ -221,18 +221,11 @@ export default function CostTrackerPage() {
               unitPrice: '$0.001',
               cost: estimated_costs.gemini.text_maps_web,
             },
-          ]}
-        />
-
-        <CostBreakdownCard
-          title="OpenAI"
-          icon={Mail}
-          items={[
             {
-              label: 'Email parsing (GPT-4o-mini)',
+              label: 'Email parsing (2.0-flash)',
               count: usage.email_analyses,
-              unitPrice: '$0.002',
-              cost: estimated_costs.openai.email,
+              unitPrice: '$0.001',
+              cost: estimated_costs.gemini.email,
             },
           ]}
         />
