@@ -47,7 +47,7 @@ import { CSS } from '@dnd-kit/utilities';
 // Disable the snap-back animation when an item is dropped
 const noReturnAnimation: AnimateLayoutChanges = () => false;
 
-import { ArrowRight, Building2, Calendar, CalendarDays, Check, ChevronLeft, Clock, GripVertical, Image as ImageIcon, MapPin, Moon, NotebookPen, Pencil, Plus, Sun, Trash2, X } from 'lucide-react';
+import { ArrowRight, Building2, Calendar, CalendarDays, Check, ChevronLeft, Clock, GripVertical, Image as ImageIcon, Loader2, MapPin, Moon, NotebookPen, Pencil, Plus, Sun, Trash2, X } from 'lucide-react';
 
 const LazyMiniMap = lazy(() => import('@/components/poi/AccommodationMiniMap').then(m => ({ default: m.AccommodationMiniMap })));
 import { Input } from '@/components/ui/input';
@@ -951,7 +951,7 @@ function SortableLocationSpan({ id, location, dayCount, isSelected, locationDayW
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function SchedulePage() {
-  const { activeTrip, updateCurrentTrip, tripLocations, addSiteToHierarchy, reloadLocations } = useActiveTrip();
+  const { activeTrip, updateCurrentTrip, tripLocations, addSiteToHierarchy, reloadLocations, isLoading: isTripLoading } = useActiveTrip();
   const { updateTripInList } = useTripList();
   const { pois, addPOI, updatePOI } = usePOI();
   const { transportation, deleteTransportation } = useTransport();
@@ -1224,6 +1224,18 @@ export default function SchedulePage() {
   // Delete a research location
   const handleDeleteResearchLocation = useCallback(async (locId: string) => {
     try {
+      // Revert POIs in this location's holding day back to 'suggested'
+      const holdingDay = itineraryDays.find(d => d.itineraryLocationId === locId);
+      const poiIds = (holdingDay?.activities || []).filter(a => a.type === 'poi').map(a => a.id);
+      let revertedCount = 0;
+      for (const poiId of poiIds) {
+        const poi = pois.find(p => p.id === poiId);
+        if (poi && (poi.status === 'interested' || poi.status === 'planned')) {
+          await updatePOI({ ...poi, status: 'suggested' });
+          revertedCount++;
+        }
+      }
+
       await deleteItineraryLocation(locId);
       await refetchItineraryLocations();
       await refetchItinerary();
@@ -1232,10 +1244,13 @@ export default function SchedulePage() {
         const remaining = researchLocations.filter(l => l.id !== locId);
         setSelectedResearchLocId(remaining.length > 0 ? remaining[0].id : null);
       }
+      if (revertedCount > 0) {
+        toast({ title: t('timeline.poisReverted', { count: revertedCount }) });
+      }
     } catch {
       toast({ title: t('common.error'), variant: 'destructive' });
     }
-  }, [selectedResearchLocId, mobileDetailLocId, researchLocations, refetchItineraryLocations, refetchItinerary, t, toast]);
+  }, [selectedResearchLocId, mobileDetailLocId, researchLocations, itineraryDays, pois, updatePOI, refetchItineraryLocations, refetchItinerary, t, toast]);
 
   // Notes for the selected research location
   const selectedResearchLocation = useMemo(() =>
@@ -2818,6 +2833,16 @@ export default function SchedulePage() {
   const reset = () => { setResetKey(k => k + 1); setLog([]); };
 
   const groups = buildGroups(scheduled, lockedIds);
+
+  if (isTripLoading || !activeTrip) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loader2 className="animate-spin h-8 w-8 text-muted-foreground" />
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout heroImageOverride={locationImageUrl} heroTitleOverride={selectedLocName ? `${selectedLocCountry || ''} — ${selectedLocName}` : undefined}>

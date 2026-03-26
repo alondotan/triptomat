@@ -684,6 +684,7 @@ const en = {
     otherPlaces: 'Other places',
     recommendAttractions: 'Recommend attractions',
     recommendPrompt: 'Recommend attractions in {{location}}',
+    poisReverted: '{{count}} attractions returned to pool',
     noItemsAvailable: 'No items available',
     accommodation: 'Accommodation',
     createBookingTask: 'Create booking task',

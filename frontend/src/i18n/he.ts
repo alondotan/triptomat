@@ -682,6 +682,7 @@ const he = {
     otherPlaces: 'מקומות אחרים',
     recommendAttractions: 'תמליץ לי על אטרקציות',
     recommendPrompt: 'תמליץ לי על אטרקציות ב{{location}}',
+    poisReverted: '{{count}} אטרקציות הוחזרו למאגר',
     noItemsAvailable: 'אין פריטים זמינים',
     accommodation: 'לינה',
     createBookingTask: 'צור משימת הזמנה',
