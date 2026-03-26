@@ -33,6 +33,7 @@ from core.config import load_config
 from core.supabase_client import get_user_id_from_token, check_ai_usage
 from core.pipeline_events import report_event
 from core.reconciliation import reconcile
+from core.travel_webhook import process_travel_email
 from core.telemetry import (
     init_telemetry, get_tracer, get_meter,
     safe_span, record_counter, record_histogram, time_ms,
@@ -67,6 +68,7 @@ SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
 SUPABASE_SERVICE_KEY = os.environ.get('SUPABASE_SERVICE_KEY', '')
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', '')
 MEDIA_BUCKET = os.environ.get('MEDIA_BUCKET', 'triptomat-media')
+USE_INLINE_WEBHOOK = os.environ.get('USE_INLINE_WEBHOOK', 'true').lower() == 'true'
 
 
 def _mask_email(email: str) -> str:
@@ -334,8 +336,26 @@ def lambda_handler(event, context):
 
                     print(json.dumps(payload, indent=2, ensure_ascii=False))
 
-                    # ── Webhook send ────────────────────────────────────────
-                    if active_webhook_url:
+                    # ── Process travel email ──────────────────────────────
+                    if USE_INLINE_WEBHOOK:
+                        with safe_span(tracer, "mail_handler.inline_webhook") as wh_span:
+                            try:
+                                result = process_travel_email(payload, uid)
+                                if wh_span:
+                                    try:
+                                        wh_span.set_attribute("webhook.status", "success")
+                                        wh_span.set_attribute("webhook.inline", True)
+                                        wh_span.set_attribute("webhook.matched", result.get("matched", False))
+                                    except Exception:
+                                        pass
+                            except Exception as wh_exc:
+                                if wh_span:
+                                    try:
+                                        wh_span.set_attribute("webhook.status", "failure")
+                                    except Exception:
+                                        pass
+                                print(f"Inline webhook processing failed: {wh_exc}")
+                    elif active_webhook_url:
                         with safe_span(tracer, "mail_handler.webhook_send") as wh_span:
                             try:
                                 send_to_webhook(payload, active_webhook_url, token)

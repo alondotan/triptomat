@@ -146,15 +146,14 @@ class TestMailLambdaHandler:
         assert result["statusCode"] == 200
         assert "skipped" in result["body"].lower() or "No user" in result["body"]
 
-    @patch("lambdas.mail_handler.handler.WEBHOOK_URL", "https://hook.example.com")
     @patch("lambdas.mail_handler.handler.report_event")
     @patch("lambdas.mail_handler.handler.reconcile", side_effect=lambda d, *a, **kw: d)
-    @patch("lambdas.mail_handler.handler.send_to_webhook")
+    @patch("lambdas.mail_handler.handler.process_travel_email", return_value={"success": True, "matched": True})
     @patch("lambdas.mail_handler.handler.call_gemini")
     @patch("lambdas.mail_handler.handler.get_webhook_token_for_email", return_value="tok-1")
     @patch("lambdas.mail_handler.handler.s3_client")
     def test_success_processes_and_sends_webhook(self, mock_s3, mock_get_token,
-                                                  mock_gemini, mock_send_wh,
+                                                  mock_gemini, mock_process,
                                                   mock_reconcile, mock_report):
         email_content = (
             "From: user@example.com\r\n"
@@ -174,8 +173,8 @@ class TestMailLambdaHandler:
 
         result = lambda_handler(self._make_s3_event(), None)
         assert result["statusCode"] == 200
-        mock_send_wh.assert_called_once()
-        payload = mock_send_wh.call_args[0][0]
+        mock_process.assert_called_once()
+        payload = mock_process.call_args[0][0]
         assert "source_email_info" in payload
         assert payload["source_email_info"]["subject"] == "Hotel Booking"
 

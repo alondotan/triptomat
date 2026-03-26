@@ -51,7 +51,7 @@ class TestWorkerLambdaHandler:
         return msg
 
     @patch("lambdas.worker.handler.report_event")
-    @patch("lambdas.worker.handler.send_to_webhook", return_value=True)
+    @patch("lambdas.worker.handler.process_recommendation", return_value={"success": True})
     @patch("lambdas.worker.handler.reconcile", side_effect=lambda d, *a, **kw: d)
     @patch("lambdas.worker.handler.enrich_analysis_data", side_effect=lambda d, *a, **kw: d)
     @patch("lambdas.worker.handler.gemini")
@@ -59,7 +59,7 @@ class TestWorkerLambdaHandler:
     @patch("lambdas.worker.handler.table")
     @patch("lambdas.worker.handler.s3")
     def test_web_flow_success(self, mock_s3, mock_table, mock_maps, mock_gemini,
-                               mock_enrich, mock_reconcile, mock_webhook, mock_report):
+                               mock_enrich, mock_reconcile, mock_process, mock_report):
         mock_gemini.analyze_text.return_value = json.dumps({
             "recommendations": [{"name": "Place A", "category": "restaurant"}]
         })
@@ -72,13 +72,13 @@ class TestWorkerLambdaHandler:
         lambda_handler(event, None)
 
         mock_gemini.analyze_text.assert_called_once()
-        mock_webhook.assert_called_once()
+        mock_process.assert_called_once()
         mock_table.put_item.assert_called()
         put_call = mock_table.put_item.call_args
         assert put_call.kwargs["Item"]["status"] == "completed"
 
     @patch("lambdas.worker.handler.report_event")
-    @patch("lambdas.worker.handler.send_to_webhook", return_value=True)
+    @patch("lambdas.worker.handler.process_recommendation", return_value={"success": True})
     @patch("lambdas.worker.handler.reconcile", side_effect=lambda d, *a, **kw: d)
     @patch("lambdas.worker.handler.enrich_analysis_data", side_effect=lambda d, *a, **kw: d)
     @patch("lambdas.worker.handler.gemini")
@@ -87,7 +87,7 @@ class TestWorkerLambdaHandler:
     @patch("lambdas.worker.handler.s3")
     def test_video_flow_downloads_from_s3(self, mock_s3, mock_table, mock_maps,
                                            mock_gemini, mock_enrich, mock_reconcile,
-                                           mock_webhook, mock_report):
+                                           mock_process, mock_report):
         mock_gemini.analyze_video.return_value = json.dumps({
             "recommendations": [{"name": "Beach", "category": "attraction"}]
         })
@@ -105,14 +105,14 @@ class TestWorkerLambdaHandler:
         mock_gemini.analyze_video.assert_called_once()
 
     @patch("lambdas.worker.handler.report_event")
-    @patch("lambdas.worker.handler.send_to_webhook", return_value=True)
+    @patch("lambdas.worker.handler.process_recommendation", return_value={"success": True})
     @patch("lambdas.worker.handler.reconcile", side_effect=lambda d, *a, **kw: d)
     @patch("lambdas.worker.handler.enrich_analysis_data", side_effect=lambda d, *a, **kw: d)
     @patch("lambdas.worker.handler.gemini")
     @patch("lambdas.worker.handler.maps")
     @patch("lambdas.worker.handler.table")
     def test_maps_flow_with_coords(self, mock_table, mock_maps, mock_gemini,
-                                    mock_enrich, mock_reconcile, mock_webhook, mock_report):
+                                    mock_enrich, mock_reconcile, mock_process, mock_report):
         mock_gemini.analyze_text.return_value = json.dumps({
             "recommendations": [{"name": "Tokyo Tower", "category": "landmark"}]
         })
@@ -142,7 +142,7 @@ class TestWorkerLambdaHandler:
         assert put_call.kwargs["Item"]["result"] == {}
 
     @patch("lambdas.worker.handler.report_event")
-    @patch("lambdas.worker.handler.send_failure_to_webhook")
+    @patch("lambdas.worker.handler.process_recommendation_failure")
     @patch("lambdas.worker.handler.gemini")
     @patch("lambdas.worker.handler.table")
     def test_failure_caches_error_and_sends_failure_webhook(self, mock_table, mock_gemini,

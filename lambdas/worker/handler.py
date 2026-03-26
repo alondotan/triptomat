@@ -31,6 +31,7 @@ from core.schemas import AnalysisMessage
 from core.pipeline_events import report_event
 from core.reconciliation import reconcile
 from core.webhook import send_to_webhook, send_failure_to_webhook
+from core.recommendation_webhook import process_recommendation, process_recommendation_failure
 from core.telemetry import (
     init_telemetry, get_tracer, get_meter,
     safe_span, record_counter, record_histogram, time_ms,
@@ -67,6 +68,7 @@ S3_BUCKET = os.environ.get("S3_BUCKET", "triptomat-media")
 DYNAMODB_TABLE = os.environ.get("DYNAMODB_TABLE", "triptomat-cache")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 MAP_GOOGLE_API_KEY = os.environ.get("MAP_GOOGLE_API_KEY", "")
+USE_INLINE_WEBHOOK = os.environ.get('USE_INLINE_WEBHOOK', 'true').lower() == 'true'
 
 table = dynamodb.Table(DYNAMODB_TABLE)
 gemini = GeminiService(GOOGLE_API_KEY)
@@ -233,20 +235,49 @@ def lambda_handler(event, context):
                                 enriched_data, webhook_token, GOOGLE_API_KEY,
                             )
 
-                        # ── Webhook ──────────────────────────────────────────
-                        webhook_url_masked = os.environ.get("WEBHOOK_URL", "")[:30] + "..."
-                        with safe_span(tracer, "worker.webhook_send", {
-                            "webhook.url_masked": webhook_url_masked,
-                        }) as wh_span:
-                            _source_text = msg.text if source_type == "web" else None
-                            result = send_to_webhook(enriched_data, url, source_metadata, webhook_token=webhook_token or None, job_id=job_id, source_text=_source_text)
-                            status_label = "success" if result else "failure"
-                            if wh_span:
+                        # ── Process recommendation ────────────────────────────
+                        if USE_INLINE_WEBHOOK:
+                            with safe_span(tracer, "worker.inline_webhook") as wh_span:
+                                _source_text = msg.text if source_type == "web" else None
+                                # Build the same payload that send_to_webhook would build
+                                inline_payload = {
+                                    "input_type": "recommendation",
+                                    "recommendation_id": job_id,
+                                    "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                                    "source_url": url,
+                                    "source_title": source_metadata.get("title", ""),
+                                    "source_image": source_metadata.get("image", ""),
+                                    "analysis": enriched_data,
+                                }
+                                if _source_text:
+                                    inline_payload["source_text"] = _source_text
                                 try:
-                                    wh_span.set_attribute("webhook.status", status_label)
-                                except Exception:
-                                    pass
-                            record_counter(webhook_counter, attributes={"status": status_label})
+                                    result = process_recommendation(inline_payload, webhook_token=webhook_token or None)
+                                    status_label = "success" if result.get("success") else "failure"
+                                except Exception as inline_exc:
+                                    print(f"Inline webhook processing failed: {inline_exc}")
+                                    status_label = "failure"
+                                if wh_span:
+                                    try:
+                                        wh_span.set_attribute("webhook.status", status_label)
+                                        wh_span.set_attribute("webhook.inline", True)
+                                    except Exception:
+                                        pass
+                                record_counter(webhook_counter, attributes={"status": status_label})
+                        else:
+                            webhook_url_masked = os.environ.get("WEBHOOK_URL", "")[:30] + "..."
+                            with safe_span(tracer, "worker.webhook_send", {
+                                "webhook.url_masked": webhook_url_masked,
+                            }) as wh_span:
+                                _source_text = msg.text if source_type == "web" else None
+                                result = send_to_webhook(enriched_data, url, source_metadata, webhook_token=webhook_token or None, job_id=job_id, source_text=_source_text)
+                                status_label = "success" if result else "failure"
+                                if wh_span:
+                                    try:
+                                        wh_span.set_attribute("webhook.status", status_label)
+                                    except Exception:
+                                        pass
+                                record_counter(webhook_counter, attributes={"status": status_label})
 
                         # ── Cache write ──────────────────────────────────────
                         with safe_span(tracer, "worker.cache_write", {
@@ -303,8 +334,24 @@ def lambda_handler(event, context):
                         "error": str(e),
                         "created_at": datetime.now(timezone.utc).isoformat(),
                     })
-                    # Notify frontend of failure via webhook
-                    send_failure_to_webhook(url, source_metadata, e, webhook_token=webhook_token or None, job_id=job_id)
+                    # Notify frontend of failure
+                    if USE_INLINE_WEBHOOK:
+                        try:
+                            fail_payload = {
+                                "input_type": "recommendation",
+                                "recommendation_id": job_id,
+                                "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                                "source_url": url,
+                                "source_title": source_metadata.get("title", ""),
+                                "source_image": source_metadata.get("image", ""),
+                                "status": "failed",
+                                "error": str(e)[:500],
+                            }
+                            process_recommendation_failure(fail_payload, webhook_token=webhook_token or None)
+                        except Exception as fail_exc:
+                            print(f"Inline failure webhook error: {fail_exc}")
+                    else:
+                        send_failure_to_webhook(url, source_metadata, e, webhook_token=webhook_token or None, job_id=job_id)
                     raise
     finally:
         flush_telemetry()
