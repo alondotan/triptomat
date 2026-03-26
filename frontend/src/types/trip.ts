@@ -76,7 +76,6 @@ export interface EventDetails {
   typical_months?: number[];              // for festivals without exact dates
   local_name?: string;
   description?: string;
-  is_festival?: boolean;                  // true when the event is a festival (cultural_festival or holiday with festival_info)
   location_ids?: string[];                // IDs from country data location tree (e.g. "ireland", "dublin")
 }
 

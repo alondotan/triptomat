@@ -63,6 +63,10 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
 
   // Load itinerary days and missions when active trip changes
   useEffect(() => {
+    // Clear stale data immediately to prevent flash of old trip content
+    dispatch({ type: 'SET_ITINERARY_DAYS', payload: [] });
+    dispatch({ type: 'SET_ITINERARY_LOCATIONS', payload: [] });
+    dispatch({ type: 'SET_MISSIONS', payload: [] });
     if (activeTrip) {
       Promise.all([
         fetchItineraryDays(activeTrip.id),
@@ -73,10 +77,6 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'SET_ITINERARY_LOCATIONS', payload: locations });
         dispatch({ type: 'SET_MISSIONS', payload: missions });
       });
-    } else {
-      dispatch({ type: 'SET_ITINERARY_DAYS', payload: [] });
-      dispatch({ type: 'SET_ITINERARY_LOCATIONS', payload: [] });
-      dispatch({ type: 'SET_MISSIONS', payload: [] });
     }
   }, [activeTrip?.id, refreshKey]);
 

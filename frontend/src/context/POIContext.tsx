@@ -50,10 +50,10 @@ export function POIProvider({ children }: { children: ReactNode }) {
 
   // Load POIs when active trip changes
   useEffect(() => {
+    // Clear stale POIs immediately to prevent flash of old data
+    dispatch({ type: 'SET_POIS', payload: [] });
     if (activeTrip) {
       fetchPOIs(activeTrip.id).then(pois => dispatch({ type: 'SET_POIS', payload: pois }));
-    } else {
-      dispatch({ type: 'SET_POIS', payload: [] });
     }
   }, [activeTrip?.id, refreshKey]);
 

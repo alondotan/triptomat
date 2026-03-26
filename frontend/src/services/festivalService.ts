@@ -98,10 +98,12 @@ export async function seedTripFestivals(
       continue;
     }
 
-    // Seed public holidays
+    // Seed public holidays that have festival info (skip plain holidays)
     for (const holiday of data.public_holidays) {
-      const resolvedDate = resolveHolidayDate(holiday, year);
       const fi = holiday.festival_info;
+      if (!fi) continue;
+
+      const resolvedDate = resolveHolidayDate(holiday, year);
 
       const poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'> = {
         tripId,
@@ -117,12 +119,9 @@ export async function seedTripFestivals(
             fixed_date: holiday.fixed_date,
             dates_by_year: holiday.dates,
             local_name: holiday.local_name,
-            is_festival: !!fi,
-            ...(fi && {
-              description: fi.description,
-              typical_months: fi.typical_months,
-              location_ids: fi.location_ids,
-            }),
+            description: fi.description,
+            typical_months: fi.typical_months,
+            location_ids: fi.location_ids,
           },
         },
         isCancelled: false,
@@ -152,7 +151,6 @@ export async function seedTripFestivals(
             typical_months: festival.typical_months,
             description: festival.description,
             local_name: festival.name_he,
-            is_festival: true,
             location_ids: festival.location_ids,
           },
         },
