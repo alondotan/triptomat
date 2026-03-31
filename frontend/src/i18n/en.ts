@@ -733,6 +733,8 @@ const en = {
     day: 'Day',
     byPlaces: 'By places',
     byDays: 'By days',
+    backToLocation: 'Back to location',
+    noItemsYet: 'No activities for this day yet',
     activity: 'Activity',
     mapTab: 'Map',
     scheduleTab: 'Schedule',

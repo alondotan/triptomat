@@ -981,6 +981,18 @@ export default function SchedulePage() {
   // hasDays: true when trip has a day count or exact dates
   const hasDays = !!(activeTrip?.numberOfDays && activeTrip.numberOfDays > 0) || !!activeTrip?.startDate;
 
+  // When trip has exact dates, sort locations by their earliest assigned day number
+  const sortedResearchLocations = useMemo(() => {
+    if (!activeTrip?.startDate) return researchLocations;
+    return [...researchLocations].sort((a, b) => {
+      const aDays = itineraryDays.filter(d => d.itineraryLocationId === a.id).map(d => d.dayNumber);
+      const bDays = itineraryDays.filter(d => d.itineraryLocationId === b.id).map(d => d.dayNumber);
+      const aMin = aDays.length > 0 ? Math.min(...aDays) : Infinity;
+      const bMin = bDays.length > 0 ? Math.min(...bDays) : Infinity;
+      return aMin - bMin;
+    });
+  }, [researchLocations, itineraryDays, activeTrip?.startDate]);
+
   // Research/places mode location strip state
   const [selectedResearchLocId, setSelectedResearchLocId] = useState<string | null>(null);
   const [mobileDetailLocId, setMobileDetailLocId] = useState<string | null>(null);
@@ -2822,8 +2834,8 @@ export default function SchedulePage() {
           onDragEnd={handleDragEnd}
           onDragCancel={() => { setActiveId(null); setActiveDragGroupCount(0); setActiveDragItem(null); document.documentElement.style.overscrollBehaviorY = ''; }}
         >
-          {/* ── View mode toggle (by places / by days) — only when trip has days ── */}
-          {hasDays && (
+          {/* ── View mode toggle (by places / by days) — only on main grid, not inside location/day detail ── */}
+          {hasDays && !selectedResearchLocId && !mobileDetailLocId && (
             <div className="flex gap-1 shrink-0">
               <button
                 type="button"
@@ -2935,8 +2947,61 @@ export default function SchedulePage() {
                           </div>
                         </div>
                       )}
-                      {/* Content */}
-                      <div className={`space-y-3 ${locDetailSelectedDayNum != null ? 'hidden' : ''}`}>
+                      {/* Content: either inline day view OR normal location content */}
+                      {locDetailSelectedDayNum != null ? (
+                        <div className="space-y-2 mt-1">
+                          <button
+                            type="button"
+                            onClick={() => setLocDetailSelectedDayNum(null)}
+                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <ChevronLeft size={14} className={isRTL ? 'rotate-180' : ''} />
+                            {t('timeline.backToLocation')}
+                          </button>
+                          <div className="space-y-1.5">
+                            {scheduled.length === 0 && potential.length === 0 ? (
+                              <p className="text-xs text-muted-foreground py-4 text-center">{t('timeline.noItemsYet')}</p>
+                            ) : (
+                              <>
+                                {scheduled.map(item => (
+                                  <button key={item.id} type="button" onClick={() => setOpenedPoiId(item.id)}
+                                    className="w-full flex items-center gap-2 p-2 rounded-lg border bg-card hover:border-primary/40 transition-all text-start"
+                                  >
+                                    {item.poi?.imageUrl ? (
+                                      <img src={item.poi.imageUrl} alt={item.label} className="w-9 h-9 rounded-md object-cover shrink-0" />
+                                    ) : (
+                                      <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center shrink-0">
+                                        <SubCategoryIcon type={item.poi?.subCategory || ''} size={16} className="text-muted-foreground/50" />
+                                      </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-sm font-medium truncate">{item.label}</p>
+                                      {item.time && <p className="text-xs text-muted-foreground">{item.time}</p>}
+                                    </div>
+                                  </button>
+                                ))}
+                                {potential.map(item => (
+                                  <button key={item.id} type="button" onClick={() => setOpenedPoiId(item.id)}
+                                    className="w-full flex items-center gap-2 p-2 rounded-lg border bg-card hover:border-primary/40 transition-all text-start opacity-60"
+                                  >
+                                    {item.poi?.imageUrl ? (
+                                      <img src={item.poi.imageUrl} alt={item.label} className="w-9 h-9 rounded-md object-cover shrink-0" />
+                                    ) : (
+                                      <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center shrink-0">
+                                        <SubCategoryIcon type={item.poi?.subCategory || ''} size={16} className="text-muted-foreground/50" />
+                                      </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-sm font-medium truncate">{item.label}</p>
+                                    </div>
+                                  </button>
+                                ))}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                      <div className="space-y-3">
                         {/* Map */}
                         {locationCoords && (
                           <div className="rounded-xl overflow-hidden border bg-muted h-[200px]">
@@ -3017,13 +3082,14 @@ export default function SchedulePage() {
                           />
                         </div>
                       </div>
+                      )}
                     </>
                   );
                 })() : (
                   <>
                     {/* ── Feed: Instagram-style cards ── */}
                     <div className="space-y-3 pb-2">
-                      {researchLocations.map((il) => {
+                      {sortedResearchLocations.map((il) => {
                         const name = researchLocNameMap.get(il.id) || '?';
                         const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
                         const poiCount = holdingDay?.activities?.length ?? 0;
@@ -3145,8 +3211,63 @@ export default function SchedulePage() {
                           </div>
                         </div>
                       )}
-                      {/* Content: activities strip (2/3 left) + sidebar (1/3 right) */}
-                      <div className={`flex-1 min-h-0 flex gap-4 overflow-hidden ${locDetailSelectedDayNum != null ? 'hidden' : ''}`}>
+                      {/* Content: either inline day view OR activities strip + sidebar */}
+                      {locDetailSelectedDayNum != null ? (
+                        <div className="flex flex-col flex-1 min-h-0 overflow-hidden gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setLocDetailSelectedDayNum(null)}
+                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0 self-start"
+                          >
+                            <ChevronLeft size={14} className={isRTL ? 'rotate-180' : ''} />
+                            {t('timeline.backToLocation')}
+                          </button>
+                          <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5">
+                            {scheduled.length === 0 && potential.length === 0 ? (
+                              <p className="text-xs text-muted-foreground py-4 text-center">{t('timeline.noItemsYet')}</p>
+                            ) : (
+                              <>
+                                {scheduled.map(item => (
+                                  <button key={item.id} type="button" onClick={() => setOpenedPoiId(item.id)}
+                                    className="w-full flex items-center gap-2 p-2 rounded-lg border bg-card hover:border-primary/40 hover:shadow-sm transition-all text-start"
+                                  >
+                                    {item.poi?.imageUrl ? (
+                                      <img src={item.poi.imageUrl} alt={item.label} className="w-10 h-10 rounded-md object-cover shrink-0" />
+                                    ) : (
+                                      <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
+                                        <SubCategoryIcon type={item.poi?.subCategory || ''} size={18} className="text-muted-foreground/50" />
+                                      </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-sm font-medium truncate">{item.label}</p>
+                                      {item.time && <p className="text-xs text-muted-foreground">{item.time}</p>}
+                                      {item.sublabel && <p className="text-xs text-muted-foreground truncate">{item.sublabel}</p>}
+                                    </div>
+                                  </button>
+                                ))}
+                                {potential.map(item => (
+                                  <button key={item.id} type="button" onClick={() => setOpenedPoiId(item.id)}
+                                    className="w-full flex items-center gap-2 p-2 rounded-lg border bg-card hover:border-primary/40 hover:shadow-sm transition-all text-start opacity-60"
+                                  >
+                                    {item.poi?.imageUrl ? (
+                                      <img src={item.poi.imageUrl} alt={item.label} className="w-10 h-10 rounded-md object-cover shrink-0" />
+                                    ) : (
+                                      <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
+                                        <SubCategoryIcon type={item.poi?.subCategory || ''} size={18} className="text-muted-foreground/50" />
+                                      </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-sm font-medium truncate">{item.label}</p>
+                                      {item.sublabel && <p className="text-xs text-muted-foreground truncate">{item.sublabel}</p>}
+                                    </div>
+                                  </button>
+                                ))}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                      <div className="flex-1 min-h-0 flex gap-4 overflow-hidden">
                         {/* Left 2/3: horizontal activities strip */}
                         <div className="flex-1 min-w-0 flex flex-col gap-2 min-h-0">
                           <h4 className="text-sm font-semibold text-muted-foreground shrink-0">
@@ -3243,6 +3364,7 @@ export default function SchedulePage() {
                           </div>
                         </div>
                       </div>
+                      )}
                     </div>
                   );
                 })() : (
@@ -3254,7 +3376,7 @@ export default function SchedulePage() {
                     {/* Pinterest grid */}
                     <div className="flex-1 min-h-0 overflow-y-auto">
                       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-2">
-                        {researchLocations.map((il) => {
+                        {sortedResearchLocations.map((il) => {
                           const name = researchLocNameMap.get(il.id) || '?';
                           const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
                           const poiCount = holdingDay?.activities?.length ?? 0;
@@ -3396,7 +3518,7 @@ export default function SchedulePage() {
             <p className="text-xs text-muted-foreground">{t('timeline.noActiveTrip')}</p>
           )}
 
-          {hasDays && (viewMode === 'days' || locDetailSelectedDayNum != null) && (<>
+          {hasDays && viewMode === 'days' && (<>
           {/* Location picker dialog */}
           {activeTrip && (
             <LocationContextPicker

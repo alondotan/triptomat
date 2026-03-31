@@ -731,6 +731,8 @@ const he = {
     day: 'יום',
     byPlaces: 'לפי מקומות',
     byDays: 'לפי ימים',
+    backToLocation: 'חזרה למקום',
+    noItemsYet: 'אין פעילויות ליום זה עדיין',
     activity: 'פעילות',
     mapTab: 'מפה',
     scheduleTab: 'לו״ז',
