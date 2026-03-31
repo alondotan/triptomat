@@ -986,6 +986,10 @@ export default function SchedulePage() {
   const [mobileDetailLocId, setMobileDetailLocId] = useState<string | null>(null);
   const [addLocationOpen, setAddLocationOpen] = useState(false);
   const [addActivityOpen, setAddActivityOpen] = useState(false);
+  const [editingLocDays, setEditingLocDays] = useState(false);
+
+  // Reset "edit days" mode when entering a different location
+  useEffect(() => { setEditingLocDays(false); }, [selectedResearchLocId, mobileDetailLocId]);
 
   // Listen for FAB "add location" event in research mode
   useEffect(() => {
@@ -2884,28 +2888,46 @@ export default function SchedulePage() {
                       {/* Days strip — shown when trip has days */}
                       {hasDays && activeTrip && activeTrip.numberOfDays && (
                         <div className="shrink-0 pb-2">
-                          <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
-                            {Array.from({ length: activeTrip.numberOfDays }, (_, i) => i + 1).map(dayNum => {
-                              const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
-                              const assigned = itDay?.itineraryLocationId === mobileDetailLocId;
-                              const label = activeTrip.startDate
-                                ? format(addDays(parseISO(activeTrip.startDate), dayNum - 1), 'd/M')
-                                : `${t('timeline.day')} ${dayNum}`;
-                              return (
-                                <button
-                                  key={dayNum}
-                                  type="button"
-                                  onClick={() => handleToggleDayForLocation(dayNum, mobileDetailLocId)}
-                                  className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-                                    assigned
-                                      ? 'bg-primary text-primary-foreground border-primary'
-                                      : 'bg-muted text-muted-foreground border-border hover:border-primary/40'
-                                  }`}
-                                >
-                                  {label}
-                                </button>
-                              );
-                            })}
+                          <div className="flex items-center gap-1.5 overflow-x-auto pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+                            {editingLocDays ? (
+                              // Edit mode: all days as toggles
+                              Array.from({ length: activeTrip.numberOfDays }, (_, i) => i + 1).map(dayNum => {
+                                const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
+                                const assigned = itDay?.itineraryLocationId === mobileDetailLocId;
+                                const label = activeTrip.startDate
+                                  ? format(addDays(parseISO(activeTrip.startDate), dayNum - 1), 'd/M')
+                                  : `${t('timeline.day')} ${dayNum}`;
+                                return (
+                                  <button key={dayNum} type="button"
+                                    onClick={() => handleToggleDayForLocation(dayNum, mobileDetailLocId)}
+                                    className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${assigned ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-border hover:border-primary/40'}`}
+                                  >{label}</button>
+                                );
+                              })
+                            ) : (
+                              // Normal mode: only assigned days — click navigates to day view
+                              itineraryDays
+                                .filter(d => d.dayNumber >= 1 && d.dayNumber <= activeTrip.numberOfDays! && d.itineraryLocationId === mobileDetailLocId)
+                                .sort((a, b) => a.dayNumber - b.dayNumber)
+                                .map(itDay => {
+                                  const label = activeTrip.startDate
+                                    ? format(addDays(parseISO(activeTrip.startDate), itDay.dayNumber - 1), 'd/M')
+                                    : `${t('timeline.day')} ${itDay.dayNumber}`;
+                                  return (
+                                    <button key={itDay.dayNumber} type="button"
+                                      onClick={() => { setSelectedDayNum(itDay.dayNumber); setViewMode('days'); }}
+                                      className="shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border bg-primary text-primary-foreground border-primary hover:opacity-80 transition-opacity"
+                                    >{label}</button>
+                                  );
+                                })
+                            )}
+                            {/* Toggle edit mode */}
+                            <button type="button"
+                              onClick={() => setEditingLocDays(v => !v)}
+                              className={`shrink-0 w-6 h-6 rounded-full border flex items-center justify-center transition-colors ${editingLocDays ? 'bg-primary/10 border-primary text-primary' : 'border-dashed border-primary/40 text-primary/60 hover:border-primary hover:text-primary'}`}
+                            >
+                              {editingLocDays ? <Check size={11} /> : <Plus size={11} />}
+                            </button>
                           </div>
                         </div>
                       )}
@@ -3076,28 +3098,46 @@ export default function SchedulePage() {
                       {/* Days strip — shown when trip has days */}
                       {hasDays && activeTrip && activeTrip.numberOfDays && (
                         <div className="shrink-0 pb-2">
-                          <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
-                            {Array.from({ length: activeTrip.numberOfDays }, (_, i) => i + 1).map(dayNum => {
-                              const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
-                              const assigned = itDay?.itineraryLocationId === selectedResearchLocId;
-                              const label = activeTrip.startDate
-                                ? format(addDays(parseISO(activeTrip.startDate), dayNum - 1), 'd/M')
-                                : `${t('timeline.day')} ${dayNum}`;
-                              return (
-                                <button
-                                  key={dayNum}
-                                  type="button"
-                                  onClick={() => handleToggleDayForLocation(dayNum, selectedResearchLocId)}
-                                  className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
-                                    assigned
-                                      ? 'bg-primary text-primary-foreground border-primary'
-                                      : 'bg-muted text-muted-foreground border-border hover:border-primary/40'
-                                  }`}
-                                >
-                                  {label}
-                                </button>
-                              );
-                            })}
+                          <div className="flex items-center gap-1.5 overflow-x-auto pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+                            {editingLocDays ? (
+                              // Edit mode: all days as toggles
+                              Array.from({ length: activeTrip.numberOfDays }, (_, i) => i + 1).map(dayNum => {
+                                const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
+                                const assigned = itDay?.itineraryLocationId === selectedResearchLocId;
+                                const label = activeTrip.startDate
+                                  ? format(addDays(parseISO(activeTrip.startDate), dayNum - 1), 'd/M')
+                                  : `${t('timeline.day')} ${dayNum}`;
+                                return (
+                                  <button key={dayNum} type="button"
+                                    onClick={() => handleToggleDayForLocation(dayNum, selectedResearchLocId)}
+                                    className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${assigned ? 'bg-primary text-primary-foreground border-primary' : 'bg-muted text-muted-foreground border-border hover:border-primary/40'}`}
+                                  >{label}</button>
+                                );
+                              })
+                            ) : (
+                              // Normal mode: only assigned days — click navigates to day view
+                              itineraryDays
+                                .filter(d => d.dayNumber >= 1 && d.dayNumber <= activeTrip.numberOfDays! && d.itineraryLocationId === selectedResearchLocId)
+                                .sort((a, b) => a.dayNumber - b.dayNumber)
+                                .map(itDay => {
+                                  const label = activeTrip.startDate
+                                    ? format(addDays(parseISO(activeTrip.startDate), itDay.dayNumber - 1), 'd/M')
+                                    : `${t('timeline.day')} ${itDay.dayNumber}`;
+                                  return (
+                                    <button key={itDay.dayNumber} type="button"
+                                      onClick={() => { setSelectedDayNum(itDay.dayNumber); setViewMode('days'); }}
+                                      className="shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border bg-primary text-primary-foreground border-primary hover:opacity-80 transition-opacity"
+                                    >{label}</button>
+                                  );
+                                })
+                            )}
+                            {/* Toggle edit mode */}
+                            <button type="button"
+                              onClick={() => setEditingLocDays(v => !v)}
+                              className={`shrink-0 w-6 h-6 rounded-full border flex items-center justify-center transition-colors ${editingLocDays ? 'bg-primary/10 border-primary text-primary' : 'border-dashed border-primary/40 text-primary/60 hover:border-primary hover:text-primary'}`}
+                            >
+                              {editingLocDays ? <Check size={11} /> : <Plus size={11} />}
+                            </button>
                           </div>
                         </div>
                       )}
