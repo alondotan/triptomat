@@ -53,7 +53,6 @@ const LazyMiniMap = lazy(() => import('@/features/poi/AccommodationMiniMap').the
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { PlanningLevelPicker, type PlanningLevel } from '@/shared/components/PlanningLevelPicker';
 import { useToast } from '@/shared/hooks/use-toast';
 import { transitionToDetailedPlanning } from '@/features/trip/tripStatusTransition';
 import { useTripList } from '@/features/trip/TripListContext';
@@ -977,15 +976,12 @@ export default function SchedulePage() {
   const { isRTL } = useLanguage();
   const { t } = useTranslation();
   const [mobileTab, setMobileTab] = useState<'schedule' | 'map'>('schedule');
+  const [viewMode, setViewMode] = useState<'places' | 'days'>('places');
 
-  // Research mode inline form state
-  const [researchLevel, setResearchLevel] = useState<PlanningLevel>('research');
-  const [researchDays, setResearchDays] = useState<number | ''>('');
-  const [researchStartDate, setResearchStartDate] = useState('');
-  const [researchEndDate, setResearchEndDate] = useState('');
-  const [researchSubmitting, setResearchSubmitting] = useState(false);
+  // hasDays: true when trip has a day count or exact dates
+  const hasDays = !!(activeTrip?.numberOfDays && activeTrip.numberOfDays > 0) || !!activeTrip?.startDate;
 
-  // Research mode location strip state
+  // Research/places mode location strip state
   const [selectedResearchLocId, setSelectedResearchLocId] = useState<string | null>(null);
   const [mobileDetailLocId, setMobileDetailLocId] = useState<string | null>(null);
   const [addLocationOpen, setAddLocationOpen] = useState(false);
@@ -1005,42 +1001,7 @@ export default function SchedulePage() {
   const [datePickerValue, setDatePickerValue] = useState('');
   const [datePickerSubmitting, setDatePickerSubmitting] = useState(false);
 
-  const handleResearchSubmit = async () => {
-    if (!activeTrip) return;
-    if (researchLevel === 'planning' && (!researchDays || Number(researchDays) < 1)) {
-      toast({ title: 'Please enter number of days', variant: 'destructive' });
-      return;
-    }
-    if (researchLevel === 'detailed_planning') {
-      if (!researchStartDate || !researchEndDate) {
-        toast({ title: 'Please enter start and end dates', variant: 'destructive' });
-        return;
-      }
-      if (researchEndDate < researchStartDate) {
-        toast({ title: 'End date must be after start date', variant: 'destructive' });
-        return;
-      }
-    }
-
-    setResearchSubmitting(true);
-    try {
-      if (researchLevel === 'planning') {
-        const updates = { status: 'planning' as const, numberOfDays: Number(researchDays) };
-        await updateCurrentTrip(updates);
-      } else if (researchLevel === 'detailed_planning') {
-        const days = Math.floor((new Date(researchEndDate).getTime() - new Date(researchStartDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
-        const tripWithDays = { ...activeTrip, numberOfDays: days };
-        const updates = await transitionToDetailedPlanning(tripWithDays, researchStartDate);
-        updateTripInList({ id: activeTrip.id, ...updates } as typeof activeTrip & { id: string });
-      }
-    } catch {
-      toast({ title: 'Update failed', variant: 'destructive' });
-    } finally {
-      setResearchSubmitting(false);
-    }
-  };
-
-  // Research mode: derived values for location strip
+  // Places mode: derived values for location strip
   const [locationOrderOverride, setLocationOrderOverride] = useState<string[] | null>(null);
   const researchLocationsBase = useMemo(() =>
     itineraryLocations.filter(il => !il.isDefault),
@@ -1399,30 +1360,28 @@ export default function SchedulePage() {
     window.dispatchEvent(new CustomEvent('research-recommend', { detail: { locationName } }));
   }, []);
 
-  // Transition from research to planning (location-aware)
-  const handleLocationBasedTransition = useCallback(async () => {
-    if (!activeTrip || researchLocations.length === 0) return;
-    setResearchSubmitting(true);
+  // Toggle a day assignment to the currently selected location (by-places view with days)
+  const handleToggleDayForLocation = useCallback(async (dayNum: number, locationId: string) => {
+    if (!activeTrip) return;
+    const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
     try {
-      // Each research location already has 1 holding day — just renumber sequentially
-      let dayNumber = 1;
-      for (const il of researchLocations) {
-        const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
-        if (holdingDay) {
-          await updateItineraryDay(holdingDay.id, { dayNumber });
-          dayNumber++;
-        }
+      if (!itDay) {
+        // Day record doesn't exist yet — create it and assign
+        await createItineraryDay({ tripId: activeTrip.id, dayNumber: dayNum, itineraryLocationId: locationId });
+        await refetchItinerary();
+      } else if (itDay.itineraryLocationId === locationId) {
+        // Already assigned — unassign
+        await updateItineraryDay(itDay.id, { itineraryLocationId: undefined });
+        setItineraryDays(prev => prev.map(d => d.id === itDay.id ? { ...d, itineraryLocationId: undefined } : d));
+      } else {
+        // Assign to this location
+        await assignDayToLocation(itDay.id, locationId);
+        setItineraryDays(prev => prev.map(d => d.id === itDay.id ? { ...d, itineraryLocationId: locationId } : d));
       }
-      const totalDays = dayNumber - 1;
-      await updateCurrentTrip({ status: 'planning' as const, numberOfDays: totalDays });
-      await refetchItineraryLocations();
-      await refetchItinerary();
     } catch {
       toast({ title: t('common.error'), variant: 'destructive' });
-    } finally {
-      setResearchSubmitting(false);
     }
-  }, [activeTrip, researchLocations, itineraryDays, updateCurrentTrip, refetchItineraryLocations, refetchItinerary, t, toast]);
+  }, [activeTrip, itineraryDays, setItineraryDays, refetchItinerary, t, toast]);
 
   // Handle day double-click → set date and switch to detailed_planning
   const handleDayDoubleClick = (dayNum: number) => {
@@ -2855,8 +2814,36 @@ export default function SchedulePage() {
           onDragEnd={handleDragEnd}
           onDragCancel={() => { setActiveId(null); setActiveDragGroupCount(0); setActiveDragItem(null); document.documentElement.style.overscrollBehaviorY = ''; }}
         >
+          {/* ── View mode toggle (by places / by days) — only when trip has days ── */}
+          {hasDays && (
+            <div className="flex gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode('places')}
+                className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
+                  viewMode === 'places'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-muted text-muted-foreground border-border hover:border-primary/40'
+                }`}
+              >
+                {t('timeline.byPlaces')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('days')}
+                className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
+                  viewMode === 'days'
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-muted text-muted-foreground border-border hover:border-primary/40'
+                }`}
+              >
+                {t('timeline.byDays')}
+              </button>
+            </div>
+          )}
+
           {/* ── Day pills + Location strip (sticky, never scrolls) ── */}
-          {activeTrip?.status === 'research' ? (
+          {!hasDays || viewMode === 'places' ? (
             <div className="flex flex-col w-full gap-3 md:overflow-hidden md:h-[calc(100dvh-5.5rem)]">
 
               {/* ════════════════════════════════════════════════════════════════ */}
@@ -2894,6 +2881,34 @@ export default function SchedulePage() {
                           <Trash2 size={16} />
                         </button>
                       </div>
+                      {/* Days strip — shown when trip has days */}
+                      {hasDays && activeTrip && activeTrip.numberOfDays && (
+                        <div className="shrink-0 pb-2">
+                          <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+                            {Array.from({ length: activeTrip.numberOfDays }, (_, i) => i + 1).map(dayNum => {
+                              const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
+                              const assigned = itDay?.itineraryLocationId === mobileDetailLocId;
+                              const label = activeTrip.startDate
+                                ? format(addDays(parseISO(activeTrip.startDate), dayNum - 1), 'd/M')
+                                : `${t('timeline.day')} ${dayNum}`;
+                              return (
+                                <button
+                                  key={dayNum}
+                                  type="button"
+                                  onClick={() => handleToggleDayForLocation(dayNum, mobileDetailLocId)}
+                                  className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                                    assigned
+                                      ? 'bg-primary text-primary-foreground border-primary'
+                                      : 'bg-muted text-muted-foreground border-border hover:border-primary/40'
+                                  }`}
+                                >
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                       {/* Content */}
                       <div className="space-y-3">
                         {/* Map */}
@@ -2986,6 +3001,7 @@ export default function SchedulePage() {
                         const name = researchLocNameMap.get(il.id) || '?';
                         const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
                         const poiCount = holdingDay?.activities?.length ?? 0;
+                        const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.itineraryLocationId === il.id).length : 0;
                         const imgUrl = il.imageUrl;
                         return (
                           <button
@@ -3007,6 +3023,9 @@ export default function SchedulePage() {
                             {/* Overlay: name + count at bottom */}
                             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-3 pb-2.5 pt-8">
                               <p className="text-base font-bold text-white truncate">{name}</p>
+                              {assignedDaysCount > 0 && (
+                                <p className="text-xs text-white/80">{t('timeline.daysCount', { count: assignedDaysCount })}</p>
+                              )}
                               {poiCount > 0 && (
                                 <p className="text-xs text-white/70">{t('timeline.activitiesCount', { count: poiCount })}</p>
                               )}
@@ -3054,6 +3073,34 @@ export default function SchedulePage() {
                           <Trash2 size={16} />
                         </button>
                       </div>
+                      {/* Days strip — shown when trip has days */}
+                      {hasDays && activeTrip && activeTrip.numberOfDays && (
+                        <div className="shrink-0 pb-2">
+                          <div className="flex gap-1.5 overflow-x-auto pb-1" style={{ WebkitOverflowScrolling: 'touch' }}>
+                            {Array.from({ length: activeTrip.numberOfDays }, (_, i) => i + 1).map(dayNum => {
+                              const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
+                              const assigned = itDay?.itineraryLocationId === selectedResearchLocId;
+                              const label = activeTrip.startDate
+                                ? format(addDays(parseISO(activeTrip.startDate), dayNum - 1), 'd/M')
+                                : `${t('timeline.day')} ${dayNum}`;
+                              return (
+                                <button
+                                  key={dayNum}
+                                  type="button"
+                                  onClick={() => handleToggleDayForLocation(dayNum, selectedResearchLocId)}
+                                  className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                                    assigned
+                                      ? 'bg-primary text-primary-foreground border-primary'
+                                      : 'bg-muted text-muted-foreground border-border hover:border-primary/40'
+                                  }`}
+                                >
+                                  {label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                       {/* Content: activities strip (2/3 left) + sidebar (1/3 right) */}
                       <div className="flex-1 min-h-0 flex gap-4 overflow-hidden">
                         {/* Left 2/3: horizontal activities strip */}
@@ -3167,6 +3214,7 @@ export default function SchedulePage() {
                           const name = researchLocNameMap.get(il.id) || '?';
                           const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
                           const poiCount = holdingDay?.activities?.length ?? 0;
+                          const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.itineraryLocationId === il.id).length : 0;
                           const imgUrl = il.imageUrl;
                           return (
                             <button
@@ -3186,6 +3234,9 @@ export default function SchedulePage() {
                               </div>
                               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-3 pb-2.5 pt-8">
                                 <p className="text-sm font-bold text-white truncate">{name}</p>
+                                {assignedDaysCount > 0 && (
+                                  <p className="text-[11px] text-white/80">{t('timeline.daysCount', { count: assignedDaysCount })}</p>
+                                )}
                                 {poiCount > 0 && (
                                   <p className="text-[11px] text-white/70">{t('timeline.activitiesCount', { count: poiCount })}</p>
                                 )}
@@ -3301,7 +3352,7 @@ export default function SchedulePage() {
             <p className="text-xs text-muted-foreground">{t('timeline.noActiveTrip')}</p>
           )}
 
-          {activeTrip?.status !== 'research' && (<>
+          {hasDays && viewMode === 'days' && (<>
           {/* Location picker dialog */}
           {activeTrip && (
             <LocationContextPicker

@@ -58,6 +58,7 @@ const en = {
     somethingWentWrong: 'Something went wrong',
     noResults: 'No results',
     back: 'Back',
+    optional: 'optional',
   },
 
   // ── POI Statuses ──
@@ -195,6 +196,7 @@ const en = {
     creating: 'Creating...',
     // Validation
     mustChoosePlanningMode: 'Must choose a planning mode',
+    haveExactDates: 'I have exact dates',
     mustEnterName: 'Must enter a trip name',
     mustChooseCountry: 'Must choose at least one country',
     mustEnterDays: 'Must enter number of days',
@@ -727,6 +729,10 @@ const en = {
     locationImage: 'Image',
     locationMap: 'Map',
     activitiesCount: '{{count}} activities',
+    daysCount: '{{count}} days',
+    day: 'Day',
+    byPlaces: 'By places',
+    byDays: 'By days',
     activity: 'Activity',
     mapTab: 'Map',
     scheduleTab: 'Schedule',

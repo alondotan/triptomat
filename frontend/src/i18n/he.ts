@@ -58,6 +58,7 @@ const he = {
     somethingWentWrong: 'משהו השתבש',
     noResults: 'אין תוצאות',
     back: 'חזרה',
+    optional: 'אופציונלי',
   },
 
   // ── POI Statuses ──
@@ -193,6 +194,7 @@ const he = {
     createTrip: 'צור טיול',
     creating: 'יוצר...',
     mustChoosePlanningMode: 'יש לבחור מצב תכנון',
+    haveExactDates: 'יש לי תאריכים מדויקים',
     mustEnterName: 'יש להזין שם לטיול',
     mustChooseCountry: 'יש לבחור לפחות מדינה אחת',
     mustEnterDays: 'יש להזין מספר ימים',
@@ -725,6 +727,10 @@ const he = {
     locationImage: 'תמונה',
     locationMap: 'מפה',
     activitiesCount: '{{count}} פעילויות',
+    daysCount: '{{count}} ימים',
+    day: 'יום',
+    byPlaces: 'לפי מקומות',
+    byDays: 'לפי ימים',
     activity: 'פעילות',
     mapTab: 'מפה',
     scheduleTab: 'לו״ז',

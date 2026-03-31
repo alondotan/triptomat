@@ -7,7 +7,6 @@ import { Label } from '@/components/ui/label';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { useTripList } from '@/features/trip/TripListContext';
 import { useToast } from '@/shared/hooks/use-toast';
-import { PlanningLevelPicker, type PlanningLevel } from '@/shared/components/PlanningLevelPicker';
 import {
   transitionToDetailedPlanning,
   transitionToPlanning,
@@ -37,22 +36,20 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
   const { toast } = useToast();
 
   const [name, setName] = useState('');
-  const [planningLevel, setPlanningLevel] = useState<PlanningLevel>('research');
   const [numberOfDays, setNumberOfDays] = useState<number | ''>('');
+  const [hasExactDates, setHasExactDates] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [confirmDowngrade, setConfirmDowngrade] = useState<PlanningLevel | null>(null);
+  const [confirmClearDates, setConfirmClearDates] = useState(false);
 
   // Sync form state when dialog opens or trip changes
   useEffect(() => {
     if (open && activeTrip) {
       setName(activeTrip.name);
-      const level = (['research', 'planning', 'detailed_planning'].includes(activeTrip.status)
-        ? activeTrip.status
-        : 'detailed_planning') as PlanningLevel;
-      setPlanningLevel(level);
-      setNumberOfDays(activeTrip.numberOfDays || '');
+      const hasDates = !!(activeTrip.startDate && activeTrip.endDate);
+      setHasExactDates(hasDates);
+      setNumberOfDays(hasDates ? '' : (activeTrip.numberOfDays || ''));
       setStartDate(activeTrip.startDate || '');
       setEndDate(activeTrip.endDate || '');
     }
@@ -60,45 +57,16 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
 
   if (!activeTrip) return null;
 
-  const originalStatus = activeTrip.status as string;
-
-  const isDowngrade = (target: PlanningLevel): boolean => {
-    if (target === 'research' && originalStatus !== 'research') return true;
-    if (target === 'planning' && originalStatus === 'detailed_planning') return true;
-    return false;
-  };
-
-  const downgradeWarning = (target: PlanningLevel): string => {
-    if (target === 'research') return t('editTrip.switchToResearch');
-    if (target === 'planning') return t('editTrip.switchToPlanning');
-    return '';
-  };
-
-  const handleLevelChange = (level: PlanningLevel) => {
-    if (isDowngrade(level)) {
-      setConfirmDowngrade(level);
-    } else {
-      setPlanningLevel(level);
-    }
-  };
-
-  const handleConfirmDowngrade = () => {
-    if (confirmDowngrade) {
-      setPlanningLevel(confirmDowngrade);
-      setConfirmDowngrade(null);
-    }
-  };
-
   const handleSave = async () => {
     if (!name.trim()) {
       toast({ title: t('createTrip.mustEnterName'), variant: 'destructive' });
       return;
     }
-    if (planningLevel === 'planning' && (!numberOfDays || Number(numberOfDays) < 1)) {
+    if (numberOfDays !== '' && Number(numberOfDays) < 1) {
       toast({ title: t('createTrip.mustEnterDays'), variant: 'destructive' });
       return;
     }
-    if (planningLevel === 'detailed_planning') {
+    if (hasExactDates) {
       if (!startDate || !endDate) {
         toast({ title: t('createTrip.mustEnterDates'), variant: 'destructive' });
         return;
@@ -111,62 +79,52 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
 
     setIsSubmitting(true);
     try {
-      const statusChanged = planningLevel !== originalStatus;
+      const hadDates = !!(activeTrip.startDate && activeTrip.endDate);
+      const hadDays = !!(activeTrip.numberOfDays && activeTrip.numberOfDays > 0);
 
-      if (statusChanged) {
-        // Handle status transition with data migration
-        let updates: Partial<Trip> = {};
+      // Determine new status
+      const newHasDates = hasExactDates && startDate && endDate;
+      const newHasDays = !hasExactDates && numberOfDays !== '' && Number(numberOfDays) >= 1;
 
-        if (planningLevel === 'research') {
-          updates = await transitionToResearch(activeTrip);
-        } else if (planningLevel === 'planning') {
-          if (originalStatus === 'detailed_planning') {
-            updates = await transitionToPlanning(activeTrip);
-          } else {
-            // research → planning
-            updates = {
-              status: 'planning',
-              numberOfDays: Number(numberOfDays),
-              startDate: undefined,
-              endDate: undefined,
-            };
-            await updateCurrentTrip(updates);
-          }
-        } else if (planningLevel === 'detailed_planning') {
-          const days = Number(numberOfDays) ||
-            Math.floor((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      let updates: Partial<Trip> = {};
+
+      if (newHasDates) {
+        // Upgrading to / staying at detailed_planning
+        const days = Math.floor((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        if (!hadDates) {
+          // Transition: create itinerary days if needed
           const tripWithDays = { ...activeTrip, numberOfDays: days };
           updates = await transitionToDetailedPlanning(tripWithDays, startDate);
-        }
-
-        // Update name if changed
-        if (name.trim() !== activeTrip.name) {
-          updates.name = name.trim();
-          await updateCurrentTrip({ name: name.trim() });
-        }
-
-        // Sync local state
-        if (updates && activeTrip) {
-          updateTripInList({ id: activeTrip.id, ...updates } as typeof activeTrip & { id: string });
-        }
-      } else {
-        // No status change — just update fields
-        const updates: Partial<Trip> = {};
-        if (name.trim() !== activeTrip.name) updates.name = name.trim();
-
-        if (planningLevel === 'planning' && Number(numberOfDays) !== activeTrip.numberOfDays) {
-          updates.numberOfDays = Number(numberOfDays);
-        }
-        if (planningLevel === 'detailed_planning') {
+        } else {
+          // Already had dates — just update values
           if (startDate !== activeTrip.startDate) updates.startDate = startDate;
           if (endDate !== activeTrip.endDate) updates.endDate = endDate;
-          const days = Math.floor((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
           if (days !== activeTrip.numberOfDays) updates.numberOfDays = days;
+          updates.status = 'detailed_planning';
         }
+      } else if (newHasDays) {
+        // planning mode
+        if (hadDates) {
+          updates = await transitionToPlanning(activeTrip);
+          updates.numberOfDays = Number(numberOfDays);
+        } else {
+          updates.status = 'planning';
+          updates.numberOfDays = Number(numberOfDays);
+          updates.startDate = undefined;
+          updates.endDate = undefined;
+        }
+      } else {
+        // No days, no dates → research
+        if (hadDates || hadDays) {
+          updates = await transitionToResearch(activeTrip);
+        }
+      }
 
-        if (Object.keys(updates).length > 0) {
-          await updateCurrentTrip(updates);
-        }
+      if (name.trim() !== activeTrip.name) updates.name = name.trim();
+
+      if (Object.keys(updates).length > 0) {
+        await updateCurrentTrip(updates);
+        updateTripInList({ id: activeTrip.id, ...updates } as typeof activeTrip & { id: string });
       }
 
       onOpenChange(false);
@@ -174,6 +132,17 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
       toast({ title: t('common.somethingWentWrong'), variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleToggleDates = (checked: boolean) => {
+    if (!checked && hasExactDates && (activeTrip.startDate || activeTrip.endDate)) {
+      // Warn before clearing dates
+      setConfirmClearDates(true);
+    } else {
+      setHasExactDates(checked);
+      if (checked) setNumberOfDays('');
+      else { setStartDate(''); setEndDate(''); }
     }
   };
 
@@ -198,57 +167,65 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
               />
             </div>
 
-            {/* Planning level */}
+            {/* Number of days (optional) */}
             <div className="space-y-2">
-              <Label htmlFor="editPlanningLevel">{t('editTrip.planningStage')}</Label>
-              <PlanningLevelPicker value={planningLevel} onChange={handleLevelChange} />
+              <Label htmlFor="editDays">
+                {t('editTrip.numberOfDays')} <span className="text-muted-foreground text-xs font-normal">({t('common.optional')})</span>
+              </Label>
+              <Input
+                id="editDays"
+                name="days"
+                type="number"
+                min={1}
+                max={365}
+                placeholder="7"
+                value={numberOfDays}
+                onChange={(e) => setNumberOfDays(e.target.value ? parseInt(e.target.value) : '')}
+                autoComplete="off"
+                disabled={hasExactDates}
+              />
             </div>
 
-            {/* Conditional fields */}
-            {planningLevel === 'planning' && (
-              <div className="space-y-2">
-                <Label htmlFor="editDays">{t('editTrip.numberOfDays')}</Label>
-                <Input
-                  id="editDays"
-                  name="days"
-                  type="number"
-                  min={1}
-                  max={365}
-                  placeholder="7"
-                  value={numberOfDays}
-                  onChange={(e) => setNumberOfDays(e.target.value ? parseInt(e.target.value) : '')}
-                  autoComplete="off"
+            {/* Exact dates */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={hasExactDates}
+                  onChange={(e) => handleToggleDates(e.target.checked)}
+                  className="rounded border-border"
                 />
-              </div>
-            )}
+                <span className="text-sm font-medium">{t('createTrip.haveExactDates')}</span>
+              </label>
 
-            {planningLevel === 'detailed_planning' && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="editStart">{t('editTrip.startDate')}</Label>
-                  <Input
-                    id="editStart"
-                    name="startDate"
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    autoComplete="off"
-                  />
+              {hasExactDates && (
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="editStart" className="text-xs">{t('editTrip.startDate')}</Label>
+                    <Input
+                      id="editStart"
+                      name="startDate"
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      autoComplete="off"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="editEnd" className="text-xs">{t('editTrip.endDate')}</Label>
+                    <Input
+                      id="editEnd"
+                      name="endDate"
+                      type="date"
+                      value={endDate}
+                      min={startDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      autoComplete="off"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="editEnd">{t('editTrip.endDate')}</Label>
-                  <Input
-                    id="editEnd"
-                    name="endDate"
-                    type="date"
-                    value={endDate}
-                    min={startDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    autoComplete="off"
-                  />
-                </div>
-              </div>
-            )}
+              )}
+            </div>
 
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>{t('common.cancel')}</Button>
@@ -260,19 +237,24 @@ export function EditTripDialog({ open, onOpenChange }: EditTripDialogProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation for downgrade */}
-      <AlertDialog open={!!confirmDowngrade} onOpenChange={() => setConfirmDowngrade(null)}>
+      {/* Confirm clearing exact dates */}
+      <AlertDialog open={confirmClearDates} onOpenChange={setConfirmClearDates}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('editTrip.statusChange')}</AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmDowngrade && downgradeWarning(confirmDowngrade)} {t('editTrip.continueQuestion')}
+              {t('editTrip.switchToPlanning')} {t('editTrip.continueQuestion')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleConfirmDowngrade}
+              onClick={() => {
+                setHasExactDates(false);
+                setStartDate('');
+                setEndDate('');
+                setConfirmClearDates(false);
+              }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {t('common.confirm')}

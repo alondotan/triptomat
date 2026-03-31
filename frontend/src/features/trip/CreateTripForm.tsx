@@ -10,7 +10,6 @@ import { useTripList } from '@/features/trip/TripListContext';
 import { CountrySelector } from '@/features/trip/CountrySelector';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/shared/hooks/use-toast';
-import { PlanningLevelPicker, type PlanningLevel } from '@/shared/components/PlanningLevelPicker';
 import type { TripStatus } from '@/types/trip';
 
 interface CreateTripFormProps {
@@ -36,18 +35,14 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [countries, setCountries] = useState<string[]>([]);
-  const [planningLevel, setPlanningLevel] = useState<PlanningLevel | null>(null);
   const [numberOfDays, setNumberOfDays] = useState<number | ''>('');
+  const [hasExactDates, setHasExactDates] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!planningLevel) {
-      toast({ title: t('createTrip.mustChoosePlanningMode'), variant: 'destructive' });
-      return;
-    }
     if (!name.trim()) {
       toast({ title: t('createTrip.mustEnterName'), variant: 'destructive' });
       return;
@@ -56,11 +51,11 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
       toast({ title: t('createTrip.mustChooseCountry'), variant: 'destructive' });
       return;
     }
-    if (planningLevel === 'planning' && (!numberOfDays || numberOfDays < 1)) {
+    if (numberOfDays !== '' && Number(numberOfDays) < 1) {
       toast({ title: t('createTrip.mustEnterDays'), variant: 'destructive' });
       return;
     }
-    if (planningLevel === 'detailed_planning') {
+    if (hasExactDates) {
       if (!startDate || !endDate) {
         toast({ title: t('createTrip.mustEnterDates'), variant: 'destructive' });
         return;
@@ -73,20 +68,25 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
 
     setIsSubmitting(true);
     try {
-      const dayCount = planningLevel === 'detailed_planning' && startDate && endDate
-        ? Math.floor((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
-        : planningLevel === 'planning' && numberOfDays
-          ? Number(numberOfDays)
-          : undefined;
+      let status: TripStatus = 'research';
+      let dayCount: number | undefined;
+
+      if (hasExactDates && startDate && endDate) {
+        status = 'detailed_planning';
+        dayCount = Math.floor((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      } else if (numberOfDays !== '' && Number(numberOfDays) >= 1) {
+        status = 'planning';
+        dayCount = Number(numberOfDays);
+      }
 
       await createNewTrip({
         name: name.trim(),
         description: description.trim() || undefined,
         countries,
-        status: planningLevel as TripStatus,
+        status,
         numberOfDays: dayCount,
-        startDate: planningLevel === 'detailed_planning' ? startDate : undefined,
-        endDate: planningLevel === 'detailed_planning' ? endDate : undefined,
+        startDate: hasExactDates ? startDate : undefined,
+        endDate: hasExactDates ? endDate : undefined,
       });
       setOpen(false);
       resetForm();
@@ -100,8 +100,8 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
     setName('');
     setDescription('');
     setCountries([]);
-    setPlanningLevel(null);
     setNumberOfDays('');
+    setHasExactDates(false);
     setStartDate('');
     setEndDate('');
   };
@@ -151,7 +151,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
                 </div>
               </div>
 
-              {/* Left column (RTL) - Countries & Planning */}
+              {/* Left column (RTL) - Countries & Duration */}
               <div className="space-y-3">
                 <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
                   <Label htmlFor="trip-countries">{t('createTrip.countries')}</Label>
@@ -162,55 +162,65 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
                   />
                 </div>
 
+                {/* Number of days (optional) */}
                 <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
-                  <Label htmlFor="trip-planning-level">{t('createTrip.planningStage')}</Label>
-                  <PlanningLevelPicker value={planningLevel} onChange={setPlanningLevel} compact />
+                  <Label htmlFor="numberOfDays">{t('createTrip.numberOfDays')} <span className="text-muted-foreground text-xs font-normal">({t('common.optional')})</span></Label>
+                  <Input
+                    id="numberOfDays"
+                    type="number"
+                    min={1}
+                    max={365}
+                    placeholder="7"
+                    value={numberOfDays}
+                    onChange={(e) => setNumberOfDays(e.target.value ? parseInt(e.target.value) : '')}
+                    autoComplete="off"
+                    disabled={hasExactDates}
+                  />
                 </div>
 
-                {planningLevel === 'planning' && (
-                  <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
-                    <Label htmlFor="numberOfDays">{t('createTrip.numberOfDays')}</Label>
-                    <Input
-                      id="numberOfDays"
-                      type="number"
-                      min={1}
-                      max={365}
-                      placeholder="7"
-                      value={numberOfDays}
-                      onChange={(e) => setNumberOfDays(e.target.value ? parseInt(e.target.value) : '')}
-                      required
-                      autoComplete="off"
+                {/* Exact dates toggle + inputs */}
+                <div className="rounded-lg border border-border/50 bg-card/50 p-3 space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={hasExactDates}
+                      onChange={(e) => {
+                        setHasExactDates(e.target.checked);
+                        if (e.target.checked) setNumberOfDays('');
+                      }}
+                      className="rounded border-border"
                     />
-                  </div>
-                )}
+                    <span className="text-sm font-medium">{t('createTrip.haveExactDates')}</span>
+                  </label>
 
-                {planningLevel === 'detailed_planning' && (
-                  <div className="rounded-lg border border-border/50 bg-card/50 p-3 grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="startDate">{t('createTrip.startDate')}</Label>
-                      <Input
-                        id="startDate"
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        required
-                        autoComplete="off"
-                      />
+                  {hasExactDates && (
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="startDate" className="text-xs">{t('createTrip.startDate')}</Label>
+                        <Input
+                          id="startDate"
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          required={hasExactDates}
+                          autoComplete="off"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="endDate" className="text-xs">{t('createTrip.endDate')}</Label>
+                        <Input
+                          id="endDate"
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          min={startDate}
+                          required={hasExactDates}
+                          autoComplete="off"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="endDate">{t('createTrip.endDate')}</Label>
-                      <Input
-                        id="endDate"
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        min={startDate}
-                        required
-                        autoComplete="off"
-                      />
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -219,7 +229,7 @@ export function CreateTripForm({ trigger, open: openProp, onOpenChange }: Create
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               {t('common.cancel')}
             </Button>
-            <Button type="submit" disabled={isSubmitting || !planningLevel}>
+            <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? t('createTrip.creating') : t('createTrip.createTrip')}
             </Button>
           </div>
