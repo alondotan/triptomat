@@ -41,7 +41,7 @@ export async function updateItineraryDay(id: string, updates: Partial<ItineraryD
   if (updates.accommodationOptions !== undefined) updateData.accommodation_options = updates.accommodationOptions;
   if (updates.activities !== undefined) updateData.activities = updates.activities;
   if (updates.transportationSegments !== undefined) updateData.transportation_segments = updates.transportationSegments;
-  if (updates.itineraryLocationId !== undefined) updateData.itinerary_location_id = updates.itineraryLocationId;
+  if ('itineraryLocationId' in updates) updateData.itinerary_location_id = updates.itineraryLocationId ?? null;
 
   const { error } = await supabase.from('itinerary_days').update(updateData).eq('id', id);
   if (error) throw error;
