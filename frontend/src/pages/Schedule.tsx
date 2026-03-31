@@ -987,9 +987,13 @@ export default function SchedulePage() {
   const [addLocationOpen, setAddLocationOpen] = useState(false);
   const [addActivityOpen, setAddActivityOpen] = useState(false);
   const [editingLocDays, setEditingLocDays] = useState(false);
+  const [locDetailSelectedDayNum, setLocDetailSelectedDayNum] = useState<number | null>(null);
 
-  // Reset "edit days" mode when entering a different location
-  useEffect(() => { setEditingLocDays(false); }, [selectedResearchLocId, mobileDetailLocId]);
+  // Reset day selection + edit mode when entering a different location
+  useEffect(() => {
+    setEditingLocDays(false);
+    setLocDetailSelectedDayNum(null);
+  }, [selectedResearchLocId, mobileDetailLocId]);
 
   // Listen for FAB "add location" event in research mode
   useEffect(() => {
@@ -2848,7 +2852,7 @@ export default function SchedulePage() {
 
           {/* ── Day pills + Location strip (sticky, never scrolls) ── */}
           {!hasDays || viewMode === 'places' ? (
-            <div className="flex flex-col w-full gap-3 md:overflow-hidden md:h-[calc(100dvh-5.5rem)]">
+            <div className={`flex flex-col w-full gap-3 md:overflow-hidden ${locDetailSelectedDayNum == null ? 'md:h-[calc(100dvh-5.5rem)]' : ''}`}>
 
               {/* ════════════════════════════════════════════════════════════════ */}
               {/* ══ MOBILE: feed / detail view ════════════════════════════════ */}
@@ -2915,8 +2919,8 @@ export default function SchedulePage() {
                                     : `${t('timeline.day')} ${itDay.dayNumber}`;
                                   return (
                                     <button key={itDay.dayNumber} type="button"
-                                      onClick={() => { setSelectedDayNum(itDay.dayNumber); setViewMode('days'); }}
-                                      className="shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border bg-primary text-primary-foreground border-primary hover:opacity-80 transition-opacity"
+                                      onClick={() => { setLocDetailSelectedDayNum(prev => prev === itDay.dayNumber ? null : itDay.dayNumber); setSelectedDayNum(itDay.dayNumber); }}
+                                      className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border bg-primary text-primary-foreground border-primary hover:opacity-80 transition-opacity ${locDetailSelectedDayNum === itDay.dayNumber ? 'ring-2 ring-offset-1 ring-primary' : ''}`}
                                     >{label}</button>
                                   );
                                 })
@@ -2932,7 +2936,7 @@ export default function SchedulePage() {
                         </div>
                       )}
                       {/* Content */}
-                      <div className="space-y-3">
+                      <div className={`space-y-3 ${locDetailSelectedDayNum != null ? 'hidden' : ''}`}>
                         {/* Map */}
                         {locationCoords && (
                           <div className="rounded-xl overflow-hidden border bg-muted h-[200px]">
@@ -3125,8 +3129,8 @@ export default function SchedulePage() {
                                     : `${t('timeline.day')} ${itDay.dayNumber}`;
                                   return (
                                     <button key={itDay.dayNumber} type="button"
-                                      onClick={() => { setSelectedDayNum(itDay.dayNumber); setViewMode('days'); }}
-                                      className="shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border bg-primary text-primary-foreground border-primary hover:opacity-80 transition-opacity"
+                                      onClick={() => { setLocDetailSelectedDayNum(prev => prev === itDay.dayNumber ? null : itDay.dayNumber); setSelectedDayNum(itDay.dayNumber); }}
+                                      className={`shrink-0 px-2.5 py-1 rounded-full text-xs font-medium border bg-primary text-primary-foreground border-primary hover:opacity-80 transition-opacity ${locDetailSelectedDayNum === itDay.dayNumber ? 'ring-2 ring-offset-1 ring-primary' : ''}`}
                                     >{label}</button>
                                   );
                                 })
@@ -3142,7 +3146,7 @@ export default function SchedulePage() {
                         </div>
                       )}
                       {/* Content: activities strip (2/3 left) + sidebar (1/3 right) */}
-                      <div className="flex-1 min-h-0 flex gap-4 overflow-hidden">
+                      <div className={`flex-1 min-h-0 flex gap-4 overflow-hidden ${locDetailSelectedDayNum != null ? 'hidden' : ''}`}>
                         {/* Left 2/3: horizontal activities strip */}
                         <div className="flex-1 min-w-0 flex flex-col gap-2 min-h-0">
                           <h4 className="text-sm font-semibold text-muted-foreground shrink-0">
@@ -3392,7 +3396,7 @@ export default function SchedulePage() {
             <p className="text-xs text-muted-foreground">{t('timeline.noActiveTrip')}</p>
           )}
 
-          {hasDays && viewMode === 'days' && (<>
+          {hasDays && (viewMode === 'days' || locDetailSelectedDayNum != null) && (<>
           {/* Location picker dialog */}
           {activeTrip && (
             <LocationContextPicker
