@@ -981,18 +981,6 @@ export default function SchedulePage() {
   // hasDays: true when trip has a day count or exact dates
   const hasDays = !!(activeTrip?.numberOfDays && activeTrip.numberOfDays > 0) || !!activeTrip?.startDate;
 
-  // When trip has exact dates, sort locations by their earliest assigned day number
-  const sortedResearchLocations = useMemo(() => {
-    if (!activeTrip?.startDate) return researchLocations;
-    return [...researchLocations].sort((a, b) => {
-      const aDays = itineraryDays.filter(d => d.itineraryLocationId === a.id).map(d => d.dayNumber);
-      const bDays = itineraryDays.filter(d => d.itineraryLocationId === b.id).map(d => d.dayNumber);
-      const aMin = aDays.length > 0 ? Math.min(...aDays) : Infinity;
-      const bMin = bDays.length > 0 ? Math.min(...bDays) : Infinity;
-      return aMin - bMin;
-    });
-  }, [researchLocations, itineraryDays, activeTrip?.startDate]);
-
   // Research/places mode location strip state
   const [selectedResearchLocId, setSelectedResearchLocId] = useState<string | null>(null);
   const [mobileDetailLocId, setMobileDetailLocId] = useState<string | null>(null);
@@ -1036,6 +1024,19 @@ export default function SchedulePage() {
     if (ordered.length !== researchLocationsBase.length) return researchLocationsBase;
     return ordered;
   }, [researchLocationsBase, locationOrderOverride]);
+
+  // When trip has exact dates, sort locations by their earliest assigned day number
+  const sortedResearchLocations = useMemo(() => {
+    if (!activeTrip?.startDate) return researchLocations;
+    return [...researchLocations].sort((a, b) => {
+      const aDays = itineraryDays.filter(d => d.itineraryLocationId === a.id).map(d => d.dayNumber);
+      const bDays = itineraryDays.filter(d => d.itineraryLocationId === b.id).map(d => d.dayNumber);
+      const aMin = aDays.length > 0 ? Math.min(...aDays) : Infinity;
+      const bMin = bDays.length > 0 ? Math.min(...bDays) : Infinity;
+      return aMin - bMin;
+    });
+  }, [researchLocations, itineraryDays, activeTrip?.startDate]);
+
   // Clear override once server data matches
   useEffect(() => {
     if (!locationOrderOverride) return;
