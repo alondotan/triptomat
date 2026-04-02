@@ -6,7 +6,7 @@ import { useTransport } from '@/features/transport/TransportContext';
 import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { updateItineraryDay, createItineraryDay } from '@/features/itinerary/itineraryService';
 import { geocodeLocation } from '@/features/geodata/weatherService';
-import { findInFlatList, reorderTripLocations, updateTripLocationNotes, updateTripLocationImage, deleteResearchTripLocation } from '@/features/trip/tripLocationService';
+import { findInFlatList, reorderTripLocations, updateTripLocationNotes, updateTripLocationImage, deleteResearchTripLocation, markTripLocationPlanned } from '@/features/trip/tripLocationService';
 import { rebuildPOIBookingsFromDays } from '@/features/poi/poiService';
 import { LocationContextPicker } from '@/shared/components/LocationContextPicker';
 import { LocationSelector } from '@/shared/components/LocationSelector';
@@ -1010,10 +1010,10 @@ export default function SchedulePage() {
 
   // Places mode: derived values for location strip
   const [locationOrderOverride, setLocationOrderOverride] = useState<string[] | null>(null);
-  const researchLocationsBase = useMemo(() => {
-    const locIdsWithDays = new Set(itineraryDays.map(d => d.tripLocationId).filter(Boolean));
-    return tripLocations.filter(tl => !tl.isTemporary && locIdsWithDays.has(tl.id));
-  }, [tripLocations, itineraryDays]);
+  const researchLocationsBase = useMemo(() =>
+    tripLocations.filter(tl => !tl.isTemporary && tl.isPlanned),
+    [tripLocations],
+  );
   // Apply local order override (cleared once server data catches up)
   const researchLocations = useMemo(() => {
     if (!locationOrderOverride) return researchLocationsBase;
@@ -1148,6 +1148,9 @@ export default function SchedulePage() {
         return;
       }
 
+      // Mark as planned in the hierarchy
+      await markTripLocationPlanned(tripLocId, true);
+
       // Check if holding day already exists for this trip_location
       const existingDay = itineraryDays.find(d => d.tripLocationId === tripLocId);
       if (!existingDay) {
@@ -1212,7 +1215,8 @@ export default function SchedulePage() {
         }
       }
 
-      await deleteResearchTripLocation(locId);
+      await deleteResearchTripLocation(locId);      // deletes holding days
+      await markTripLocationPlanned(locId, false);  // stays in hierarchy, removed from plan
       await reloadLocations();
       await refetchItinerary();
       if (mobileDetailLocId === locId) setMobileDetailLocId(null);
@@ -1385,8 +1389,9 @@ export default function SchedulePage() {
         await updateItineraryDay(itDay.id, { tripLocationId: undefined });
         setItineraryDays(prev => prev.map(d => d.id === itDay.id ? { ...d, tripLocationId: undefined } : d));
       } else {
-        // Assign to this location
+        // Assign to this location + mark as planned
         await updateItineraryDay(itDay.id, { tripLocationId: locationId });
+        await markTripLocationPlanned(locationId, true);
         setItineraryDays(prev => prev.map(d => d.id === itDay.id ? { ...d, tripLocationId: locationId } : d));
       }
     } catch {

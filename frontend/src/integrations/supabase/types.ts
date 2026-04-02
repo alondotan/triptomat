@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       ai_usage: {
@@ -265,9 +240,9 @@ export type Database = {
           date: string | null
           day_number: number
           id: string
-          location_context: string | null
           transportation_segments: Json | null
           trip_id: string
+          trip_location_id: string | null
           updated_at: string
         }
         Insert: {
@@ -277,9 +252,9 @@ export type Database = {
           date?: string | null
           day_number: number
           id?: string
-          location_context?: string | null
           transportation_segments?: Json | null
           trip_id: string
+          trip_location_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -289,9 +264,9 @@ export type Database = {
           date?: string | null
           day_number?: number
           id?: string
-          location_context?: string | null
           transportation_segments?: Json | null
           trip_id?: string
+          trip_location_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -300,6 +275,13 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itinerary_days_trip_location_id_fkey"
+            columns: ["trip_location_id"]
+            isOneToOne: false
+            referencedRelation: "trip_locations"
             referencedColumns: ["id"]
           },
         ]
@@ -731,7 +713,11 @@ export type Database = {
           created_at: string
           external_id: string | null
           id: string
+          image_url: string
+          is_planned: boolean
+          is_temporary: boolean
           name: string
+          notes: string
           parent_id: string | null
           site_type: string
           sort_order: number
@@ -743,7 +729,11 @@ export type Database = {
           created_at?: string
           external_id?: string | null
           id?: string
+          image_url?: string
+          is_planned?: boolean
+          is_temporary?: boolean
           name: string
+          notes?: string
           parent_id?: string | null
           site_type: string
           sort_order?: number
@@ -755,7 +745,11 @@ export type Database = {
           created_at?: string
           external_id?: string | null
           id?: string
+          image_url?: string
+          is_planned?: boolean
+          is_temporary?: boolean
           name?: string
+          notes?: string
           parent_id?: string | null
           site_type?: string
           sort_order?: number
@@ -1107,9 +1101,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

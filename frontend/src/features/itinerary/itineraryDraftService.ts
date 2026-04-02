@@ -2,6 +2,7 @@ import type { PointOfInterest } from '@/types/trip';
 import type { DraftDay } from '@/types/itineraryDraft';
 import type { Json } from '@/integrations/supabase/types';
 import { createOrMergePOI } from '@/features/poi/poiService';
+import { markTripLocationPlanned } from '@/features/trip/tripLocationService';
 import { supabase } from '@/shared/services/helpers';
 
 interface ActivityEntry {
@@ -71,7 +72,11 @@ export async function applyDraftToTrip(
       const tripLoc = (tripLocs || []).find(
         l => l.name.toLowerCase() === locName.toLowerCase(),
       );
-      if (tripLoc) tripLocationIdMap.set(locName.toLowerCase(), tripLoc.id);
+      if (tripLoc) {
+        tripLocationIdMap.set(locName.toLowerCase(), tripLoc.id);
+        // Mark as planned — AI draft is explicitly choosing this location
+        await markTripLocationPlanned(tripLoc.id, true);
+      }
     }
   }
 

@@ -2,7 +2,7 @@ import { useCallback, useContext } from 'react';
 import { ActiveTripContext } from '@/features/trip/ActiveTripContext';
 import { ItineraryContext } from '@/features/itinerary/ItineraryContext';
 import { POIContext } from '@/features/poi/POIContext';
-import { getDescendantNames, updateTripLocationImage, type TripLocation } from '@/features/trip/tripLocationService';
+import { getDescendantNames, updateTripLocationImage, markTripLocationPlanned, type TripLocation } from '@/features/trip/tripLocationService';
 import { createItineraryDay, updateItineraryDay } from '@/features/itinerary/itineraryService';
 import type { PointOfInterest } from '@/types/trip';
 
@@ -26,8 +26,7 @@ export function useResearchAutoAssign() {
 
   const isResearchMode = activeTrip?.status === 'research';
 
-  const locIdsWithDays = new Set(itineraryDays.map(d => d.tripLocationId).filter(Boolean));
-  const researchLocations = tripLocations.filter(tl => !tl.isTemporary && locIdsWithDays.has(tl.id));
+  const researchLocations = tripLocations.filter(tl => !tl.isTemporary && tl.isPlanned);
 
   // Fire-and-forget: find an image for the new research location
   const fetchLocationImage = useCallback(async (locationName: string, tripLoc: TripLocation) => {
@@ -144,6 +143,7 @@ export function useResearchAutoAssign() {
             activities: [...activities, { order: activities.length + 1, type: 'poi' as const, id: poi.id, schedule_state: 'potential' as const }],
           });
         }
+        await markTripLocationPlanned(cityTripLoc.id, true);
         await reloadLocations?.();
 
         // Fetch and persist location image in the background

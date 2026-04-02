@@ -63,6 +63,7 @@ export interface TripLocation {
   sortOrder: number;
   source: string;
   isTemporary: boolean;
+  isPlanned: boolean;
   notes: string;
   imageUrl: string;
   createdAt: string;
@@ -463,6 +464,7 @@ function mapTripLocation(row: Record<string, unknown>): TripLocation {
     sortOrder: row.sort_order as number,
     source: row.source as string,
     isTemporary: (row.is_temporary as boolean) ?? false,
+    isPlanned: (row.is_planned as boolean) ?? false,
     notes: (row.notes as string) || '',
     imageUrl: (row.image_url as string) || '',
     createdAt: row.created_at as string,
@@ -491,6 +493,13 @@ export async function ensureTemporaryTripLocation(tripId: string): Promise<TripL
 
   if (error) throw error;
   return mapTripLocation(data as Record<string, unknown>);
+}
+
+// ── Planned flag ────────────────────────────────
+
+export async function markTripLocationPlanned(id: string, planned: boolean): Promise<void> {
+  const { error } = await supabase.from('trip_locations').update({ is_planned: planned }).eq('id', id);
+  if (error) throw error;
 }
 
 // ── Notes / image mutations ─────────────────────
