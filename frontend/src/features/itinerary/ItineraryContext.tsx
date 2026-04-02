@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { ItineraryDay, ItineraryLocation, Mission, Contact } from '@/types/trip';
+import { ItineraryDay, Mission, Contact } from '@/types/trip';
 import { fetchItineraryDays } from '@/features/itinerary/itineraryService';
-import { fetchItineraryLocations } from '@/features/itinerary/itineraryLocationService';
 import { fetchMissions, createMission as createMissionService, updateMission as updateMissionService, deleteMission as deleteMissionService } from '@/features/missions/missionService';
 import { fetchContacts, createContact as createContactService, updateContact as updateContactService, deleteContact as deleteContactService } from '@/features/contacts/contactService';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,14 +10,12 @@ import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 // State
 interface ItineraryState {
   itineraryDays: ItineraryDay[];
-  itineraryLocations: ItineraryLocation[];
   missions: Mission[];
   contacts: Contact[];
 }
 
 type ItineraryAction =
   | { type: 'SET_ITINERARY_DAYS'; payload: ItineraryDay[] }
-  | { type: 'SET_ITINERARY_LOCATIONS'; payload: ItineraryLocation[] }
   | { type: 'SET_MISSIONS'; payload: Mission[] }
   | { type: 'ADD_MISSION'; payload: Mission }
   | { type: 'UPDATE_MISSION'; payload: { id: string; updates: Partial<Mission> } }
@@ -32,8 +29,6 @@ function itineraryReducer(state: ItineraryState, action: ItineraryAction): Itine
   switch (action.type) {
     case 'SET_ITINERARY_DAYS':
       return { ...state, itineraryDays: action.payload };
-    case 'SET_ITINERARY_LOCATIONS':
-      return { ...state, itineraryLocations: action.payload };
     case 'SET_MISSIONS':
       return { ...state, missions: action.payload };
     case 'ADD_MISSION':
@@ -59,8 +54,6 @@ function itineraryReducer(state: ItineraryState, action: ItineraryAction): Itine
 interface ItineraryContextType {
   itineraryDays: ItineraryDay[];
   setItineraryDays: (days: ItineraryDay[]) => void;
-  itineraryLocations: ItineraryLocation[];
-  refetchItineraryLocations: () => Promise<void>;
   missions: Mission[];
   addMission: (m: Omit<Mission, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateMission: (id: string, updates: Partial<Mission>) => Promise<void>;
@@ -78,23 +71,20 @@ export const ItineraryContext = createContext<ItineraryContextType | undefined>(
 export function ItineraryProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const { activeTrip, refreshKey } = useActiveTrip();
-  const [state, dispatch] = useReducer(itineraryReducer, { itineraryDays: [], itineraryLocations: [], missions: [], contacts: [] });
+  const [state, dispatch] = useReducer(itineraryReducer, { itineraryDays: [], missions: [], contacts: [] });
 
   // Load all data when active trip changes
   useEffect(() => {
     dispatch({ type: 'SET_ITINERARY_DAYS', payload: [] });
-    dispatch({ type: 'SET_ITINERARY_LOCATIONS', payload: [] });
     dispatch({ type: 'SET_MISSIONS', payload: [] });
     dispatch({ type: 'SET_CONTACTS', payload: [] });
     if (activeTrip) {
       Promise.all([
         fetchItineraryDays(activeTrip.id),
-        fetchItineraryLocations(activeTrip.id),
         fetchMissions(activeTrip.id),
         fetchContacts(activeTrip.id),
-      ]).then(([days, locations, missions, contacts]) => {
+      ]).then(([days, missions, contacts]) => {
         dispatch({ type: 'SET_ITINERARY_DAYS', payload: days });
-        dispatch({ type: 'SET_ITINERARY_LOCATIONS', payload: locations });
         dispatch({ type: 'SET_MISSIONS', payload: missions });
         dispatch({ type: 'SET_CONTACTS', payload: contacts });
       });
@@ -131,23 +121,6 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
       .channel(`missions-realtime-${tripId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'missions', filter: `trip_id=eq.${tripId}` }, () => {
         fetchMissions(tripId).then(missions => dispatch({ type: 'SET_MISSIONS', payload: missions }));
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeTrip?.id]);
-
-  // Realtime subscription for itinerary_locations
-  useEffect(() => {
-    const tripId = activeTrip?.id;
-    if (!tripId) return;
-
-    const channel = supabase
-      .channel(`itinerary-locations-realtime-${tripId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'itinerary_locations', filter: `trip_id=eq.${tripId}` }, () => {
-        fetchItineraryLocations(tripId).then(locs => dispatch({ type: 'SET_ITINERARY_LOCATIONS', payload: locs }));
       })
       .subscribe();
 
@@ -225,12 +198,6 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_ITINERARY_DAYS', payload: days });
   }, [activeTrip]);
 
-  const refetchItineraryLocations = useCallback(async () => {
-    if (!activeTrip) return;
-    const locs = await fetchItineraryLocations(activeTrip.id);
-    dispatch({ type: 'SET_ITINERARY_LOCATIONS', payload: locs });
-  }, [activeTrip]);
-
   const setItineraryDays = useCallback((days: ItineraryDay[]) => {
     dispatch({ type: 'SET_ITINERARY_DAYS', payload: days });
   }, []);
@@ -238,8 +205,6 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({
     itineraryDays: state.itineraryDays,
     setItineraryDays,
-    itineraryLocations: state.itineraryLocations,
-    refetchItineraryLocations,
     missions: state.missions,
     addMission,
     updateMission,
@@ -249,7 +214,7 @@ export function ItineraryProvider({ children }: { children: ReactNode }) {
     addContact,
     updateContact,
     deleteContact,
-  }), [state.itineraryDays, setItineraryDays, state.itineraryLocations, refetchItineraryLocations, state.missions, addMission, updateMission, deleteMission, refetchItinerary, state.contacts, addContact, updateContact, deleteContact]);
+  }), [state.itineraryDays, setItineraryDays, state.missions, addMission, updateMission, deleteMission, refetchItinerary, state.contacts, addContact, updateContact, deleteContact]);
 
   return <ItineraryContext.Provider value={value}>{children}</ItineraryContext.Provider>;
 }

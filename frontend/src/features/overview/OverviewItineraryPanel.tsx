@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { usePOI } from '@/features/poi/POIContext';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { ItineraryTree } from '@/shared/components/ItineraryTree';
 import type { DraftDay, DraftPlace } from '@/types/itineraryDraft';
 
@@ -12,18 +13,25 @@ const CATEGORY_MAP: Record<string, DraftPlace['category']> = {
   service: 'service',
 };
 
-export function OverviewItineraryPanel() {
+interface OverviewItineraryPanelProps {
+  selectedName?: string | null;
+  onSelectName?: (name: string | null) => void;
+}
+
+export function OverviewItineraryPanel({ selectedName, onSelectName }: OverviewItineraryPanelProps = {}) {
   const { t } = useTranslation();
   const { itineraryDays } = useItinerary();
   const { pois } = usePOI();
+  const { tripLocations } = useActiveTrip();
 
   const days = useMemo<DraftDay[]>(() => {
     const poiMap = new Map(pois.map(p => [p.id, p]));
+    const locMap = new Map(tripLocations.filter(tl => !tl.isTemporary).map(tl => [tl.id, tl.name]));
 
     return itineraryDays.map(day => ({
       dayNumber: day.dayNumber,
       date: day.date,
-      locationContext: day.locationContext,
+      locationContext: (day.tripLocationId && locMap.get(day.tripLocationId)) || day.locationContext,
       places: (day.activities || [])
         .filter(a => a.type === 'poi' && poiMap.has(a.id))
         .sort((a, b) => a.order - b.order)
@@ -38,7 +46,7 @@ export function OverviewItineraryPanel() {
           };
         }),
     }));
-  }, [itineraryDays, pois]);
+  }, [itineraryDays, pois, tripLocations]);
 
   return (
     <div className="flex flex-col min-h-0">
@@ -47,6 +55,8 @@ export function OverviewItineraryPanel() {
         <ItineraryTree
           days={days}
           emptyText={t('overview.noItinerary')}
+          selectedName={selectedName ?? null}
+          onSelectName={onSelectName}
         />
       </div>
     </div>

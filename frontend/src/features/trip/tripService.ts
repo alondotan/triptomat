@@ -1,9 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Trip, Collection } from '@/types/trip';
 import { fetchItineraryDays, updateItineraryDay } from '@/features/itinerary/itineraryService';
-import { seedTripLocations } from './tripLocationService';
+import { seedTripLocations, ensureTemporaryTripLocation } from './tripLocationService';
 import { seedTripFestivals } from '@/features/geodata/festivalService';
-import { ensureDefaultItineraryLocation } from '@/features/itinerary/itineraryLocationService';
+import { createItineraryDay } from '@/features/itinerary/itineraryService';
 
 // ============================================================
 // TRIPS
@@ -80,11 +80,37 @@ export async function createTrip(trip: Omit<Trip, 'id' | 'createdAt' | 'updatedA
     );
   }
 
-  // Create default "General" itinerary location
+  // Create temporary location and seed days into it
   try {
-    await ensureDefaultItineraryLocation(mapped.id);
+    const tempLoc = await ensureTemporaryTripLocation(mapped.id);
+
+    // Determine number of days from explicit count or date range
+    let numDays = mapped.numberOfDays ?? 0;
+    if (!numDays && mapped.startDate && mapped.endDate) {
+      const start = new Date(mapped.startDate);
+      const end = new Date(mapped.endDate);
+      numDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+    }
+
+    for (let i = 1; i <= numDays; i++) {
+      let date: string | undefined;
+      if (mapped.startDate) {
+        const d = new Date(mapped.startDate);
+        d.setDate(d.getDate() + i - 1);
+        date = d.toISOString().slice(0, 10);
+      }
+      await createItineraryDay({
+        tripId: mapped.id,
+        dayNumber: i,
+        date,
+        tripLocationId: tempLoc.id,
+        accommodationOptions: [],
+        activities: [],
+        transportationSegments: [],
+      });
+    }
   } catch (e) {
-    console.error('Failed to create default itinerary location:', e);
+    console.error('Failed to create temporary location or days:', e);
   }
 
   return mapped;

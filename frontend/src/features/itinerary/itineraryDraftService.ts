@@ -58,7 +58,24 @@ export async function applyDraftToTrip(
     }
   }
 
-  // 2) Merge into itinerary days
+  // 2) Resolve locationContext names → trip_location IDs
+  const tripLocationIdMap = new Map<string, string>(); // locationContext (lower) → trip_location.id
+  const uniqueLocations = [...new Set(draft.map(d => d.locationContext).filter(Boolean))] as string[];
+  if (uniqueLocations.length > 0) {
+    const { data: tripLocs } = await supabase
+      .from('trip_locations')
+      .select('id, name')
+      .eq('trip_id', tripId);
+
+    for (const locName of uniqueLocations) {
+      const tripLoc = (tripLocs || []).find(
+        l => l.name.toLowerCase() === locName.toLowerCase(),
+      );
+      if (tripLoc) tripLocationIdMap.set(locName.toLowerCase(), tripLoc.id);
+    }
+  }
+
+  // 3) Merge into itinerary days
   for (const day of draft) {
     const { data: existingDay } = await supabase
       .from('itinerary_days')
@@ -83,6 +100,10 @@ export async function applyDraftToTrip(
       })
       .filter(a => a.id);
 
+    const tripLocationId = day.locationContext
+      ? tripLocationIdMap.get(day.locationContext.toLowerCase()) ?? null
+      : null;
+
     if (existingDay) {
       // Preserve existing non-POI activities (time_blocks, collections)
       // and POIs that are NOT in the draft (they were already there)
@@ -100,12 +121,15 @@ export async function applyDraftToTrip(
         ...preserved.map((a, i) => ({ ...a, order: maxOrder + i + 1 })),
       ];
 
+      const updatePayload: Record<string, unknown> = {
+        activities: merged as unknown as Json,
+        location_context: day.locationContext || (existingDay as Record<string, unknown>).location_context as string || undefined,
+      };
+      if (tripLocationId) updatePayload.trip_location_id = tripLocationId;
+
       await supabase
         .from('itinerary_days')
-        .update({
-          activities: merged as unknown as Json,
-          location_context: day.locationContext || (existingDay as Record<string, unknown>).location_context as string || undefined,
-        })
+        .update(updatePayload)
         .eq('id', existingDay.id);
     } else {
       await supabase
@@ -114,6 +138,7 @@ export async function applyDraftToTrip(
           trip_id: tripId,
           day_number: day.dayNumber,
           location_context: day.locationContext || null,
+          trip_location_id: tripLocationId,
           activities: newActivities as unknown as Json,
         }]);
     }

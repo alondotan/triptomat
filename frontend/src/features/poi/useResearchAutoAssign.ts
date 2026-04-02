@@ -2,8 +2,7 @@ import { useCallback, useContext } from 'react';
 import { ActiveTripContext } from '@/features/trip/ActiveTripContext';
 import { ItineraryContext } from '@/features/itinerary/ItineraryContext';
 import { POIContext } from '@/features/poi/POIContext';
-import { getDescendantNames, type TripLocation } from '@/features/trip/tripLocationService';
-import { findOrCreateItineraryLocation, assignDayToLocation, updateItineraryLocationImage } from '@/features/itinerary/itineraryLocationService';
+import { getDescendantNames, updateTripLocationImage, type TripLocation } from '@/features/trip/tripLocationService';
 import { createItineraryDay, updateItineraryDay } from '@/features/itinerary/itineraryService';
 import type { PointOfInterest } from '@/types/trip';
 
@@ -20,18 +19,17 @@ export function useResearchAutoAssign() {
 
   const activeTrip = tripCtx?.activeTrip;
   const tripLocations = tripCtx?.tripLocations ?? [];
+  const reloadLocations = tripCtx?.reloadLocations;
   const pois = poiCtx?.pois ?? [];
-  const itineraryLocations = itinCtx?.itineraryLocations ?? [];
   const itineraryDays = itinCtx?.itineraryDays ?? [];
-  const refetchItineraryLocations = itinCtx?.refetchItineraryLocations;
   const refetchItinerary = itinCtx?.refetchItinerary;
 
   const isResearchMode = activeTrip?.status === 'research';
 
-  const researchLocations = itineraryLocations.filter(il => !il.isDefault);
+  const researchLocations = tripLocations.filter(tl => !tl.isTemporary);
 
   // Fire-and-forget: find an image for the new research location
-  const fetchLocationImage = useCallback(async (locationName: string, tripLoc: TripLocation, itinLocId: string) => {
+  const fetchLocationImage = useCallback(async (locationName: string, tripLoc: TripLocation) => {
     try {
       let imageUrl: string | null = null;
       const locName = locationName.toLowerCase();
@@ -63,11 +61,11 @@ export function useResearchAutoAssign() {
       }
 
       if (imageUrl) {
-        await updateItineraryLocationImage(itinLocId, imageUrl);
-        await refetchItineraryLocations?.();
+        await updateTripLocationImage(tripLoc.id, imageUrl);
+        await reloadLocations?.();
       }
     } catch { /* silent */ }
-  }, [pois, tripLocations, refetchItineraryLocations]);
+  }, [pois, tripLocations, reloadLocations]);
 
   const autoAssign = useCallback(async (poi: PointOfInterest) => {
     if (!activeTrip || !isResearchMode) return;
@@ -92,30 +90,28 @@ export function useResearchAutoAssign() {
       }
 
       // Check if any existing research location matches (is the city itself or an ancestor)
-      let matchedItinLocId: string | null = null;
-      for (const il of researchLocations) {
-        if (il.tripLocationId && selfAndAncestorIds.has(il.tripLocationId)) {
-          matchedItinLocId = il.id;
+      let matchedTripLocId: string | null = null;
+      for (const tl of researchLocations) {
+        if (selfAndAncestorIds.has(tl.id)) {
+          matchedTripLocId = tl.id;
           break;
         }
       }
 
       // Also check descendant direction: research location might be a child of the city
-      if (!matchedItinLocId) {
+      if (!matchedTripLocId) {
         const descendants = getDescendantNames(tripLocations, city);
-        for (const il of researchLocations) {
-          if (!il.tripLocationId) continue;
-          const tl = tripLocations.find(l => l.id === il.tripLocationId);
-          if (tl && descendants.has(tl.name.toLowerCase())) {
-            matchedItinLocId = il.id;
+        for (const tl of researchLocations) {
+          if (descendants.has(tl.name.toLowerCase())) {
+            matchedTripLocId = tl.id;
             break;
           }
         }
       }
 
-      if (matchedItinLocId) {
+      if (matchedTripLocId) {
         // Add POI to the matched research location's holding day
-        const holdingDay = itineraryDays.find(d => d.itineraryLocationId === matchedItinLocId);
+        const holdingDay = itineraryDays.find(d => d.tripLocationId === matchedTripLocId);
         if (holdingDay) {
           const existing = holdingDay.activities || [];
           if (!existing.some(a => a.id === poi.id)) {
@@ -125,9 +121,8 @@ export function useResearchAutoAssign() {
           }
         }
       } else {
-        // No matching research location — create one for the POI's city
-        const itinLoc = await findOrCreateItineraryLocation(activeTrip.id, cityTripLoc.id);
-        const existingDay = itineraryDays.find(d => d.itineraryLocationId === itinLoc.id);
+        // No matching research location — use the city trip_location directly as research location
+        const existingDay = itineraryDays.find(d => d.tripLocationId === cityTripLoc.id);
         let holdingDay = existingDay;
         if (!holdingDay) {
           const dayNumber = researchLocations.length + 1;
@@ -135,11 +130,11 @@ export function useResearchAutoAssign() {
             tripId: activeTrip.id,
             dayNumber,
             locationContext: city,
+            tripLocationId: cityTripLoc.id,
             accommodationOptions: [],
             activities: [],
             transportationSegments: [],
           });
-          await assignDayToLocation(created.id, itinLoc.id);
           holdingDay = created;
         }
         const activities = holdingDay.activities || [];
@@ -148,18 +143,18 @@ export function useResearchAutoAssign() {
             activities: [...activities, { order: activities.length + 1, type: 'poi' as const, id: poi.id, schedule_state: 'potential' as const }],
           });
         }
-        await refetchItineraryLocations?.();
+        await reloadLocations?.();
 
         // Fetch and persist location image in the background
-        if (!itinLoc.imageUrl) {
-          fetchLocationImage(city, cityTripLoc, itinLoc.id);
+        if (!cityTripLoc.imageUrl) {
+          fetchLocationImage(city, cityTripLoc);
         }
       }
       await refetchItinerary?.();
     } catch (e) {
       console.error('Failed to auto-assign POI to research location:', e);
     }
-  }, [activeTrip, isResearchMode, researchLocations, tripLocations, itineraryDays, refetchItineraryLocations, refetchItinerary, fetchLocationImage]);
+  }, [activeTrip, isResearchMode, researchLocations, tripLocations, itineraryDays, reloadLocations, refetchItinerary, fetchLocationImage]);
 
   return { autoAssign, isResearchMode };
 }

@@ -248,7 +248,9 @@ export interface ItineraryDay {
   dayNumber: number;
   date?: string;
   locationContext?: string;
+  /** @deprecated use tripLocationId */
   itineraryLocationId?: string;
+  tripLocationId?: string;
   accommodationOptions: ItineraryAccommodationOption[];
   activities: ItineraryActivity[];
   transportationSegments: ItineraryTransportSegment[];

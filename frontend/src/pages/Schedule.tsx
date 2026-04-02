@@ -5,9 +5,8 @@ import { usePOI } from '@/features/poi/POIContext';
 import { useTransport } from '@/features/transport/TransportContext';
 import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { updateItineraryDay, createItineraryDay } from '@/features/itinerary/itineraryService';
-import { findOrCreateItineraryLocation, assignDayToLocation, reorderItineraryLocations, updateItineraryLocationNotes, updateItineraryLocationImage, deleteItineraryLocation } from '@/features/itinerary/itineraryLocationService';
 import { geocodeLocation } from '@/features/geodata/weatherService';
-import { findInFlatList } from '@/features/trip/tripLocationService';
+import { findInFlatList, reorderTripLocations, updateTripLocationNotes, updateTripLocationImage, deleteResearchTripLocation } from '@/features/trip/tripLocationService';
 import { rebuildPOIBookingsFromDays } from '@/features/poi/poiService';
 import { LocationContextPicker } from '@/shared/components/LocationContextPicker';
 import { LocationSelector } from '@/shared/components/LocationSelector';
@@ -954,7 +953,7 @@ export default function SchedulePage() {
   const { updateTripInList } = useTripList();
   const { pois, addPOI, updatePOI } = usePOI();
   const { transportation, deleteTransportation } = useTransport();
-  const { itineraryDays, setItineraryDays, itineraryLocations, refetchItineraryLocations, addMission, refetchItinerary } = useItinerary();
+  const { itineraryDays, setItineraryDays, addMission, refetchItinerary } = useItinerary();
   const { toast } = useToast();
   const [selectedDayNum, setSelectedDayNum] = useState(1);
   const [addTransportOpen, setAddTransportOpen] = useState(false);
@@ -1012,8 +1011,8 @@ export default function SchedulePage() {
   // Places mode: derived values for location strip
   const [locationOrderOverride, setLocationOrderOverride] = useState<string[] | null>(null);
   const researchLocationsBase = useMemo(() =>
-    itineraryLocations.filter(il => !il.isDefault),
-    [itineraryLocations],
+    tripLocations.filter(tl => !tl.isTemporary),
+    [tripLocations],
   );
   // Apply local order override (cleared once server data catches up)
   const researchLocations = useMemo(() => {
@@ -1029,8 +1028,8 @@ export default function SchedulePage() {
   const sortedResearchLocations = useMemo(() => {
     if (!activeTrip?.startDate) return researchLocations;
     return [...researchLocations].sort((a, b) => {
-      const aDays = itineraryDays.filter(d => d.itineraryLocationId === a.id).map(d => d.dayNumber);
-      const bDays = itineraryDays.filter(d => d.itineraryLocationId === b.id).map(d => d.dayNumber);
+      const aDays = itineraryDays.filter(d => d.tripLocationId === a.id).map(d => d.dayNumber);
+      const bDays = itineraryDays.filter(d => d.tripLocationId === b.id).map(d => d.dayNumber);
       const aMin = aDays.length > 0 ? Math.min(...aDays) : Infinity;
       const bMin = bDays.length > 0 ? Math.min(...bDays) : Infinity;
       return aMin - bMin;
@@ -1047,19 +1046,16 @@ export default function SchedulePage() {
 
   const researchLocNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const il of researchLocations) {
-      if (il.tripLocationId) {
-        const tl = tripLocations.find(l => l.id === il.tripLocationId);
-        if (tl) map.set(il.id, tl.name);
-      }
+    for (const tl of researchLocations) {
+      map.set(tl.id, tl.name);
     }
     return map;
-  }, [researchLocations, tripLocations]);
+  }, [researchLocations]);
 
   // Holding day for selected research location (stores potential POIs)
   const selectedResearchDay = useMemo(() => {
     if (!selectedResearchLocId) return undefined;
-    return itineraryDays.find(d => d.itineraryLocationId === selectedResearchLocId);
+    return itineraryDays.find(d => d.tripLocationId === selectedResearchLocId);
   }, [selectedResearchLocId, itineraryDays]);
 
   // Build potential items for selected research location
@@ -1094,7 +1090,7 @@ export default function SchedulePage() {
   }, [researchPotential]);
 
   // Fetch an image for a location and persist it
-  const fetchAndSaveLocationImage = useCallback(async (itinLocId: string, locationName: string, tripLocation?: { id: string; name: string }) => {
+  const fetchAndSaveLocationImage = useCallback(async (tripLocId: string, locationName: string, tripLocation?: { id: string; name: string }) => {
     try {
       let imageUrl: string | null = null;
       const locName = locationName.toLowerCase();
@@ -1126,11 +1122,11 @@ export default function SchedulePage() {
       }
 
       if (imageUrl) {
-        await updateItineraryLocationImage(itinLocId, imageUrl);
-        await refetchItineraryLocations();
+        await updateTripLocationImage(tripLocId, imageUrl);
+        await reloadLocations();
       }
     } catch { /* silent */ }
-  }, [pois, tripLocations, refetchItineraryLocations]);
+  }, [pois, tripLocations, reloadLocations]);
 
   // Add a location to the research strip
   const handleAddResearchLocation = useCallback(async (locationName: string) => {
@@ -1152,35 +1148,33 @@ export default function SchedulePage() {
         return;
       }
 
-      // Create itinerary_location
-      const itinLoc = await findOrCreateItineraryLocation(activeTrip.id, tripLocId);
-
-      // Check if holding day already exists
-      const existingDay = itineraryDays.find(d => d.itineraryLocationId === itinLoc.id);
+      // Check if holding day already exists for this trip_location
+      const existingDay = itineraryDays.find(d => d.tripLocationId === tripLocId);
       if (!existingDay) {
         const dayNumber = researchLocations.length + 1;
-        const created = await createItineraryDay({
+        await createItineraryDay({
           tripId: activeTrip.id,
           dayNumber,
           locationContext: locationName,
+          tripLocationId: tripLocId,
           accommodationOptions: [],
           activities: [],
           transportationSegments: [],
         });
-        await assignDayToLocation(created.id, itinLoc.id);
       }
 
-      await refetchItineraryLocations();
+      await reloadLocations();
       await refetchItinerary();
 
       // Fetch and persist image in the background (fire-and-forget)
-      if (!itinLoc.imageUrl) {
-        fetchAndSaveLocationImage(itinLoc.id, locationName, existing);
+      const tripLoc = tripLocations.find(tl => tl.id === tripLocId);
+      if (!tripLoc?.imageUrl) {
+        fetchAndSaveLocationImage(tripLocId, locationName, existing);
       }
     } catch {
       toast({ title: t('common.error'), variant: 'destructive' });
     }
-  }, [activeTrip, tripLocations, addSiteToHierarchy, reloadLocations, itineraryDays, researchLocations, refetchItineraryLocations, refetchItinerary, fetchAndSaveLocationImage, t, toast]);
+  }, [activeTrip, tripLocations, addSiteToHierarchy, reloadLocations, itineraryDays, researchLocations, refetchItinerary, fetchAndSaveLocationImage, t, toast]);
 
   // Drag-end handler for reordering research location pills
   const handleLocationDragEnd = useCallback(async (event: DragEndEvent) => {
@@ -1193,21 +1187,21 @@ export default function SchedulePage() {
     // Apply optimistic reorder immediately so there's no flash
     setLocationOrderOverride(reordered.map(l => l.id));
     try {
-      await reorderItineraryLocations(
+      await reorderTripLocations(
         reordered.map((loc, i) => ({ id: loc.id, sortOrder: i + 1 })),
       );
-      await refetchItineraryLocations();
+      await reloadLocations();
     } catch {
       setLocationOrderOverride(null);
       toast({ title: t('common.error'), variant: 'destructive' });
     }
-  }, [researchLocations, refetchItineraryLocations, t, toast]);
+  }, [researchLocations, reloadLocations, t, toast]);
 
   // Delete a research location
   const handleDeleteResearchLocation = useCallback(async (locId: string) => {
     try {
       // Revert POIs in this location's holding day back to 'suggested'
-      const holdingDay = itineraryDays.find(d => d.itineraryLocationId === locId);
+      const holdingDay = itineraryDays.find(d => d.tripLocationId === locId);
       const poiIds = (holdingDay?.activities || []).filter(a => a.type === 'poi').map(a => a.id);
       let revertedCount = 0;
       for (const poiId of poiIds) {
@@ -1218,8 +1212,8 @@ export default function SchedulePage() {
         }
       }
 
-      await deleteItineraryLocation(locId);
-      await refetchItineraryLocations();
+      await deleteResearchTripLocation(locId);
+      await reloadLocations();
       await refetchItinerary();
       if (mobileDetailLocId === locId) setMobileDetailLocId(null);
       if (selectedResearchLocId === locId) {
@@ -1232,7 +1226,7 @@ export default function SchedulePage() {
     } catch {
       toast({ title: t('common.error'), variant: 'destructive' });
     }
-  }, [selectedResearchLocId, mobileDetailLocId, researchLocations, itineraryDays, pois, updatePOI, refetchItineraryLocations, refetchItinerary, t, toast]);
+  }, [selectedResearchLocId, mobileDetailLocId, researchLocations, itineraryDays, pois, updatePOI, reloadLocations, refetchItinerary, t, toast]);
 
   // Notes for the selected research location
   const selectedResearchLocation = useMemo(() =>
@@ -1252,7 +1246,7 @@ export default function SchedulePage() {
     notesSaveTimerRef.current = setTimeout(async () => {
       if (!selectedResearchLocId) return;
       try {
-        await updateItineraryLocationNotes(selectedResearchLocId, value);
+        await updateTripLocationNotes(selectedResearchLocId, value);
       } catch { /* silent — notes are saved optimistically */ }
     }, 800);
   }, [selectedResearchLocId]);
@@ -1266,12 +1260,8 @@ export default function SchedulePage() {
   const locationImageUrl = activeDetailLoc?.imageUrl || null;
 
   // Geocode selected research location for map + fetch boundary + image
-  const selectedLocName = activeDetailLocId ? researchLocNameMap.get(activeDetailLocId) : undefined;
-  const selectedTripLocation = useMemo(() => {
-    if (!activeDetailLocId) return undefined;
-    const il = researchLocations.find(l => l.id === activeDetailLocId);
-    return il?.tripLocationId ? tripLocations.find(tl => tl.id === il.tripLocationId) : undefined;
-  }, [activeDetailLocId, researchLocations, tripLocations]);
+  const selectedLocName = activeDetailLoc?.name;
+  const selectedTripLocation = activeDetailLoc;
   const isCity = selectedTripLocation?.siteType === 'city' || selectedTripLocation?.siteType === 'town' || selectedTripLocation?.siteType === 'village';
 
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -1342,7 +1332,7 @@ export default function SchedulePage() {
   const handleAddResearchPoi = useCallback(async (poiId: string) => {
     if (!activeTrip || !selectedResearchLocId) return;
     try {
-      const holdingDay = itineraryDays.find(d => d.itineraryLocationId === selectedResearchLocId);
+      const holdingDay = itineraryDays.find(d => d.tripLocationId === selectedResearchLocId);
       if (!holdingDay) return;
 
       const existing = holdingDay.activities || [];
@@ -1388,16 +1378,16 @@ export default function SchedulePage() {
     try {
       if (!itDay) {
         // Day record doesn't exist yet — create it and assign
-        await createItineraryDay({ tripId: activeTrip.id, dayNumber: dayNum, itineraryLocationId: locationId });
+        await createItineraryDay({ tripId: activeTrip.id, dayNumber: dayNum, tripLocationId: locationId, accommodationOptions: [], activities: [], transportationSegments: [] });
         await refetchItinerary();
-      } else if (itDay.itineraryLocationId === locationId) {
-        // Already assigned — unassign
-        await updateItineraryDay(itDay.id, { itineraryLocationId: undefined });
-        setItineraryDays(prev => prev.map(d => d.id === itDay.id ? { ...d, itineraryLocationId: undefined } : d));
+      } else if (itDay.tripLocationId === locationId) {
+        // Already assigned — unassign (move to temp location)
+        await updateItineraryDay(itDay.id, { tripLocationId: undefined });
+        setItineraryDays(prev => prev.map(d => d.id === itDay.id ? { ...d, tripLocationId: undefined } : d));
       } else {
         // Assign to this location
-        await assignDayToLocation(itDay.id, locationId);
-        setItineraryDays(prev => prev.map(d => d.id === itDay.id ? { ...d, itineraryLocationId: locationId } : d));
+        await updateItineraryDay(itDay.id, { tripLocationId: locationId });
+        setItineraryDays(prev => prev.map(d => d.id === itDay.id ? { ...d, tripLocationId: locationId } : d));
       }
     } catch {
       toast({ title: t('common.error'), variant: 'destructive' });
@@ -1433,25 +1423,22 @@ export default function SchedulePage() {
   const tripDays = useTripDays();
   const { weatherByDate } = useTripWeather(activeTrip ?? undefined, itineraryDays);
 
-  // Build lookup: itinerary_location_id → location name (from trip_locations)
+  // Build lookup: trip_location_id → location name
   const itinLocNameMap = useMemo(() => {
     const map = new Map<string, string>();
-    for (const il of itineraryLocations) {
-      if (il.tripLocationId) {
-        const tl = tripLocations.find(l => l.id === il.tripLocationId);
-        if (tl) map.set(il.id, tl.name);
-      }
+    for (const tl of tripLocations) {
+      if (!tl.isTemporary) map.set(tl.id, tl.name);
     }
     return map;
-  }, [itineraryLocations, tripLocations]);
+  }, [tripLocations]);
 
   const locationSpans = useMemo(() => {
     if (tripDays.length === 0) return [];
     const spans: { location: string; startIdx: number; endIdx: number }[] = [];
     for (let i = 0; i < tripDays.length; i++) {
       const itDay = itineraryDays.find(d => d.dayNumber === i + 1);
-      // Prefer resolved name from itinerary_location, fall back to locationContext
-      const loc = (itDay?.itineraryLocationId && itinLocNameMap.get(itDay.itineraryLocationId))
+      // Prefer resolved name from trip_location, fall back to locationContext
+      const loc = (itDay?.tripLocationId && itinLocNameMap.get(itDay.tripLocationId))
         || itDay?.locationContext || '';
       if (loc && spans.length > 0 && spans[spans.length - 1].location === loc && spans[spans.length - 1].endIdx === i - 1) {
         spans[spans.length - 1].endIdx = i;
@@ -1774,14 +1761,12 @@ export default function SchedulePage() {
   const updateLocationContext = useCallback(async () => {
     if (!activeTrip) return;
 
-    // Resolve location name to itinerary_location (FK-based)
-    let itineraryLocationId: string | undefined;
+    // Resolve location name to trip_location ID
+    let tripLocationId: string | undefined;
     if (locationContext) {
       const tripLoc = findInFlatList(tripLocations, locationContext);
       if (tripLoc) {
-        const itinLoc = await findOrCreateItineraryLocation(activeTrip.id, tripLoc.id);
-        itineraryLocationId = itinLoc.id;
-        await refetchItineraryLocations();
+        tripLocationId = tripLoc.id;
       }
     }
 
@@ -1814,8 +1799,8 @@ export default function SchedulePage() {
           activities: [],
           transportationSegments: [],
         });
-        if (itineraryLocationId) {
-          await assignDayToLocation(created.id, itineraryLocationId);
+        if (tripLocationId) {
+          await updateItineraryDay(created.id, { tripLocationId });
         }
       }
 
@@ -1843,7 +1828,7 @@ export default function SchedulePage() {
       if (targetDay) {
         await updateItineraryDay(targetDay.id, {
           locationContext,
-          ...(itineraryLocationId ? { itineraryLocationId } : {}),
+          ...(tripLocationId ? { tripLocationId } : {}),
         });
       }
     }
@@ -1851,7 +1836,7 @@ export default function SchedulePage() {
     setEditingLocation(false);
     setLocationTotalDays(1);
     await refreshDays();
-  }, [locationContext, locationTotalDays, selectedDayNum, selectedSpan, tripDays, itineraryDays, activeTrip, tripLocations, refetchItineraryLocations, refreshDays, updateCurrentTrip]);
+  }, [locationContext, locationTotalDays, selectedDayNum, selectedSpan, tripDays, itineraryDays, activeTrip, tripLocations, refreshDays, updateCurrentTrip]);
 
   // ── Ensure itinerary day exists ─────────────────────────────────────────────
   const ensureItDay = useCallback(async () => {
@@ -2054,7 +2039,7 @@ export default function SchedulePage() {
   }, [scheduled, potential, morningCoords, morningAccom, eveningCoords, eveningAccom]);
 
   // Actual location of the current day — for DaySection suggestions (not the edit buffer)
-  const currentDayLocation = (currentItDay?.itineraryLocationId && itinLocNameMap.get(currentItDay.itineraryLocationId))
+  const currentDayLocation = (currentItDay?.tripLocationId && itinLocNameMap.get(currentItDay.tripLocationId))
     || (currentItDay?.locationContext ?? '');
 
   const availableAccom = pois.filter(
@@ -2874,7 +2859,7 @@ export default function SchedulePage() {
                 {mobileDetailLocId ? (() => {
                   const detailLoc = researchLocations.find(l => l.id === mobileDetailLocId);
                   const detailName = mobileDetailLocId ? researchLocNameMap.get(mobileDetailLocId) || '?' : '';
-                  const detailDay = itineraryDays.find(d => d.itineraryLocationId === mobileDetailLocId);
+                  const detailDay = itineraryDays.find(d => d.tripLocationId === mobileDetailLocId);
                   const detailItems: Item[] = [];
                   for (const a of detailDay?.activities || []) {
                     if (a.type === 'poi') {
@@ -2910,7 +2895,7 @@ export default function SchedulePage() {
                               // Edit mode: all days as toggles
                               Array.from({ length: activeTrip.numberOfDays }, (_, i) => i + 1).map(dayNum => {
                                 const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
-                                const assigned = itDay?.itineraryLocationId === mobileDetailLocId;
+                                const assigned = itDay?.tripLocationId === mobileDetailLocId;
                                 const label = activeTrip.startDate
                                   ? format(addDays(parseISO(activeTrip.startDate), dayNum - 1), 'd/M')
                                   : `${t('timeline.day')} ${dayNum}`;
@@ -2924,7 +2909,7 @@ export default function SchedulePage() {
                             ) : (
                               // Normal mode: only assigned days — click navigates to day view
                               itineraryDays
-                                .filter(d => d.dayNumber >= 1 && d.dayNumber <= activeTrip.numberOfDays! && d.itineraryLocationId === mobileDetailLocId)
+                                .filter(d => d.dayNumber >= 1 && d.dayNumber <= activeTrip.numberOfDays! && d.tripLocationId === mobileDetailLocId)
                                 .sort((a, b) => a.dayNumber - b.dayNumber)
                                 .map(itDay => {
                                   const label = activeTrip.startDate
@@ -3091,10 +3076,10 @@ export default function SchedulePage() {
                     {/* ── Feed: Instagram-style cards ── */}
                     <div className="space-y-3 pb-2">
                       {sortedResearchLocations.map((il) => {
-                        const name = researchLocNameMap.get(il.id) || '?';
-                        const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
+                        const name = il.name;
+                        const holdingDay = itineraryDays.find(d => d.tripLocationId === il.id);
                         const poiCount = holdingDay?.activities?.length ?? 0;
-                        const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.itineraryLocationId === il.id).length : 0;
+                        const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.tripLocationId === il.id).length : 0;
                         const imgUrl = il.imageUrl;
                         return (
                           <button
@@ -3174,7 +3159,7 @@ export default function SchedulePage() {
                               // Edit mode: all days as toggles
                               Array.from({ length: activeTrip.numberOfDays }, (_, i) => i + 1).map(dayNum => {
                                 const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
-                                const assigned = itDay?.itineraryLocationId === selectedResearchLocId;
+                                const assigned = itDay?.tripLocationId === selectedResearchLocId;
                                 const label = activeTrip.startDate
                                   ? format(addDays(parseISO(activeTrip.startDate), dayNum - 1), 'd/M')
                                   : `${t('timeline.day')} ${dayNum}`;
@@ -3188,7 +3173,7 @@ export default function SchedulePage() {
                             ) : (
                               // Normal mode: only assigned days — click navigates to day view
                               itineraryDays
-                                .filter(d => d.dayNumber >= 1 && d.dayNumber <= activeTrip.numberOfDays! && d.itineraryLocationId === selectedResearchLocId)
+                                .filter(d => d.dayNumber >= 1 && d.dayNumber <= activeTrip.numberOfDays! && d.tripLocationId === selectedResearchLocId)
                                 .sort((a, b) => a.dayNumber - b.dayNumber)
                                 .map(itDay => {
                                   const label = activeTrip.startDate
@@ -3378,10 +3363,10 @@ export default function SchedulePage() {
                     <div className="flex-1 min-h-0 overflow-y-auto">
                       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-2">
                         {sortedResearchLocations.map((il) => {
-                          const name = researchLocNameMap.get(il.id) || '?';
-                          const holdingDay = itineraryDays.find(d => d.itineraryLocationId === il.id);
+                          const name = il.name;
+                          const holdingDay = itineraryDays.find(d => d.tripLocationId === il.id);
                           const poiCount = holdingDay?.activities?.length ?? 0;
-                          const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.itineraryLocationId === il.id).length : 0;
+                          const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.tripLocationId === il.id).length : 0;
                           const imgUrl = il.imageUrl;
                           return (
                             <button
