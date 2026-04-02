@@ -1010,10 +1010,10 @@ export default function SchedulePage() {
 
   // Places mode: derived values for location strip
   const [locationOrderOverride, setLocationOrderOverride] = useState<string[] | null>(null);
-  const researchLocationsBase = useMemo(() =>
-    tripLocations.filter(tl => !tl.isTemporary),
-    [tripLocations],
-  );
+  const researchLocationsBase = useMemo(() => {
+    const locIdsWithDays = new Set(itineraryDays.map(d => d.tripLocationId).filter(Boolean));
+    return tripLocations.filter(tl => !tl.isTemporary && locIdsWithDays.has(tl.id));
+  }, [tripLocations, itineraryDays]);
   // Apply local order override (cleared once server data catches up)
   const researchLocations = useMemo(() => {
     if (!locationOrderOverride) return researchLocationsBase;
@@ -1423,7 +1423,7 @@ export default function SchedulePage() {
   const tripDays = useTripDays();
   const { weatherByDate } = useTripWeather(activeTrip ?? undefined, itineraryDays);
 
-  // Build lookup: trip_location_id → location name
+  // Build lookup: trip_location_id → location name (all non-temporary locations)
   const itinLocNameMap = useMemo(() => {
     const map = new Map<string, string>();
     for (const tl of tripLocations) {
@@ -1431,6 +1431,8 @@ export default function SchedulePage() {
     }
     return map;
   }, [tripLocations]);
+  // Note: itinLocNameMap intentionally includes all named locations (not just research ones)
+  // so that day headers in the days-view show the correct location name.
 
   const locationSpans = useMemo(() => {
     if (tripDays.length === 0) return [];

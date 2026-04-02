@@ -26,7 +26,8 @@ export function useResearchAutoAssign() {
 
   const isResearchMode = activeTrip?.status === 'research';
 
-  const researchLocations = tripLocations.filter(tl => !tl.isTemporary);
+  const locIdsWithDays = new Set(itineraryDays.map(d => d.tripLocationId).filter(Boolean));
+  const researchLocations = tripLocations.filter(tl => !tl.isTemporary && locIdsWithDays.has(tl.id));
 
   // Fire-and-forget: find an image for the new research location
   const fetchLocationImage = useCallback(async (locationName: string, tripLoc: TripLocation) => {
