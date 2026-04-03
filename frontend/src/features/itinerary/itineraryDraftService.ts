@@ -6,20 +6,6 @@ import { supabase } from '@/shared/services/helpers';
 import { createTripPlace, findTripPlaceByLocationId } from '@/features/trip/tripPlaceService';
 import type { TripPlace } from '@/types/trip';
 
-/** Fire-and-forget: enrich a newly created POI (coords, image, subCategory). */
-function enrichNewPOI(poi: PointOfInterest): void {
-  if (poi.imageUrl && poi.location?.coordinates?.lat && poi.subCategory) return;
-  supabase.functions.invoke('fetch-poi-image', {
-    body: {
-      poiId: poi.id,
-      name: poi.name,
-      category: poi.category,
-      city: poi.location?.city,
-      country: poi.location?.country,
-      address: poi.location?.address,
-    },
-  }).catch(err => console.warn('[itineraryDraft] Enrich failed:', err));
-}
 
 interface ActivityEntry {
   id: string;
@@ -55,7 +41,7 @@ export async function applyDraftToTrip(
         continue;
       }
 
-      const { poi, merged } = await createOrMergePOI({
+      const { poi } = await createOrMergePOI({
         tripId,
         category: place.category as PointOfInterest['category'],
         name: place.name,
@@ -71,7 +57,6 @@ export async function applyDraftToTrip(
         isPaid: false,
       } as Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>);
 
-      if (!merged) enrichNewPOI(poi);
       poiIdMap.set(key, poi.id);
     }
   }

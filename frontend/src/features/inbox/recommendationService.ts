@@ -1,9 +1,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
 import type { SourceRecommendation, SiteHierarchyNode } from '@/types/webhook';
-import type { SourceRefs } from '@/types/trip';
+import type { PointOfInterest, SourceRefs } from '@/types/trip';
 import { isSourceRefsEmpty } from '@/shared/services/helpers';
 import { getTypeToCategoryMap, getGeoTypes, getTipTypes } from '@/shared/lib/subCategoryConfig';
+import { createOrMergePOI } from '@/features/poi/poiService';
 
 function buildSiteToCountryMap(hierarchy: SiteHierarchyNode[]): Record<string, string> {
   const map: Record<string, string> = {};
@@ -74,8 +75,7 @@ export async function linkRecommendationToTrip(
   const linkedEntities: Array<{ entity_type: string; entity_id: string; description: string; matched_existing: boolean }> = [];
 
   // Pre-fetch existing entities for this trip
-  const [{ data: existingPois }, { data: existingTransport }, { data: existingContacts }] = await Promise.all([
-    supabase.from('points_of_interest').select('id, name, category, source_refs').eq('trip_id', tripId),
+  const [{ data: existingTransport }, { data: existingContacts }] = await Promise.all([
     supabase.from('transportation').select('id, category, additional_info, source_refs').eq('trip_id', tripId),
     supabase.from('contacts').select('id, name, role').eq('trip_id', tripId),
   ]);
@@ -121,38 +121,19 @@ export async function linkRecommendationToTrip(
       }
     } else {
       const poiCategory = dbCategory;
-      const matchedPoi = existingPois?.find(p => p.category === poiCategory && fuzzyMatch(p.name, item.name));
-
-      if (matchedPoi) {
-        const refs = (matchedPoi.source_refs as Record<string, unknown>) || {};
-        const recIds = (refs.recommendation_ids as string[]) || [];
-        if (!recIds.includes(recommendationId)) {
-          await supabase.from('points_of_interest').update({
-            source_refs: { ...refs, recommendation_ids: [...recIds, recommendationId] } as unknown as Json,
-          }).eq('id', matchedPoi.id);
-        }
-        linkedEntities.push({ entity_type: 'poi', entity_id: matchedPoi.id, description: item.name, matched_existing: true });
-      } else {
-        const { data: newPoi } = await supabase.from('points_of_interest').insert([{
-          trip_id: tripId, category: poiCategory, sub_category: itemType, name: item.name,
-          status: 'suggested',
-          location: { country: siteToCountry[(item.site || '').toLowerCase()] || undefined, city: item.site } as unknown as Json,
-          source_refs: { email_ids: [], recommendation_ids: [recommendationId] } as unknown as Json,
-          details: { from_recommendation: true, paragraph: item.paragraph, source_url: rec.source_url } as unknown as Json,
-        }]).select('id').single();
-        if (newPoi) {
-          linkedEntities.push({ entity_type: 'poi', entity_id: newPoi.id, description: item.name, matched_existing: false });
-          supabase.functions.invoke('fetch-poi-image', {
-            body: {
-              poiId: newPoi.id,
-              name: item.name,
-              category: poiCategory,
-              city: item.site,
-              country: siteToCountry[(item.site || '').toLowerCase()] || undefined,
-            },
-          }).catch(err => console.warn('[recommendation] Enrich failed:', err));
-        }
-      }
+      const { poi: resultPoi, merged } = await createOrMergePOI({
+        tripId,
+        category: poiCategory as PointOfInterest['category'],
+        subCategory: itemType,
+        name: item.name,
+        status: 'suggested',
+        location: { country: siteToCountry[(item.site || '').toLowerCase()] || undefined, city: item.site },
+        sourceRefs: { email_ids: [], recommendation_ids: [recommendationId] },
+        details: { notes: item.paragraph ? { raw_notes: item.paragraph } : undefined },
+        isCancelled: false,
+        isPaid: false,
+      });
+      linkedEntities.push({ entity_type: 'poi', entity_id: resultPoi.id, description: item.name, matched_existing: merged });
     }
   }
 

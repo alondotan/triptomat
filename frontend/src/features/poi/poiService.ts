@@ -72,6 +72,21 @@ export async function createOrMergePOI(
   }
 
   const newPoi = await createPOI(poi);
+
+  // Fire-and-forget: enrich coords, image, subCategory for every new POI
+  if (!newPoi.imageUrl || !newPoi.location?.coordinates?.lat || !newPoi.subCategory) {
+    supabase.functions.invoke('fetch-poi-image', {
+      body: {
+        poiId: newPoi.id,
+        name: newPoi.name,
+        category: newPoi.category,
+        city: newPoi.location?.city,
+        country: newPoi.location?.country,
+        address: newPoi.location?.address,
+      },
+    }).catch(err => console.warn('[poiService] Enrich failed:', err));
+  }
+
   return { poi: newPoi, merged: false };
 }
 

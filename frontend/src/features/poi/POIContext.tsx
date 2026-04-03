@@ -88,20 +88,6 @@ export function POIProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'ADD_POI', payload: result });
       }
 
-      // Fire-and-forget: enrich POI (coords, image, subCategory fallback) if anything is missing
-      if (!result.imageUrl || !result.location?.coordinates?.lat || !result.subCategory) {
-        supabase.functions.invoke('fetch-poi-image', {
-          body: {
-            poiId: result.id,
-            name: result.name,
-            category: result.category,
-            city: result.location?.city,
-            country: result.location?.country,
-            address: result.location?.address,
-          },
-        }).catch(err => console.warn('[POIContext] Enrich failed:', err));
-      }
-
       return result;
     } catch (error) {
       console.error('Failed to add POI:', error);
