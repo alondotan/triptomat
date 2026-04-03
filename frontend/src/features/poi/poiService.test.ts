@@ -37,7 +37,10 @@ function buildChain() {
 const mockFrom = vi.fn();
 
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { from: (...args: any[]) => mockFrom(...args) },
+  supabase: {
+    from: (...args: any[]) => mockFrom(...args),
+    functions: { invoke: vi.fn().mockResolvedValue({ data: null, error: null }) },
+  },
 }));
 
 import { mapPOI, createOrMergePOI, mergeTwoPOIs } from "./poiService";
