@@ -476,7 +476,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             onClick={() => {
               setMessages([]);
               tripSessions.delete(tripId);
-              try { localStorage.removeItem(`triptomat_chat_${tripId}`); } catch {}
+              try { localStorage.removeItem(`triptomat_chat_${tripId}`); } catch { /* ignore */ }
               if (instantApply) history.reset();
               setError(null);
             }}

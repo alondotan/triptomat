@@ -1135,7 +1135,7 @@ export default function SchedulePage() {
     setAddLocationOpen(false);
     try {
       // Ensure it's in trip_locations hierarchy
-      let tripLoc = findInFlatList(tripLocations, locationName);
+      const tripLoc = findInFlatList(tripLocations, locationName);
       if (!tripLoc) {
         // addSiteToHierarchy triggers a reload; wait for it
         addSiteToHierarchy(locationName);
