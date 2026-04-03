@@ -140,7 +140,18 @@ export async function linkRecommendationToTrip(
           source_refs: { email_ids: [], recommendation_ids: [recommendationId] } as unknown as Json,
           details: { from_recommendation: true, paragraph: item.paragraph, source_url: rec.source_url } as unknown as Json,
         }]).select('id').single();
-        if (newPoi) linkedEntities.push({ entity_type: 'poi', entity_id: newPoi.id, description: item.name, matched_existing: false });
+        if (newPoi) {
+          linkedEntities.push({ entity_type: 'poi', entity_id: newPoi.id, description: item.name, matched_existing: false });
+          supabase.functions.invoke('fetch-poi-image', {
+            body: {
+              poiId: newPoi.id,
+              name: item.name,
+              category: poiCategory,
+              city: item.site,
+              country: siteToCountry[(item.site || '').toLowerCase()] || undefined,
+            },
+          }).catch(err => console.warn('[recommendation] Enrich failed:', err));
+        }
       }
     }
   }
