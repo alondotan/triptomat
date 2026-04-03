@@ -7,7 +7,7 @@ import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { updateItineraryDay, createItineraryDay } from '@/features/itinerary/itineraryService';
 import { geocodeLocation } from '@/features/geodata/weatherService';
 import { findInFlatList } from '@/features/trip/tripLocationService';
-import { createTripPlace, deleteTripPlace, reorderTripPlaces, updateTripPlace, updateTripPlaceImage, findTripPlaceByLocationId } from '@/features/trip/tripPlaceService';
+import { createTripPlace, deleteTripPlace, reorderTripPlaces, updateTripPlace, findTripPlaceByLocationId } from '@/features/trip/tripPlaceService';
 import { rebuildPOIBookingsFromDays } from '@/features/poi/poiService';
 import { LocationContextPicker } from '@/shared/components/LocationContextPicker';
 import { LocationSelector } from '@/shared/components/LocationSelector';
@@ -1090,45 +1090,6 @@ export default function SchedulePage() {
       }));
   }, [researchPotential]);
 
-  // Fetch an image for a trip_place and persist it
-  const fetchAndSaveLocationImage = useCallback(async (tripPlaceId: string, locationName: string, tripLocationId?: string) => {
-    try {
-      let imageUrl: string | null = null;
-      const locName = locationName.toLowerCase();
-      const nameParts = [locName, ...locName.split(/\s*[&,\-–]\s*/).map(s => s.trim()).filter(Boolean)];
-
-      // 1. Try POIs whose city matches any part of the name
-      for (const part of nameParts) {
-        const match = pois.find(p => p.imageUrl && p.location?.city?.toLowerCase() === part);
-        if (match) { imageUrl = match.imageUrl; break; }
-      }
-
-      // 2. Try child locations in the hierarchy
-      if (!imageUrl && tripLocationId) {
-        const childLocs = tripLocations.filter(tl => tl.parentId === tripLocationId);
-        for (const child of childLocs) {
-          const match = pois.find(p => p.imageUrl && p.location?.city?.toLowerCase() === child.name.toLowerCase());
-          if (match) { imageUrl = match.imageUrl; break; }
-        }
-      }
-
-      // 3. Fallback: Wikipedia
-      if (!imageUrl) {
-        const wikiName = nameParts[0] || locationName;
-        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiName)}`);
-        if (res.ok) {
-          const data = await res.json();
-          imageUrl = data?.originalimage?.source || data?.thumbnail?.source || null;
-        }
-      }
-
-      if (imageUrl) {
-        await updateTripPlaceImage(tripPlaceId, imageUrl);
-        await reloadTripPlaces();
-      }
-    } catch { /* silent */ }
-  }, [pois, tripLocations, reloadTripPlaces]);
-
   // Add a location to the research strip
   const handleAddResearchLocation = useCallback(async (locationName: string) => {
     if (!activeTrip) return;
@@ -1147,7 +1108,7 @@ export default function SchedulePage() {
       // Find or create a trip_place for this location
       let tripPlace = findTripPlaceByLocationId(tripPlaces, tripLoc.id);
       if (!tripPlace) {
-        tripPlace = await createTripPlace(activeTrip.id, tripLoc.id, { sortOrder: tripPlaces.length });
+        tripPlace = await createTripPlace(activeTrip.id, tripLoc.id, { sortOrder: tripPlaces.length, locationName });
       }
 
       // Check if holding day already exists for this trip_place
@@ -1167,14 +1128,10 @@ export default function SchedulePage() {
       await reloadTripPlaces();
       await refetchItinerary();
 
-      // Fetch and persist image in the background (fire-and-forget)
-      if (!tripPlace.imageUrl) {
-        fetchAndSaveLocationImage(tripPlace.id, locationName, tripLoc.id);
-      }
     } catch {
       toast({ title: t('common.error'), variant: 'destructive' });
     }
-  }, [activeTrip, tripLocations, tripPlaces, addSiteToHierarchy, reloadLocations, reloadTripPlaces, itineraryDays, researchLocations, refetchItinerary, fetchAndSaveLocationImage, t, toast]);
+  }, [activeTrip, tripLocations, tripPlaces, addSiteToHierarchy, reloadLocations, reloadTripPlaces, itineraryDays, researchLocations, refetchItinerary, t, toast]);
 
   // Drag-end handler for reordering research location pills
   const handleLocationDragEnd = useCallback(async (event: DragEndEvent) => {
@@ -1389,11 +1346,11 @@ export default function SchedulePage() {
       } else if (itDay.tripPlaceId === tripPlaceId) {
         // Already assigned — unassign
         await updateItineraryDay(itDay.id, { tripPlaceId: undefined });
-        setItineraryDays(prev => prev.map(d => d.id === itDay.id ? { ...d, tripPlaceId: undefined } : d));
+        setItineraryDays(itineraryDays.map(d => d.id === itDay.id ? { ...d, tripPlaceId: undefined } : d));
       } else {
         // Assign to this place
         await updateItineraryDay(itDay.id, { tripPlaceId });
-        setItineraryDays(prev => prev.map(d => d.id === itDay.id ? { ...d, tripPlaceId } : d));
+        setItineraryDays(itineraryDays.map(d => d.id === itDay.id ? { ...d, tripPlaceId } : d));
       }
     } catch {
       toast({ title: t('common.error'), variant: 'destructive' });
@@ -1773,7 +1730,7 @@ export default function SchedulePage() {
       if (tripLoc) {
         let tripPlace = findTripPlaceByLocationId(tripPlaces, tripLoc.id);
         if (!tripPlace) {
-          tripPlace = await createTripPlace(activeTrip.id, tripLoc.id, { sortOrder: tripPlaces.length });
+          tripPlace = await createTripPlace(activeTrip.id, tripLoc.id, { sortOrder: tripPlaces.length, locationName: locationContext });
           await reloadTripPlaces();
         }
         tripPlaceId = tripPlace.id;
@@ -1849,7 +1806,6 @@ export default function SchedulePage() {
       tripId: activeTrip.id,
       dayNumber: selectedDayNum,
       date: tripDays[selectedDayNum - 1]?.dateStr,
-      locationContext: '',
       accommodationOptions: [],
       activities: [],
       transportationSegments: [],
@@ -2860,7 +2816,7 @@ export default function SchedulePage() {
                 {mobileDetailLocId ? (() => {
                   const detailLoc = researchLocations.find(l => l.id === mobileDetailLocId);
                   const detailName = mobileDetailLocId ? researchLocNameMap.get(mobileDetailLocId) || '?' : '';
-                  const detailDay = itineraryDays.find(d => d.tripLocationId === mobileDetailLocId);
+                  const detailDay = itineraryDays.find(d => d.tripPlaceId === mobileDetailLocId);
                   const detailItems: Item[] = [];
                   for (const a of detailDay?.activities || []) {
                     if (a.type === 'poi') {
@@ -2910,7 +2866,7 @@ export default function SchedulePage() {
                             ) : (
                               // Normal mode: only assigned days — click navigates to day view
                               itineraryDays
-                                .filter(d => d.dayNumber >= 1 && d.dayNumber <= activeTrip.numberOfDays! && d.tripLocationId === mobileDetailLocId)
+                                .filter(d => d.dayNumber >= 1 && d.dayNumber <= activeTrip.numberOfDays! && d.tripPlaceId === mobileDetailLocId)
                                 .sort((a, b) => a.dayNumber - b.dayNumber)
                                 .map(itDay => {
                                   const label = activeTrip.startDate
@@ -3078,9 +3034,9 @@ export default function SchedulePage() {
                     <div className="space-y-3 pb-2">
                       {sortedResearchLocations.map((il) => {
                         const name = il.name;
-                        const holdingDay = itineraryDays.find(d => d.tripLocationId === il.id);
+                        const holdingDay = itineraryDays.find(d => d.tripPlaceId === il.id);
                         const poiCount = holdingDay?.activities?.length ?? 0;
-                        const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.tripLocationId === il.id).length : 0;
+                        const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.tripPlaceId === il.id).length : 0;
                         const imgUrl = il.imageUrl;
                         return (
                           <button
@@ -3174,7 +3130,7 @@ export default function SchedulePage() {
                             ) : (
                               // Normal mode: only assigned days — click navigates to day view
                               itineraryDays
-                                .filter(d => d.dayNumber >= 1 && d.dayNumber <= activeTrip.numberOfDays! && d.tripLocationId === selectedResearchLocId)
+                                .filter(d => d.dayNumber >= 1 && d.dayNumber <= activeTrip.numberOfDays! && d.tripPlaceId === selectedResearchLocId)
                                 .sort((a, b) => a.dayNumber - b.dayNumber)
                                 .map(itDay => {
                                   const label = activeTrip.startDate
@@ -3365,9 +3321,9 @@ export default function SchedulePage() {
                       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-2">
                         {sortedResearchLocations.map((il) => {
                           const name = il.name;
-                          const holdingDay = itineraryDays.find(d => d.tripLocationId === il.id);
+                          const holdingDay = itineraryDays.find(d => d.tripPlaceId === il.id);
                           const poiCount = holdingDay?.activities?.length ?? 0;
-                          const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.tripLocationId === il.id).length : 0;
+                          const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.tripPlaceId === il.id).length : 0;
                           const imgUrl = il.imageUrl;
                           return (
                             <button

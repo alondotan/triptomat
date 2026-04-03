@@ -82,7 +82,7 @@ export async function applyDraftToTrip(
       // Find existing trip_place or create one
       let tripPlace = findTripPlaceByLocationId(mutableTripPlaces, tripLoc.id);
       if (!tripPlace) {
-        tripPlace = await createTripPlace(tripId, tripLoc.id, { sortOrder: mutableTripPlaces.length });
+        tripPlace = await createTripPlace(tripId, tripLoc.id, { sortOrder: mutableTripPlaces.length, locationName: locName });
         mutableTripPlaces.push(tripPlace);
       }
       tripPlaceIdMap.set(locName.toLowerCase(), tripPlace.id);

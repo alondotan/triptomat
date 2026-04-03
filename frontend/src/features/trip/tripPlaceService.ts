@@ -35,7 +35,7 @@ export async function fetchTripPlaces(tripId: string): Promise<TripPlace[]> {
 export async function createTripPlace(
   tripId: string,
   tripLocationId: string,
-  options: { notes?: string; imageUrl?: string; sortOrder?: number } = {},
+  options: { notes?: string; imageUrl?: string; sortOrder?: number; locationName?: string } = {},
 ): Promise<TripPlace> {
   const { data, error } = await supabase
     .from('trip_places')
@@ -50,7 +50,33 @@ export async function createTripPlace(
     .single();
 
   if (error) throw error;
-  return mapTripPlace(data as Record<string, unknown>);
+  const tripPlace = mapTripPlace(data as Record<string, unknown>);
+
+  // Fire-and-forget: fetch Wikipedia image if no image was provided
+  if (!options.imageUrl && options.locationName) {
+    fetchAndPersistTripPlaceImage(tripPlace.id, options.locationName);
+  }
+
+  return tripPlace;
+}
+
+/** Fire-and-forget: fetch a destination image from Wikipedia and persist it. */
+async function fetchAndPersistTripPlaceImage(tripPlaceId: string, locationName: string): Promise<void> {
+  try {
+    const nameParts = [locationName, ...locationName.split(/\s*[&,\-–]\s*/).map(s => s.trim()).filter(Boolean)];
+    let imageUrl: string | null = null;
+
+    for (const part of nameParts) {
+      const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(part)}`);
+      if (res.ok) {
+        const data = await res.json();
+        imageUrl = data?.originalimage?.source || data?.thumbnail?.source || null;
+        if (imageUrl) break;
+      }
+    }
+
+    if (imageUrl) await updateTripPlaceImage(tripPlaceId, imageUrl);
+  } catch { /* silent */ }
 }
 
 // ── Update ───────────────────────────────────────────────────
