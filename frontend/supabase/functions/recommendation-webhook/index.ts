@@ -5,7 +5,6 @@ import { mergeWithNewWins } from '../_shared/merge.ts';
 import { fuzzyMatch } from '../_shared/matching.ts';
 import { TYPE_TO_CATEGORY, GEO_TYPES, TIP_TYPES } from '../_shared/categories.ts';
 import { buildSiteToCountryMap, buildSiteToCityMap } from '../_shared/mapUtils.ts';
-import { enrichPoi } from '../_shared/enrichPoi.ts';
 
 interface SiteHierarchyNode {
   site: string;
@@ -466,9 +465,10 @@ Deno.serve(async (req)=>{
               if (!item.image_url || !item.location?.coordinates?.lat) {
                 const country = siteToCountry[(item.site || '').toLowerCase()] || '';
                 const city = siteToCity[(item.site || '').toLowerCase()] || '';
-                enrichPoi(supabase, newPoi.id, item.name, {
+                supabase.functions.invoke('fetch-poi-image', { body: {
+                  poiId: newPoi.id, name: item.name,
                   city, country, address: item.location?.address,
-                }).catch(e => console.warn(`[enrich] Failed for "${item.name}":`, e));
+                } }).catch((e: unknown) => console.warn(`[enrich] Failed for "${item.name}":`, e));
               }
             }
           }

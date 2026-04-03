@@ -3,7 +3,6 @@ import { createSupabaseClient } from '../_shared/supabase.ts';
 import { validateWebhookToken } from '../_shared/auth.ts';
 import { mergeWithNewWins } from '../_shared/merge.ts';
 import { fuzzyMatch } from '../_shared/matching.ts';
-import { enrichPoi } from '../_shared/enrichPoi.ts';
 import type { SiteNode } from '../_shared/types.ts';
 
 interface WebhookPayload {
@@ -505,9 +504,10 @@ Deno.serve(async (req) => {
 
             // Fire-and-forget: enrich if still missing coordinates or image
             if (!existing.location?.coordinates?.lat || !existing.image_url) {
-              enrichPoi(supabase, existing.id, merged.name || existing.name, {
+              supabase.functions.invoke('fetch-poi-image', { body: {
+                poiId: existing.id, name: merged.name || existing.name,
                 city: merged.location?.city, country: merged.location?.country, address: merged.location?.address,
-              }).catch(e => console.error('[enrich] Accommodation update failed:', e));
+              } }).catch((e: unknown) => console.error('[enrich] Accommodation update failed:', e));
             }
 
             // Re-link itinerary days if dates changed
@@ -536,9 +536,10 @@ Deno.serve(async (req) => {
                 await linkAccommodationToDays(supabase, matchedTripId, poi.id, accom.checkin_date, accom.checkout_date);
               }
               // Fire-and-forget: enrich with coordinates + image
-              enrichPoi(supabase, poi.id, newData.name, {
+              supabase.functions.invoke('fetch-poi-image', { body: {
+                poiId: poi.id, name: newData.name,
                 city: newData.location?.city, country: newData.location?.country, address: newData.location?.address,
-              }).catch(e => console.error('[enrich] Accommodation failed:', e));
+              } }).catch((e: unknown) => console.error('[enrich] Accommodation failed:', e));
             }
           }
 
@@ -652,9 +653,10 @@ Deno.serve(async (req) => {
 
               // Fire-and-forget: enrich if still missing coordinates or image
               if (!existing.location?.coordinates?.lat || !existing.image_url) {
-                enrichPoi(supabase, existing.id, merged.name || existing.name, {
+                supabase.functions.invoke('fetch-poi-image', { body: {
+                  poiId: existing.id, name: merged.name || existing.name,
                   city: merged.location?.city, country: merged.location?.country, address: merged.location?.address,
-                }).catch(e => console.error('[enrich] POI update failed:', e));
+                } }).catch((e: unknown) => console.error('[enrich] POI update failed:', e));
               }
             } else {
               const { data: poi } = await supabase
@@ -669,9 +671,10 @@ Deno.serve(async (req) => {
               if (poi) {
                 linkedEntities.push({ entity_type: 'poi', entity_id: poi.id, description: isAttraction ? 'Attraction' : 'Eatery' });
                 // Fire-and-forget: enrich with coordinates + image
-                enrichPoi(supabase, poi.id, newData.name, {
+                supabase.functions.invoke('fetch-poi-image', { body: {
+                  poiId: poi.id, name: newData.name,
                   city: newData.location?.city, country: newData.location?.country, address: newData.location?.address,
-                }).catch(e => console.error('[enrich] POI failed:', e));
+                } }).catch((e: unknown) => console.error('[enrich] POI failed:', e));
               }
             }
           }
