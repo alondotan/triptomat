@@ -42,9 +42,9 @@ export function useItineraryDraft() {
     setIsInitialized(true);
   }, []);
 
-  /** Apply AI tool call result — replaces the entire draft */
-  const applyToolCall = useCallback((days: DraftDay[]) => {
-    // Normalize the AI response
+  /** Apply AI tool call result — replaces the entire draft. Returns the normalized days. */
+  const applyToolCall = useCallback((days: DraftDay[]): DraftDay[] => {
+    // Normalize the AI response (handles snake_case from Gemini)
     const normalized = days.map(d => ({
       dayNumber: d.dayNumber ?? (d as unknown as Record<string, number>).day_number,
       date: d.date,
@@ -60,6 +60,7 @@ export function useItineraryDraft() {
     }));
     setDraft(normalized);
     setIsDirty(true);
+    return normalized;
   }, []);
 
   /** Clear the draft to start fresh */

@@ -65,10 +65,9 @@ import { useAiUsage } from '@/shared/hooks/useAiUsage';
 import { Crown } from 'lucide-react';
 
 const navItems = [
+  { path: '/', labelKey: 'nav.aiHome', icon: Bot },
+  { path: '/schedule', labelKey: 'nav.timeline', icon: CalendarDays },
   { path: '/overview', labelKey: 'nav.home', icon: Compass },
-  { path: '/', labelKey: 'nav.timeline', icon: CalendarDays },
-  // TODO: Re-enable Itinerary page when ready
-  // { path: '/itinerary', labelKey: 'nav.itinerary', icon: Table2 },
   { path: '/map', labelKey: 'nav.map', icon: Map },
   { path: '/weather', labelKey: 'nav.weather', icon: CloudSun },
   { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },

@@ -26,6 +26,7 @@ const en = {
     aiAssistant: 'AI Travel Assistant',
     resources: 'Resources',
     home: 'Recommendations',
+    aiHome: 'Home',
     weather: 'Weather',
   },
 

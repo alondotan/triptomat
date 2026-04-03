@@ -9,15 +9,15 @@ import {
   DollarSign,
   CheckSquare,
   FileText,
-  Compass,
   CloudSun,
+  Bot,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 const primaryItems = [
-  { path: '/overview', labelKey: 'nav.home', icon: Compass },
-  { path: '/', labelKey: 'nav.timeline', icon: CalendarDays },
+  { path: '/', labelKey: 'nav.aiHome', icon: Bot },
+  { path: '/schedule', labelKey: 'nav.timeline', icon: CalendarDays },
   { path: '/map', labelKey: 'nav.map', icon: Map },
 ];
 

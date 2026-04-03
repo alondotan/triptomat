@@ -26,6 +26,7 @@ const he = {
     aiAssistant: 'עוזר AI לטיולים',
     resources: 'מקורות',
     home: 'המלצות',
+    aiHome: 'בית',
     weather: 'מזג אוויר',
   },
 

@@ -32,6 +32,7 @@ const ContactsPage = lazy(() => import("@/pages/Contacts"));
 const DocumentsPage = lazy(() => import("@/pages/Documents"));
 const TripsPage = lazy(() => import("@/pages/Trips"));
 const OverviewPage = lazy(() => import("@/pages/Overview"));
+const HomePage = lazy(() => import("@/pages/Home"));
 const WeatherPage = lazy(() => import("@/pages/Weather"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
@@ -82,7 +83,8 @@ const App = () => (
                 <AuthGuard>
                   <TripProvider>
                     <Routes>
-                      <Route path="/" element={<ErrorBoundary><SchedulePage /></ErrorBoundary>} />
+                      <Route path="/" element={<ErrorBoundary><HomePage /></ErrorBoundary>} />
+                      <Route path="/schedule" element={<ErrorBoundary><SchedulePage /></ErrorBoundary>} />
                       <Route path="/overview" element={<ErrorBoundary><OverviewPage /></ErrorBoundary>} />
                       <Route path="/itinerary" element={<ErrorBoundary><ItineraryPage /></ErrorBoundary>} />
                       <Route path="/attractions" element={<ErrorBoundary><AttractionsPage /></ErrorBoundary>} />

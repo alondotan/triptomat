@@ -58,6 +58,10 @@ interface TripContext {
   status?: string;
   currency?: string;
   locations?: string[];
+  /** Condensed list of existing POIs already in the trip */
+  existingPOIs?: Array<{ name: string; category: string; status: string; city?: string }>;
+  /** Relevant festivals / holidays for the trip countries and period */
+  festivals?: Array<{ name: string; country: string; period?: string }>;
 }
 
 interface DraftDay {
@@ -67,7 +71,7 @@ interface DraftDay {
   places: { name: string; category: string; city?: string; notes?: string; time?: string; duration?: number }[];
 }
 
-function buildSystemPrompt(tripContext?: TripContext, draft?: DraftDay[] | null): string {
+function buildSystemPrompt(tripContext?: TripContext, draft?: DraftDay[] | null, instantApply = false): string {
   let prompt = BASE_SYSTEM_PROMPT;
 
   if (tripContext?.tripName) {
@@ -89,6 +93,25 @@ function buildSystemPrompt(tripContext?: TripContext, draft?: DraftDay[] | null)
     }
     if (tripContext.locations?.length) {
       parts.push(`Planned locations: ${tripContext.locations.join(', ')}.`);
+    }
+
+    if (tripContext.existingPOIs?.length) {
+      const byStatus: Record<string, string[]> = {};
+      for (const p of tripContext.existingPOIs) {
+        if (!byStatus[p.status]) byStatus[p.status] = [];
+        byStatus[p.status].push(p.city ? `${p.name} (${p.city})` : p.name);
+      }
+      const poiLines = Object.entries(byStatus)
+        .map(([status, names]) => `  ${status}: ${names.join(', ')}`)
+        .join('\n');
+      parts.push(`\nExisting places already in the trip:\n${poiLines}`);
+    }
+
+    if (tripContext.festivals?.length) {
+      const festLines = tripContext.festivals
+        .map(f => f.period ? `  - ${f.name} (${f.country}, ${f.period})` : `  - ${f.name} (${f.country})`)
+        .join('\n');
+      parts.push(`\nUpcoming festivals & events during this trip:\n${festLines}`);
     }
 
     parts.push('Use this context to give relevant, specific advice. Reference the trip details naturally when helpful.');
@@ -125,17 +148,50 @@ function buildSystemPrompt(tripContext?: TripContext, draft?: DraftDay[] | null)
       draftText = lines.join('\n');
     }
 
-    prompt += `\n\n## Itinerary Planner Mode
-You have a set_itinerary tool. Call it when you add, remove, move, or change places in the itinerary.
-Include the COMPLETE updated itinerary (all days), not just changes.
-When answering questions or giving tips without changing the plan, just respond with text — do NOT call the tool.
-Always include a text explanation of what you changed alongside the tool call.
-Categories: accommodation, eatery, attraction, service.
-When you're done planning or the user seems satisfied, suggest they can say "update the trip" to save the plan.
-When the user asks to update/save/apply the itinerary, call the apply_itinerary tool.
+    if (instantApply) {
+      prompt += `\n\n## Itinerary Planner Mode (Live)
+Every call to set_itinerary is saved to the trip immediately — the user sees changes in real time.
 
-Current draft:
-${draftText}`;
+**set_itinerary** — The only tool available. Always include ALL days and ALL places in every call.
+Place categories: accommodation, eatery, attraction, service.
+Always include a short text explanation alongside the tool call.
+
+### CRITICAL RULE — CALL set_itinerary IMMEDIATELY, NEVER ASK PERMISSION:
+- If your response contains a day-by-day itinerary in ANY form, you MUST call set_itinerary in the SAME response.
+- NEVER write a plan in text and then ask "should I add this to your schedule?" — call set_itinerary directly.
+- NEVER say "would you like me to update the itinerary?" — just update it.
+- The user can undo any change, so call set_itinerary without asking permission first.
+
+### When to call set_itinerary:
+- User asks you to plan, suggest, build, or create an itinerary of any length
+- User asks to add, remove, or move a specific place
+- Your response contains a day-by-day breakdown of any kind
+
+### When NOT to call set_itinerary:
+- User asks for open recommendations with no planning intent ("what are good restaurants in Tokyo?")
+- User asks a factual travel question or wants tips, and your response has no day-by-day structure
+
+### Place naming rules for set_itinerary:
+- Use specific, searchable place names (e.g. "Senso-ji Temple", not "Buddhist temple")
+- Do not use generic descriptions as place names (e.g. NOT "local restaurant", "scenic viewpoint")
+- One entry per named place — do not combine multiple places in one name`;
+    } else {
+      prompt += `\n\n## Itinerary Planner Mode
+You have two tools: set_itinerary and apply_itinerary.
+
+**set_itinerary** — Call this whenever you modify the itinerary. Always include ALL days and places, not just changes.
+Categories: accommodation, eatery, attraction, service.
+Always include a short text explanation alongside every tool call.
+
+**apply_itinerary** — Saves the itinerary to the real trip.
+- Call it AUTOMATICALLY right after set_itinerary when the user asks you to recommend, plan, build, or create an itinerary.
+- Also call it when the user explicitly says to save/update/apply.
+- Do NOT call it for minor suggestions, tips, or when the user is still exploring options interactively.
+
+When answering questions or giving tips without changing the plan, respond with text only — do NOT call any tool.`;
+    }
+
+    prompt += `\n\nCurrent plan:\n${draftText}`;
   }
 
   return prompt;
@@ -182,12 +238,17 @@ const ITINERARY_TOOL = {
     },
   }, {
     name: 'apply_itinerary',
-    description: 'Apply the current draft itinerary to the real trip. Call this ONLY when the user explicitly asks to update/save/apply the plan to their trip. Do NOT call this on your own — wait for the user to confirm.',
+    description: 'Save the itinerary draft to the real trip. Call this automatically right after set_itinerary whenever the user asks you to recommend, plan, build, or create an itinerary (e.g. "recommend a 5-day route", "plan my trip", "suggest an itinerary"). Also call it when the user explicitly asks to update/save/apply the plan.',
     parameters: {
       type: 'OBJECT',
       properties: {},
     },
   }],
+};
+
+// Instant-apply mode: only set_itinerary (apply_itinerary is handled client-side)
+const ITINERARY_TOOL_INSTANT = {
+  functionDeclarations: [ITINERARY_TOOL.functionDeclarations[0]],
 };
 
 const SAFETY_SETTINGS = [
@@ -274,7 +335,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { messages, tripContext, mode, itineraryDraft } = body;
+    const { messages, tripContext, mode, itineraryDraft, instantApply } = body;
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: 'messages array is required' }), {
@@ -297,7 +358,8 @@ Deno.serve(async (req) => {
     }
 
     const isPlanner = mode === 'planner';
-    const systemPrompt = buildSystemPrompt(tripContext, isPlanner ? (itineraryDraft ?? []) : undefined);
+    const isInstantApply = !!instantApply;
+    const systemPrompt = buildSystemPrompt(tripContext, isPlanner ? (itineraryDraft ?? []) : undefined, isInstantApply);
 
     const geminiBody: Record<string, unknown> = {
       system_instruction: { parts: [{ text: systemPrompt }] },
@@ -311,7 +373,8 @@ Deno.serve(async (req) => {
 
     // Add tool calling for planner mode
     if (isPlanner) {
-      geminiBody.tools = [ITINERARY_TOOL];
+      // In instant-apply mode, apply_itinerary is handled client-side — omit it
+      geminiBody.tools = [isInstantApply ? ITINERARY_TOOL_INSTANT : ITINERARY_TOOL];
       geminiBody.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
     }
 

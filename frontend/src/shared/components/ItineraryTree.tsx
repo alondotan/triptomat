@@ -11,6 +11,10 @@ export interface ItineraryTreeProps {
   formatDate?: (date: string) => string;
   /** Text shown when no days are provided */
   emptyText?: string;
+  /** Highlighted place name (cross-panel selection) */
+  selectedName?: string | null;
+  /** Called when a place row is clicked */
+  onSelectName?: (name: string | null) => void;
 }
 
 const CATEGORY_ICONS: Record<string, typeof MapPin> = {
@@ -31,7 +35,7 @@ function defaultFormatDate(date: string): string {
  * Groups consecutive days by location, shows dates when available.
  * Reusable outside the AI chat context.
  */
-export function ItineraryTree({ days, className, formatDate, emptyText }: ItineraryTreeProps) {
+export function ItineraryTree({ days, className, formatDate, emptyText, selectedName, onSelectName }: ItineraryTreeProps) {
   const { t } = useTranslation();
   const fmt = formatDate ?? defaultFormatDate;
   const [collapsedLocations, setCollapsedLocations] = useState<Set<number>>(new Set());
@@ -148,10 +152,18 @@ export function ItineraryTree({ days, className, formatDate, emptyText }: Itiner
                         <div className="ms-5 space-y-0.5">
                           {day.places.map((place, idx) => {
                             const Icon = CATEGORY_ICONS[place.category] || MapPin;
+                            const isSelected = selectedName?.toLowerCase() === place.name.toLowerCase();
                             return (
                               <div
                                 key={idx}
-                                className="flex items-center gap-2 py-1 px-1.5 rounded text-xs hover:bg-muted/30"
+                                onClick={() => onSelectName?.(isSelected ? null : place.name)}
+                                className={cn(
+                                  'flex items-center gap-2 py-1 px-1.5 rounded text-xs transition-colors',
+                                  onSelectName ? 'cursor-pointer' : '',
+                                  isSelected
+                                    ? 'bg-primary/10 ring-1 ring-primary/30'
+                                    : 'hover:bg-muted/30',
+                                )}
                               >
                                 <Icon size={12} className={cn(
                                   'shrink-0',
@@ -160,7 +172,7 @@ export function ItineraryTree({ days, className, formatDate, emptyText }: Itiner
                                   place.category === 'service' ? 'text-purple-500' :
                                   'text-green-600'
                                 )} />
-                                <span className="truncate flex-1">{place.name}</span>
+                                <span className="truncate flex-1 font-medium">{place.name}</span>
                                 {place.time && (
                                   <span className="text-[10px] text-muted-foreground shrink-0">
                                     {place.time}
