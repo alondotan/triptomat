@@ -169,7 +169,7 @@ const HomePage = () => {
   return (
     <AppLayout hideHero fillHeight>
       {/* ── Desktop layout ── */}
-      <div className="hidden lg:flex flex-col h-[calc(100dvh-56px)] -mx-6 overflow-hidden">
+      <div className="hidden lg:flex flex-col flex-1 min-h-0 -mx-6 overflow-hidden">
 
         {/* Main 3 columns */}
         <div className="flex flex-1 min-h-0 overflow-hidden">
@@ -212,7 +212,7 @@ const HomePage = () => {
       </div>
 
       {/* ── Mobile: stacked chat (full screen) ── */}
-      <div className="lg:hidden flex flex-col h-[calc(100dvh-112px)]">
+      <div className="lg:hidden flex flex-col flex-1 min-h-0 overflow-hidden">
         <AIChatCore
           tripContext={tripContext}
           compact
