@@ -4,6 +4,7 @@ import type { Json } from '@/integrations/supabase/types';
 import { createOrMergePOI } from '@/features/poi/poiService';
 import { supabase } from '@/shared/services/helpers';
 import { createTripPlace, findTripPlaceByLocationId } from '@/features/trip/tripPlaceService';
+import { resolveOrAddLocation } from '@/features/trip/tripLocationService';
 import type { TripPlace } from '@/types/trip';
 
 
@@ -74,10 +75,17 @@ export async function applyDraftToTrip(
       .eq('trip_id', tripId);
 
     for (const locName of uniqueLocations) {
-      const tripLoc = (tripLocs || []).find(
+      let tripLoc = (tripLocs || []).find(
         l => l.name.toLowerCase() === locName.toLowerCase(),
       );
-      if (!tripLoc) continue;
+      if (!tripLoc) {
+        try {
+          const newLoc = await resolveOrAddLocation(tripId, locName, 'city');
+          tripLoc = { id: newLoc.id, name: newLoc.name };
+        } catch {
+          continue;
+        }
+      }
 
       // Find existing trip_place or create one
       let tripPlace = findTripPlaceByLocationId(mutableTripPlaces, tripLoc.id);
