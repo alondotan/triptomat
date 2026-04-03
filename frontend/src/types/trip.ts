@@ -88,6 +88,8 @@ export interface POIDetails {
   activity_details?: ActivityDetails;
   event_details?: EventDetails;
   notes?: { user_summary?: string; raw_notes?: string };
+  source_url?: string;
+  from_recommendation?: boolean;
 }
 
 export interface PointOfInterest {

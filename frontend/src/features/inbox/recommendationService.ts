@@ -129,7 +129,11 @@ export async function linkRecommendationToTrip(
         status: 'suggested',
         location: { country: siteToCountry[(item.site || '').toLowerCase()] || undefined, city: item.site },
         sourceRefs: { email_ids: [], recommendation_ids: [recommendationId] },
-        details: { notes: item.paragraph ? { raw_notes: item.paragraph } : undefined },
+        details: {
+          notes: item.paragraph ? { raw_notes: item.paragraph } : undefined,
+          from_recommendation: true,
+          source_url: rec.source_url || undefined,
+        },
         isCancelled: false,
         isPaid: false,
       });
