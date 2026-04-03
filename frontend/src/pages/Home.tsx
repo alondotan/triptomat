@@ -167,7 +167,7 @@ const HomePage = () => {
   }
 
   return (
-    <AppLayout hideHero fillHeight>
+    <AppLayout hideHero fillHeight hideFAB>
       {/* ── Desktop layout ── */}
       <div className="hidden lg:flex flex-col flex-1 min-h-0 -mx-6 overflow-hidden">
 
