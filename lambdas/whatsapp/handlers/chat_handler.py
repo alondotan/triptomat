@@ -1,4 +1,4 @@
-"""AI Chat handler — answer questions about the trip using Gemini."""
+"""AI Chat handler — answer questions about the trip via the shared ai-chat edge function."""
 
 import json
 import logging
@@ -13,12 +13,14 @@ from botocore.exceptions import ClientError
 import meta_api
 from core.supabase_client import get_active_trips, get_trip_entities, _supabase_get, check_ai_usage
 from handlers.command_handler import _fetch_missions, _create_mission, _update_mission_status
+from handlers.ai_chat_adapter import call_ai_chat
+from handlers.tool_executor import execute_tool_calls
 
 logger = logging.getLogger(__name__)
 
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GOOGLE_API_KEY}"
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://aqpzhflzsqkjceeeufyf.supabase.co")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 DYNAMODB_TABLE = os.environ.get("CONVERSATION_TABLE", "triptomat-whatsapp-conversations")
 
@@ -26,7 +28,7 @@ dynamodb = boto3.resource("dynamodb")
 
 # Conversation TTL: 24 hours
 CONVERSATION_TTL_SECONDS = 86400
-MAX_HISTORY = 20
+MAX_HISTORY = 30  # Increased from 20 to match Supabase-backed history limit
 
 SYSTEM_PROMPT = """You are Triptomat AI, a travel planning assistant on WhatsApp.
 
@@ -145,8 +147,142 @@ GEMINI_TOOLS = [{
 }]
 
 
+def _load_chat_history(trip_id, user_id):
+    """Load last MAX_HISTORY messages for a trip from chat_messages table (shared with web).
+
+    Returns list of {"role": str, "content": str} dicts, oldest first.
+    Falls back to empty list on any error so chat still works.
+    """
+    url = (
+        f"{SUPABASE_URL}/rest/v1/chat_messages"
+        f"?trip_id=eq.{trip_id}&user_id=eq.{user_id}"
+        f"&order=created_at.asc&limit={MAX_HISTORY}"
+        f"&select=role,content"
+    )
+    headers = {
+        "apikey": SUPABASE_SERVICE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+    }
+    try:
+        resp = requests.get(url, headers=headers, timeout=5)
+        resp.raise_for_status()
+        return [{"role": r["role"], "content": r["content"]} for r in resp.json()]
+    except Exception as e:
+        logger.warning("[chat_handler] Failed to load chat history: %s", e)
+        return []
+
+
+def _build_trip_context(trip, entities):
+    """Build a TripContext dict matching the unified shape used by the web ai-chat edge function."""
+    pois = entities.get("existing_pois") or []
+    return {
+        "tripName": trip.get("name"),
+        "countries": trip.get("countries") or [],
+        "startDate": trip.get("start_date"),
+        "endDate": trip.get("end_date"),
+        "numberOfDays": trip.get("number_of_days"),
+        "status": trip.get("status"),
+        "currency": trip.get("currency"),
+        "locations": [
+            loc.get("name")
+            for loc in (trip.get("locations") or [])
+            if loc.get("name")
+        ],
+        "existingPOIs": [
+            {
+                "name": p.get("name", ""),
+                "category": p.get("category", "attraction"),
+                "status": p.get("status", "suggested"),
+                "city": (p.get("location") or {}).get("city"),
+            }
+            for p in pois
+        ],
+        "festivals": [],
+    }
+
+
 def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
-    """Handle a chat/Q&A message with Gemini AI."""
+    """Handle a chat/Q&A message via the shared ai-chat edge function."""
+    text = (message.get("text") or {}).get("body", "").strip()
+    if not text:
+        meta_api.send_text(phone, "I can only read text messages for now.")
+        return
+
+    # Daily AI usage check
+    user_id = wa_user.get("user_id")
+    if user_id and SUPABASE_URL:
+        usage = check_ai_usage(user_id, "whatsapp_chat", SUPABASE_URL, SUPABASE_SERVICE_KEY)
+        if not usage.get("allowed", True):
+            tier = usage.get("tier", "free")
+            limit = usage.get("limit", 15)
+            meta_api.send_text(
+                phone,
+                f"You've reached your daily AI chat limit ({limit}/day on {tier.title()} tier). "
+                "Try again tomorrow or upgrade to Pro.",
+            )
+            return
+
+    trip_id = wa_user.get("active_trip_id")
+    if not trip_id:
+        meta_api.send_text(phone, "No active trip selected. Use /trip to choose one.")
+        return
+
+    if not user_id:
+        meta_api.send_text(phone, "Could not identify your account. Please try again.")
+        return
+
+    # Load trip data for context building
+    trips = get_active_trips(user_id, SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    trip = next((t for t in trips if t["id"] == trip_id), None)
+    if not trip:
+        meta_api.send_text(phone, "Could not load your trip data. Please try again.")
+        return
+
+    entities = get_trip_entities(trip_id, SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+    # Load shared conversation history (same Supabase table as the web app)
+    history = _load_chat_history(trip_id, user_id)
+
+    # Append current user message
+    history.append({"role": "user", "content": text})
+
+    # Build unified trip context
+    trip_context = _build_trip_context(trip, entities)
+
+    # Call the shared AI brain
+    try:
+        result = call_ai_chat(
+            user_id=user_id,
+            trip_id=trip_id,
+            messages=history,
+            trip_context=trip_context,
+        )
+    except Exception as e:
+        logger.error("[chat_handler] ai-chat call failed: %s", e)
+        meta_api.send_text(phone, "Sorry, I couldn't process that right now. Please try again.")
+        return
+
+    ai_message = result.get("message", "")
+    tool_calls = result.get("toolCalls") or []
+
+    # Execute tool calls server-side and build confirmation text
+    if tool_calls:
+        confirmations = execute_tool_calls(tool_calls, trip_id, user_id, wa_user)
+        if confirmations:
+            suffix = "\n".join(confirmations)
+            ai_message = (ai_message + "\n\n" + suffix).strip() if ai_message else suffix
+
+    reply = ai_message or "Done."
+    meta_api.send_text(phone, reply)
+
+
+# ─── Legacy Gemini path — kept for rollback ──────────────────────────────────
+# The functions below (_gemini_handle_chat, _load_conversation, _save_conversation,
+# and the raw Gemini call logic) are no longer called by handle_chat.
+# They are preserved here so we can revert quickly if needed.
+
+def _legacy_gemini_handle_chat(wa_user: dict, message: dict, phone: str) -> None:
+    """Legacy: handle chat via Gemini directly (no longer used)."""
     text = (message.get("text") or {}).get("body", "").strip()
     if not text:
         meta_api.send_text(phone, "I can only read text messages for now.")
@@ -156,7 +292,6 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
         meta_api.send_text(phone, "AI chat is not configured yet. Please try again later.")
         return
 
-    # Daily AI usage check
     user_id = wa_user.get("user_id")
     if user_id and SUPABASE_URL:
         usage = check_ai_usage(user_id, "whatsapp_chat", SUPABASE_URL, SUPABASE_SERVICE_KEY)
@@ -171,12 +306,9 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
         meta_api.send_text(phone, "No active trip selected. Use /trip to choose one.")
         return
 
-    # Strip WhatsApp markdown and invisible Unicode characters before intent matching
     clean_text = text.replace("*", "").replace("_", "").replace("~", "")
-    # Remove invisible Unicode chars (RTL/LTR marks, zero-width spaces, etc.)
     clean_text = re.sub(r'[\u200e\u200f\u200b\u200c\u200d\u2069\u2068\u202a\u202b\u202c\ufeff]', '', clean_text).strip()
 
-    # Intercept task/place intents before calling Gemini
     webhook_token = wa_user.get("webhook_token", "")
     logger.info("Intent check: clean_text=%r, webhook_token=%s", clean_text[:80], "YES" if webhook_token else "NO")
     intent_result = _try_handle_task_intent(clean_text, trip_id, phone, webhook_token)
@@ -185,16 +317,10 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
         meta_api.send_text(phone, intent_result)
         return
 
-    # Load trip context
     trip_context = _load_trip_context(trip_id, wa_user.get("user_id", ""))
-
-    # Load conversation history
     conversation = _load_conversation(phone)
-
-    # Add user message
     conversation.append({"role": "user", "text": text})
 
-    # Build Gemini request
     system_text = SYSTEM_PROMPT + "\n" + trip_context
     contents = []
     for msg in conversation[-MAX_HISTORY:]:

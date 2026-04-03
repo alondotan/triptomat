@@ -394,7 +394,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Authenticate user via Supabase JWT
+    // Authenticate user via Supabase JWT (or service-role bypass for WhatsApp Lambda)
     const authHeader = req.headers.get('authorization') || '';
     if (!authHeader.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Missing authorization' }), {
@@ -403,22 +403,38 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    const body = await req.json();
+    const { messages, tripContext, mode, itineraryDraft, instantApply, persistHistory, serviceUserId, source, tripId: bodyTripId } = body;
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Service-role bypass: trusted internal callers (e.g. WhatsApp Lambda) may authenticate
+    // using the service role key and provide a serviceUserId directly.
+    const isServiceRoleCall =
+      authHeader === `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` &&
+      typeof serviceUserId === 'string' &&
+      serviceUserId.length > 0;
+
+    let userId: string;
+
+    if (isServiceRoleCall) {
+      userId = serviceUserId as string;
+    } else {
+      const supabaseUser = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
       });
+      const { data: { user }, error: authError } = await supabaseUser.auth.getUser();
+      if (authError || !user) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      userId = user.id;
     }
 
     // Daily AI usage limit
     const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { data: usageResult } = await serviceClient.rpc('check_and_increment_usage', {
-      p_user_id: user.id,
+      p_user_id: userId,
       p_feature: 'ai_chat',
     });
     if (usageResult && !usageResult.allowed) {
@@ -437,15 +453,12 @@ Deno.serve(async (req) => {
     }
 
     // Per-minute rate limit
-    if (!checkRateLimit(user.id)) {
+    if (!checkRateLimit(userId)) {
       return new Response(JSON.stringify({ error: 'Rate limit exceeded. Please wait a moment before sending another message.' }), {
         status: 429,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    const body = await req.json();
-    const { messages, tripContext, mode, itineraryDraft, instantApply } = body;
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: 'messages array is required' }), {
@@ -526,15 +539,32 @@ Deno.serve(async (req) => {
       }));
     }
 
+    // Resolve the last user message text for persistence
+    const lastUserMessage = [...messages].reverse().find((m: { role: string; content: string }) => m.role === 'user')?.content ?? '';
+
+    // Helper: persist user + assistant messages asynchronously (fire-and-forget)
+    const persistIfRequested = (responseText: string, toolCallsPayload: unknown) => {
+      if (!persistHistory || !bodyTripId) return;
+      const msgSource: string = typeof source === 'string' ? source : 'web';
+      serviceClient
+        .rpc('save_chat_message', { p_trip_id: bodyTripId, p_user_id: userId, p_role: 'user', p_content: lastUserMessage, p_tool_calls: null, p_source: msgSource })
+        .then(() =>
+          serviceClient.rpc('save_chat_message', { p_trip_id: bodyTripId, p_user_id: userId, p_role: 'assistant', p_content: responseText, p_tool_calls: toolCallsPayload ?? null, p_source: msgSource })
+        )
+        .catch((err: unknown) => console.error('persistHistory error:', err));
+    };
+
     // If there are tool calls, return them along with any text from the same response
     if (functionCalls.length > 0) {
       const toolCalls = functionCalls.map((fc: { functionCall: { name: string; args: unknown } }) => ({
         name: fc.functionCall.name,
         args: fc.functionCall.args,
       }));
+      const responseMessage = textParts || 'I updated the itinerary plan.';
+      persistIfRequested(responseMessage, toolCalls);
 
       return new Response(JSON.stringify({
-        message: textParts || 'I updated the itinerary plan.',
+        message: responseMessage,
         toolCalls,
       }), {
         status: 200,
@@ -543,8 +573,10 @@ Deno.serve(async (req) => {
     }
 
     // No tool calls — regular text response
+    const responseMessage = textParts || 'Sorry, I could not generate a response.';
+    persistIfRequested(responseMessage, null);
     return new Response(JSON.stringify({
-      message: textParts || 'Sorry, I could not generate a response.',
+      message: responseMessage,
       toolCalls: [],
     }), {
       status: 200,

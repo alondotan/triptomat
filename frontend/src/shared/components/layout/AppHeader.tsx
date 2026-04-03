@@ -40,6 +40,7 @@ import { ShareTripDialog } from '@/features/trip/ShareTripDialog';
 import { AIChatSheet, type TripContext } from '@/features/chat/AIChatSheet';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchLinkedEmailsCount } from '@/features/inbox/recommendationService';
 import { useToast } from '@/shared/hooks/use-toast';
 import {
   AlertDialog,
@@ -163,7 +164,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false, heroTitle
   // Recalculate unread count from DB — called on mount + real-time changes
   const refreshUnread = useCallback(async () => {
     try {
-      const { data } = await supabase.from('source_emails').select('id').eq('status', 'linked');
+      const data = await fetchLinkedEmailsCount();
       if (!data) return;
       const readIdsRaw = localStorage.getItem('inbox_read_ids');
       const readIds = readIdsRaw ? new Set<string>(JSON.parse(readIdsRaw)) : null;

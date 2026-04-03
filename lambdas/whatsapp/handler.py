@@ -17,6 +17,9 @@ Required env vars:
 Optional env vars:
   RATE_LIMIT            — Max messages per minute per phone (default: 30)
   OTEL_ENABLED          — "true" to enable OpenTelemetry tracing/metrics
+  AI_CHAT_URL           — Full Supabase edge function URL for the shared AI brain
+                          (default: https://aqpzhflzsqkjceeeufyf.supabase.co/functions/v1/ai-chat)
+  AI_CHAT_TRIP_ID_SOURCE — How to resolve the trip ID for AI chat (default: active_trip_id)
 """
 
 import hashlib

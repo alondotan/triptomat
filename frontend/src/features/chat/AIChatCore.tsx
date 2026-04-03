@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Loader2, Bot, User, AlertCircle, Sparkles, Trash2, Undo2, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { createSourceRecommendation } from '@/features/inbox/recommendationService';
 import { cn } from '@/shared/lib/utils';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useAiUsage } from '@/shared/hooks/useAiUsage';
@@ -15,38 +16,18 @@ import { useItineraryDraft } from '@/features/itinerary/useItineraryDraft';
 import { applyDraftToTrip } from '@/features/itinerary/itineraryDraftService';
 import { useItineraryHistory } from '@/features/home/useItineraryHistory';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { useChatHistory } from './useChatHistory';
 import type { TripContext } from './AIChatSheet';
 import type { PointOfInterest } from '@/types/trip';
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
+type Message = import('./useChatHistory').Message;
 
 const MAX_INPUT = 2000;
 const COOLDOWN_MS = 2000;
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
 
-// In-memory store for per-trip conversation sessions
+// In-memory store for per-trip conversation sessions (L1 cache for instant re-render)
 const tripSessions = new Map<string, Message[]>();
-
-function loadFromLocalStorage(tripId: string): Message[] {
-  try {
-    const raw = localStorage.getItem(`triptomat_chat_${tripId}`);
-    return raw ? (JSON.parse(raw) as Message[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveToLocalStorage(tripId: string, messages: Message[]) {
-  try {
-    // Keep last 100 messages to avoid localStorage quota issues
-    localStorage.setItem(`triptomat_chat_${tripId}`, JSON.stringify(messages.slice(-100)));
-  } catch {
-    // ignore quota errors
-  }
-}
 
 const SUMMARIZE_PROMPT = `First, summarize what the user ultimately asked for in this conversation — consider only their final preferences (if the user changed their mind or rejected earlier suggestions, ignore those). Then list ONLY the specific place names that match what the user actually wanted. Reply in the SAME LANGUAGE the user used.
 
@@ -95,14 +76,12 @@ interface AIChatCoreProps {
 export function AIChatCore({ tripContext, compact = false, className, initialMessage, onNewAssistantMessage, onItineraryUpdate, onSuggestPlaces, instantApply = false }: AIChatCoreProps) {
   const { t } = useTranslation();
   const tripId = tripContext.tripId;
-  const [messages, setMessages] = useState<Message[]>(() => {
-    // Prefer in-memory (fastest), fall back to localStorage across page loads
-    const inMemory = tripSessions.get(tripId);
-    if (inMemory && inMemory.length > 0) return inMemory;
-    const persisted = loadFromLocalStorage(tripId);
-    if (persisted.length > 0) tripSessions.set(tripId, persisted);
-    return persisted;
-  });
+
+  // DB-backed chat history (with localStorage migration on first load)
+  const { messages: dbMessages, isLoading: historyIsLoading, appendMessages, clearHistory } = useChatHistory(tripId);
+
+  // Local messages state — initialized from in-memory cache (L1), synced from DB on load
+  const [messages, setMessages] = useState<Message[]>(() => tripSessions.get(tripId) ?? []);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [integrating, setIntegrating] = useState(false);
@@ -131,26 +110,36 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
     }
   }, [isInitialized, initFromReal, itineraryDays, pois]);
 
-  // When trip changes, save current session and load the new one
+  // When DB messages load (or trip changes), seed local state from DB (if local cache is empty)
+  useEffect(() => {
+    if (!historyIsLoading && dbMessages.length > 0) {
+      const cached = tripSessions.get(tripId);
+      if (!cached || cached.length === 0) {
+        tripSessions.set(tripId, dbMessages);
+        setMessages(dbMessages);
+      }
+    }
+  }, [historyIsLoading, dbMessages, tripId]);
+
+  // When trip changes, save current session to in-memory cache and reset for new trip
   useEffect(() => {
     if (prevTripIdRef.current !== tripId) {
       if (prevTripIdRef.current && messages.length > 0) {
         tripSessions.set(prevTripIdRef.current, messages);
       }
-      const restored = tripSessions.get(tripId) || [];
+      const restored = tripSessions.get(tripId) ?? [];
       setMessages(restored);
       setError(null);
       prevTripIdRef.current = tripId;
     }
   }, [tripId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Persist session (in-memory + localStorage) on message changes
+  // Keep in-memory cache in sync on every message change
   useEffect(() => {
     if (messages.length > 0) {
       tripSessions.set(tripId, messages);
-      saveToLocalStorage(tripId, messages);
     }
-  }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [messages, tripId]);
 
   // Pre-fill input when initialMessage is provided
   useEffect(() => {
@@ -347,6 +336,8 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         onNewAssistantMessage?.(assistantMsg.content, next.length - 1);
         return next;
       });
+      // Persist both messages to DB (fire-and-forget — don't block UI)
+      appendMessages([userMsg, assistantMsg]).catch(() => {});
       queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
 
       // Apply the itinerary to the real trip
@@ -377,7 +368,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, lastSentAt, tripContext, draft, applyToolCall, queryClient, onNewAssistantMessage, onSuggestPlaces, pois, itineraryDays, toast, t, initFromReal, instantApply, history, addPOI, activeTrip, updateCurrentTrip, tripPlaces]);
+  }, [input, loading, messages, lastSentAt, tripContext, draft, applyToolCall, queryClient, onNewAssistantMessage, onSuggestPlaces, pois, itineraryDays, toast, t, initFromReal, instantApply, history, addPOI, activeTrip, updateCurrentTrip, tripPlaces, appendMessages]);
 
   // Undo last AI change (instant-apply mode)
   const handleUndo = useCallback(async () => {
@@ -477,14 +468,14 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         const jobId = gatewayData.job_id;
         const meta = gatewayData.source_metadata || {};
         if (jobId) {
-          await supabase.from('source_recommendations').insert([{
+          await createSourceRecommendation({
             recommendation_id: jobId,
             trip_id: tripContext.tripId,
             source_title: `AI: ${meta.title || tripContext.tripName}`,
             status: 'processing',
             analysis: {},
             linked_entities: [],
-          }]);
+          });
         }
 
         const confirmationMsg: Message = {
@@ -559,7 +550,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             onClick={() => {
               setMessages([]);
               tripSessions.delete(tripId);
-              try { localStorage.removeItem(`triptomat_chat_${tripId}`); } catch { /* ignore */ }
+              clearHistory().catch(() => {});
               if (instantApply) history.reset();
               setError(null);
             }}
@@ -588,7 +579,12 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
       {/* Messages area */}
       <ScrollArea className="flex-1 min-h-0" ref={scrollRef}>
         <div className={cn('space-y-3', compact ? 'px-3 py-3' : 'px-4 py-4')}>
-          {messages.length === 0 && (
+          {historyIsLoading && messages.length === 0 && (
+            <div className="flex justify-center py-8">
+              <Loader2 size={compact ? 16 : 20} className="animate-spin text-muted-foreground/50" />
+            </div>
+          )}
+          {!historyIsLoading && messages.length === 0 && (
             <div className="text-center text-muted-foreground py-8 space-y-1.5">
               <Bot size={compact ? 24 : 32} className="mx-auto text-muted-foreground/50" />
               <p className={cn('font-medium', compact ? 'text-xs' : 'text-sm')}>

@@ -25,6 +25,27 @@ function collectSitesUnderCountry(node: SiteHierarchyNode, country: string, map:
   }
 }
 
+export async function fetchLinkedEmailsCount(): Promise<{ id: string }[]> {
+  const { data, error } = await supabase
+    .from('source_emails')
+    .select('id')
+    .eq('status', 'linked');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createSourceRecommendation(record: {
+  recommendation_id: string;
+  trip_id: string;
+  source_title: string;
+  status: string;
+  analysis: Record<string, never>;
+  linked_entities: never[];
+}): Promise<void> {
+  const { error } = await supabase.from('source_recommendations').insert([record]);
+  if (error) throw error;
+}
+
 export async function fetchRecommendations(tripId?: string): Promise<SourceRecommendation[]> {
   let query = supabase
     .from('source_recommendations')

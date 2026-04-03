@@ -1,14 +1,7 @@
 import { useRef, useState, useCallback } from 'react';
 import type { ItineraryDay, PointOfInterest, Trip } from '@/types/trip';
-import type { DraftDay, DraftPlace } from '@/types/itineraryDraft';
-
-const CATEGORY_MAP: Record<string, DraftPlace['category']> = {
-  accommodation: 'accommodation',
-  eatery: 'eatery',
-  attraction: 'attraction',
-  service: 'service',
-  event: 'event',
-};
+import type { DraftDay } from '@/types/itineraryDraft';
+import { CATEGORY_MAP } from '@/shared/utils/categoryMap';
 
 export interface TripMeta {
   numberOfDays?: number;

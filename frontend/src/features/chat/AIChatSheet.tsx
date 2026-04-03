@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Loader2, Bot, User, AlertCircle, Sparkles, Trash2, Map as MapIcon, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { createSourceRecommendation } from '@/features/inbox/recommendationService';
 import { cn } from '@/shared/lib/utils';
 import { useToast } from '@/shared/hooks/use-toast';
 import { useAiUsage } from '@/shared/hooks/useAiUsage';
@@ -284,14 +285,14 @@ export function AIChatSheet({ open, onOpenChange, tripContext, initialMessage }:
         const jobId = gatewayData.job_id;
         const meta = gatewayData.source_metadata || {};
         if (jobId && tripContext.tripId) {
-          await supabase.from('source_recommendations').insert([{
+          await createSourceRecommendation({
             recommendation_id: jobId,
             trip_id: tripContext.tripId,
             source_title: `AI: ${meta.title || tripContext.tripName}`,
             status: 'processing',
             analysis: {},
             linked_entities: [],
-          }]);
+          });
         }
 
         const confirmationMsg: Message = {
