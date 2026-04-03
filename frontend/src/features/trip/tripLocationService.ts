@@ -62,10 +62,7 @@ export interface TripLocation {
   externalId: string | null;
   sortOrder: number;
   source: string;
-  isTemporary: boolean;
-  isPlanned: boolean;
   notes: string;
-  imageUrl: string;
   createdAt: string;
 }
 
@@ -165,18 +162,6 @@ export async function addTripLocation(
 }
 
 export async function deleteTripLocation(id: string): Promise<void> {
-  const { error } = await supabase.from('trip_locations').delete().eq('id', id);
-  if (error) throw error;
-}
-
-/** Delete a research-mode location: first removes its holding days, then the location itself. */
-export async function deleteResearchTripLocation(id: string): Promise<void> {
-  const { error: daysError } = await supabase
-    .from('itinerary_days')
-    .delete()
-    .eq('trip_location_id', id);
-  if (daysError) throw daysError;
-
   const { error } = await supabase.from('trip_locations').delete().eq('id', id);
   if (error) throw error;
 }
@@ -463,66 +448,7 @@ function mapTripLocation(row: Record<string, unknown>): TripLocation {
     externalId: (row.external_id as string) || null,
     sortOrder: row.sort_order as number,
     source: row.source as string,
-    isTemporary: (row.is_temporary as boolean) ?? false,
-    isPlanned: (row.is_planned as boolean) ?? false,
     notes: (row.notes as string) || '',
-    imageUrl: (row.image_url as string) || '',
     createdAt: row.created_at as string,
   };
-}
-
-// ── Temporary location ──────────────────────────
-
-/** Returns the trip's temporary (unassigned) location, creating it if needed. */
-export async function ensureTemporaryTripLocation(tripId: string): Promise<TripLocation> {
-  const { data: existing, error: findError } = await supabase
-    .from('trip_locations')
-    .select('*')
-    .eq('trip_id', tripId)
-    .eq('is_temporary', true)
-    .maybeSingle();
-
-  if (findError) throw findError;
-  if (existing) return mapTripLocation(existing as Record<string, unknown>);
-
-  const { data, error } = await supabase
-    .from('trip_locations')
-    .insert({ trip_id: tripId, parent_id: null, name: '', site_type: 'temporary', sort_order: -1, source: 'manual', is_temporary: true })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return mapTripLocation(data as Record<string, unknown>);
-}
-
-// ── Planned flag ────────────────────────────────
-
-export async function markTripLocationPlanned(id: string, planned: boolean): Promise<void> {
-  const { error } = await supabase.from('trip_locations').update({ is_planned: planned }).eq('id', id);
-  if (error) throw error;
-}
-
-// ── Notes / image mutations ─────────────────────
-
-export async function updateTripLocationNotes(id: string, notes: string): Promise<void> {
-  const { error } = await supabase.from('trip_locations').update({ notes }).eq('id', id);
-  if (error) throw error;
-}
-
-export async function updateTripLocationImage(id: string, imageUrl: string): Promise<void> {
-  const { error } = await supabase.from('trip_locations').update({ image_url: imageUrl }).eq('id', id);
-  if (error) throw error;
-}
-
-// ── Reorder ─────────────────────────────────────
-
-export async function reorderTripLocations(
-  orderedIds: { id: string; sortOrder: number }[],
-): Promise<void> {
-  const promises = orderedIds.map(({ id, sortOrder }) =>
-    supabase.from('trip_locations').update({ sort_order: sortOrder }).eq('id', id),
-  );
-  const results = await Promise.all(promises);
-  const err = results.find(r => r.error);
-  if (err?.error) throw err.error;
 }

@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Trip, Collection } from '@/types/trip';
 import { fetchItineraryDays, updateItineraryDay } from '@/features/itinerary/itineraryService';
-import { seedTripLocations, ensureTemporaryTripLocation } from './tripLocationService';
+import { seedTripLocations } from './tripLocationService';
 import { seedTripFestivals } from '@/features/geodata/festivalService';
 import { createItineraryDay } from '@/features/itinerary/itineraryService';
 
@@ -80,11 +80,8 @@ export async function createTrip(trip: Omit<Trip, 'id' | 'createdAt' | 'updatedA
     );
   }
 
-  // Create temporary location and seed days into it
+  // Seed itinerary days (unassigned — no trip_place_id yet)
   try {
-    const tempLoc = await ensureTemporaryTripLocation(mapped.id);
-
-    // Determine number of days from explicit count or date range
     let numDays = mapped.numberOfDays ?? 0;
     if (!numDays && mapped.startDate && mapped.endDate) {
       const start = new Date(mapped.startDate);
@@ -103,14 +100,13 @@ export async function createTrip(trip: Omit<Trip, 'id' | 'createdAt' | 'updatedA
         tripId: mapped.id,
         dayNumber: i,
         date,
-        tripLocationId: tempLoc.id,
         accommodationOptions: [],
         activities: [],
         transportationSegments: [],
       });
     }
   } catch (e) {
-    console.error('Failed to create temporary location or days:', e);
+    console.error('Failed to create itinerary days:', e);
   }
 
   return mapped;

@@ -18,8 +18,7 @@ export async function createItineraryDay(day: Omit<ItineraryDay, 'id' | 'created
     trip_id: day.tripId,
     day_number: day.dayNumber,
     date: day.date,
-    location_context: day.locationContext,
-    trip_location_id: day.tripLocationId || null,
+    trip_place_id: day.tripPlaceId || null,
     accommodation_options: day.accommodationOptions as unknown as Json,
     activities: day.activities as unknown as Json,
     transportation_segments: day.transportationSegments as unknown as Json,
@@ -38,11 +37,10 @@ export async function updateItineraryDay(id: string, updates: Partial<ItineraryD
   const updateData: Record<string, unknown> = {};
   if (updates.dayNumber !== undefined) updateData.day_number = updates.dayNumber;
   if (updates.date !== undefined) updateData.date = updates.date;
-  if (updates.locationContext !== undefined) updateData.location_context = updates.locationContext;
   if (updates.accommodationOptions !== undefined) updateData.accommodation_options = updates.accommodationOptions;
   if (updates.activities !== undefined) updateData.activities = updates.activities;
   if (updates.transportationSegments !== undefined) updateData.transportation_segments = updates.transportationSegments;
-  if ('tripLocationId' in updates) updateData.trip_location_id = updates.tripLocationId ?? null;
+  if ('tripPlaceId' in updates) updateData.trip_place_id = updates.tripPlaceId ?? null;
 
   const { error } = await supabase.from('itinerary_days').update(updateData).eq('id', id);
   if (error) throw error;
@@ -59,9 +57,7 @@ function mapItineraryDay(row: Record<string, unknown>): ItineraryDay {
     tripId: row.trip_id as string,
     dayNumber: row.day_number as number,
     date: (row.date as string) || undefined,
-    locationContext: (row.location_context as string) || undefined,
-    itineraryLocationId: (row.itinerary_location_id as string) || undefined,
-    tripLocationId: (row.trip_location_id as string) || undefined,
+    tripPlaceId: (row.trip_place_id as string) || undefined,
     accommodationOptions: (row.accommodation_options as ItineraryDay['accommodationOptions']) || [],
     activities: (row.activities as ItineraryDay['activities']) || [],
     transportationSegments: (row.transportation_segments as ItineraryDay['transportationSegments']) || [],

@@ -2,8 +2,9 @@ import type { PointOfInterest } from '@/types/trip';
 import type { DraftDay } from '@/types/itineraryDraft';
 import type { Json } from '@/integrations/supabase/types';
 import { createOrMergePOI } from '@/features/poi/poiService';
-import { markTripLocationPlanned } from '@/features/trip/tripLocationService';
 import { supabase } from '@/shared/services/helpers';
+import { createTripPlace, findTripPlaceByLocationId } from '@/features/trip/tripPlaceService';
+import type { TripPlace } from '@/types/trip';
 
 interface ActivityEntry {
   id: string;
@@ -17,12 +18,14 @@ interface ActivityEntry {
 /**
  * Apply a draft itinerary to the real trip.
  * - Resolves place names to POI IDs (creates new POIs as needed via createOrMergePOI)
+ * - Resolves locationContext names → trip_places (creates new trip_place if needed)
  * - Merges draft activities into existing itinerary_days (preserves scheduled/planned items)
  */
 export async function applyDraftToTrip(
   tripId: string,
   draft: DraftDay[],
   _existingPois: PointOfInterest[],
+  existingTripPlaces: TripPlace[],
 ): Promise<void> {
   const poiIdMap = new Map<string, string>(); // "name|category" → POI ID
 
@@ -32,13 +35,11 @@ export async function applyDraftToTrip(
       const key = `${place.name}|${place.category}`;
       if (poiIdMap.has(key)) continue;
 
-      // If this place came from a real POI, reuse its ID
       if (place.existingPoiId) {
         poiIdMap.set(key, place.existingPoiId);
         continue;
       }
 
-      // Use createOrMergePOI to find existing or create new
       const { poi } = await createOrMergePOI({
         tripId,
         category: place.category as PointOfInterest['category'],
@@ -59,8 +60,11 @@ export async function applyDraftToTrip(
     }
   }
 
-  // 2) Resolve locationContext names → trip_location IDs
-  const tripLocationIdMap = new Map<string, string>(); // locationContext (lower) → trip_location.id
+  // 2) Resolve locationContext names → trip_place IDs
+  //    Find matching trip_location by name, then find or create a trip_place for it
+  const tripPlaceIdMap = new Map<string, string>(); // locationContext (lower) → trip_place.id
+  const mutableTripPlaces = [...existingTripPlaces];
+
   const uniqueLocations = [...new Set(draft.map(d => d.locationContext).filter(Boolean))] as string[];
   if (uniqueLocations.length > 0) {
     const { data: tripLocs } = await supabase
@@ -72,11 +76,15 @@ export async function applyDraftToTrip(
       const tripLoc = (tripLocs || []).find(
         l => l.name.toLowerCase() === locName.toLowerCase(),
       );
-      if (tripLoc) {
-        tripLocationIdMap.set(locName.toLowerCase(), tripLoc.id);
-        // Mark as planned — AI draft is explicitly choosing this location
-        await markTripLocationPlanned(tripLoc.id, true);
+      if (!tripLoc) continue;
+
+      // Find existing trip_place or create one
+      let tripPlace = findTripPlaceByLocationId(mutableTripPlaces, tripLoc.id);
+      if (!tripPlace) {
+        tripPlace = await createTripPlace(tripId, tripLoc.id, { sortOrder: mutableTripPlaces.length });
+        mutableTripPlaces.push(tripPlace);
       }
+      tripPlaceIdMap.set(locName.toLowerCase(), tripPlace.id);
     }
   }
 
@@ -105,21 +113,18 @@ export async function applyDraftToTrip(
       })
       .filter(a => a.id);
 
-    const tripLocationId = day.locationContext
-      ? tripLocationIdMap.get(day.locationContext.toLowerCase()) ?? null
+    const tripPlaceId = day.locationContext
+      ? tripPlaceIdMap.get(day.locationContext.toLowerCase()) ?? null
       : null;
 
     if (existingDay) {
-      // Preserve existing non-POI activities (time_blocks, collections)
-      // and POIs that are NOT in the draft (they were already there)
       const existingActivities = (existingDay.activities || []) as unknown as ActivityEntry[];
       const preserved = existingActivities.filter(a => {
-        if (a.type !== 'poi') return true; // keep time_blocks, collections
-        if (draftPoiIds.has(a.id)) return false; // draft replaces this
-        return true; // keep POIs not in draft (user's other planned items)
+        if (a.type !== 'poi') return true;
+        if (draftPoiIds.has(a.id)) return false;
+        return true;
       });
 
-      // Merge: draft activities first (with their order), then preserved items after
       const maxOrder = newActivities.length;
       const merged = [
         ...newActivities,
@@ -128,9 +133,8 @@ export async function applyDraftToTrip(
 
       const updatePayload: Record<string, unknown> = {
         activities: merged as unknown as Json,
-        location_context: day.locationContext || (existingDay as Record<string, unknown>).location_context as string || undefined,
       };
-      if (tripLocationId) updatePayload.trip_location_id = tripLocationId;
+      if (tripPlaceId) updatePayload.trip_place_id = tripPlaceId;
 
       await supabase
         .from('itinerary_days')
@@ -142,8 +146,7 @@ export async function applyDraftToTrip(
         .insert([{
           trip_id: tripId,
           day_number: day.dayNumber,
-          location_context: day.locationContext || null,
-          trip_location_id: tripLocationId,
+          trip_place_id: tripPlaceId,
           activities: newActivities as unknown as Json,
         }]);
     }

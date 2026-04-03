@@ -2,14 +2,15 @@ import { useCallback, useContext } from 'react';
 import { ActiveTripContext } from '@/features/trip/ActiveTripContext';
 import { ItineraryContext } from '@/features/itinerary/ItineraryContext';
 import { POIContext } from '@/features/poi/POIContext';
-import { getDescendantNames, updateTripLocationImage, markTripLocationPlanned, type TripLocation } from '@/features/trip/tripLocationService';
+import { getDescendantNames, type TripLocation } from '@/features/trip/tripLocationService';
 import { createItineraryDay, updateItineraryDay } from '@/features/itinerary/itineraryService';
-import type { PointOfInterest } from '@/types/trip';
+import { createTripPlace, findTripPlaceByLocationId, updateTripPlaceImage } from '@/features/trip/tripPlaceService';
+import type { PointOfInterest, TripPlace } from '@/types/trip';
 
 /**
- * In research mode, auto-assigns a POI to the matching research location when liked.
+ * In research mode, auto-assigns a POI to the matching trip_place when liked.
  * Searches the trip location hierarchy for a match (ancestor or descendant),
- * or creates a new research location for the POI's city.
+ * or creates a new trip_place for the POI's city.
  * Safe to use outside of providers (returns a no-op).
  */
 export function useResearchAutoAssign() {
@@ -19,17 +20,17 @@ export function useResearchAutoAssign() {
 
   const activeTrip = tripCtx?.activeTrip;
   const tripLocations = tripCtx?.tripLocations ?? [];
+  const tripPlaces = tripCtx?.tripPlaces ?? [];
   const reloadLocations = tripCtx?.reloadLocations;
+  const reloadTripPlaces = tripCtx?.reloadTripPlaces;
   const pois = poiCtx?.pois ?? [];
   const itineraryDays = itinCtx?.itineraryDays ?? [];
   const refetchItinerary = itinCtx?.refetchItinerary;
 
   const isResearchMode = activeTrip?.status === 'research';
 
-  const researchLocations = tripLocations.filter(tl => !tl.isTemporary && tl.isPlanned);
-
-  // Fire-and-forget: find an image for the new research location
-  const fetchLocationImage = useCallback(async (locationName: string, tripLoc: TripLocation) => {
+  // Fire-and-forget: find an image for the new trip place
+  const fetchPlaceImage = useCallback(async (locationName: string, tripPlace: TripPlace) => {
     try {
       let imageUrl: string | null = null;
       const locName = locationName.toLowerCase();
@@ -43,10 +44,13 @@ export function useResearchAutoAssign() {
 
       // 2. Try child locations in the hierarchy
       if (!imageUrl) {
-        const childLocs = tripLocations.filter(tl => tl.parentId === tripLoc.id);
-        for (const child of childLocs) {
-          const match = pois.find(p => p.imageUrl && p.location?.city?.toLowerCase() === child.name.toLowerCase());
-          if (match) { imageUrl = match.imageUrl!; break; }
+        const tripLoc = tripLocations.find(l => l.id === tripPlace.tripLocationId);
+        if (tripLoc) {
+          const childLocs = tripLocations.filter(tl => tl.parentId === tripLoc.id);
+          for (const child of childLocs) {
+            const match = pois.find(p => p.imageUrl && p.location?.city?.toLowerCase() === child.name.toLowerCase());
+            if (match) { imageUrl = match.imageUrl!; break; }
+          }
         }
       }
 
@@ -61,11 +65,11 @@ export function useResearchAutoAssign() {
       }
 
       if (imageUrl) {
-        await updateTripLocationImage(tripLoc.id, imageUrl);
-        await reloadLocations?.();
+        await updateTripPlaceImage(tripPlace.id, imageUrl);
+        await reloadTripPlaces?.();
       }
     } catch { /* silent */ }
-  }, [pois, tripLocations, reloadLocations]);
+  }, [pois, tripLocations, reloadTripPlaces]);
 
   const autoAssign = useCallback(async (poi: PointOfInterest) => {
     if (!activeTrip || !isResearchMode) return;
@@ -75,43 +79,44 @@ export function useResearchAutoAssign() {
 
     try {
       // Find the POI's city in the trip location hierarchy
-      const cityTripLoc = tripLocations.find(l => l.name.toLowerCase() === cityLower);
+      const cityTripLoc = tripLocations.find((l: TripLocation) => l.name.toLowerCase() === cityLower);
       if (!cityTripLoc) return;
 
       // Collect the city + all its ancestors (e.g. Beijing -> North China -> China)
       const selfAndAncestorIds = new Set<string>();
-      let current = cityTripLoc;
+      let current: TripLocation = cityTripLoc;
       while (current) {
         selfAndAncestorIds.add(current.id);
         if (!current.parentId) break;
-        const parent = tripLocations.find(l => l.id === current.parentId);
+        const parent = tripLocations.find((l: TripLocation) => l.id === current.parentId);
         if (!parent) break;
         current = parent;
       }
 
-      // Check if any existing research location matches (is the city itself or an ancestor)
-      let matchedTripLocId: string | null = null;
-      for (const tl of researchLocations) {
-        if (selfAndAncestorIds.has(tl.id)) {
-          matchedTripLocId = tl.id;
+      // Check if any existing trip_place matches (is the city itself or an ancestor)
+      let matchedTripPlace: TripPlace | null = null;
+      for (const tp of tripPlaces) {
+        if (selfAndAncestorIds.has(tp.tripLocationId)) {
+          matchedTripPlace = tp;
           break;
         }
       }
 
-      // Also check descendant direction: research location might be a child of the city
-      if (!matchedTripLocId) {
+      // Also check descendant direction: trip_place might be a child of the city
+      if (!matchedTripPlace) {
         const descendants = getDescendantNames(tripLocations, city);
-        for (const tl of researchLocations) {
-          if (descendants.has(tl.name.toLowerCase())) {
-            matchedTripLocId = tl.id;
+        for (const tp of tripPlaces) {
+          const tpLoc = tripLocations.find((l: TripLocation) => l.id === tp.tripLocationId);
+          if (tpLoc && descendants.has(tpLoc.name.toLowerCase())) {
+            matchedTripPlace = tp;
             break;
           }
         }
       }
 
-      if (matchedTripLocId) {
-        // Add POI to the matched research location's holding day
-        const holdingDay = itineraryDays.find(d => d.tripLocationId === matchedTripLocId);
+      if (matchedTripPlace) {
+        // Add POI to the matched trip_place's holding day
+        const holdingDay = itineraryDays.find(d => d.tripPlaceId === matchedTripPlace!.id);
         if (holdingDay) {
           const existing = holdingDay.activities || [];
           if (!existing.some(a => a.id === poi.id)) {
@@ -121,16 +126,21 @@ export function useResearchAutoAssign() {
           }
         }
       } else {
-        // No matching research location — use the city trip_location directly as research location
-        const existingDay = itineraryDays.find(d => d.tripLocationId === cityTripLoc.id);
+        // No matching trip_place — create one for the city
+        let tripPlace = findTripPlaceByLocationId(tripPlaces, cityTripLoc.id);
+        if (!tripPlace) {
+          tripPlace = await createTripPlace(activeTrip.id, cityTripLoc.id, { sortOrder: tripPlaces.length });
+          await reloadTripPlaces?.();
+        }
+
+        const existingDay = itineraryDays.find(d => d.tripPlaceId === tripPlace!.id);
         let holdingDay = existingDay;
         if (!holdingDay) {
-          const dayNumber = researchLocations.length + 1;
+          const dayNumber = tripPlaces.length + 1;
           const created = await createItineraryDay({
             tripId: activeTrip.id,
             dayNumber,
-            locationContext: city,
-            tripLocationId: cityTripLoc.id,
+            tripPlaceId: tripPlace.id,
             accommodationOptions: [],
             activities: [],
             transportationSegments: [],
@@ -143,19 +153,18 @@ export function useResearchAutoAssign() {
             activities: [...activities, { order: activities.length + 1, type: 'poi' as const, id: poi.id, schedule_state: 'potential' as const }],
           });
         }
-        await markTripLocationPlanned(cityTripLoc.id, true);
         await reloadLocations?.();
 
-        // Fetch and persist location image in the background
-        if (!cityTripLoc.imageUrl) {
-          fetchLocationImage(city, cityTripLoc);
+        // Fetch and persist place image in the background
+        if (!tripPlace.imageUrl) {
+          fetchPlaceImage(city, tripPlace);
         }
       }
       await refetchItinerary?.();
     } catch (e) {
-      console.error('Failed to auto-assign POI to research location:', e);
+      console.error('Failed to auto-assign POI to trip place:', e);
     }
-  }, [activeTrip, isResearchMode, researchLocations, tripLocations, itineraryDays, reloadLocations, refetchItinerary, fetchLocationImage]);
+  }, [activeTrip, isResearchMode, tripPlaces, tripLocations, itineraryDays, reloadLocations, reloadTripPlaces, refetchItinerary, fetchPlaceImage]);
 
   return { autoAssign, isResearchMode };
 }

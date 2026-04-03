@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Loader2, Bot, User, AlertCircle, Sparkles, Trash2 } from 'lucide-react';
+import { Send, Loader2, Bot, User, AlertCircle, Sparkles, Trash2, Undo2, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/shared/lib/utils';
 import { useToast } from '@/shared/hooks/use-toast';
@@ -12,6 +12,8 @@ import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { usePOI } from '@/features/poi/POIContext';
 import { useItineraryDraft } from '@/features/itinerary/useItineraryDraft';
 import { applyDraftToTrip } from '@/features/itinerary/itineraryDraftService';
+import { useItineraryHistory } from '@/features/home/useItineraryHistory';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import type { TripContext } from './AIChatSheet';
 
 interface Message {
@@ -25,6 +27,24 @@ const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
 
 // In-memory store for per-trip conversation sessions
 const tripSessions = new Map<string, Message[]>();
+
+function loadFromLocalStorage(tripId: string): Message[] {
+  try {
+    const raw = localStorage.getItem(`triptomat_chat_${tripId}`);
+    return raw ? (JSON.parse(raw) as Message[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveToLocalStorage(tripId: string, messages: Message[]) {
+  try {
+    // Keep last 100 messages to avoid localStorage quota issues
+    localStorage.setItem(`triptomat_chat_${tripId}`, JSON.stringify(messages.slice(-100)));
+  } catch {
+    // ignore quota errors
+  }
+}
 
 const SUMMARIZE_PROMPT = `First, summarize what the user ultimately asked for in this conversation — consider only their final preferences (if the user changed their mind or rejected earlier suggestions, ignore those). Then list ONLY the specific place names that match what the user actually wanted. Reply in the SAME LANGUAGE the user used.
 
@@ -57,18 +77,31 @@ interface AIChatCoreProps {
   className?: string;
   /** Pre-fill the input with this message when the chat opens */
   initialMessage?: string;
+  /** Called after every new assistant message (message text + its index in the conversation) */
+  onNewAssistantMessage?: (message: string, messageIndex: number) => void;
+  /** Called when set_itinerary fires — receives the clean, structured place list from the tool call + the assistant message index */
+  onItineraryUpdate?: (places: Array<{ name: string; day: number; location?: string }>, messageIndex: number) => void;
+  /**
+   * When true: set_itinerary is applied to the real trip immediately (no draft/apply step).
+   * Shows undo-per-step and restore-to-pre-conversation buttons.
+   */
+  instantApply?: boolean;
 }
 
-export function AIChatCore({ tripContext, compact = false, className, initialMessage }: AIChatCoreProps) {
+export function AIChatCore({ tripContext, compact = false, className, initialMessage, onNewAssistantMessage, onItineraryUpdate, instantApply = false }: AIChatCoreProps) {
   const { t } = useTranslation();
   const tripId = tripContext.tripId;
-  const [messages, setMessages] = useState<Message[]>(() =>
-    tripSessions.get(tripId) || []
-  );
+  const [messages, setMessages] = useState<Message[]>(() => {
+    // Prefer in-memory (fastest), fall back to localStorage across page loads
+    const inMemory = tripSessions.get(tripId);
+    if (inMemory && inMemory.length > 0) return inMemory;
+    const persisted = loadFromLocalStorage(tripId);
+    if (persisted.length > 0) tripSessions.set(tripId, persisted);
+    return persisted;
+  });
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [integrating, setIntegrating] = useState(false);
-  const [applying, setApplying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSentAt, setLastSentAt] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -82,7 +115,10 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
 
   const { itineraryDays } = useItinerary();
   const { pois } = usePOI();
-  const { draft, isInitialized, initFromReal, applyToolCall, clearDraft } = useItineraryDraft();
+  const { draft, isInitialized, initFromReal, applyToolCall } = useItineraryDraft();
+  const history = useItineraryHistory();
+  const { updateCurrentTrip, tripPlaces } = useActiveTrip();
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Initialize draft
   useEffect(() => {
@@ -104,10 +140,11 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
     }
   }, [tripId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Persist session on message changes
+  // Persist session (in-memory + localStorage) on message changes
   useEffect(() => {
     if (messages.length > 0) {
       tripSessions.set(tripId, messages);
+      saveToLocalStorage(tripId, messages);
     }
   }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -132,25 +169,6 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
     setTimeout(() => inputRef.current?.focus(), 100);
   }, []);
 
-  const handleApplyDraft = useCallback(async () => {
-    if (applying || draft.length === 0) return;
-    setApplying(true);
-    setError(null);
-
-    try {
-      await applyDraftToTrip(tripContext.tripId, draft, pois);
-      toast({
-        title: t('aiChat.tripUpdated'),
-        description: t('aiChat.tripUpdatedDesc'),
-      });
-      initFromReal(itineraryDays, pois);
-    } catch (err: unknown) {
-      setError((err as Error).message || 'Failed to update trip.');
-    } finally {
-      setApplying(false);
-    }
-  }, [applying, draft, pois, toast, t, initFromReal, itineraryDays, tripContext.tripId]);
-
   const sendMessage = useCallback(async () => {
     const trimmed = input.trim();
     if (!trimmed || loading) return;
@@ -158,12 +176,37 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
     if (Date.now() - lastSentAt < COOLDOWN_MS) return;
 
     setError(null);
+
+    // In instant-apply mode, take a backup before the very first message of the conversation
+    if (instantApply && messages.length === 0) {
+      history.takeBackup(itineraryDays, pois);
+    }
+
     const userMsg: Message = { role: 'user', content: trimmed.slice(0, MAX_INPUT) };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput('');
     setLoading(true);
     setLastSentAt(Date.now());
+
+    // Build the itinerary sent as context: in instant-apply mode use real days; otherwise use draft
+    const itineraryForContext = instantApply
+      ? (() => {
+          const poiMap = new Map(pois.map(p => [p.id, p]));
+          return itineraryDays.map(day => ({
+            dayNumber: day.dayNumber,
+            date: day.date,
+            locationContext: day.locationContext,
+            places: (day.activities ?? [])
+              .filter(a => a.type === 'poi' && poiMap.has(a.id))
+              .sort((a, b) => a.order - b.order)
+              .map(a => {
+                const poi = poiMap.get(a.id)!;
+                return { name: poi.name, category: poi.category, city: poi.location?.city };
+              }),
+          }));
+        })()
+      : draft;
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke('ai-chat', {
@@ -178,9 +221,12 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             status: tripContext.status,
             currency: tripContext.currency,
             locations: tripContext.locations,
+            existingPOIs: tripContext.existingPOIs,
+            festivals: tripContext.festivals,
           },
           mode: 'planner',
-          itineraryDraft: draft,
+          itineraryDraft: itineraryForContext,
+          instantApply,
         },
       });
 
@@ -193,10 +239,24 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
 
       // Handle tool calls (itinerary updates)
       let shouldApply = false;
+      let newDays: ReturnType<typeof applyToolCall> | null = null;
       if (data?.toolCalls?.length > 0) {
         for (const tc of data.toolCalls) {
           if (tc.name === 'set_itinerary' && tc.args?.days) {
-            applyToolCall(tc.args.days);
+            if (instantApply) {
+              history.pushHistory(itineraryDays, pois);
+            }
+            newDays = applyToolCall(tc.args.days);
+            // Notify parent with clean structured places from the tool call
+            if (onItineraryUpdate) {
+              const places = (tc.args.days as Array<{ day_number?: number; dayNumber?: number; location_context?: string; locationContext?: string; places?: Array<{ name: string }> }>)
+                .flatMap(d => (d.places ?? []).map(p => ({
+                  name: p.name,
+                  day: d.day_number ?? d.dayNumber ?? 0,
+                  location: d.location_context ?? d.locationContext,
+                })));
+              onItineraryUpdate(places, updatedMessages.length);
+            }
           } else if (tc.name === 'apply_itinerary') {
             shouldApply = true;
           }
@@ -207,18 +267,74 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         role: 'assistant',
         content: data?.message || 'Sorry, I could not generate a response.',
       };
-      setMessages(prev => [...prev, assistantMsg]);
+      setMessages(prev => {
+        const next = [...prev, assistantMsg];
+        onNewAssistantMessage?.(assistantMsg.content, next.length - 1);
+        return next;
+      });
       queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
 
-      if (shouldApply && draft.length > 0) {
-        handleApplyDraft();
+      // Apply the itinerary to the real trip
+      const daysToApply = newDays ?? (shouldApply ? draft : null);
+      if (daysToApply && daysToApply.length > 0 && (instantApply ? !!newDays : shouldApply)) {
+        try {
+          await applyDraftToTrip(tripContext.tripId, daysToApply, pois, tripPlaces);
+          if (!instantApply) {
+            toast({ title: t('aiChat.tripUpdated'), description: t('aiChat.tripUpdatedDesc') });
+          }
+          initFromReal(itineraryDays, pois);
+          // Sync trip metadata so Schedule page (useTripDays) sees the right day count
+          const maxDay = daysToApply.reduce((m, d) => Math.max(m, d.dayNumber || 0), 0);
+          if (maxDay > 0) {
+            const updates: Parameters<typeof updateCurrentTrip>[0] = {};
+            if (maxDay > (tripContext.numberOfDays || 0)) updates.numberOfDays = maxDay;
+            if (tripContext.status === 'research') updates.status = 'planning';
+            if (Object.keys(updates).length > 0) {
+              updateCurrentTrip(updates).catch(() => {});
+            }
+          }
+        } catch (err: unknown) {
+          setError((err as Error).message || 'Failed to update trip.');
+        }
       }
     } catch (err: unknown) {
       setError((err as Error).message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, lastSentAt, tripContext, draft, applyToolCall, queryClient, handleApplyDraft]);
+  }, [input, loading, messages, lastSentAt, tripContext, draft, applyToolCall, queryClient, onNewAssistantMessage, pois, itineraryDays, toast, t, initFromReal, instantApply, history]);
+
+  // Undo last AI itinerary change (instant-apply mode)
+  const handleUndo = useCallback(async () => {
+    const snapshot = history.undo();
+    if (!snapshot) return;
+    setHistoryLoading(true);
+    setError(null);
+    try {
+      await applyDraftToTrip(tripContext.tripId, snapshot, pois, tripPlaces);
+      initFromReal(itineraryDays, pois);
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Undo failed.');
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [history, tripContext.tripId, pois, itineraryDays, initFromReal]);
+
+  // Restore to pre-conversation state (instant-apply mode)
+  const handleRestore = useCallback(async () => {
+    const snapshot = history.restore();
+    if (!snapshot) return;
+    setHistoryLoading(true);
+    setError(null);
+    try {
+      await applyDraftToTrip(tripContext.tripId, snapshot, pois, tripPlaces);
+      initFromReal(itineraryDays, pois);
+    } catch (err: unknown) {
+      setError((err as Error).message || 'Restore failed.');
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [history, tripContext.tripId, pois, itineraryDays, initFromReal]);
 
   const handleIntegrateInsights = useCallback(async () => {
     if (loading || integrating) return;
@@ -326,13 +442,45 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         <span className={cn('font-medium truncate flex-1', compact ? 'text-xs' : 'text-sm')}>
           {t('aiChat.title', { trip: tripLabel })}
         </span>
+        {/* Instant-apply: undo / restore buttons */}
+        {instantApply && history.canUndo && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="shrink-0 h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+            onClick={handleUndo}
+            disabled={loading || historyLoading}
+            title="Undo last change"
+          >
+            {historyLoading ? <Loader2 size={12} className="animate-spin" /> : <Undo2 size={12} />}
+          </Button>
+        )}
+        {instantApply && history.canRestore && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="shrink-0 h-6 gap-1 px-1.5 text-[10px] text-muted-foreground hover:text-foreground"
+            onClick={handleRestore}
+            disabled={loading || historyLoading}
+            title="Restore to before this conversation"
+          >
+            {historyLoading ? <Loader2 size={10} className="animate-spin" /> : <RotateCcw size={10} />}
+            {!compact && 'Restore'}
+          </Button>
+        )}
         {messages.length > 0 && (
           <Button
             variant="ghost"
             size="sm"
             className="shrink-0 h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
-            onClick={() => { setMessages([]); tripSessions.delete(tripId); setError(null); }}
-            disabled={loading || integrating}
+            onClick={() => {
+              setMessages([]);
+              tripSessions.delete(tripId);
+              try { localStorage.removeItem(`triptomat_chat_${tripId}`); } catch {}
+              if (instantApply) history.reset();
+              setError(null);
+            }}
+            disabled={loading || integrating || historyLoading}
             title={t('aiChat.clearChat')}
           >
             <Trash2 size={12} />

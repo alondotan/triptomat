@@ -203,16 +203,16 @@ export interface Mission {
 }
 
 // ============================================================
-// ITINERARY LOCATION
+// TRIP PLACE
 // ============================================================
-export interface ItineraryLocation {
+export interface TripPlace {
   id: string;
   tripId: string;
-  tripLocationId: string | null;  // null = "General" (default)
-  isDefault: boolean;
-  sortOrder: number;
+  tripLocationId: string;  // always set — points to geo hierarchy node
+  potentialActivityIds: string[];  // POI IDs shared across all days at this place
   notes: string;
   imageUrl: string;
+  sortOrder: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -247,10 +247,7 @@ export interface ItineraryDay {
   tripId: string;
   dayNumber: number;
   date?: string;
-  locationContext?: string;
-  /** @deprecated use tripLocationId */
-  itineraryLocationId?: string;
-  tripLocationId?: string;
+  tripPlaceId?: string;  // FK → trip_places (nullable = unassigned day)
   accommodationOptions: ItineraryAccommodationOption[];
   activities: ItineraryActivity[];
   transportationSegments: ItineraryTransportSegment[];

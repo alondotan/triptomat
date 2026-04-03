@@ -14,6 +14,7 @@ import { usePOI } from '@/features/poi/POIContext';
 import { useItineraryDraft } from '@/features/itinerary/useItineraryDraft';
 import { DraftTreePanel } from './DraftTreePanel';
 import { applyDraftToTrip } from '@/features/itinerary/itineraryDraftService';
+import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -30,6 +31,10 @@ export interface TripContext {
   status: string;
   currency: string;
   locations: string[];
+  /** Condensed existing POIs for AI context enrichment */
+  existingPOIs?: Array<{ name: string; category: string; status: string; city?: string }>;
+  /** Relevant festivals/holidays for AI context enrichment */
+  festivals?: Array<{ name: string; country: string; period?: string }>;
 }
 
 interface AIChatSheetProps {
@@ -96,6 +101,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext, initialMessage }:
   // Itinerary + POI contexts for seeding draft
   const { itineraryDays } = useItinerary();
   const { pois } = usePOI();
+  const { tripPlaces } = useActiveTrip();
 
   // Draft state
   const { draft, isDirty, isInitialized, initFromReal, applyToolCall, clearDraft } = useItineraryDraft();
@@ -314,7 +320,7 @@ export function AIChatSheet({ open, onOpenChange, tripContext, initialMessage }:
     setError(null);
 
     try {
-      await applyDraftToTrip(tripContext.tripId, draft, pois);
+      await applyDraftToTrip(tripContext.tripId, draft, pois, tripPlaces);
       toast({
         title: t('aiChat.tripUpdated'),
         description: t('aiChat.tripUpdatedDesc'),

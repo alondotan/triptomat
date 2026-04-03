@@ -22,16 +22,22 @@ export function OverviewItineraryPanel({ selectedName, onSelectName }: OverviewI
   const { t } = useTranslation();
   const { itineraryDays } = useItinerary();
   const { pois } = usePOI();
-  const { tripLocations } = useActiveTrip();
+  const { tripLocations, tripPlaces } = useActiveTrip();
 
   const days = useMemo<DraftDay[]>(() => {
     const poiMap = new Map(pois.map(p => [p.id, p]));
-    const locMap = new Map(tripLocations.filter(tl => !tl.isTemporary).map(tl => [tl.id, tl.name]));
+    // Build map: trip_place_id → location name
+    const placeLocMap = new Map(
+      tripPlaces.map(tp => {
+        const loc = tripLocations.find(l => l.id === tp.tripLocationId);
+        return [tp.id, loc?.name ?? ''];
+      })
+    );
 
     return itineraryDays.map(day => ({
       dayNumber: day.dayNumber,
       date: day.date,
-      locationContext: (day.tripLocationId && locMap.get(day.tripLocationId)) || day.locationContext,
+      locationContext: (day.tripPlaceId && placeLocMap.get(day.tripPlaceId)) || undefined,
       places: (day.activities || [])
         .filter(a => a.type === 'poi' && poiMap.has(a.id))
         .sort((a, b) => a.order - b.order)
@@ -46,7 +52,7 @@ export function OverviewItineraryPanel({ selectedName, onSelectName }: OverviewI
           };
         }),
     }));
-  }, [itineraryDays, pois, tripLocations]);
+  }, [itineraryDays, pois, tripLocations, tripPlaces]);
 
   return (
     <div className="flex flex-col min-h-0">

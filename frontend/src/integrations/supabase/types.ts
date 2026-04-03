@@ -242,7 +242,7 @@ export type Database = {
           id: string
           transportation_segments: Json | null
           trip_id: string
-          trip_location_id: string | null
+          trip_place_id: string | null
           updated_at: string
         }
         Insert: {
@@ -254,7 +254,7 @@ export type Database = {
           id?: string
           transportation_segments?: Json | null
           trip_id: string
-          trip_location_id?: string | null
+          trip_place_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -266,7 +266,7 @@ export type Database = {
           id?: string
           transportation_segments?: Json | null
           trip_id?: string
-          trip_location_id?: string | null
+          trip_place_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -278,10 +278,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "itinerary_days_trip_location_id_fkey"
-            columns: ["trip_location_id"]
+            foreignKeyName: "itinerary_days_trip_place_id_fkey"
+            columns: ["trip_place_id"]
             isOneToOne: false
-            referencedRelation: "trip_locations"
+            referencedRelation: "trip_places"
             referencedColumns: ["id"]
           },
         ]
@@ -713,9 +713,6 @@ export type Database = {
           created_at: string
           external_id: string | null
           id: string
-          image_url: string
-          is_planned: boolean
-          is_temporary: boolean
           name: string
           notes: string
           parent_id: string | null
@@ -729,9 +726,6 @@ export type Database = {
           created_at?: string
           external_id?: string | null
           id?: string
-          image_url?: string
-          is_planned?: boolean
-          is_temporary?: boolean
           name: string
           notes?: string
           parent_id?: string | null
@@ -745,9 +739,6 @@ export type Database = {
           created_at?: string
           external_id?: string | null
           id?: string
-          image_url?: string
-          is_planned?: boolean
-          is_temporary?: boolean
           name?: string
           notes?: string
           parent_id?: string | null
@@ -805,6 +796,57 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trip_places: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          notes: string
+          potential_activity_ids: Json
+          sort_order: number
+          trip_id: string
+          trip_location_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          notes?: string
+          potential_activity_ids?: Json
+          sort_order?: number
+          trip_id: string
+          trip_location_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          notes?: string
+          potential_activity_ids?: Json
+          sort_order?: number
+          trip_id?: string
+          trip_location_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_places_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trip_places_trip_location_id_fkey"
+            columns: ["trip_location_id"]
+            isOneToOne: false
+            referencedRelation: "trip_locations"
             referencedColumns: ["id"]
           },
         ]
