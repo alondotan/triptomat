@@ -120,30 +120,47 @@ const HomePage = () => {
     };
   }, [activeTrip, tripLocationTree, pois, festivals]);
 
-  // Called when set_itinerary fires — the only source of suggestions in this page
-  const handleItineraryUpdate = useCallback((
-    places: Array<{ name: string; day?: number; location?: string }>,
+  // Shared helper: add a list of place-name suggestions to the panel + map
+  const addSuggestionsToPanel = useCallback((
+    items: Array<{ name: string; location?: string; day?: number }>,
     messageIndex: number,
   ) => {
-    const parsed = suggestionsFromToolCall(places, messageIndex);
-    const fresh = parsed.filter(s => !seenNamesRef.current.has(s.name.toLowerCase()));
+    const fresh = items.filter(s => !seenNamesRef.current.has(s.name.toLowerCase()));
     if (!fresh.length) return;
     fresh.forEach(s => seenNamesRef.current.add(s.name.toLowerCase()));
     setSuggestions(prev => {
-      // Replace the full list with suggestions from the latest tool call
-      // (re-plan replaces the previous plan's suggestions)
       const prevFromOtherMessages = prev.filter(s => s.sourceMessageIndex !== messageIndex);
       return [
         ...prevFromOtherMessages,
         ...fresh.map(s => ({
           ...s,
           id: String(nextSuggId++),
-          // Pre-populate coordinates from geodata so the map can show them immediately
           coordinates: placeCoordMapRef.current.get(s.name.toLowerCase()),
+          sourceMessageIndex: messageIndex,
         })),
       ];
     });
   }, []);
+
+  // Called when set_itinerary fires — structured itinerary update
+  const handleItineraryUpdate = useCallback((
+    places: Array<{ name: string; day?: number; location?: string }>,
+    messageIndex: number,
+  ) => {
+    const parsed = suggestionsFromToolCall(places, messageIndex);
+    addSuggestionsToPanel(parsed, messageIndex);
+  }, [addSuggestionsToPanel]);
+
+  // Called when suggest_places fires — non-destructive recommendations
+  const handleSuggestPlaces = useCallback((
+    places: Array<{ name: string; category: string; city?: string; country?: string; why?: string }>,
+    messageIndex: number,
+  ) => {
+    const items = places
+      .filter(p => p.name && p.name.length >= 2)
+      .map(p => ({ name: p.name, location: p.city }));
+    addSuggestionsToPanel(items, messageIndex);
+  }, [addSuggestionsToPanel]);
 
   // Clear suggestions when trip changes
   const lastTripIdRef = useRef(activeTrip?.id);
@@ -190,6 +207,7 @@ const HomePage = () => {
               tripContext={tripContext}
               className="flex-1 min-h-0"
               onItineraryUpdate={handleItineraryUpdate}
+              onSuggestPlaces={handleSuggestPlaces}
               instantApply
             />
           </div>

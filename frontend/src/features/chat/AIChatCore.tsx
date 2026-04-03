@@ -10,11 +10,13 @@ import { useToast } from '@/shared/hooks/use-toast';
 import { useAiUsage } from '@/shared/hooks/useAiUsage';
 import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { usePOI } from '@/features/poi/POIContext';
+import { updatePOI as updatePOIService } from '@/features/poi/poiService';
 import { useItineraryDraft } from '@/features/itinerary/useItineraryDraft';
 import { applyDraftToTrip } from '@/features/itinerary/itineraryDraftService';
 import { useItineraryHistory } from '@/features/home/useItineraryHistory';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import type { TripContext } from './AIChatSheet';
+import type { PointOfInterest } from '@/types/trip';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -81,6 +83,8 @@ interface AIChatCoreProps {
   onNewAssistantMessage?: (message: string, messageIndex: number) => void;
   /** Called when set_itinerary fires — receives the clean, structured place list from the tool call + the assistant message index */
   onItineraryUpdate?: (places: Array<{ name: string; day: number; location?: string }>, messageIndex: number) => void;
+  /** Called when suggest_places fires — receives recommended places to show on map / suggestions panel */
+  onSuggestPlaces?: (places: Array<{ name: string; category: string; city?: string; country?: string; why?: string }>, messageIndex: number) => void;
   /**
    * When true: set_itinerary is applied to the real trip immediately (no draft/apply step).
    * Shows undo-per-step and restore-to-pre-conversation buttons.
@@ -88,7 +92,7 @@ interface AIChatCoreProps {
   instantApply?: boolean;
 }
 
-export function AIChatCore({ tripContext, compact = false, className, initialMessage, onNewAssistantMessage, onItineraryUpdate, instantApply = false }: AIChatCoreProps) {
+export function AIChatCore({ tripContext, compact = false, className, initialMessage, onNewAssistantMessage, onItineraryUpdate, onSuggestPlaces, instantApply = false }: AIChatCoreProps) {
   const { t } = useTranslation();
   const tripId = tripContext.tripId;
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -114,10 +118,10 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
   const chatLimitReached = chatUsage ? chatUsage.used >= chatUsage.limit : false;
 
   const { itineraryDays } = useItinerary();
-  const { pois } = usePOI();
+  const { pois, addPOI } = usePOI();
   const { draft, isInitialized, initFromReal, applyToolCall } = useItineraryDraft();
   const history = useItineraryHistory();
-  const { updateCurrentTrip, tripPlaces } = useActiveTrip();
+  const { activeTrip, updateCurrentTrip, tripPlaces } = useActiveTrip();
   const [historyLoading, setHistoryLoading] = useState(false);
 
   // Initialize draft
@@ -179,7 +183,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
 
     // In instant-apply mode, take a backup before the very first message of the conversation
     if (instantApply && messages.length === 0) {
-      history.takeBackup(itineraryDays, pois);
+      history.takeBackup(itineraryDays, pois, activeTrip);
     }
 
     const userMsg: Message = { role: 'user', content: trimmed.slice(0, MAX_INPUT) };
@@ -244,7 +248,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         for (const tc of data.toolCalls) {
           if (tc.name === 'set_itinerary' && tc.args?.days) {
             if (instantApply) {
-              history.pushHistory(itineraryDays, pois);
+              history.pushHistory(itineraryDays, pois, activeTrip);
             }
             newDays = applyToolCall(tc.args.days);
             // Notify parent with clean structured places from the tool call
@@ -259,6 +263,77 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             }
           } else if (tc.name === 'apply_itinerary') {
             shouldApply = true;
+
+          } else if (tc.name === 'suggest_places' && tc.args?.places) {
+            onSuggestPlaces?.(tc.args.places, updatedMessages.length);
+
+          } else if (tc.name === 'add_place' && tc.args?.name) {
+            if (instantApply) history.pushHistory(itineraryDays, pois, activeTrip);
+            await addPOI({
+              tripId: tripContext.tripId,
+              name: tc.args.name,
+              category: (tc.args.category as PointOfInterest['category']) || 'attraction',
+              status: 'suggested',
+              location: {
+                city: tc.args.city || undefined,
+                country: tc.args.country || undefined,
+              },
+              details: {
+                ...(tc.args.cost !== undefined ? { cost: { amount: tc.args.cost, currency: tripContext.currency || '' } } : {}),
+                ...(tc.args.notes ? { notes: { user_summary: tc.args.notes } } : {}),
+              },
+              sourceRefs: { email_ids: [], recommendation_ids: [] },
+              isCancelled: false,
+              isPaid: false,
+            } as Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>);
+
+          } else if (tc.name === 'update_place' && tc.args?.name) {
+            const existing = pois.find(p => p.name.toLowerCase() === String(tc.args.name).toLowerCase());
+            if (existing) {
+              if (instantApply) history.pushHistory(itineraryDays, pois, activeTrip);
+              const updates: Partial<PointOfInterest> = {};
+              if (tc.args.cost !== undefined || tc.args.notes !== undefined) {
+                updates.details = {
+                  ...existing.details,
+                  ...(tc.args.cost !== undefined ? { cost: { amount: tc.args.cost as number, currency: tripContext.currency || '' } } : {}),
+                  ...(tc.args.notes !== undefined ? { notes: { ...existing.details?.notes, user_summary: tc.args.notes as string } } : {}),
+                };
+              }
+              if (tc.args.status !== undefined) {
+                updates.status = tc.args.status as PointOfInterest['status'];
+              }
+              await updatePOIService(existing.id, updates);
+            }
+
+          } else if (tc.name === 'add_days' && (tc.args?.count as number) > 0) {
+            if (instantApply) history.pushHistory(itineraryDays, pois, activeTrip);
+            await updateCurrentTrip({ numberOfDays: (tripContext.numberOfDays || 0) + (tc.args.count as number) });
+
+          } else if (tc.name === 'shift_trip_dates' && tc.args?.new_start_date && tripContext.startDate) {
+            if (instantApply) history.pushHistory(itineraryDays, pois, activeTrip);
+            const oldStart = new Date(tripContext.startDate);
+            const newStart = new Date(tc.args.new_start_date as string);
+            const deltaDays = Math.round((newStart.getTime() - oldStart.getTime()) / 86_400_000);
+            const tripUpdates: Parameters<typeof updateCurrentTrip>[0] = { startDate: tc.args.new_start_date as string };
+            if (tripContext.endDate) {
+              const newEnd = new Date(tripContext.endDate);
+              newEnd.setDate(newEnd.getDate() + deltaDays);
+              tripUpdates.endDate = newEnd.toISOString().split('T')[0];
+            }
+            await updateCurrentTrip(tripUpdates);
+            // Shift dates on all itinerary days that have an assigned date
+            await Promise.all(
+              itineraryDays
+                .filter(d => d.date)
+                .map(d => {
+                  const shifted = new Date(d.date!);
+                  shifted.setDate(shifted.getDate() + deltaDays);
+                  return supabase
+                    .from('itinerary_days')
+                    .update({ date: shifted.toISOString().split('T')[0] })
+                    .eq('id', d.id);
+                }),
+            );
           }
         }
       }
@@ -302,23 +377,27 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, lastSentAt, tripContext, draft, applyToolCall, queryClient, onNewAssistantMessage, pois, itineraryDays, toast, t, initFromReal, instantApply, history]);
+  }, [input, loading, messages, lastSentAt, tripContext, draft, applyToolCall, queryClient, onNewAssistantMessage, onSuggestPlaces, pois, itineraryDays, toast, t, initFromReal, instantApply, history, addPOI, activeTrip, updateCurrentTrip, tripPlaces]);
 
-  // Undo last AI itinerary change (instant-apply mode)
+  // Undo last AI change (instant-apply mode)
   const handleUndo = useCallback(async () => {
     const snapshot = history.undo();
     if (!snapshot) return;
     setHistoryLoading(true);
     setError(null);
     try {
-      await applyDraftToTrip(tripContext.tripId, snapshot, pois, tripPlaces);
+      await applyDraftToTrip(tripContext.tripId, snapshot.days, pois, tripPlaces);
+      const { numberOfDays, startDate, endDate } = snapshot.tripMeta;
+      if (numberOfDays !== undefined || startDate !== undefined || endDate !== undefined) {
+        await updateCurrentTrip({ ...(numberOfDays !== undefined ? { numberOfDays } : {}), ...(startDate !== undefined ? { startDate } : {}), ...(endDate !== undefined ? { endDate } : {}) });
+      }
       initFromReal(itineraryDays, pois);
     } catch (err: unknown) {
       setError((err as Error).message || 'Undo failed.');
     } finally {
       setHistoryLoading(false);
     }
-  }, [history, tripContext.tripId, pois, itineraryDays, initFromReal]);
+  }, [history, tripContext.tripId, pois, itineraryDays, initFromReal, updateCurrentTrip, tripPlaces]);
 
   // Restore to pre-conversation state (instant-apply mode)
   const handleRestore = useCallback(async () => {
@@ -327,14 +406,18 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
     setHistoryLoading(true);
     setError(null);
     try {
-      await applyDraftToTrip(tripContext.tripId, snapshot, pois, tripPlaces);
+      await applyDraftToTrip(tripContext.tripId, snapshot.days, pois, tripPlaces);
+      const { numberOfDays, startDate, endDate } = snapshot.tripMeta;
+      if (numberOfDays !== undefined || startDate !== undefined || endDate !== undefined) {
+        await updateCurrentTrip({ ...(numberOfDays !== undefined ? { numberOfDays } : {}), ...(startDate !== undefined ? { startDate } : {}), ...(endDate !== undefined ? { endDate } : {}) });
+      }
       initFromReal(itineraryDays, pois);
     } catch (err: unknown) {
       setError((err as Error).message || 'Restore failed.');
     } finally {
       setHistoryLoading(false);
     }
-  }, [history, tripContext.tripId, pois, itineraryDays, initFromReal]);
+  }, [history, tripContext.tripId, pois, itineraryDays, initFromReal, updateCurrentTrip, tripPlaces]);
 
   const handleIntegrateInsights = useCallback(async () => {
     if (loading || integrating) return;

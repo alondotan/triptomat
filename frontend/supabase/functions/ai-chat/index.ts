@@ -41,6 +41,33 @@ const BASE_SYSTEM_PROMPT = `You are Triptomat AI, a helpful travel planning assi
 - Be friendly, enthusiastic about travel, and culturally sensitive.
 - You may respond in any language the user writes in.
 
+## Tools available — when to use each
+You have tools to interact directly with the user's trip. Use them proactively — changes are applied immediately and the user can always undo.
+
+**suggest_places** — Use when recommending places without an explicit save intent.
+- User asks "what are good restaurants in Tokyo?" → call suggest_places
+- User asks "what should I see in Rome?" → call suggest_places
+- Do NOT use for factual questions with no place list ("how much does the Colosseum cost?")
+
+**add_place** — Use when user explicitly wants to add/save a place to their trip.
+- "Add the Colosseum to my trip" → call add_place
+- "Save this restaurant for later" → call add_place
+
+**update_place** — Use when user wants to update details of an existing place.
+- "Set the Louvre entry cost to €17" → call update_place
+- "Add a note to Senso-ji" → call update_place
+
+**add_days** — Use when user wants to extend the trip duration.
+- "Add 2 more days to my trip" → call add_days(2)
+
+**shift_trip_dates** — Use when user wants to move the entire trip to different dates.
+- "Move my trip to start on March 15" → call shift_trip_dates
+
+**set_itinerary** — Use for building or restructuring the full day-by-day schedule.
+- "Plan me a 5-day itinerary in Japan" → call set_itinerary
+- "Reorganize my schedule" → call set_itinerary
+- Always include ALL days in one call. Never ask permission — just build it.
+
 ## Safety rules — STRICTLY ENFORCED
 - You ONLY discuss travel-related topics. If a user asks about something unrelated to travel, politely redirect them back to travel planning.
 - NEVER generate, discuss, or assist with: harmful content, illegal activities, hateful speech, personal attacks, sexual content, weapons, drugs, hacking, fraud, or any dangerous advice.
@@ -196,6 +223,89 @@ When answering questions or giving tips without changing the plan, respond with 
 
   return prompt;
 }
+
+// Base tools — always available in all modes
+const BASE_TOOLS = {
+  functionDeclarations: [
+    {
+      name: 'suggest_places',
+      description: 'Show place recommendations on the map and suggestions panel. Use when the user asks for recommendations without an explicit intent to save. Does NOT add anything to the trip.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          places: {
+            type: 'ARRAY',
+            description: 'List of recommended places',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                name: { type: 'STRING', description: 'Specific, searchable place name' },
+                category: { type: 'STRING', description: 'One of: accommodation, eatery, attraction, service, event' },
+                city: { type: 'STRING', description: 'City where the place is located' },
+                country: { type: 'STRING', description: 'Country where the place is located' },
+                why: { type: 'STRING', description: 'One-line reason why this place is recommended' },
+              },
+              required: ['name', 'category'],
+            },
+          },
+        },
+        required: ['places'],
+      },
+    },
+    {
+      name: 'add_place',
+      description: 'Add a specific place to the trip\'s place list. Use when the user explicitly wants to add or save a place.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          name: { type: 'STRING', description: 'Specific, searchable place name' },
+          category: { type: 'STRING', description: 'One of: accommodation, eatery, attraction, service, event' },
+          city: { type: 'STRING', description: 'City where the place is located' },
+          country: { type: 'STRING', description: 'Country where the place is located' },
+          cost: { type: 'NUMBER', description: 'Estimated cost in the trip currency' },
+          notes: { type: 'STRING', description: 'Optional note about this place' },
+        },
+        required: ['name', 'category'],
+      },
+    },
+    {
+      name: 'update_place',
+      description: 'Update details of an existing place already in the trip (cost, notes, or status).',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          name: { type: 'STRING', description: 'Name of the existing place to update' },
+          cost: { type: 'NUMBER', description: 'New estimated cost in the trip currency' },
+          notes: { type: 'STRING', description: 'New note to set on this place' },
+          status: { type: 'STRING', description: 'One of: suggested, interested, planned, scheduled, booked' },
+        },
+        required: ['name'],
+      },
+    },
+    {
+      name: 'add_days',
+      description: 'Add days to the trip duration. Use when the user wants to extend the trip.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          count: { type: 'INTEGER', description: 'Number of days to add (must be positive)' },
+        },
+        required: ['count'],
+      },
+    },
+    {
+      name: 'shift_trip_dates',
+      description: 'Move the entire trip to a new start date. Use when the user wants to change when the trip begins.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          new_start_date: { type: 'STRING', description: 'New start date in YYYY-MM-DD format' },
+        },
+        required: ['new_start_date'],
+      },
+    },
+  ],
+};
 
 // Gemini tool declaration for itinerary planning
 const ITINERARY_TOOL = {
@@ -371,12 +481,22 @@ Deno.serve(async (req) => {
       safetySettings: SAFETY_SETTINGS,
     };
 
-    // Add tool calling for planner mode
+    // Always enable base tools (suggest_places, add_place, update_place, add_days, shift_trip_dates).
+    // In planner mode, also add set_itinerary (and apply_itinerary if not instant-apply).
     if (isPlanner) {
-      // In instant-apply mode, apply_itinerary is handled client-side — omit it
-      geminiBody.tools = [isInstantApply ? ITINERARY_TOOL_INSTANT : ITINERARY_TOOL];
-      geminiBody.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
+      const itineraryDeclarations = isInstantApply
+        ? ITINERARY_TOOL_INSTANT.functionDeclarations
+        : ITINERARY_TOOL.functionDeclarations;
+      geminiBody.tools = [{
+        functionDeclarations: [
+          ...BASE_TOOLS.functionDeclarations,
+          ...itineraryDeclarations,
+        ],
+      }];
+    } else {
+      geminiBody.tools = [BASE_TOOLS];
     }
+    geminiBody.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
 
     // First Gemini call
     const result = await callGemini(geminiBody);
