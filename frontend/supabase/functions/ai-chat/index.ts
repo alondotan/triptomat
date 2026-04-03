@@ -123,15 +123,16 @@ function buildSystemPrompt(tripContext?: TripContext, draft?: DraftDay[] | null,
     }
 
     if (tripContext.existingPOIs?.length) {
-      const byStatus: Record<string, string[]> = {};
+      const byCity: Record<string, string[]> = {};
       for (const p of tripContext.existingPOIs) {
-        if (!byStatus[p.status]) byStatus[p.status] = [];
-        byStatus[p.status].push(p.city ? `${p.name} (${p.city})` : p.name);
+        const key = p.city || '(other)';
+        if (!byCity[key]) byCity[key] = [];
+        byCity[key].push(p.name);
       }
-      const poiLines = Object.entries(byStatus)
-        .map(([status, names]) => `  ${status}: ${names.join(', ')}`)
+      const cityLines = Object.entries(byCity)
+        .map(([city, names]) => `  ${city}: ${names.join(', ')}`)
         .join('\n');
-      parts.push(`\nExisting places already in the trip:\n${poiLines}`);
+      parts.push(`\nKnown places already in this trip — when recommending any of these, use the EXACT name as listed (do not shorten, translate, or paraphrase):\n${cityLines}`);
     }
 
     if (tripContext.festivals?.length) {
@@ -201,7 +202,8 @@ Always include a short text explanation alongside the tool call.
 ### Place naming rules for set_itinerary:
 - Use specific, searchable place names (e.g. "Senso-ji Temple", not "Buddhist temple")
 - Do not use generic descriptions as place names (e.g. NOT "local restaurant", "scenic viewpoint")
-- One entry per named place — do not combine multiple places in one name`;
+- One entry per named place — do not combine multiple places in one name
+- If a place appears in the "Known places" list above, copy its name EXACTLY as listed — do not shorten, translate, or paraphrase it`;
     } else {
       prompt += `\n\n## Itinerary Planner Mode
 You have two tools: set_itinerary and apply_itinerary.
@@ -215,7 +217,13 @@ Always include a short text explanation alongside every tool call.
 - Also call it when the user explicitly says to save/update/apply.
 - Do NOT call it for minor suggestions, tips, or when the user is still exploring options interactively.
 
-When answering questions or giving tips without changing the plan, respond with text only — do NOT call any tool.`;
+When answering questions or giving tips without changing the plan, respond with text only — do NOT call any tool.
+
+### Place naming rules for set_itinerary:
+- Use specific, searchable place names (e.g. "Senso-ji Temple", not "Buddhist temple")
+- Do not use generic descriptions as place names (e.g. NOT "local restaurant", "scenic viewpoint")
+- One entry per named place — do not combine multiple places in one name
+- If a place appears in the "Known places" list above, copy its name EXACTLY as listed — do not shorten, translate, or paraphrase it`;
     }
 
     prompt += `\n\nCurrent plan:\n${draftText}`;

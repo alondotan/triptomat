@@ -114,7 +114,8 @@ const HomePage = () => {
         ...(n.sub_sites ?? []).flatMap(s => [s.site, ...(s.sub_sites ?? []).map(c => c.site)]),
       ]),
       existingPOIs: pois
-        .slice(0, 60)
+        .filter(p => p.location?.city)
+        .slice(0, 200)
         .map(p => ({ name: p.name, category: p.category, status: p.status, city: p.location?.city })),
       festivals,
     };
