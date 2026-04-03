@@ -6,48 +6,56 @@
 import { geocodeAddress, fetchPlaceImage } from './geocode.ts';
 import { fetchAndSetPoiImage } from './pexels.ts';
 
+// Default sub_category fallback by POI category
+const CATEGORY_FALLBACK_SUBCATEGORY: Record<string, string> = {
+  attraction: 'other_activity',
+  eatery: 'restaurant',
+  accommodation: 'hotel',
+  service: 'other_service',
+  event: 'other_activity',
+};
+
 interface EnrichResult {
   coordinates: { lat: number; lng: number } | null;
   imageUrl: string | null;
+  subCategory: string | null;
 }
 
 /**
- * Enrich a POI with coordinates and image.
- * Only updates fields that are currently missing (null).
+ * Enrich a POI with coordinates, image, and subCategory fallback.
+ * Only updates fields that are currently missing (null/undefined).
  *
  * @param supabase - Supabase client (service role)
  * @param poiId - POI UUID
  * @param name - POI name (for geocoding and image search)
- * @param opts - optional location hints
+ * @param opts - optional location hints and category
  */
 export async function enrichPoi(
   supabase: { from: (table: string) => any },
   poiId: string,
   name: string,
-  opts: { city?: string; country?: string; address?: string } = {},
+  opts: { city?: string; country?: string; address?: string; category?: string } = {},
 ): Promise<EnrichResult> {
   // Read current POI state to know what's missing
   const { data: poi, error: readErr } = await supabase
     .from('points_of_interest')
-    .select('location, image_url')
+    .select('location, image_url, sub_category, category')
     .eq('id', poiId)
     .single();
 
   if (readErr || !poi) {
     console.error('[enrichPoi] Failed to read POI:', readErr);
-    return { coordinates: null, imageUrl: null };
+    return { coordinates: null, imageUrl: null, subCategory: null };
   }
 
   const existingCoords = poi.location?.coordinates;
   const hasCoords = existingCoords?.lat && existingCoords?.lng;
   const hasImage = !!poi.image_url;
-
-  if (hasCoords && hasImage) {
-    return { coordinates: existingCoords, imageUrl: poi.image_url };
-  }
+  const hasSubCategory = !!poi.sub_category;
 
   let coordinates = hasCoords ? existingCoords : null;
   let imageUrl: string | null = hasImage ? poi.image_url : null;
+  let subCategory: string | null = hasSubCategory ? poi.sub_category : null;
 
   // Step 1: Geocode if missing coordinates
   if (!hasCoords) {
@@ -59,7 +67,6 @@ export async function enrichPoi(
     if (geo.coordinates) {
       coordinates = geo.coordinates;
 
-      // Update location in DB (merge with existing location object)
       const updatedLocation = {
         ...poi.location,
         coordinates: geo.coordinates,
@@ -102,5 +109,24 @@ export async function enrichPoi(
     }
   }
 
-  return { coordinates, imageUrl };
+  // Step 3: Set subCategory fallback if missing
+  if (!hasSubCategory) {
+    const category = opts.category || poi.category;
+    const fallback = CATEGORY_FALLBACK_SUBCATEGORY[category] ?? null;
+    if (fallback) {
+      const { error } = await supabase
+        .from('points_of_interest')
+        .update({ sub_category: fallback })
+        .eq('id', poiId)
+        .is('sub_category', null);
+
+      if (error) console.error('[enrichPoi] Failed to update subCategory:', error);
+      else {
+        subCategory = fallback;
+        console.log(`[enrichPoi] subCategory fallback set for ${poiId}: ${fallback}`);
+      }
+    }
+  }
+
+  return { coordinates, imageUrl, subCategory };
 }

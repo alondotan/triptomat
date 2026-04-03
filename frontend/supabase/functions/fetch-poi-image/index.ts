@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     if (body.tripId) {
       const { data: pois, error } = await supabase
         .from('points_of_interest')
-        .select('id, name, location, image_url')
+        .select('id, name, category, sub_category, location, image_url')
         .eq('trip_id', body.tripId)
         .eq('is_cancelled', false);
 
@@ -35,9 +35,9 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Filter to POIs missing coordinates or image
+      // Filter to POIs missing coordinates, image, or subCategory
       const incomplete = (pois || []).filter((p: any) =>
-        !p.location?.coordinates?.lat || !p.image_url
+        !p.location?.coordinates?.lat || !p.image_url || !p.sub_category
       );
 
       console.log(`[enrich-poi] Batch: ${incomplete.length}/${pois?.length || 0} POIs need enrichment for trip ${body.tripId}`);
@@ -48,6 +48,7 @@ Deno.serve(async (req) => {
           city: poi.location?.city,
           country: poi.location?.country,
           address: poi.location?.address,
+          category: poi.category,
         });
         results.push({ id: poi.id, name: poi.name, ...result });
 
@@ -63,7 +64,7 @@ Deno.serve(async (req) => {
     }
 
     // Single POI mode
-    const { poiId, name, country, city, address } = body;
+    const { poiId, name, country, city, address, category } = body;
     if (!poiId || !name) {
       return new Response(JSON.stringify({ error: 'poiId and name are required' }), {
         status: 400,
@@ -71,7 +72,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const result = await enrichPoi(supabase, poiId, name, { city, country, address });
+    const result = await enrichPoi(supabase, poiId, name, { city, country, address, category });
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
