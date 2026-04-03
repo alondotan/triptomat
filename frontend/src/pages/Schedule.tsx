@@ -3033,7 +3033,7 @@ export default function SchedulePage() {
                     {/* ── Feed: Instagram-style cards ── */}
                     <div className="space-y-3 pb-2">
                       {sortedResearchLocations.map((il) => {
-                        const name = il.name;
+                        const name = researchLocNameMap.get(il.id) || '';
                         const holdingDay = itineraryDays.find(d => d.tripPlaceId === il.id);
                         const poiCount = holdingDay?.activities?.length ?? 0;
                         const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.tripPlaceId === il.id).length : 0;
@@ -3320,7 +3320,7 @@ export default function SchedulePage() {
                     <div className="flex-1 min-h-0 overflow-y-auto">
                       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pb-2">
                         {sortedResearchLocations.map((il) => {
-                          const name = il.name;
+                          const name = researchLocNameMap.get(il.id) || '';
                           const holdingDay = itineraryDays.find(d => d.tripPlaceId === il.id);
                           const poiCount = holdingDay?.activities?.length ?? 0;
                           const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.tripPlaceId === il.id).length : 0;
