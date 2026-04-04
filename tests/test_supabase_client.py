@@ -99,12 +99,14 @@ class TestGetTripEntities:
     @patch("core.supabase_client._supabase_get")
     def test_returns_all_entity_types(self, mock_get):
         mock_get.side_effect = [
-            [{"id": "p1", "name": "Museum"}],  # pois
-            [{"id": "tr1", "category": "train"}],  # transport
-            [{"id": "c1", "name": "John"}],  # contacts
+            [{"id": "p1", "name": "Museum"}],       # pois
+            [{"day_number": 1, "activities": []}],  # itinerary_days
+            [{"id": "tr1", "category": "train"}],   # transport
+            [{"id": "c1", "name": "John"}],         # contacts
         ]
         result = get_trip_entities("trip-1", BASE_URL, KEY)
         assert len(result["existing_pois"]) == 1
+        assert len(result["itinerary_days"]) == 1
         assert len(result["existing_transport"]) == 1
         assert len(result["existing_contacts"]) == 1
 
@@ -113,6 +115,7 @@ class TestGetTripEntities:
         mock_get.return_value = None
         result = get_trip_entities("trip-1", BASE_URL, KEY)
         assert result["existing_pois"] == []
+        assert result["itinerary_days"] == []
         assert result["existing_transport"] == []
         assert result["existing_contacts"] == []
 
