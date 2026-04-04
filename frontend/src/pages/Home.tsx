@@ -28,6 +28,8 @@ const HomePage = () => {
 
   const [suggestions, setSuggestions] = useState<ChatSuggestion[]>([]);
   const [festivals, setFestivals] = useState<TripContext['festivals']>([]);
+  const [locationsFlat, setLocationsFlat] = useState<string[]>([]);
+  const [allPlaces, setAllPlaces] = useState<Array<{ name: string; category: string }>>([]);
   // name (lowercase) → image URL, built from country geodata places (triggers re-render for suggestions panel)
   const [placeImageMap, setPlaceImageMap] = useState<Map<string, string>>(new Map());
   // Tourist region markers for empty-state map display
@@ -92,6 +94,31 @@ const HomePage = () => {
         setPlaceImageMap(imageMap);
         placeCoordMapRef.current = coordMap;
         setRegionMarkers(regions);
+
+        // Build flat lists for AI context from the last loaded country
+        // (for multi-country trips we accumulate across all)
+        const flatLocs: string[] = [];
+        const flatPlaces: Array<{ name: string; category: string }> = [];
+        for (const country of activeTrip.countries) {
+          const cd = await loadCountryData(country);
+          if (!cd) continue;
+          function collectCityNames(locs: typeof cd.locations): void {
+            for (const loc of (locs || [])) {
+              if (loc.name) flatLocs.push(loc.name);
+              if ((loc as { children?: typeof cd.locations }).children?.length) {
+                collectCityNames((loc as { children: typeof cd.locations }).children);
+              }
+            }
+          }
+          collectCityNames(cd.locations ?? []);
+          (cd.places ?? []).forEach((p: { name?: string; category?: string }) => {
+            if (p.name) flatPlaces.push({ name: p.name, category: p.category || 'attraction' });
+          });
+        }
+        if (!cancelled) {
+          setLocationsFlat([...new Set(flatLocs)]);
+          setAllPlaces(flatPlaces);
+        }
       }
     })();
     return () => { cancelled = true; };
@@ -118,8 +145,10 @@ const HomePage = () => {
         .slice(0, 200)
         .map(p => ({ name: p.name, category: p.category, status: p.status, city: p.location?.city })),
       festivals,
+      locationsFlat,
+      allPlaces,
     };
-  }, [activeTrip, tripLocationTree, pois, festivals]);
+  }, [activeTrip, tripLocationTree, pois, festivals, locationsFlat, allPlaces]);
 
   // Shared helper: add a list of place-name suggestions to the panel + map
   const addSuggestionsToPanel = useCallback((

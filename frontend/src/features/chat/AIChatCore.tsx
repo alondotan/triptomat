@@ -255,6 +255,8 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             status: tripContext.status,
             currency: tripContext.currency,
             festivals: tripContext.festivals,
+            locationsFlat: tripContext.locationsFlat,
+            allPlaces: tripContext.allPlaces,
           },
           mode: 'planner',
           tripPlan,

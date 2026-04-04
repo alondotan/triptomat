@@ -36,6 +36,10 @@ export interface TripContext {
   existingPOIs?: Array<{ name: string; category: string; status: string; city?: string }>;
   /** Relevant festivals/holidays for AI context enrichment */
   festivals?: Array<{ name: string; country: string; period?: string }>;
+  /** Flat list of all city/area names available in this country (from geodata) */
+  locationsFlat?: string[];
+  /** All known attractions/places in this country (from geodata) */
+  allPlaces?: Array<{ name: string; category: string }>;
 }
 
 interface AIChatSheetProps {

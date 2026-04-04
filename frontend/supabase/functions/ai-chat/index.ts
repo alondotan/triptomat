@@ -86,6 +86,10 @@ interface TripContext {
   currency?: string;
   /** Relevant festivals / holidays for the trip countries and period */
   festivals?: Array<{ name: string; country: string; period?: string }>;
+  /** Flat list of all city/area names available in this country (from geodata) */
+  locationsFlat?: string[];
+  /** All known attractions/places in this country (from geodata) */
+  allPlaces?: Array<{ name: string; category: string }>;
 }
 
 interface TripPlanPlace {
@@ -171,6 +175,15 @@ function buildSystemPrompt(tripContext?: TripContext, tripPlan?: TripPlan | null
     }
     if (tripContext.status) {
       parts.push(`Trip phase: ${tripContext.status}.`);
+    }
+
+    if (tripContext.locationsFlat?.length) {
+      parts.push(`Available destinations in ${tripContext.countries?.[0] ?? 'this country'}: ${tripContext.locationsFlat.join(', ')}.`);
+    }
+
+    if (tripContext.allPlaces?.length) {
+      const names = tripContext.allPlaces.map(p => p.name).join(', ');
+      parts.push(`\nKnown attractions in this country (use EXACT names when referencing these): ${names}.`);
     }
 
     if (tripContext.festivals?.length) {
