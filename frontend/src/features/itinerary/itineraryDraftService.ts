@@ -113,7 +113,9 @@ export async function applyDraftToTrip(
       const place = day.places[idx];
 
       // ── Resolve POI ──────────────────────────────────────────────────────
-      if (!place.existingPoiId && !place.name) continue; // skip malformed entries
+      // Skip non-specific entries (logistics, transfers, etc.) and malformed ones
+      if (!place.existingPoiId && !place.name) continue;
+      if (!place.existingPoiId && place.isSpecificPlace === false) continue;
 
       let poiId: string;
 
@@ -122,7 +124,7 @@ export async function applyDraftToTrip(
         poiId = place.existingPoiId;
         const existing = poiMap.get(poiId);
         if (existing && ['suggested', 'interested'].includes(existing.status)) {
-          await updatePOI({ ...existing, status: 'planned' });
+          await updatePOI(poiId, { status: 'planned' });
           poiMap.set(poiId, { ...existing, status: 'planned' });
         }
       } else {
