@@ -113,6 +113,8 @@ export async function applyDraftToTrip(
       const place = day.places[idx];
 
       // ── Resolve POI ──────────────────────────────────────────────────────
+      if (!place.existingPoiId && !place.name) continue; // skip malformed entries
+
       let poiId: string;
 
       if (place.existingPoiId) {
