@@ -2892,7 +2892,7 @@ export default function SchedulePage() {
                       )}
                       {/* Content: either inline day view OR normal location content */}
                       {locDetailSelectedDayNum != null ? (
-                        <div className="space-y-2 mt-1">
+                        <div className="space-y-3 mt-1">
                           <button
                             type="button"
                             onClick={() => setLocDetailSelectedDayNum(null)}
@@ -2901,46 +2901,77 @@ export default function SchedulePage() {
                             <ChevronLeft size={14} className={isRTL ? 'rotate-180' : ''} />
                             {t('timeline.backToLocation')}
                           </button>
+                          {/* Potential */}
                           <div className="space-y-1.5">
-                            {scheduled.length === 0 && potential.length === 0 ? (
-                              <p className="text-xs text-muted-foreground py-4 text-center">{t('timeline.noItemsYet')}</p>
-                            ) : (
-                              <>
-                                {scheduled.map(item => (
-                                  <button key={item.id} type="button" onClick={() => setOpenedPoiId(item.id)}
-                                    className="w-full flex items-center gap-2 p-2 rounded-lg border bg-card hover:border-primary/40 transition-all text-start"
-                                  >
-                                    {item.poi?.imageUrl ? (
-                                      <img src={item.poi.imageUrl} alt={item.label} className="w-9 h-9 rounded-md object-cover shrink-0" />
-                                    ) : (
-                                      <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center shrink-0">
-                                        <SubCategoryIcon type={item.poi?.subCategory || ''} size={16} className="text-muted-foreground/50" />
-                                      </div>
-                                    )}
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-sm font-medium truncate">{item.label}</p>
-                                      {item.time && <p className="text-xs text-muted-foreground">{item.time}</p>}
+                            <p className="text-xs font-bold uppercase tracking-widest text-amber-600">
+                              {t('timeline.potential')} ({potential.length})
+                            </p>
+                            <PotentialZone isScheduledDragging={isScheduledDrag}>
+                              {potential.length === 0 && !isScheduledDrag ? (
+                                <p className="text-xs text-muted-foreground py-2 text-center">{t('timeline.allItemsScheduled')}</p>
+                              ) : (
+                                <div className="space-y-1.5">
+                                  {potential.map(item => (
+                                    <DraggableItem key={item.id} item={item} isBeingDragged={activeId === item.id} onRemove={() => removeActivity(item.id)} />
+                                  ))}
+                                </div>
+                              )}
+                            </PotentialZone>
+                            <DaySection
+                              title="" icon={null as any} hideHeader hideEmptyState
+                              entityType="activity" items={[]}
+                              onRemove={removeActivity}
+                              availableItems={availableActivities.map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))}
+                              onAdd={addActivity}
+                              onCreateNew={createNewActivity}
+                              addLabel={t('timeline.addActivity')}
+                              locationContext={currentDayLocation}
+                              countries={activeTrip?.countries}
+                              showBookingMissionOption
+                            />
+                          </div>
+                          {/* Schedule/timeline */}
+                          <div className="space-y-1.5">
+                            <p className="text-xs font-bold uppercase tracking-widest text-primary">
+                              {t('timeline.schedule')} ({scheduled.length})
+                            </p>
+                            <ScheduleZone activePotentialDrag={isPotentialDrag} isEmpty={scheduled.length === 0}>
+                              {scheduled.length === 0 && !isPotentialDrag && (
+                                <p className="text-xs text-muted-foreground py-4 text-center">{t('timeline.dragItemHere')}</p>
+                              )}
+                              <div className="relative space-y-0.5">
+                                <div className={`absolute top-0 bottom-0 w-px bg-border/60 pointer-events-none ${isRTL ? 'right-1.5 sm:right-2.5' : 'left-1.5 sm:left-2.5'}`} />
+                                <DropGap index={0} active={isAnyDragging} />
+                                {groups.map((group, gi) => (
+                                  <div key={group.id} className="relative space-y-0.5">
+                                    <div className={`absolute top-[8px] w-2 h-2 rounded-full bg-orange-400 pointer-events-none z-10 ${isRTL ? 'right-0.5 sm:right-1.5' : 'left-0.5 sm:left-1.5'}`} />
+                                    <div className={isRTL ? 'pr-4 sm:pr-6' : 'pl-4 sm:pl-6'}>
+                                      <GroupFrame
+                                        group={group}
+                                        label={groupLabel(groups, gi, t)}
+                                        lockedIds={lockedIds}
+                                        onToggleLock={toggleLock}
+                                        onAddTransport={handleAddTransport}
+                                        onDeleteTransport={handleDeleteTransport}
+                                        onEditTransport={handleEditTransport}
+                                        onUpdateTimeBlock={handleUpdateTimeBlock}
+                                        onDeleteTimeBlock={handleDeleteTimeBlock}
+                                        canDelete={canDeleteGroup(groups, gi)}
+                                        onRenameGroup={(lbl, time) => { const content = group.items.filter(i => !i.isTimeBlock); handleRenameAutoGroup(content[0]?.id, lbl, time); }}
+                                        onDeleteGroup={() => { const content = group.items.filter(i => !i.isTimeBlock); handleDeleteAutoGroup(content.map(i => i.id)); }}
+                                        legMap={legMap}
+                                        onHighlightLeg={setHighlightedLegId}
+                                        transportCalcDurations={transportCalcDurations}
+                                        selectedItemId={null}
+                                        onSelectItem={undefined}
+                                        onRemoveActivity={removeActivity}
+                                      />
                                     </div>
-                                  </button>
+                                    <DropGap index={gi + 1} active={isAnyDragging} />
+                                  </div>
                                 ))}
-                                {potential.map(item => (
-                                  <button key={item.id} type="button" onClick={() => setOpenedPoiId(item.id)}
-                                    className="w-full flex items-center gap-2 p-2 rounded-lg border bg-card hover:border-primary/40 transition-all text-start opacity-60"
-                                  >
-                                    {item.poi?.imageUrl ? (
-                                      <img src={item.poi.imageUrl} alt={item.label} className="w-9 h-9 rounded-md object-cover shrink-0" />
-                                    ) : (
-                                      <div className="w-9 h-9 rounded-md bg-muted flex items-center justify-center shrink-0">
-                                        <SubCategoryIcon type={item.poi?.subCategory || ''} size={16} className="text-muted-foreground/50" />
-                                      </div>
-                                    )}
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-sm font-medium truncate">{item.label}</p>
-                                    </div>
-                                  </button>
-                                ))}
-                              </>
-                            )}
+                              </div>
+                            </ScheduleZone>
                           </div>
                         </div>
                       ) : (
@@ -3165,48 +3196,95 @@ export default function SchedulePage() {
                             <ChevronLeft size={14} className={isRTL ? 'rotate-180' : ''} />
                             {t('timeline.backToLocation')}
                           </button>
-                          <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5">
-                            {scheduled.length === 0 && potential.length === 0 ? (
-                              <p className="text-xs text-muted-foreground py-4 text-center">{t('timeline.noItemsYet')}</p>
-                            ) : (
-                              <>
-                                {scheduled.map(item => (
-                                  <button key={item.id} type="button" onClick={() => setOpenedPoiId(item.id)}
-                                    className="w-full flex items-center gap-2 p-2 rounded-lg border bg-card hover:border-primary/40 hover:shadow-sm transition-all text-start"
-                                  >
-                                    {item.poi?.imageUrl ? (
-                                      <img src={item.poi.imageUrl} alt={item.label} className="w-10 h-10 rounded-md object-cover shrink-0" />
-                                    ) : (
-                                      <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-                                        <SubCategoryIcon type={item.poi?.subCategory || ''} size={18} className="text-muted-foreground/50" />
-                                      </div>
-                                    )}
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-sm font-medium truncate">{item.label}</p>
-                                      {item.time && <p className="text-xs text-muted-foreground">{item.time}</p>}
-                                      {item.sublabel && <p className="text-xs text-muted-foreground truncate">{item.sublabel}</p>}
-                                    </div>
-                                  </button>
-                                ))}
+                          {/* 2-column: potential + schedule (mirrors the day view) */}
+                          <div className="grid grid-cols-[3fr_5fr] gap-3 flex-1 min-h-0 overflow-hidden">
+                            {/* Potential column */}
+                            <div className="space-y-3 overflow-y-auto min-h-0">
+                              <p className="text-xs font-bold uppercase tracking-widest text-amber-600">
+                                {t('timeline.potential')} ({potential.length})
+                              </p>
+                              <PotentialZone isScheduledDragging={isScheduledDrag}>
+                                {potential.length === 0 && !isScheduledDrag && (
+                                  <p className="text-xs text-muted-foreground py-4 text-center">{t('timeline.allItemsScheduled')}</p>
+                                )}
                                 {potential.map(item => (
-                                  <button key={item.id} type="button" onClick={() => setOpenedPoiId(item.id)}
-                                    className="w-full flex items-center gap-2 p-2 rounded-lg border bg-card hover:border-primary/40 hover:shadow-sm transition-all text-start opacity-60"
-                                  >
-                                    {item.poi?.imageUrl ? (
-                                      <img src={item.poi.imageUrl} alt={item.label} className="w-10 h-10 rounded-md object-cover shrink-0" />
-                                    ) : (
-                                      <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center shrink-0">
-                                        <SubCategoryIcon type={item.poi?.subCategory || ''} size={18} className="text-muted-foreground/50" />
-                                      </div>
-                                    )}
-                                    <div className="min-w-0 flex-1">
-                                      <p className="text-sm font-medium truncate">{item.label}</p>
-                                      {item.sublabel && <p className="text-xs text-muted-foreground truncate">{item.sublabel}</p>}
-                                    </div>
-                                  </button>
+                                  <DraggableItem
+                                    key={item.id}
+                                    item={item}
+                                    isBeingDragged={activeId === item.id}
+                                    onRemove={() => removeActivity(item.id)}
+                                  />
                                 ))}
-                              </>
-                            )}
+                              </PotentialZone>
+                              <DaySection
+                                title="" icon={null as any} hideHeader hideEmptyState
+                                entityType="activity" items={[]}
+                                onRemove={removeActivity}
+                                availableItems={availableActivities.map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))}
+                                onAdd={addActivity}
+                                onCreateNew={createNewActivity}
+                                addLabel={t('timeline.addActivity')}
+                                locationContext={currentDayLocation}
+                                countries={activeTrip?.countries}
+                                showBookingMissionOption
+                              />
+                            </div>
+                            {/* Schedule/timeline column */}
+                            <div className="space-y-3 overflow-y-auto min-h-0 pb-4">
+                              <p className="text-xs font-bold uppercase tracking-widest text-primary">
+                                {t('timeline.schedule')} ({scheduled.length})
+                              </p>
+                              <ScheduleZone activePotentialDrag={isPotentialDrag} isEmpty={scheduled.length === 0}>
+                                {scheduled.length === 0 && !isPotentialDrag && (
+                                  <p className="text-xs text-muted-foreground py-4 text-center">{t('timeline.dragItemHere')}</p>
+                                )}
+                                <div className="relative space-y-0.5">
+                                  <div className={`absolute top-0 bottom-0 w-px bg-border/60 pointer-events-none ${isRTL ? 'right-1.5 sm:right-2.5' : 'left-1.5 sm:left-2.5'}`} />
+                                  <DropGap index={0} active={isAnyDragging} />
+                                  {groups.map((group, gi) => (
+                                    <div key={group.id} className="relative space-y-0.5">
+                                      <div className={`absolute top-[8px] w-2 h-2 rounded-full bg-orange-400 pointer-events-none z-10 ${isRTL ? 'right-0.5 sm:right-1.5' : 'left-0.5 sm:left-1.5'}`} />
+                                      <div className={isRTL ? 'pr-4 sm:pr-6' : 'pl-4 sm:pl-6'}>
+                                        <GroupFrame
+                                          group={group}
+                                          label={groupLabel(groups, gi, t)}
+                                          lockedIds={lockedIds}
+                                          onToggleLock={toggleLock}
+                                          onAddTransport={handleAddTransport}
+                                          onDeleteTransport={handleDeleteTransport}
+                                          onEditTransport={handleEditTransport}
+                                          onUpdateTimeBlock={handleUpdateTimeBlock}
+                                          onDeleteTimeBlock={handleDeleteTimeBlock}
+                                          canDelete={canDeleteGroup(groups, gi)}
+                                          onRenameGroup={(lbl, time) => { const content = group.items.filter(i => !i.isTimeBlock); handleRenameAutoGroup(content[0]?.id, lbl, time); }}
+                                          onDeleteGroup={() => { const content = group.items.filter(i => !i.isTimeBlock); handleDeleteAutoGroup(content.map(i => i.id)); }}
+                                          legMap={legMap}
+                                          onHighlightLeg={setHighlightedLegId}
+                                          transportCalcDurations={transportCalcDurations}
+                                          selectedItemId={selectedItemId}
+                                          onSelectItem={(id) => setSelectedItemId(prev => prev === id ? null : id)}
+                                          onRemoveActivity={removeActivity}
+                                        />
+                                      </div>
+                                      <DropGap index={gi + 1} active={isAnyDragging} />
+                                    </div>
+                                  ))}
+                                </div>
+                              </ScheduleZone>
+                              {addingTimeBlock ? (
+                                <div className="flex gap-1.5 items-center mt-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
+                                  <Input placeholder={t('timeline.timeWindowPlaceholder')} value={newTbLabel} onChange={e => setNewTbLabel(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleAddTimeBlock(); if (e.key === 'Escape') { setAddingTimeBlock(false); setNewTbLabel(''); setNewTbTime(''); } }} className="h-7 text-xs flex-1 min-w-0" autoFocus />
+                                  <input type="time" value={newTbTime} onChange={e => setNewTbTime(e.target.value)} className="h-7 text-xs border border-input rounded-md px-2 bg-background w-[88px] shrink-0" />
+                                  <button type="button" onClick={handleAddTimeBlock} className="p-1 rounded text-primary hover:bg-primary/10 transition-colors shrink-0"><Check size={14} /></button>
+                                  <button type="button" onClick={() => { setAddingTimeBlock(false); setNewTbLabel(''); setNewTbTime(''); }} className="p-1 rounded text-muted-foreground hover:bg-muted transition-colors shrink-0"><X size={14} /></button>
+                                </div>
+                              ) : (
+                                <button type="button" onClick={() => setAddingTimeBlock(true)} className="mt-2 w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground/60 hover:text-primary hover:bg-primary/5 border border-dashed border-primary/20 hover:border-primary/40 rounded-lg py-1.5 transition-colors">
+                                  <Clock size={12} />
+                                  {t('timeline.addTimeWindow')}
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ) : (
