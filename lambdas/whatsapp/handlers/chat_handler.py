@@ -172,9 +172,74 @@ def _load_chat_history(trip_id, user_id):
         return []
 
 
+def _build_trip_plan(entities):
+    """Build a TripPlan dict (locations → scheduled days + potential POIs)."""
+    pois = entities.get("existing_pois") or []
+    itinerary_days = entities.get("itinerary_days") or []
+
+    # Collect scheduled POI IDs
+    scheduled_poi_ids = set()
+    for day in itinerary_days:
+        for activity in (day.get("activities") or []):
+            if activity.get("type") == "poi" and activity.get("id"):
+                scheduled_poi_ids.add(activity["id"])
+
+    # Build a map of poi_id → poi for quick lookup
+    poi_map = {p["id"]: p for p in pois if p.get("id")}
+
+    # Group days by location_context
+    location_days: dict = {}
+    for day in itinerary_days:
+        loc = day.get("location_context") or ""
+        if loc not in location_days:
+            location_days[loc] = []
+        scheduled = [
+            {"name": poi_map[a["id"]]["name"], "category": poi_map[a["id"]].get("category", "attraction")}
+            for a in (day.get("activities") or [])
+            if a.get("type") == "poi" and a.get("id") in poi_map
+        ]
+        location_days[loc].append({
+            "dayNumber": day["day_number"],
+            "date": day.get("date"),
+            "places": scheduled,
+        })
+
+    # Group unscheduled POIs by city
+    potential_by_city: dict = {}
+    unassigned = []
+    for poi in pois:
+        if poi.get("id") in scheduled_poi_ids:
+            continue
+        city = (poi.get("location") or {}).get("city") or ""
+        entry = {"name": poi.get("name", ""), "category": poi.get("category", "attraction"), "status": poi.get("status", "suggested")}
+        if not city:
+            unassigned.append(entry)
+        else:
+            if city not in potential_by_city:
+                potential_by_city[city] = []
+            potential_by_city[city].append(entry)
+
+    # Build location list
+    locations = []
+    for loc_name, days in location_days.items():
+        locations.append({
+            "name": loc_name,
+            "days": days,
+            "potential": potential_by_city.get(loc_name, []),
+        })
+    # Add cities with only potential POIs (no scheduled days)
+    for city, potentials in potential_by_city.items():
+        if city not in location_days:
+            locations.append({"name": city, "days": [], "potential": potentials})
+
+    return {
+        "locations": locations,
+        "unassigned": unassigned if unassigned else None,
+    }
+
+
 def _build_trip_context(trip, entities):
     """Build a TripContext dict matching the unified shape used by the web ai-chat edge function."""
-    pois = entities.get("existing_pois") or []
     return {
         "tripName": trip.get("name"),
         "countries": trip.get("countries") or [],
@@ -183,20 +248,6 @@ def _build_trip_context(trip, entities):
         "numberOfDays": trip.get("number_of_days"),
         "status": trip.get("status"),
         "currency": trip.get("currency"),
-        "locations": [
-            loc.get("name")
-            for loc in (trip.get("locations") or [])
-            if loc.get("name")
-        ],
-        "existingPOIs": [
-            {
-                "name": p.get("name", ""),
-                "category": p.get("category", "attraction"),
-                "status": p.get("status", "suggested"),
-                "city": (p.get("location") or {}).get("city"),
-            }
-            for p in pois
-        ],
         "festivals": [],
     }
 
@@ -246,8 +297,9 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
     # Append current user message
     history.append({"role": "user", "content": text})
 
-    # Build unified trip context
+    # Build unified trip context and plan
     trip_context = _build_trip_context(trip, entities)
+    trip_plan = _build_trip_plan(entities)
 
     # Call the shared AI brain
     try:
@@ -256,6 +308,8 @@ def handle_chat(wa_user: dict, message: dict, phone: str) -> None:
             trip_id=trip_id,
             messages=history,
             trip_context=trip_context,
+            trip_plan=trip_plan,
+            mode="planner",
         )
     except Exception as e:
         logger.error("[chat_handler] ai-chat call failed: %s", e)

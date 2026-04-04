@@ -12,7 +12,7 @@ AI_CHAT_URL = os.environ.get(
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
 
-def call_ai_chat(user_id, trip_id, messages, trip_context, source="whatsapp", mode="chat"):
+def call_ai_chat(user_id, trip_id, messages, trip_context, trip_plan=None, source="whatsapp", mode="planner"):
     """Call the ai-chat edge function and return {"message": str, "toolCalls": [...]}.
 
     Args:
@@ -20,8 +20,9 @@ def call_ai_chat(user_id, trip_id, messages, trip_context, source="whatsapp", mo
         trip_id:      Trip UUID
         messages:     List of {"role": "user"|"assistant", "content": str}
         trip_context: TripContext dict (see _build_trip_context in chat_handler)
+        trip_plan:    TripPlan dict with locations/days/potential (see _build_trip_plan)
         source:       Source identifier, default "whatsapp"
-        mode:         Chat mode, default "chat"
+        mode:         Chat mode, default "planner"
 
     Returns:
         dict with keys "message" (str) and "toolCalls" (list or None)
@@ -33,6 +34,7 @@ def call_ai_chat(user_id, trip_id, messages, trip_context, source="whatsapp", mo
         "messages": messages,
         "tripContext": trip_context,
         "mode": mode,
+        "tripPlan": trip_plan,
         "serviceUserId": user_id,
         "tripId": trip_id,
         "persistHistory": True,

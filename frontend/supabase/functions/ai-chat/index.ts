@@ -84,21 +84,75 @@ interface TripContext {
   numberOfDays?: number;
   status?: string;
   currency?: string;
-  locations?: string[];
-  /** Condensed list of existing POIs already in the trip */
-  existingPOIs?: Array<{ name: string; category: string; status: string; city?: string }>;
   /** Relevant festivals / holidays for the trip countries and period */
   festivals?: Array<{ name: string; country: string; period?: string }>;
 }
 
-interface DraftDay {
-  dayNumber: number;
-  date?: string;
-  locationContext?: string;
-  places: { name: string; category: string; city?: string; notes?: string; time?: string; duration?: number }[];
+interface TripPlanPlace {
+  name: string;
+  category: string;
+  time?: string;
 }
 
-function buildSystemPrompt(tripContext?: TripContext, draft?: DraftDay[] | null, instantApply = false): string {
+interface TripPlanDay {
+  dayNumber: number;
+  date?: string;
+  places: TripPlanPlace[];
+}
+
+interface TripPlanLocation {
+  name: string;
+  days: TripPlanDay[];
+  potential: Array<{ name: string; category: string; status: string }>;
+}
+
+interface TripPlan {
+  locations: TripPlanLocation[];
+  unassigned?: Array<{ name: string; category: string; status: string }>;
+}
+
+
+function buildTripPlanText(tripPlan: TripPlan): string {
+  const lines: string[] = [];
+
+  // Collect all known place names for the "exact name" rule
+  const allKnownNames: string[] = [];
+
+  for (const loc of tripPlan.locations) {
+    const dayNums = loc.days.map(d => d.dayNumber);
+    const header = loc.name
+      ? (dayNums.length > 0 ? `### ${loc.name} (Days ${dayNums.join(', ')})` : `### ${loc.name}`)
+      : '### (No location)';
+    lines.push(header);
+
+    for (const day of loc.days) {
+      const places = day.places.map(p => p.time ? `${p.name} @ ${p.time}` : p.name).join(', ');
+      lines.push(`  Day ${day.dayNumber}: ${places || '(empty)'}`);
+      day.places.forEach(p => allKnownNames.push(p.name));
+    }
+
+    if (loc.potential.length > 0) {
+      const potLine = loc.potential.map(p => `${p.name} (${p.status})`).join(', ');
+      lines.push(`  Potential: ${potLine}`);
+      loc.potential.forEach(p => allKnownNames.push(p.name));
+    }
+
+    lines.push('');
+  }
+
+  if (tripPlan.unassigned?.length) {
+    lines.push('### Unassigned places');
+    tripPlan.unassigned.forEach(p => {
+      lines.push(`  ${p.name} (${p.category}, ${p.status})`);
+      allKnownNames.push(p.name);
+    });
+    lines.push('');
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+function buildSystemPrompt(tripContext?: TripContext, tripPlan?: TripPlan | null, instantApply = false): string {
   let prompt = BASE_SYSTEM_PROMPT;
 
   if (tripContext?.tripName) {
@@ -118,22 +172,6 @@ function buildSystemPrompt(tripContext?: TripContext, draft?: DraftDay[] | null,
     if (tripContext.status) {
       parts.push(`Trip phase: ${tripContext.status}.`);
     }
-    if (tripContext.locations?.length) {
-      parts.push(`Planned locations: ${tripContext.locations.join(', ')}.`);
-    }
-
-    if (tripContext.existingPOIs?.length) {
-      const byCity: Record<string, string[]> = {};
-      for (const p of tripContext.existingPOIs) {
-        const key = p.city || '(other)';
-        if (!byCity[key]) byCity[key] = [];
-        byCity[key].push(p.name);
-      }
-      const cityLines = Object.entries(byCity)
-        .map(([city, names]) => `  ${city}: ${names.join(', ')}`)
-        .join('\n');
-      parts.push(`\nKnown places already in this trip — when recommending any of these, use the EXACT name as listed (do not shorten, translate, or paraphrase):\n${cityLines}`);
-    }
 
     if (tripContext.festivals?.length) {
       const festLines = tripContext.festivals
@@ -146,39 +184,27 @@ function buildSystemPrompt(tripContext?: TripContext, draft?: DraftDay[] | null,
     prompt += parts.join('\n');
   }
 
-  // Planner mode: inject draft and tool instructions
-  if (draft !== undefined && draft !== null) {
-    let draftText: string;
-    if (draft.length === 0) {
-      draftText = '(Empty — no days planned yet)';
-    } else {
-      // Group consecutive days by location, then show days under each location
-      const spans: { location: string; days: DraftDay[] }[] = [];
-      for (const d of draft) {
-        const loc = d.locationContext || '';
-        if (spans.length > 0 && spans[spans.length - 1].location === loc) {
-          spans[spans.length - 1].days.push(d);
-        } else {
-          spans.push({ location: loc, days: [d] });
-        }
-      }
-      const lines: string[] = [];
-      for (const span of spans) {
-        if (span.location) {
-          lines.push(span.location);
-        }
-        const indent = span.location ? '  ' : '';
-        for (const d of span.days) {
-          const places = d.places.map(p => p.name).join(', ');
-          lines.push(`${indent}Day ${d.dayNumber}: ${places || '(empty)'}`);
-        }
-      }
-      draftText = lines.join('\n');
-    }
+  // Planner mode: inject trip plan and tool instructions
+  if (tripPlan !== undefined && tripPlan !== null) {
+    const hasContent = tripPlan.locations.length > 0 || (tripPlan.unassigned?.length ?? 0) > 0;
+    const planText = hasContent ? buildTripPlanText(tripPlan) : '(Empty — no places or days planned yet)';
+
+    // Collect all known place names for exact-name rule
+    const allNames: string[] = [
+      ...tripPlan.locations.flatMap(loc => [
+        ...loc.days.flatMap(d => d.places.map(p => p.name)),
+        ...loc.potential.map(p => p.name),
+      ]),
+      ...(tripPlan.unassigned ?? []).map(p => p.name),
+    ];
+    const knownNamesRule = allNames.length > 0
+      ? `\nWhen referencing any place that appears in the current plan, use the EXACT name as listed — do not shorten, translate, or paraphrase it.`
+      : '';
 
     if (instantApply) {
       prompt += `\n\n## Itinerary Planner Mode (Live)
 Every call to set_itinerary is saved to the trip immediately — the user sees changes in real time.
+${knownNamesRule}
 
 **set_itinerary** — The only tool available. Always include ALL days and ALL places in every call.
 Place categories: accommodation, eatery, attraction, service.
@@ -203,10 +229,11 @@ Always include a short text explanation alongside the tool call.
 - Use specific, searchable place names (e.g. "Senso-ji Temple", not "Buddhist temple")
 - Do not use generic descriptions as place names (e.g. NOT "local restaurant", "scenic viewpoint")
 - One entry per named place — do not combine multiple places in one name
-- If a place appears in the "Known places" list above, copy its name EXACTLY as listed — do not shorten, translate, or paraphrase it`;
+- If a place appears in the current plan, copy its name EXACTLY as listed`;
     } else {
       prompt += `\n\n## Itinerary Planner Mode
 You have two tools: set_itinerary and apply_itinerary.
+${knownNamesRule}
 
 **set_itinerary** — Call this whenever you modify the itinerary. Always include ALL days and places, not just changes.
 Categories: accommodation, eatery, attraction, service.
@@ -223,10 +250,10 @@ When answering questions or giving tips without changing the plan, respond with 
 - Use specific, searchable place names (e.g. "Senso-ji Temple", not "Buddhist temple")
 - Do not use generic descriptions as place names (e.g. NOT "local restaurant", "scenic viewpoint")
 - One entry per named place — do not combine multiple places in one name
-- If a place appears in the "Known places" list above, copy its name EXACTLY as listed — do not shorten, translate, or paraphrase it`;
+- If a place appears in the current plan, copy its name EXACTLY as listed`;
     }
 
-    prompt += `\n\nCurrent plan:\n${draftText}`;
+    prompt += `\n\nCurrent plan:\n${planText}`;
   }
 
   return prompt;
@@ -412,7 +439,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json();
-    const { messages, tripContext, mode, itineraryDraft, instantApply, persistHistory, serviceUserId, source, tripId: bodyTripId } = body;
+    const { messages, tripContext, mode, tripPlan, instantApply, persistHistory, serviceUserId, source, tripId: bodyTripId } = body;
 
     // Service-role bypass: trusted internal callers (e.g. WhatsApp Lambda) may authenticate
     // using the service role key and provide a serviceUserId directly.
@@ -490,7 +517,8 @@ Deno.serve(async (req) => {
 
     const isPlanner = mode === 'planner';
     const isInstantApply = !!instantApply;
-    const systemPrompt = buildSystemPrompt(tripContext, isPlanner ? (itineraryDraft ?? []) : undefined, isInstantApply);
+    const planForPrompt: TripPlan | null | undefined = isPlanner ? ((tripPlan as TripPlan) ?? null) : undefined;
+    const systemPrompt = buildSystemPrompt(tripContext, planForPrompt, isInstantApply);
 
     const geminiBody: Record<string, unknown> = {
       system_instruction: { parts: [{ text: systemPrompt }] },

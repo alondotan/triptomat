@@ -182,24 +182,65 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
     setLoading(true);
     setLastSentAt(Date.now());
 
-    // Build the itinerary sent as context: in instant-apply mode use real days; otherwise use draft
-    const itineraryForContext = instantApply
-      ? (() => {
-          const poiMap = new Map(pois.map(p => [p.id, p]));
-          return itineraryDays.map(day => ({
-            dayNumber: day.dayNumber,
-            date: day.date,
-            locationContext: day.locationContext,
-            places: (day.activities ?? [])
-              .filter(a => a.type === 'poi' && poiMap.has(a.id))
-              .sort((a, b) => a.order - b.order)
-              .map(a => {
-                const poi = poiMap.get(a.id)!;
-                return { name: poi.name, category: poi.category, city: poi.location?.city };
-              }),
-          }));
-        })()
-      : draft;
+    // Build the trip plan sent as context: locations → days (scheduled) + potential POIs
+    const tripPlan = (() => {
+      const poiMap = new Map(pois.map(p => [p.id, p]));
+
+      // Collect scheduled POI IDs across all days
+      const scheduledPoiIds = new Set(
+        itineraryDays.flatMap(d =>
+          (d.activities ?? []).filter(a => a.type === 'poi').map(a => a.id)
+        )
+      );
+
+      // Group days by locationContext (preserve order)
+      const locationDaysMap = new Map<string, typeof itineraryDays>();
+      for (const day of itineraryDays) {
+        const loc = day.locationContext || '';
+        if (!locationDaysMap.has(loc)) locationDaysMap.set(loc, []);
+        locationDaysMap.get(loc)!.push(day);
+      }
+
+      // Group unscheduled POIs by city
+      const potentialByCity = new Map<string, Array<{ name: string; category: string; status: string }>>();
+      const unassigned: Array<{ name: string; category: string; status: string }> = [];
+      for (const poi of pois) {
+        if (scheduledPoiIds.has(poi.id)) continue;
+        const city = poi.location?.city || '';
+        if (!city) {
+          unassigned.push({ name: poi.name, category: poi.category, status: poi.status });
+          continue;
+        }
+        if (!potentialByCity.has(city)) potentialByCity.set(city, []);
+        potentialByCity.get(city)!.push({ name: poi.name, category: poi.category, status: poi.status });
+      }
+
+      // Build location entries for locations that have scheduled days
+      const locations = [...locationDaysMap.entries()].map(([locName, days]) => ({
+        name: locName,
+        days: days.map(day => ({
+          dayNumber: day.dayNumber,
+          date: day.date,
+          places: (day.activities ?? [])
+            .filter(a => a.type === 'poi' && poiMap.has(a.id))
+            .sort((a, b) => a.order - b.order)
+            .map(a => {
+              const poi = poiMap.get(a.id)!;
+              return { name: poi.name, category: poi.category, time: a.time_window?.start };
+            }),
+        })),
+        potential: potentialByCity.get(locName) ?? [],
+      }));
+
+      // Add cities that have potential POIs but no scheduled days
+      for (const [city, potentials] of potentialByCity.entries()) {
+        if (!locationDaysMap.has(city)) {
+          locations.push({ name: city, days: [], potential: potentials });
+        }
+      }
+
+      return { locations, unassigned: unassigned.length ? unassigned : undefined };
+    })();
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke('ai-chat', {
@@ -213,12 +254,10 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             numberOfDays: tripContext.numberOfDays,
             status: tripContext.status,
             currency: tripContext.currency,
-            locations: tripContext.locations,
-            existingPOIs: tripContext.existingPOIs,
             festivals: tripContext.festivals,
           },
           mode: 'planner',
-          itineraryDraft: itineraryForContext,
+          tripPlan,
           instantApply,
         },
       });

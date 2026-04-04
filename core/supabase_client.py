@@ -107,12 +107,19 @@ def get_active_trips(
 def get_trip_entities(
     trip_id: str, supabase_url: str, supabase_key: str
 ) -> dict:
-    """Fetch existing POIs, transportation, and contacts for a trip."""
+    """Fetch existing POIs, itinerary days, transportation, and contacts for a trip."""
     pois = _supabase_get(
         supabase_url, supabase_key,
         f"/rest/v1/points_of_interest?trip_id=eq.{trip_id}"
-        f"&select=id,name,category,sub_category,location,details"
+        f"&select=id,name,category,sub_category,location,details,status"
         f"&is_cancelled=is.false"
+    ) or []
+
+    itinerary_days = _supabase_get(
+        supabase_url, supabase_key,
+        f"/rest/v1/itinerary_days?trip_id=eq.{trip_id}"
+        f"&select=day_number,date,location_context,activities"
+        f"&order=day_number.asc&limit=30"
     ) or []
 
     transport = _supabase_get(
@@ -130,6 +137,7 @@ def get_trip_entities(
 
     return {
         "existing_pois": pois,
+        "itinerary_days": itinerary_days,
         "existing_transport": transport,
         "existing_contacts": contacts,
     }
