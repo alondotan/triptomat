@@ -290,12 +290,15 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             newDays = applyToolCall(tc.args.days);
             // Notify parent with clean structured places from the tool call
             if (onItineraryUpdate) {
-              const places = (tc.args.days as Array<{ day_number?: number; dayNumber?: number; location_context?: string; locationContext?: string; places?: Array<{ name?: string; place_name?: string }> }>)
-                .flatMap(d => (d.places ?? []).map(p => ({
-                  name: p.place_name ?? p.name ?? '',
-                  day: d.day_number ?? d.dayNumber ?? 0,
-                  location: d.location_context ?? d.locationContext,
-                })));
+              const places = (tc.args.days as Array<{ day_number?: number; dayNumber?: number; location_context?: string; locationContext?: string; places?: Array<{ name?: string; place_name?: string; is_specific_place?: boolean; place_id?: string }> }>)
+                .flatMap(d => (d.places ?? [])
+                  .filter(p => p.place_id || p.is_specific_place !== false)
+                  .map(p => ({
+                    name: p.place_name ?? p.name ?? '',
+                    day: d.day_number ?? d.dayNumber ?? 0,
+                    location: d.location_context ?? d.locationContext,
+                  }))
+                  .filter(p => p.name));
               onItineraryUpdate(places, updatedMessages.length);
             }
           } else if (tc.name === 'apply_itinerary') {
@@ -394,7 +397,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
       if (daysToApply && daysToApply.length > 0 && (instantApply ? !!newDays : shouldApply)) {
         try {
           console.log('[ai-chat] calling applyDraftToTrip with', JSON.stringify(daysToApply).slice(0, 500));
-          await applyDraftToTrip(tripContext.tripId, daysToApply, pois, tripPlaces);
+          await applyDraftToTrip(tripContext.tripId, daysToApply, pois, tripPlaces, tripContext.countries?.[0]);
           if (!instantApply) {
             toast({ title: t('aiChat.tripUpdated'), description: t('aiChat.tripUpdatedDesc') });
           }

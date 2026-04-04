@@ -83,6 +83,7 @@ export async function applyDraftToTrip(
   draft: DraftDay[],
   existingPois: PointOfInterest[],
   existingTripPlaces: TripPlace[],
+  country?: string,
 ): Promise<void> {
   const mutableTripPlaces = [...existingTripPlaces];
   const poiMap = new Map(existingPois.map(p => [p.id, p]));
@@ -151,7 +152,7 @@ export async function applyDraftToTrip(
           category: place.category as PointOfInterest['category'],
           name: place.name,
           status: 'planned',
-          location: { city: cityName },
+          location: { city: cityName, country },
           sourceRefs: { email_ids: [], recommendation_ids: [] },
           details: {
             notes: place.description || place.notes
