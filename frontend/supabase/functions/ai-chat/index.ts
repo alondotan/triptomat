@@ -375,7 +375,7 @@ const ITINERARY_TOOL = {
                 },
               },
             },
-            required: ['day_number', 'places'],
+            required: ['day_number', 'location_context', 'places'],
           },
         },
       },
