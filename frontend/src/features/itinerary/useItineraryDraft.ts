@@ -39,19 +39,29 @@ export function useItineraryDraft() {
   /** Apply AI tool call result — replaces the entire draft. Returns the normalized days. */
   const applyToolCall = useCallback((days: DraftDay[]): DraftDay[] => {
     // Normalize the AI response (handles snake_case from Gemini)
-    const normalized = days.map(d => ({
-      dayNumber: d.dayNumber ?? (d as unknown as Record<string, number>).day_number,
-      date: d.date,
-      locationContext: d.locationContext ?? (d as unknown as Record<string, string>).location_context,
-      places: (d.places || []).map(p => ({
-        name: p.name,
-        category: (CATEGORY_MAP[p.category] || 'attraction') as DraftPlace['category'],
-        city: p.city,
-        notes: p.notes,
-        time: p.time,
-        duration: p.duration,
-      })),
-    }));
+    const normalized = days.map(d => {
+      const raw = d as unknown as Record<string, unknown>;
+      return {
+        dayNumber: (d.dayNumber ?? raw.day_number) as number,
+        date: d.date,
+        locationContext: d.locationContext ?? raw.location_context as string | undefined,
+        places: ((d.places || raw.places || []) as Record<string, unknown>[]).map(p => ({
+          existingPoiId: (p.existingPoiId ?? p.place_id) as string | undefined,
+          locationId: (p.locationId ?? p.location_id) as string | undefined,
+          locationName: (p.locationName ?? p.location_name) as string | undefined,
+          eventId: (p.eventId ?? p.event_id) as string | undefined,
+          name: ((p.name ?? p.place_name) as string) || '',
+          category: CATEGORY_MAP[p.category as string] || p.category as string || 'attraction',
+          description: p.description as string | undefined,
+          isSpecificPlace: p.isSpecificPlace as boolean | undefined ?? p.is_specific_place as boolean | undefined,
+          city: p.city as string | undefined,
+          notes: p.notes as string | undefined,
+          startTime: (p.startTime ?? p.start_time) as string | undefined,
+          dayPart: (p.dayPart ?? p.day_part) as string | undefined,
+          duration: p.duration as string | undefined,
+        })) as DraftPlace[],
+      };
+    });
     setDraft(normalized);
     setIsDirty(true);
     return normalized;

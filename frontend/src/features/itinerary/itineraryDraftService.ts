@@ -1,10 +1,10 @@
 import type { PointOfInterest } from '@/types/trip';
 import type { DraftDay } from '@/types/itineraryDraft';
 import type { Json } from '@/integrations/supabase/types';
-import { createOrMergePOI } from '@/features/poi/poiService';
-import { supabase } from '@/shared/services/helpers';
+import { createOrMergePOI, updatePOI } from '@/features/poi/poiService';
+import { supabase, fuzzyMatch } from '@/shared/services/helpers';
 import { createTripPlace, findTripPlaceByLocationId } from '@/features/trip/tripPlaceService';
-import { resolveOrAddLocation } from '@/features/trip/tripLocationService';
+import { addTripLocation, resolveOrAddLocation } from '@/features/trip/tripLocationService';
 import type { TripPlace } from '@/types/trip';
 
 
@@ -14,91 +14,200 @@ interface ActivityEntry {
   order: number;
   schedule_state?: string;
   time_window?: { start?: string; end?: string };
-  [key: string]: Json | undefined; // index signature for Json compatibility
+  [key: string]: Json | undefined;
+}
+
+/**
+ * Resolve the trip_location ID for a place entry.
+ *
+ * Priority:
+ * 1. place has locationId → find that trip_location
+ *    - if locationName also provided and fuzzy-differs → create child location under it
+ * 2. no locationId, has locationName → resolveOrAddLocation by name
+ * 3. neither → return null (will fall back to trip-level)
+ */
+async function resolveLocationId(
+  tripId: string,
+  locationId: string | undefined,
+  locationName: string | undefined,
+): Promise<string | null> {
+  if (locationId) {
+    // Verify the location exists
+    const { data: loc } = await supabase
+      .from('trip_locations')
+      .select('id, name')
+      .eq('trip_id', tripId)
+      .eq('id', locationId)
+      .maybeSingle();
+
+    if (!loc) return null;
+
+    // If locationName is also given and differs → create child location
+    if (locationName && !fuzzyMatch(loc.name, locationName)) {
+      const child = await addTripLocation(tripId, locationName, 'city', locationId, 'ai', undefined);
+      return child.id;
+    }
+
+    return loc.id;
+  }
+
+  if (locationName) {
+    const loc = await resolveOrAddLocation(tripId, locationName, 'city');
+    return loc.id;
+  }
+
+  return null;
 }
 
 /**
  * Apply a draft itinerary to the real trip.
- * - Resolves place names to POI IDs (creates new POIs as needed via createOrMergePOI)
- * - Resolves locationContext names → trip_places (creates new trip_place if needed)
- * - Merges draft activities into existing itinerary_days (preserves scheduled/planned items)
+ *
+ * For each place:
+ * - existingPoiId → use existing POI, update status to 'planned'
+ * - no existingPoiId → create new POI via createOrMergePOI
+ *   - locationId/locationName → resolved to a trip_location
+ *   - otherwise → trip-level (no city)
+ *
+ * schedule_state:
+ * - startTime present → 'scheduled', time_window: { start: startTime }
+ * - dayPart present  → 'potential',  time_window: { start: dayPart }
+ * - neither          → 'potential',  no time_window
+ *
+ * Day-to-location assignment:
+ * - Day is assigned to the trip_place of the first place that has a resolved location.
+ *
+ * Places with same dayPart on the same day are grouped together (same time_window).
  */
 export async function applyDraftToTrip(
   tripId: string,
   draft: DraftDay[],
-  _existingPois: PointOfInterest[],
+  existingPois: PointOfInterest[],
   existingTripPlaces: TripPlace[],
 ): Promise<void> {
-  const poiIdMap = new Map<string, string>(); // "name|category" → POI ID
+  const mutableTripPlaces = [...existingTripPlaces];
+  const poiMap = new Map(existingPois.map(p => [p.id, p]));
 
-  // 1) Resolve all place names to POI IDs
-  for (const day of draft) {
-    for (const place of day.places) {
-      const key = `${place.name}|${place.category}`;
-      if (poiIdMap.has(key)) continue;
+  // Cache: locationId → trip_place.id (to avoid duplicate creates)
+  const tripPlaceByLocationId = new Map<string, string>();
 
-      if (place.existingPoiId) {
-        poiIdMap.set(key, place.existingPoiId);
-        continue;
-      }
+  async function getOrCreateTripPlace(resolvedLocId: string): Promise<string> {
+    const cached = tripPlaceByLocationId.get(resolvedLocId);
+    if (cached) return cached;
 
-      const { poi } = await createOrMergePOI({
-        tripId,
-        category: place.category as PointOfInterest['category'],
-        name: place.name,
-        status: 'suggested',
-        location: {
-          city: place.city || undefined,
-        },
-        sourceRefs: { email_ids: [], recommendation_ids: [] },
-        details: {
-          notes: place.notes ? { user_summary: place.notes } : undefined,
-        },
-        isCancelled: false,
-        isPaid: false,
-      } as Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>);
-
-      poiIdMap.set(key, poi.id);
+    let tripPlace = findTripPlaceByLocationId(mutableTripPlaces, resolvedLocId);
+    if (!tripPlace) {
+      tripPlace = await createTripPlace(tripId, resolvedLocId, {
+        sortOrder: mutableTripPlaces.length,
+      });
+      mutableTripPlaces.push(tripPlace);
     }
+    tripPlaceByLocationId.set(resolvedLocId, tripPlace.id);
+    return tripPlace.id;
   }
 
-  // 2) Resolve locationContext names → trip_place IDs
-  //    Find matching trip_location by name, then find or create a trip_place for it
-  const tripPlaceIdMap = new Map<string, string>(); // locationContext (lower) → trip_place.id
-  const mutableTripPlaces = [...existingTripPlaces];
+  for (const day of draft) {
+    const newActivities: ActivityEntry[] = [];
+    let dayTripPlaceId: string | null = null;
 
-  const uniqueLocations = [...new Set(draft.map(d => d.locationContext).filter(Boolean))] as string[];
-  if (uniqueLocations.length > 0) {
-    const { data: tripLocs } = await supabase
-      .from('trip_locations')
-      .select('id, name')
-      .eq('trip_id', tripId);
+    for (let idx = 0; idx < day.places.length; idx++) {
+      const place = day.places[idx];
 
-    for (const locName of uniqueLocations) {
-      let tripLoc = (tripLocs || []).find(
-        l => l.name.toLowerCase() === locName.toLowerCase(),
-      );
-      if (!tripLoc) {
-        try {
-          const newLoc = await resolveOrAddLocation(tripId, locName, 'city');
-          tripLoc = { id: newLoc.id, name: newLoc.name };
-        } catch {
-          continue;
+      // ── Resolve POI ──────────────────────────────────────────────────────
+      let poiId: string;
+
+      if (place.existingPoiId) {
+        // Use existing POI — update status to 'planned' if not already locked
+        poiId = place.existingPoiId;
+        const existing = poiMap.get(poiId);
+        if (existing && ['suggested', 'interested'].includes(existing.status)) {
+          await updatePOI({ ...existing, status: 'planned' });
+          poiMap.set(poiId, { ...existing, status: 'planned' });
+        }
+      } else {
+        // Create or merge new POI
+        const resolvedLocId = await resolveLocationId(
+          tripId,
+          place.locationId,
+          place.locationName ?? place.city,
+        );
+
+        // Find city name for the POI from the resolved location
+        let cityName = place.city || place.locationName;
+        if (resolvedLocId && !cityName) {
+          const { data: loc } = await supabase
+            .from('trip_locations')
+            .select('name')
+            .eq('id', resolvedLocId)
+            .maybeSingle();
+          if (loc) cityName = loc.name;
+        }
+
+        const { poi } = await createOrMergePOI({
+          tripId,
+          category: place.category as PointOfInterest['category'],
+          name: place.name,
+          status: 'planned',
+          location: { city: cityName },
+          sourceRefs: { email_ids: [], recommendation_ids: [] },
+          details: {
+            notes: place.description || place.notes
+              ? { user_summary: place.description || place.notes }
+              : undefined,
+          },
+          isCancelled: false,
+          isPaid: false,
+        } as Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>);
+
+        poiId = poi.id;
+        poiMap.set(poiId, poi);
+
+        // Assign day to this location (first resolved location wins)
+        if (resolvedLocId && !dayTripPlaceId) {
+          dayTripPlaceId = await getOrCreateTripPlace(resolvedLocId);
         }
       }
 
-      // Find existing trip_place or create one
-      let tripPlace = findTripPlaceByLocationId(mutableTripPlaces, tripLoc.id);
-      if (!tripPlace) {
-        tripPlace = await createTripPlace(tripId, tripLoc.id, { sortOrder: mutableTripPlaces.length, locationName: locName });
-        mutableTripPlaces.push(tripPlace);
+      // Also try to assign day location from existing POI's city
+      if (!dayTripPlaceId && place.existingPoiId) {
+        const resolvedLocId = await resolveLocationId(
+          tripId,
+          place.locationId,
+          place.locationName,
+        );
+        if (resolvedLocId) {
+          dayTripPlaceId = await getOrCreateTripPlace(resolvedLocId);
+        }
       }
-      tripPlaceIdMap.set(locName.toLowerCase(), tripPlace.id);
-    }
-  }
 
-  // 3) Merge into itinerary days
-  for (const day of draft) {
+      // ── Build activity entry ────────────────────────────────────────────
+      let scheduleState: 'scheduled' | 'potential' = 'potential';
+      let timeWindow: { start?: string; end?: string } | undefined;
+
+      const effectiveTime = place.startTime;
+      if (effectiveTime) {
+        scheduleState = 'scheduled';
+        timeWindow = { start: effectiveTime };
+      } else if (place.dayPart) {
+        scheduleState = 'potential';
+        timeWindow = { start: place.dayPart };
+      }
+
+      newActivities.push({
+        order: idx + 1,
+        type: 'poi',
+        id: poiId,
+        schedule_state: scheduleState,
+        ...(timeWindow ? { time_window: timeWindow } : {}),
+      });
+    }
+
+    // ── Fallback: resolve day location from locationContext ────────────────
+    if (!dayTripPlaceId && day.locationContext) {
+      const loc = await resolveOrAddLocation(tripId, day.locationContext, 'city');
+      dayTripPlaceId = await getOrCreateTripPlace(loc.id);
+    }
+
+    // ── Write itinerary day ───────────────────────────────────────────────
     const { data: existingDay } = await supabase
       .from('itinerary_days')
       .select('id, activities')
@@ -106,58 +215,31 @@ export async function applyDraftToTrip(
       .eq('day_number', day.dayNumber)
       .maybeSingle();
 
-    // Build new activity entries from draft
-    const draftPoiIds = new Set<string>();
-    const newActivities: ActivityEntry[] = day.places
-      .map((place, idx) => {
-        const poiId = poiIdMap.get(`${place.name}|${place.category}`) || '';
-        if (poiId) draftPoiIds.add(poiId);
-        return {
-          order: idx + 1,
-          type: 'poi' as const,
-          id: poiId,
-          schedule_state: 'potential' as const,
-          time_window: place.time ? { start: place.time } : undefined,
-        };
-      })
-      .filter(a => a.id);
-
-    const tripPlaceId = day.locationContext
-      ? tripPlaceIdMap.get(day.locationContext.toLowerCase()) ?? null
-      : null;
+    const validActivities = newActivities.filter(a => a.id);
+    const draftPoiIds = new Set(validActivities.map(a => a.id));
 
     if (existingDay) {
       const existingActivities = (existingDay.activities || []) as unknown as ActivityEntry[];
-      const preserved = existingActivities.filter(a => {
-        if (a.type !== 'poi') return true;
-        if (draftPoiIds.has(a.id)) return false;
-        return true;
-      });
-
-      const maxOrder = newActivities.length;
+      const preserved = existingActivities.filter(
+        a => a.type !== 'poi' || !draftPoiIds.has(a.id),
+      );
+      const maxOrder = validActivities.length;
       const merged = [
-        ...newActivities,
+        ...validActivities,
         ...preserved.map((a, i) => ({ ...a, order: maxOrder + i + 1 })),
       ];
 
-      const updatePayload: Record<string, unknown> = {
-        activities: merged as unknown as Json,
-      };
-      if (tripPlaceId) updatePayload.trip_place_id = tripPlaceId;
+      const updatePayload: Record<string, unknown> = { activities: merged as unknown as Json };
+      if (dayTripPlaceId) updatePayload.trip_place_id = dayTripPlaceId;
 
-      await supabase
-        .from('itinerary_days')
-        .update(updatePayload)
-        .eq('id', existingDay.id);
+      await supabase.from('itinerary_days').update(updatePayload).eq('id', existingDay.id);
     } else {
-      await supabase
-        .from('itinerary_days')
-        .insert([{
-          trip_id: tripId,
-          day_number: day.dayNumber,
-          trip_place_id: tripPlaceId,
-          activities: newActivities as unknown as Json,
-        }]);
+      await supabase.from('itinerary_days').insert([{
+        trip_id: tripId,
+        day_number: day.dayNumber,
+        trip_place_id: dayTripPlaceId,
+        activities: validActivities as unknown as Json,
+      }]);
     }
   }
 }
