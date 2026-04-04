@@ -390,8 +390,10 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
 
       // Apply the itinerary to the real trip
       const daysToApply = newDays ?? (shouldApply ? draft : null);
+      console.log('[ai-chat] daysToApply:', daysToApply?.length, 'newDays:', !!newDays, 'shouldApply:', shouldApply, 'instantApply:', instantApply);
       if (daysToApply && daysToApply.length > 0 && (instantApply ? !!newDays : shouldApply)) {
         try {
+          console.log('[ai-chat] calling applyDraftToTrip with', JSON.stringify(daysToApply).slice(0, 500));
           await applyDraftToTrip(tripContext.tripId, daysToApply, pois, tripPlaces);
           if (!instantApply) {
             toast({ title: t('aiChat.tripUpdated'), description: t('aiChat.tripUpdatedDesc') });
@@ -408,10 +410,12 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             }
           }
         } catch (err: unknown) {
+          console.error('[ai-chat] applyDraftToTrip error:', err);
           setError((err as Error).message || 'Failed to update trip.');
         }
       }
     } catch (err: unknown) {
+      console.error('[ai-chat] outer error:', err);
       setError((err as Error).message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
