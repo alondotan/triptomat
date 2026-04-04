@@ -57,9 +57,12 @@ interface HomeMapPanelProps {
   regionMarkers?: RegionMarker[];
   selectedName: string | null;
   onSelectName: (name: string | null) => void;
+  /** When set, show these suggestions instead of live ones (snapshot/preview mode) */
+  overrideSuggestions?: ChatSuggestion[];
 }
 
-export function HomeMapPanel({ suggestions, countries, regionMarkers = [], selectedName, onSelectName }: HomeMapPanelProps) {
+export function HomeMapPanel({ suggestions, countries, regionMarkers = [], selectedName, onSelectName, overrideSuggestions }: HomeMapPanelProps) {
+  const activeSuggestions = overrideSuggestions ?? suggestions;
   const { itineraryDays } = useItinerary();
   const { pois } = usePOI();
 
@@ -77,7 +80,7 @@ export function HomeMapPanel({ suggestions, countries, regionMarkers = [], selec
 
   // Geocode suggestions that don't already have coordinates
   useEffect(() => {
-    const todo = suggestions.filter(s => !s.coordinates && !geocodedRef.current.has(s.id));
+    const todo = activeSuggestions.filter(s => !s.coordinates && !geocodedRef.current.has(s.id));
     if (!todo.length) return;
     let cancelled = false;
     (async () => {
@@ -91,11 +94,11 @@ export function HomeMapPanel({ suggestions, countries, regionMarkers = [], selec
       }
     })();
     return () => { cancelled = true; };
-  }, [suggestions]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeSuggestions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Build markers from suggestions — use embedded coords first, then Nominatim
   const markers = useMemo(() =>
-    suggestions
+    activeSuggestions
       .map(s => {
         const pos = s.coordinates ?? nominatimCoords[s.id] ?? null;
         if (!pos) return null;
@@ -107,10 +110,10 @@ export function HomeMapPanel({ suggestions, countries, regionMarkers = [], selec
         };
       })
       .filter((m): m is NonNullable<typeof m> => m !== null),
-    [suggestions, nominatimCoords, plannedNames],
+    [activeSuggestions, nominatimCoords, plannedNames],
   );
 
-  const isEmpty = suggestions.length === 0;
+  const isEmpty = activeSuggestions.length === 0;
   const allCoords = markers.map(m => m.pos);
   const fitCoords = allCoords.length > 0 ? allCoords : (isEmpty ? regionMarkers.flatMap(r => r.pos ? [r.pos] : []) : []);
   const defaultCenter: [number, number] = fitCoords[0] ?? [35.6762, 139.6503];

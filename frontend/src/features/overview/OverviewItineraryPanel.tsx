@@ -16,15 +16,17 @@ const CATEGORY_MAP: Record<string, DraftPlace['category']> = {
 interface OverviewItineraryPanelProps {
   selectedName?: string | null;
   onSelectName?: (name: string | null) => void;
+  /** When set, renders these days instead of the live itinerary (snapshot/preview mode) */
+  overrideDays?: DraftDay[];
 }
 
-export function OverviewItineraryPanel({ selectedName, onSelectName }: OverviewItineraryPanelProps = {}) {
+export function OverviewItineraryPanel({ selectedName, onSelectName, overrideDays }: OverviewItineraryPanelProps = {}) {
   const { t } = useTranslation();
   const { itineraryDays } = useItinerary();
   const { pois } = usePOI();
   const { tripLocations, tripPlaces } = useActiveTrip();
 
-  const days = useMemo<DraftDay[]>(() => {
+  const liveDays = useMemo<DraftDay[]>(() => {
     const poiMap = new Map(pois.map(p => [p.id, p]));
     // Build map: trip_place_id → location name
     const placeLocMap = new Map(
@@ -53,6 +55,8 @@ export function OverviewItineraryPanel({ selectedName, onSelectName }: OverviewI
         }),
     }));
   }, [itineraryDays, pois, tripLocations, tripPlaces]);
+
+  const days = overrideDays ?? liveDays;
 
   return (
     <div className="flex flex-col min-h-0">

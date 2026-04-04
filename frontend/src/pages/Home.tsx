@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { X } from 'lucide-react';
+import type { DraftDay } from '@/types/itineraryDraft';
 import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { usePOI } from '@/features/poi/POIContext';
@@ -39,6 +41,8 @@ const HomePage = () => {
   // Cross-panel selection: the currently highlighted place name (lowercase)
   const [selectedName, setSelectedName] = useState<string | null>(null);
   const seenNamesRef = useRef<Set<string>>(new Set());
+  // Snapshot preview: set when user clicks "View plan snapshot" in chat
+  const [previewSnapshot, setPreviewSnapshot] = useState<DraftDay[] | null>(null);
 
   // Load festival data + geodata place images/coords for trip countries
   useEffect(() => {
@@ -203,6 +207,22 @@ const HomePage = () => {
     }
   }, [activeTrip?.id]);
 
+  // Derive snapshot suggestions from previewSnapshot days
+  const snapshotSuggestions = useMemo<ChatSuggestion[]>(() => {
+    if (!previewSnapshot) return suggestions;
+    let id = 0;
+    return previewSnapshot
+      .flatMap(d => d.places)
+      .filter(p => p.name && p.isSpecificPlace !== false)
+      .map(p => ({
+        id: `snap-${id++}-${p.name}`,
+        name: p.name!,
+        location: p.locationName ?? p.city,
+        coordinates: placeCoordMapRef.current.get(p.name!.toLowerCase()),
+        sourceMessageIndex: -1,
+      }));
+  }, [previewSnapshot, suggestions]);
+
   if (!activeTrip || !tripContext) {
     return (
       <AppLayout hideHero>
@@ -213,10 +233,25 @@ const HomePage = () => {
     );
   }
 
+  const activeSuggestions = previewSnapshot ? snapshotSuggestions : suggestions;
+
   return (
     <AppLayout hideHero fillHeight hideFAB>
       {/* ── Desktop layout ── */}
       <div className="hidden lg:flex flex-col flex-1 min-h-0 -mx-6 overflow-hidden">
+
+        {/* Preview banner */}
+        {previewSnapshot && (
+          <div className="shrink-0 flex items-center justify-between gap-2 px-4 py-1.5 bg-amber-50 border-b border-amber-200 text-amber-800 text-xs">
+            <span>Viewing a past plan snapshot — changes are not saved</span>
+            <button
+              onClick={() => setPreviewSnapshot(null)}
+              className="flex items-center gap-1 font-medium hover:text-amber-900"
+            >
+              <X size={12} /> Return to current plan
+            </button>
+          </div>
+        )}
 
         {/* Main 3 columns */}
         <div className="flex flex-1 min-h-0 overflow-hidden">
@@ -228,6 +263,7 @@ const HomePage = () => {
               regionMarkers={regionMarkers}
               selectedName={selectedName}
               onSelectName={setSelectedName}
+              overrideSuggestions={previewSnapshot ? snapshotSuggestions : undefined}
             />
           </div>
 
@@ -238,23 +274,29 @@ const HomePage = () => {
               className="flex-1 min-h-0"
               onItineraryUpdate={handleItineraryUpdate}
               onSuggestPlaces={handleSuggestPlaces}
+              onViewSnapshot={setPreviewSnapshot}
               instantApply
             />
           </div>
 
           {/* RIGHT: Schedule */}
           <div className="w-[260px] shrink-0 h-full border-l overflow-y-auto">
-            <OverviewItineraryPanel selectedName={selectedName} onSelectName={setSelectedName} />
+            <OverviewItineraryPanel
+              selectedName={selectedName}
+              onSelectName={setSelectedName}
+              overrideDays={previewSnapshot ?? undefined}
+            />
           </div>
         </div>
 
         {/* Bottom: Suggestions horizontal strip */}
         <div className="shrink-0 border-t h-[116px]">
           <HomeSuggestionsPanel
-            suggestions={suggestions}
+            suggestions={activeSuggestions}
             placeImageMap={placeImageMap}
             selectedName={selectedName}
             onSelectName={setSelectedName}
+            isPreviewMode={!!previewSnapshot}
           />
         </div>
       </div>
@@ -266,15 +308,17 @@ const HomePage = () => {
           compact
           className="flex-1 min-h-0"
           onItineraryUpdate={handleItineraryUpdate}
+          onViewSnapshot={setPreviewSnapshot}
           instantApply
         />
-        {suggestions.length > 0 && (
+        {activeSuggestions.length > 0 && (
           <div className="shrink-0 max-h-40 border-t overflow-hidden">
             <HomeSuggestionsPanel
-              suggestions={suggestions}
+              suggestions={activeSuggestions}
               placeImageMap={placeImageMap}
               selectedName={selectedName}
               onSelectName={setSelectedName}
+              isPreviewMode={!!previewSnapshot}
             />
           </div>
         )}

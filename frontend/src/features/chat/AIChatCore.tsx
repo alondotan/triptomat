@@ -71,9 +71,11 @@ interface AIChatCoreProps {
    * Shows undo-per-step and restore-to-pre-conversation buttons.
    */
   instantApply?: boolean;
+  /** Called when user clicks a snapshot link in a message — receives the DraftDay[] from that tool call */
+  onViewSnapshot?: (days: import('@/types/itineraryDraft').DraftDay[]) => void;
 }
 
-export function AIChatCore({ tripContext, compact = false, className, initialMessage, onNewAssistantMessage, onItineraryUpdate, onSuggestPlaces, instantApply = false }: AIChatCoreProps) {
+export function AIChatCore({ tripContext, compact = false, className, initialMessage, onNewAssistantMessage, onItineraryUpdate, onSuggestPlaces, instantApply = false, onViewSnapshot }: AIChatCoreProps) {
   const { t } = useTranslation();
   const tripId = tripContext.tripId;
 
@@ -102,6 +104,8 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
   const history = useItineraryHistory();
   const { activeTrip, updateCurrentTrip, tripPlaces, tripLocations } = useActiveTrip();
   const [historyLoading, setHistoryLoading] = useState(false);
+  // In-memory map: assistant message index → itinerary snapshot (not persisted)
+  const snapshotByMsgIdxRef = useRef<Map<number, import('@/types/itineraryDraft').DraftDay[]>>(new Map());
 
   // Initialize draft
   useEffect(() => {
@@ -193,10 +197,18 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         )
       );
 
-      // Group days by locationContext (preserve order)
+      // Build tripPlace → location name lookup
+      const placeLocMap = new Map(
+        tripPlaces.map(tp => {
+          const loc = tripLocations.find(l => l.id === tp.tripLocationId);
+          return [tp.id, loc?.name ?? ''];
+        })
+      );
+
+      // Group days by location name (via tripPlaceId → location name)
       const locationDaysMap = new Map<string, typeof itineraryDays>();
       for (const day of itineraryDays) {
-        const loc = day.locationContext || '';
+        const loc = (day.tripPlaceId && placeLocMap.get(day.tripPlaceId)) || '';
         if (!locationDaysMap.has(loc)) locationDaysMap.set(loc, []);
         locationDaysMap.get(loc)!.push(day);
       }
@@ -288,6 +300,10 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
               history.pushHistory(itineraryDays, pois, activeTrip);
             }
             newDays = applyToolCall(tc.args.days);
+            // Save snapshot so the user can revisit this plan state later
+            if (newDays) {
+              snapshotByMsgIdxRef.current.set(updatedMessages.length, newDays);
+            }
             // Notify parent with clean structured places from the tool call
             if (onItineraryUpdate) {
               const places = (tc.args.days as Array<{ day_number?: number; dayNumber?: number; location_context?: string; locationContext?: string; places?: Array<{ name?: string; place_name?: string; is_specific_place?: boolean; place_id?: string }> }>)
@@ -653,37 +669,50 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             </div>
           )}
 
-          {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={cn(
-                'flex gap-2',
-                msg.role === 'user' ? 'justify-end' : 'justify-start'
-              )}
-            >
-              {msg.role === 'assistant' && (
-                <div className={cn('shrink-0 rounded-full bg-primary/10 flex items-center justify-center mt-0.5', compact ? 'w-5 h-5' : 'w-7 h-7')}>
-                  <Bot size={compact ? 10 : 14} className="text-primary" />
-                </div>
-              )}
+          {messages.map((msg, i) => {
+            const snap = msg.role === 'assistant' ? snapshotByMsgIdxRef.current.get(i) : undefined;
+            return (
               <div
+                key={i}
                 className={cn(
-                  'rounded-2xl whitespace-pre-wrap break-words',
-                  compact ? 'px-2.5 py-1.5 text-xs max-w-[90%]' : 'px-3.5 py-2.5 text-sm max-w-[85%]',
-                  msg.role === 'user'
-                    ? 'bg-primary text-primary-foreground rounded-br-md'
-                    : 'bg-muted rounded-bl-md'
+                  'flex gap-2',
+                  msg.role === 'user' ? 'justify-end' : 'justify-start'
                 )}
               >
-                {msg.content}
-              </div>
-              {msg.role === 'user' && (
-                <div className={cn('shrink-0 rounded-full bg-muted flex items-center justify-center mt-0.5', compact ? 'w-5 h-5' : 'w-7 h-7')}>
-                  <User size={compact ? 10 : 14} />
+                {msg.role === 'assistant' && (
+                  <div className={cn('shrink-0 rounded-full bg-primary/10 flex items-center justify-center mt-0.5', compact ? 'w-5 h-5' : 'w-7 h-7')}>
+                    <Bot size={compact ? 10 : 14} className="text-primary" />
+                  </div>
+                )}
+                <div className={cn('flex flex-col gap-1', compact ? 'max-w-[90%]' : 'max-w-[85%]')}>
+                  <div
+                    className={cn(
+                      'rounded-2xl whitespace-pre-wrap break-words',
+                      compact ? 'px-2.5 py-1.5 text-xs' : 'px-3.5 py-2.5 text-sm',
+                      msg.role === 'user'
+                        ? 'bg-primary text-primary-foreground rounded-br-md'
+                        : 'bg-muted rounded-bl-md'
+                    )}
+                  >
+                    {msg.content}
+                  </div>
+                  {snap && onViewSnapshot && (
+                    <button
+                      onClick={() => onViewSnapshot(snap)}
+                      className="self-start text-[10px] text-primary underline underline-offset-2 hover:text-primary/80 px-1"
+                    >
+                      View plan snapshot
+                    </button>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+                {msg.role === 'user' && (
+                  <div className={cn('shrink-0 rounded-full bg-muted flex items-center justify-center mt-0.5', compact ? 'w-5 h-5' : 'w-7 h-7')}>
+                    <User size={compact ? 10 : 14} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
           {loading && (
             <div className="flex gap-2 justify-start">

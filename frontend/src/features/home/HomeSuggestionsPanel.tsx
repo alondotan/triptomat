@@ -13,6 +13,8 @@ interface HomeSuggestionsPanelProps {
   placeImageMap: Map<string, string>;
   selectedName: string | null;
   onSelectName: (name: string | null) => void;
+  /** When true, disables add-to-trip button (snapshot/preview mode) */
+  isPreviewMode?: boolean;
 }
 
 interface SuggestionCardProps {
@@ -23,9 +25,10 @@ interface SuggestionCardProps {
   onSelect: () => void;
   onAdd: (s: ChatSuggestion) => void;
   placeImageMap: Map<string, string>;
+  isPreviewMode?: boolean;
 }
 
-function SuggestionCard({ suggestion, inPlan, adding, selected, onSelect, onAdd, placeImageMap }: SuggestionCardProps) {
+function SuggestionCard({ suggestion, inPlan, adding, selected, onSelect, onAdd, placeImageMap, isPreviewMode }: SuggestionCardProps) {
   // Start with geodata image if available, then try Wikipedia, then gradient
   const geodataImg = placeImageMap.get(suggestion.name.toLowerCase()) ?? null;
   const [imgUrl, setImgUrl] = useState<string | null>(geodataImg);
@@ -102,8 +105,8 @@ function SuggestionCard({ suggestion, inPlan, adding, selected, onSelect, onAdd,
           className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-white/90 hover:bg-white text-foreground shadow"
           variant="ghost"
           onClick={() => onAdd(suggestion)}
-          disabled={adding}
-          title="Add to trip"
+          disabled={adding || isPreviewMode}
+          title={isPreviewMode ? 'Exit preview to add' : 'Add to trip'}
         >
           {adding
             ? <Loader2 size={9} className="animate-spin text-foreground" />
@@ -114,7 +117,7 @@ function SuggestionCard({ suggestion, inPlan, adding, selected, onSelect, onAdd,
   );
 }
 
-export function HomeSuggestionsPanel({ suggestions, placeImageMap, selectedName, onSelectName }: HomeSuggestionsPanelProps) {
+export function HomeSuggestionsPanel({ suggestions, placeImageMap, selectedName, onSelectName, isPreviewMode = false }: HomeSuggestionsPanelProps) {
   const { pois, addPOI } = usePOI();
   const { itineraryDays } = useItinerary();
   const { activeTrip } = useActiveTrip();
@@ -191,6 +194,7 @@ export function HomeSuggestionsPanel({ suggestions, placeImageMap, selectedName,
                   onSelect={() => onSelectName(isSelected ? null : s.name)}
                   onAdd={handleAdd}
                   placeImageMap={placeImageMap}
+                  isPreviewMode={isPreviewMode}
                 />
               );
             })}
