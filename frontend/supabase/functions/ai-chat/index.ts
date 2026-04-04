@@ -93,6 +93,7 @@ interface TripContext {
 }
 
 interface TripPlanPlace {
+  id?: string;
   name: string;
   category: string;
   time?: string;
@@ -105,14 +106,15 @@ interface TripPlanDay {
 }
 
 interface TripPlanLocation {
+  id?: string;
   name: string;
   days: TripPlanDay[];
-  potential: Array<{ name: string; category: string; status: string }>;
+  potential: Array<{ id?: string; name: string; category: string; status: string }>;
 }
 
 interface TripPlan {
   locations: TripPlanLocation[];
-  unassigned?: Array<{ name: string; category: string; status: string }>;
+  unassigned?: Array<{ id?: string; name: string; category: string; status: string }>;
 }
 
 
@@ -124,19 +126,26 @@ function buildTripPlanText(tripPlan: TripPlan): string {
 
   for (const loc of tripPlan.locations) {
     const dayNums = loc.days.map(d => d.dayNumber);
+    const locId = loc.id ? ` [location_id: ${loc.id}]` : '';
     const header = loc.name
-      ? (dayNums.length > 0 ? `### ${loc.name} (Days ${dayNums.join(', ')})` : `### ${loc.name}`)
+      ? (dayNums.length > 0 ? `### ${loc.name}${locId} (Days ${dayNums.join(', ')})` : `### ${loc.name}${locId}`)
       : '### (No location)';
     lines.push(header);
 
     for (const day of loc.days) {
-      const places = day.places.map(p => p.time ? `${p.name} @ ${p.time}` : p.name).join(', ');
+      const places = day.places.map(p => {
+        const id = p.id ? ` [place_id: ${p.id}]` : '';
+        return p.time ? `${p.name}${id} @ ${p.time}` : `${p.name}${id}`;
+      }).join(', ');
       lines.push(`  Day ${day.dayNumber}: ${places || '(empty)'}`);
       day.places.forEach(p => allKnownNames.push(p.name));
     }
 
     if (loc.potential.length > 0) {
-      const potLine = loc.potential.map(p => `${p.name} (${p.status})`).join(', ');
+      const potLine = loc.potential.map(p => {
+        const id = p.id ? ` [place_id: ${p.id}]` : '';
+        return `${p.name}${id} (${p.status})`;
+      }).join(', ');
       lines.push(`  Potential: ${potLine}`);
       loc.potential.forEach(p => allKnownNames.push(p.name));
     }

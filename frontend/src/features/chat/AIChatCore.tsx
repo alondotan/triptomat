@@ -100,7 +100,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
   const { pois, addPOI } = usePOI();
   const { draft, isInitialized, initFromReal, applyToolCall } = useItineraryDraft();
   const history = useItineraryHistory();
-  const { activeTrip, updateCurrentTrip, tripPlaces } = useActiveTrip();
+  const { activeTrip, updateCurrentTrip, tripPlaces, tripLocations } = useActiveTrip();
   const [historyLoading, setHistoryLoading] = useState(false);
 
   // Initialize draft
@@ -201,22 +201,28 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         locationDaysMap.get(loc)!.push(day);
       }
 
+      // Build name → TripLocation lookup for IDs
+      const tripLocationByName = new Map(
+        tripLocations.map(tl => [tl.name.toLowerCase(), tl])
+      );
+
       // Group unscheduled POIs by city
-      const potentialByCity = new Map<string, Array<{ name: string; category: string; status: string }>>();
-      const unassigned: Array<{ name: string; category: string; status: string }> = [];
+      const potentialByCity = new Map<string, Array<{ id: string; name: string; category: string; status: string }>>();
+      const unassigned: Array<{ id: string; name: string; category: string; status: string }> = [];
       for (const poi of pois) {
         if (scheduledPoiIds.has(poi.id)) continue;
         const city = poi.location?.city || '';
         if (!city) {
-          unassigned.push({ name: poi.name, category: poi.category, status: poi.status });
+          unassigned.push({ id: poi.id, name: poi.name, category: poi.category, status: poi.status });
           continue;
         }
         if (!potentialByCity.has(city)) potentialByCity.set(city, []);
-        potentialByCity.get(city)!.push({ name: poi.name, category: poi.category, status: poi.status });
+        potentialByCity.get(city)!.push({ id: poi.id, name: poi.name, category: poi.category, status: poi.status });
       }
 
       // Build location entries for locations that have scheduled days
       const locations = [...locationDaysMap.entries()].map(([locName, days]) => ({
+        id: tripLocationByName.get(locName.toLowerCase())?.id,
         name: locName,
         days: days.map(day => ({
           dayNumber: day.dayNumber,
@@ -226,7 +232,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             .sort((a, b) => a.order - b.order)
             .map(a => {
               const poi = poiMap.get(a.id)!;
-              return { name: poi.name, category: poi.category, time: a.time_window?.start };
+              return { id: poi.id, name: poi.name, category: poi.category, time: a.time_window?.start };
             }),
         })),
         potential: potentialByCity.get(locName) ?? [],
@@ -235,7 +241,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
       // Add cities that have potential POIs but no scheduled days
       for (const [city, potentials] of potentialByCity.entries()) {
         if (!locationDaysMap.has(city)) {
-          locations.push({ name: city, days: [], potential: potentials });
+          locations.push({ id: tripLocationByName.get(city.toLowerCase())?.id, name: city, days: [], potential: potentials });
         }
       }
 
