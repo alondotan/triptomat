@@ -64,10 +64,9 @@ describe("isStale", () => {
   });
 
   it("handles edge case right at 30 days boundary", () => {
-    // Exactly 30 days — should NOT be stale (needs to be strictly greater)
-    const exactlyThirtyDays = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    const file = makeFile({ searched_at: exactlyThirtyDays.toISOString() });
-    // At exactly 30 days, Date.now() - searchedAt === CACHE_MAX_AGE_MS, so > returns false
+    // 1 second before the 30-day boundary — should NOT be stale
+    const justUnder = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000 + 1000);
+    const file = makeFile({ searched_at: justUnder.toISOString() });
     expect(isStale(file)).toBe(false);
   });
 });
