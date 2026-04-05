@@ -9,7 +9,8 @@ interface WebhookPayload {
   metadata: {
     date: string;
     category: 'transportation' | 'accommodation' | 'attraction' | 'eatery';
-    sub_category?: string;
+    place_type?: string;
+    activity_type?: string;
     action: 'create' | 'update' | 'cancel';
     order_number: string;
     is_paid?: boolean;
@@ -463,7 +464,7 @@ Deno.serve(async (req) => {
 
           const newData = {
             category: 'accommodation',
-            sub_category: metadata.sub_category || 'hotel',
+            place_type: metadata.place_type || 'hotel',
             name: accom.establishment_name || 'Accommodation',
             status: 'booked',
             is_cancelled: false,
@@ -554,7 +555,7 @@ Deno.serve(async (req) => {
           }));
 
           const newData = {
-            category: metadata.sub_category?.toLowerCase() || 'flight',
+            category: metadata.place_type?.toLowerCase() || 'flight',
             status: 'booked',
             is_cancelled: false,
             cost: { total_amount: cost?.amount || 0, currency: cost?.currency || 'USD' },
@@ -619,7 +620,8 @@ Deno.serve(async (req) => {
 
             const newData = {
               category: metadata.category,
-              sub_category: isAttraction ? (details as any).attraction_type : 'restaurant',
+              place_type: isAttraction ? (details as any).attraction_type : 'restaurant',
+              activity_type: isAttraction ? (details as any).attraction_type : 'dining',
               name: name || 'Activity',
               status: 'booked',
               is_cancelled: false,

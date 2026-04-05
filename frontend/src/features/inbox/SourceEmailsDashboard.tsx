@@ -295,7 +295,7 @@ function EmailDetails({ parsedData, orderNumber, sender, dateSent }: EmailDetail
       {/* Key metadata row */}
       <div className="flex flex-wrap gap-2 text-xs pt-1">
         {metadata?.category && <Badge variant="outline">{metadata.category}</Badge>}
-        {metadata?.sub_category && <Badge variant="outline">{metadata.sub_category}</Badge>}
+        {metadata?.place_type || metadata?.activity_type && <Badge variant="outline">{metadata.place_type || metadata.activity_type}</Badge>}
         {metadata?.date && <Badge variant="outline">{metadata.date}</Badge>}
         {metadata?.action && <Badge variant="outline">{metadata.action}</Badge>}
         {sites_hierarchy?.map((node, i) => (

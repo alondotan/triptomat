@@ -55,7 +55,7 @@ def _build_worker_prompt(data: dict, trip_context: dict) -> str:
     """Build reconciliation prompt for worker (recommendations) format."""
     existing_pois = json.dumps([
         {"name": p["name"], "category": p.get("category"),
-         "sub_category": p.get("sub_category"),
+         "place_type": p.get("place_type"), "activity_type": p.get("activity_type"),
          "city": (p.get("location") or {}).get("city")}
         for p in trip_context["existing_pois"]
     ], ensure_ascii=False)
@@ -123,7 +123,7 @@ def _build_mail_handler_prompt(data: dict, trip_context: dict) -> str:
     """Build reconciliation prompt for mail-handler (email) format."""
     existing_pois = json.dumps([
         {"name": p["name"], "category": p.get("category"),
-         "sub_category": p.get("sub_category"),
+         "place_type": p.get("place_type"), "activity_type": p.get("activity_type"),
          "city": (p.get("location") or {}).get("city")}
         for p in trip_context["existing_pois"]
     ], ensure_ascii=False)

@@ -1071,7 +1071,7 @@ export default function SchedulePage() {
           id: a.id,
           label: poi.name,
           emoji: categoryEmoji(poi.category),
-          sublabel: poi.location?.city || getSubCategoryLabel(poi.subCategory) || '',
+          sublabel: poi.location?.city || getSubCategoryLabel((poi.placeType || poi.activityType)) || '',
           poi,
         });
       }
@@ -1225,7 +1225,7 @@ export default function SchedulePage() {
   // Geocode selected research location for map + fetch boundary + image
   const selectedLocName = activeDetailTripLoc?.name;
   const selectedTripLocation = activeDetailTripLoc;
-  const isCity = selectedTripLocation?.siteType === 'city' || selectedTripLocation?.siteType === 'town' || selectedTripLocation?.siteType === 'village';
+  const isCity = selectedTripLocation?.placeType === 'city' || selectedTripLocation?.placeType === 'town' || selectedTripLocation?.placeType === 'village';
 
   const [locationCoords, setLocationCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [locationBoundary, setLocationBoundary] = useState<GeoJSON.GeoJsonObject | null>(null);
@@ -1240,7 +1240,7 @@ export default function SchedulePage() {
       if (!parent) break;
       current = parent;
     }
-    return current.siteType === 'country' ? current.name : activeTrip?.countries?.[0];
+    return current.placeType === 'country' ? current.name : activeTrip?.countries?.[0];
   }, [activeDetailTripLoc, tripLocations, activeTrip?.countries]);
 
   // Geocode + boundary
@@ -2059,7 +2059,7 @@ export default function SchedulePage() {
     const newPOI = await addPOI({
       tripId: activeTrip.id,
       category: 'accommodation',
-      subCategory: data.subCategory || undefined,
+      placeType: data.placeType || undefined,
       name: data.name,
       status: 'suggested',
       location: { city: data.city || undefined },
@@ -2127,7 +2127,7 @@ export default function SchedulePage() {
     const newPOI = await addPOI({
       tripId: activeTrip.id,
       category: (data.category as any) || 'attraction',
-      subCategory: data.subCategory || undefined,
+      placeType: data.placeType || undefined,
       name: data.name,
       status: 'suggested',
       location: { city: data.city || undefined },
@@ -2183,9 +2183,9 @@ export default function SchedulePage() {
         const item: Item = {
           id: a.id,
           label: poi.name,
-          emoji: getSubCategoryEntry(poi.subCategory)?.icon || categoryEmoji(poi.category),
+          emoji: getSubCategoryEntry((poi.placeType || poi.activityType))?.icon || categoryEmoji(poi.category),
           time,
-          sublabel: [poi.subCategory ? getSubCategoryLabel(poi.subCategory) : '', poi.location?.city].filter(Boolean).join(' · '),
+          sublabel: [(poi.placeType || poi.activityType) ? getSubCategoryLabel((poi.placeType || poi.activityType)) : '', poi.location?.city].filter(Boolean).join(' · '),
           remark: poi.details?.notes?.user_summary,
           poi,
         };
@@ -3310,12 +3310,12 @@ export default function SchedulePage() {
                                       <img src={item.poi.imageUrl} alt={item.label} className="w-full h-full object-cover" />
                                     ) : (
                                       <div className="w-full h-full flex items-center justify-center">
-                                        <SubCategoryIcon type={item.poi?.subCategory || ''} size={28} className="text-muted-foreground/30" />
+                                        <SubCategoryIcon type={(item.poi?.placeType || item.poi?.activityType) || ''} size={28} className="text-muted-foreground/30" />
                                       </div>
                                     )}
                                   </div>
                                   <div className="p-2 flex items-center gap-1.5">
-                                    <SubCategoryIcon type={item.poi?.subCategory || ''} size={13} className="shrink-0 text-muted-foreground" />
+                                    <SubCategoryIcon type={(item.poi?.placeType || item.poi?.activityType) || ''} size={13} className="shrink-0 text-muted-foreground" />
                                     <div className="min-w-0">
                                       <p className="text-sm font-medium truncate">{item.label}</p>
                                       {item.sublabel && <p className="text-[11px] text-muted-foreground truncate">{item.sublabel}</p>}
@@ -3851,7 +3851,7 @@ export default function SchedulePage() {
                     sublabel: d.poi.location?.city || '',
                     status: d.poi.status,
                     isSelected: d.is_selected,
-                    subCategory: d.poi.subCategory || '',
+                    placeType: d.poi.placeType || '',
                   }))}
                   onRemove={removeAccommodation}
                   availableItems={availableAccom.map(p => ({

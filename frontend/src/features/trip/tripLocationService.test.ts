@@ -10,7 +10,7 @@ import {
 // ── Test data helpers ───────────────────────────
 
 function makeLoc(
-  overrides: Partial<TripLocation> & Pick<TripLocation, "id" | "name" | "siteType">,
+  overrides: Partial<TripLocation> & Pick<TripLocation, "id" | "name" | "placeType">,
 ): TripLocation {
   return {
     tripId: "trip-1",
@@ -18,6 +18,7 @@ function makeLoc(
     externalId: null,
     sortOrder: 0,
     source: "manual",
+    notes: "",
     createdAt: "2026-01-01T00:00:00Z",
     ...overrides,
   };
@@ -34,15 +35,15 @@ function makeLoc(
 //   └── Kansai (region)
 //       └── Kyoto (city)
 
-const italy = makeLoc({ id: "1", name: "Italy", siteType: "country" });
-const tuscany = makeLoc({ id: "2", name: "Tuscany", siteType: "region", parentId: "1" });
-const florence = makeLoc({ id: "3", name: "Florence", siteType: "city", parentId: "2" });
-const siena = makeLoc({ id: "4", name: "Siena", siteType: "city", parentId: "2" });
-const lazio = makeLoc({ id: "5", name: "Lazio", siteType: "region", parentId: "1" });
-const rome = makeLoc({ id: "6", name: "Rome", siteType: "city", parentId: "5" });
-const japan = makeLoc({ id: "7", name: "Japan", siteType: "country" });
-const kansai = makeLoc({ id: "8", name: "Kansai", siteType: "region", parentId: "7" });
-const kyoto = makeLoc({ id: "9", name: "Kyoto", siteType: "city", parentId: "8" });
+const italy = makeLoc({ id: "1", name: "Italy", placeType: "country" });
+const tuscany = makeLoc({ id: "2", name: "Tuscany", placeType: "region", parentId: "1" });
+const florence = makeLoc({ id: "3", name: "Florence", placeType: "city", parentId: "2" });
+const siena = makeLoc({ id: "4", name: "Siena", placeType: "city", parentId: "2" });
+const lazio = makeLoc({ id: "5", name: "Lazio", placeType: "region", parentId: "1" });
+const rome = makeLoc({ id: "6", name: "Rome", placeType: "city", parentId: "5" });
+const japan = makeLoc({ id: "7", name: "Japan", placeType: "country" });
+const kansai = makeLoc({ id: "8", name: "Kansai", placeType: "region", parentId: "7" });
+const kyoto = makeLoc({ id: "9", name: "Kyoto", placeType: "city", parentId: "8" });
 
 const fullHierarchy = [italy, tuscany, florence, siena, lazio, rome, japan, kansai, kyoto];
 
@@ -103,7 +104,7 @@ describe("buildLocationTree", () => {
   });
 
   it("preserves external_id when present", () => {
-    const loc = makeLoc({ id: "x", name: "Test", siteType: "city", externalId: "ext-123" });
+    const loc = makeLoc({ id: "x", name: "Test", placeType: "city", externalId: "ext-123" });
     const result = buildLocationTree([loc]);
     expect(result[0].external_id).toBe("ext-123");
   });
@@ -139,7 +140,7 @@ describe("findInFlatList", () => {
   });
 
   it("returns the first match if duplicates existed", () => {
-    const duplicate = makeLoc({ id: "99", name: "Florence", siteType: "city" });
+    const duplicate = makeLoc({ id: "99", name: "Florence", placeType: "city" });
     const result = findInFlatList([...fullHierarchy, duplicate], "Florence");
     expect(result!.id).toBe("3"); // first one wins
   });
@@ -223,18 +224,18 @@ describe("flattenTripLocations", () => {
     expect(tuscanyEntry.depth).toBe(1);
   });
 
-  it("preserves siteType in output", () => {
+  it("preserves placeType in output", () => {
     const result = flattenTripLocations(fullHierarchy);
     const florenceEntry = result.find((r) => r.label === "Florence")!;
-    expect(florenceEntry.siteType).toBe("city");
+    expect(florenceEntry.placeType).toBe("city");
     const tuscanyEntry = result.find((r) => r.label === "Tuscany")!;
-    expect(tuscanyEntry.siteType).toBe("region");
+    expect(tuscanyEntry.placeType).toBe("region");
   });
 
   it("handles a flat list with no parents gracefully", () => {
     const cities = [
-      makeLoc({ id: "a", name: "Paris", siteType: "city" }),
-      makeLoc({ id: "b", name: "London", siteType: "city" }),
+      makeLoc({ id: "a", name: "Paris", placeType: "city" }),
+      makeLoc({ id: "b", name: "London", placeType: "city" }),
     ];
     const result = flattenTripLocations(cities);
     expect(result).toHaveLength(2);

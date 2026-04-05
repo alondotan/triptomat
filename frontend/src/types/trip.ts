@@ -96,7 +96,8 @@ export interface PointOfInterest {
   id: string;
   tripId: string;
   category: POICategory;
-  subCategory?: string;
+  placeType?: string;
+  activityType?: string;
   name: string;
   status: POIStatus;
   location: POILocation;

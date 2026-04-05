@@ -21,7 +21,8 @@ export interface SourceEmail {
     metadata?: {
       date?: string;
       category?: string;
-      sub_category?: string;
+      place_type?: string;
+      activity_type?: string;
       action?: string;
       order_number?: string;
     };

@@ -126,7 +126,7 @@ export async function seedTripFestivals(
       const poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'> = {
         tripId,
         category: 'event',
-        subCategory: 'cultural_festival',
+        activityType: 'cultural_festival',
         name: holiday.name,
         status: 'suggested',
         location: { country: data.country, ...(city ? { city } : {}) },
@@ -161,7 +161,7 @@ export async function seedTripFestivals(
       const poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'> = {
         tripId,
         category: 'event',
-        subCategory: festival.type,
+        activityType: festival.type,
         name: festival.name,
         status: 'suggested',
         location: { country: data.country, ...(city ? { city } : {}) },

@@ -115,13 +115,13 @@ const ItineraryPage = () => {
                           <div key={poi!.id} className="flex items-center gap-2 text-sm">
                             {poi!.imageUrl ? (
                               <img src={poi!.imageUrl} alt="" className="w-7 h-7 rounded object-cover shrink-0" />
-                            ) : poi!.subCategory ? (
-                              <SubCategoryIcon type={poi!.subCategory} size={13} className="text-primary shrink-0" />
+                            ) : (poi!.placeType || poi!.activityType) ? (
+                              <SubCategoryIcon type={(poi!.placeType || poi!.activityType)} size={13} className="text-primary shrink-0" />
                             ) : (
                               <MapPin size={13} className="text-primary shrink-0" />
                             )}
                             <span className="truncate">{poi!.name}</span>
-                            {poi!.subCategory && <span className="text-xs text-muted-foreground">({getSubCategoryLabel(poi!.subCategory)})</span>}
+                            {(poi!.placeType || poi!.activityType) && <span className="text-xs text-muted-foreground">({getSubCategoryLabel((poi!.placeType || poi!.activityType))})</span>}
                             <Badge variant={poi!.status === 'booked' ? 'default' : 'secondary'} className="text-[10px] shrink-0">{poi!.status}</Badge>
                           </div>
                         ))}

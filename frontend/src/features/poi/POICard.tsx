@@ -59,7 +59,7 @@ export function POICard({
   const [notesValue, setNotesValue] = useState('');
   const [durationValue, setDurationValue] = useState(''); // minutes as string while editing
 
-  const iconName = getSubCategoryEntry(poi.subCategory || '')?.icon;
+  const iconName = getSubCategoryEntry(poi.placeType || poi.activityType || '')?.icon;
 
   const handleStartEditNotes = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -100,7 +100,7 @@ export function POICard({
       <div className={`flex items-center gap-2 ${className}`}>
         {iconName
           ? <span className="material-symbols-outlined text-sm shrink-0" aria-hidden="true">{iconName}</span>
-          : <SubCategoryIcon type={poi.subCategory || ''} size={14} className="shrink-0" />
+          : <SubCategoryIcon type={poi.placeType || poi.activityType || ''} size={14} className="shrink-0" />
         }
         <span className="text-sm font-medium truncate">{poi.name}</span>
       </div>
@@ -142,7 +142,7 @@ export function POICard({
           <div className="flex items-center gap-2">
             {!poi.imageUrl && (iconName
               ? <span className="material-symbols-outlined text-sm shrink-0" aria-hidden="true">{iconName}</span>
-              : <SubCategoryIcon type={poi.subCategory || ''} size={14} className="shrink-0" />
+              : <SubCategoryIcon type={poi.placeType || poi.activityType || ''} size={14} className="shrink-0" />
             )}
             <span className="text-sm font-medium truncate">{poi.name}</span>
           </div>
@@ -301,7 +301,7 @@ export function POICard({
             <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <SubCategoryIcon type={poi.subCategory || ''} size={32} className="text-muted-foreground/40" />
+              <SubCategoryIcon type={poi.placeType || poi.activityType || ''} size={32} className="text-muted-foreground/40" />
             </div>
           )}
           {/* New badge */}
@@ -334,10 +334,10 @@ export function POICard({
           {poi.location.city && (
             <p className="text-xs text-muted-foreground truncate">{poi.location.city}</p>
           )}
-          {poi.subCategory && (
+          {poi.placeType || poi.activityType && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
-              <SubCategoryIcon type={poi.subCategory} size={11} />
-              <span className="truncate">{getSubCategoryLabel(poi.subCategory)}</span>
+              <SubCategoryIcon type={poi.placeType || poi.activityType} size={11} />
+              <span className="truncate">{getSubCategoryLabel(poi.placeType || poi.activityType)}</span>
             </div>
           )}
         </div>

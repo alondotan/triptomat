@@ -286,7 +286,7 @@ serve(async (req) => {
           trip_id: list.trip_id,
           name: rec.name,
           category,
-          sub_category: subCat,
+          place_type: subCat,
           status: "suggested",
           location: {
             country: siteToCountry[(rec.site || "").toLowerCase()] || null,

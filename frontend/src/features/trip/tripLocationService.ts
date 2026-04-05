@@ -20,7 +20,7 @@ export interface CountryLocationNode {
 
 export interface CountryPlace {
   id: string;
-  subCategory: string;
+  placeType: string;
   name: string;
   description?: string;
   maps_id?: string;
@@ -58,7 +58,7 @@ export interface TripLocation {
   tripId: string;
   parentId: string | null;
   name: string;
-  siteType: string;
+  placeType: string;
   externalId: string | null;
   sortOrder: number;
   source: string;
@@ -89,7 +89,7 @@ export function buildLocationTree(locations: TripLocation[]): SiteNode[] {
       _id: loc.id,
       _parentId: loc.parentId,
       site: loc.name,
-      site_type: loc.siteType,
+      site_type: loc.placeType,
       external_id: loc.externalId || undefined,
       sub_sites: [],
     });
@@ -149,7 +149,7 @@ export async function addTripLocation(
     .insert({
       trip_id: tripId,
       name,
-      site_type: siteType,
+      place_type: siteType,
       parent_id: parentId || null,
       source,
       external_id: resolvedExternalId || null,
@@ -286,7 +286,7 @@ async function seedTripPOIs(
       const poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'> = {
         tripId,
         category: 'attraction',
-        subCategory: place.subCategory || undefined,
+        placeType: place.placeType || undefined,
         name: place.name,
         status: 'suggested',
         location: {
@@ -405,7 +405,7 @@ export function getDescendantNames(locations: TripLocation[], ancestorName: stri
 export interface FlatTripLocation {
   label: string;
   path: string[];
-  siteType: string;
+  placeType: string;
   depth: number;
 }
 
@@ -424,13 +424,13 @@ export function flattenTripLocations(locations: TripLocation[]): FlatTripLocatio
   }
 
   return locations
-    .filter(l => l.siteType !== 'country') // skip country nodes as selectable
+    .filter(l => l.placeType !== 'country') // skip country nodes as selectable
     .map(loc => {
       const path = getPath(loc);
       return {
         label: loc.name,
         path,
-        siteType: loc.siteType,
+        placeType: loc.placeType,
         depth: path.length - 1,
       };
     });
@@ -444,7 +444,7 @@ function mapTripLocation(row: Record<string, unknown>): TripLocation {
     tripId: row.trip_id as string,
     parentId: (row.parent_id as string) || null,
     name: row.name as string,
-    siteType: row.site_type as string,
+    placeType: row.place_type as string,
     externalId: (row.external_id as string) || null,
     sortOrder: row.sort_order as number,
     source: row.source as string,

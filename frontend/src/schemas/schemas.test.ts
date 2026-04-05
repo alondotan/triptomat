@@ -70,7 +70,7 @@ describe("createPOISchema", () => {
   it("accepts all optional fields", () => {
     const full = {
       ...validPOI,
-      subCategory: "museum",
+      placeType: "museum",
       country: "NL",
       city: "Amsterdam",
       address: "Prinsengracht 263",

@@ -55,8 +55,8 @@ export async function createOrMergePOI(
       sourceRefs: mergeSourceRefs(existingPoi.sourceRefs, poi.sourceRefs),
     };
 
-    // Keep sub_category if new one is provided
-    if (hasValue(poi.subCategory)) updates.subCategory = poi.subCategory;
+    if (hasValue(poi.placeType)) updates.placeType = poi.placeType;
+    if (hasValue(poi.activityType)) updates.activityType = poi.activityType;
 
     // Upgrade status only; never downgrade (e.g. don't overwrite 'booked' with 'suggested')
     const newPriority = STATUS_PRIORITY[poi.status] ?? 0;
@@ -73,8 +73,8 @@ export async function createOrMergePOI(
 
   const newPoi = await createPOI(poi);
 
-  // Fire-and-forget: enrich coords, image, subCategory for every new POI
-  if (!newPoi.imageUrl || !newPoi.location?.coordinates?.lat || !newPoi.subCategory) {
+  // Fire-and-forget: enrich coords, image, type for every new POI
+  if (!newPoi.imageUrl || !newPoi.location?.coordinates?.lat || (!newPoi.placeType && !newPoi.activityType)) {
     supabase.functions.invoke('fetch-poi-image', {
       body: {
         poiId: newPoi.id,
@@ -94,7 +94,8 @@ export async function createPOI(poi: Omit<PointOfInterest, 'id' | 'createdAt' | 
   const insertData = {
     trip_id: poi.tripId,
     category: poi.category,
-    sub_category: poi.subCategory,
+    place_type: poi.placeType || null,
+    activity_type: poi.activityType || null,
     name: poi.name,
     status: poi.status,
     location: poi.location as unknown as Json,
@@ -118,7 +119,8 @@ export async function updatePOI(poiId: string, updates: Partial<PointOfInterest>
   const updateData: Record<string, unknown> = {};
   if (updates.name !== undefined) updateData.name = updates.name;
   if (updates.category !== undefined) updateData.category = updates.category;
-  if (updates.subCategory !== undefined) updateData.sub_category = updates.subCategory;
+  if (updates.placeType !== undefined) updateData.place_type = updates.placeType;
+  if (updates.activityType !== undefined) updateData.activity_type = updates.activityType;
   if (updates.status !== undefined) updateData.status = updates.status;
   if (updates.location !== undefined) updateData.location = updates.location;
   if (updates.sourceRefs !== undefined) updateData.source_refs = updates.sourceRefs;
@@ -155,8 +157,11 @@ export async function mergeTwoPOIs(
     sourceRefs: mergeSourceRefs(primary.sourceRefs, secondary.sourceRefs),
   };
 
-  if (!hasValue(primary.subCategory) && hasValue(secondary.subCategory)) {
-    updates.subCategory = secondary.subCategory;
+  if (!hasValue(primary.placeType) && hasValue(secondary.placeType)) {
+    updates.placeType = secondary.placeType;
+  }
+  if (!hasValue(primary.activityType) && hasValue(secondary.activityType)) {
+    updates.activityType = secondary.activityType;
   }
 
   // Status: never downgrade
@@ -267,7 +272,8 @@ export function mapPOI(row: Record<string, unknown>): PointOfInterest {
     id: row.id as string,
     tripId: row.trip_id as string,
     category: row.category as PointOfInterest['category'],
-    subCategory: (row.sub_category as string) || undefined,
+    placeType: (row.place_type as string) || undefined,
+    activityType: (row.activity_type as string) || undefined,
     name: row.name as string,
     status: (row.status as PointOfInterest['status']) || 'suggested',
     location: (row.location as POILocation) || {},

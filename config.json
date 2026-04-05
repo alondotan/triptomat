@@ -6,6 +6,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Continent",
         "he": "יבשת"
@@ -17,6 +20,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Country",
         "he": "מדינה"
@@ -28,6 +34,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Square",
         "he": "כיכר"
@@ -39,6 +48,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Plaza",
         "he": "פלזה"
@@ -50,6 +62,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Street",
         "he": "רחוב"
@@ -61,6 +76,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Avenue",
         "he": "שדרה"
@@ -72,6 +90,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Boulevard",
         "he": "שדרה"
@@ -82,6 +103,9 @@
       "icon": "turn_right",
       "category": "Geography",
       "is_geo_location": true,
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "spatial_type": "area",
       "names": {
         "en": "Alley",
@@ -93,6 +117,9 @@
       "icon": "turn_slight_right",
       "category": "Geography",
       "is_geo_location": true,
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "spatial_type": "area",
       "names": {
         "en": "Lane",
@@ -105,6 +132,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Promenade",
         "he": "טיילת"
@@ -116,6 +146,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Waterfront",
         "he": "קו חוף"
@@ -127,6 +160,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Esplanade",
         "he": "טיילת"
@@ -138,6 +174,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Roundabout",
         "he": "כיכר"
@@ -149,6 +188,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Intersection",
         "he": "צומת"
@@ -160,6 +202,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Bridge",
         "he": "גשר"
@@ -171,6 +216,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Tunnel",
         "he": "מנהרה"
@@ -182,6 +230,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Overpass",
         "he": "גשר עילי"
@@ -193,6 +244,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Underpass",
         "he": "מעבר תת קרקעי"
@@ -204,6 +258,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Stairs",
         "he": "מדרגות"
@@ -215,6 +272,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Path",
         "he": "דרך"
@@ -226,6 +286,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Walkway",
         "he": "שביל הליכה"
@@ -237,6 +300,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Pier",
         "he": "מזח"
@@ -248,6 +314,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Quay",
         "he": "רציף"
@@ -259,6 +328,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Embankment",
         "he": "טיילת נהר"
@@ -270,6 +342,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "County",
         "he": "מחוז"
@@ -281,6 +356,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Republic",
         "he": "רפובליקה"
@@ -292,6 +370,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Oblast",
         "he": "אובלסט"
@@ -303,6 +384,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Borough",
         "he": "רובע"
@@ -314,6 +398,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Quarter",
         "he": "רובע"
@@ -325,6 +412,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Federal Entity",
         "he": "ישות פדרלית"
@@ -336,6 +426,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Autonomous Community",
         "he": "קהילה אוטונומית"
@@ -347,6 +440,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Canton",
         "he": "קנטון"
@@ -358,6 +454,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Voivodeship",
         "he": "וויבודשיפ"
@@ -369,6 +468,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Capital City",
         "he": "עיר בירה"
@@ -380,6 +482,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Entity",
         "he": "ישות"
@@ -391,6 +496,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Federal City",
         "he": "עיר פדרלית"
@@ -402,6 +510,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "State",
         "he": "מדינה"
@@ -413,6 +524,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Province",
         "he": "פרובינציה"
@@ -424,6 +538,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Territory",
         "he": "טריטוריה"
@@ -435,6 +552,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Region",
         "he": "אזור"
@@ -446,6 +566,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Tourism Region",
         "he": "אזור תיירות"
@@ -457,6 +580,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Metropolitan Area",
         "he": "אזור מטרופוליטני"
@@ -468,6 +594,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Municipality",
         "he": "רשות מוניציפלית"
@@ -479,6 +608,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "City",
         "he": "עיר"
@@ -490,6 +622,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Town",
         "he": "עיירה"
@@ -501,6 +636,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Village",
         "he": "כפר"
@@ -512,6 +650,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Suburb",
         "he": "פרבר"
@@ -523,6 +664,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "District",
         "he": "מחוז"
@@ -534,6 +678,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Neighborhood",
         "he": "שכונה"
@@ -545,6 +692,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Pedestrian Zone",
         "he": "אזור הולכי רגל"
@@ -556,6 +706,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Historic District",
         "he": "רובע היסטורי"
@@ -567,6 +720,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Department",
         "he": "מחוז"
@@ -578,6 +734,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Township",
         "he": "יישוב"
@@ -589,6 +748,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Governorate",
         "he": "מחוז"
@@ -600,6 +762,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Metropolis",
         "he": "מטרופולין"
@@ -611,6 +776,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Prefecture",
         "he": "מחוז"
@@ -622,6 +790,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Area",
         "he": "אזור"
@@ -633,6 +804,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Atoll",
         "he": "אטול"
@@ -644,6 +818,9 @@
       "category": "Geography",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": true,
+      "is_activity": false,
       "names": {
         "en": "Other Geography",
         "he": "גיאוגרפיה אחרת"
@@ -655,6 +832,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "River",
         "he": "נהר"
@@ -667,6 +847,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Delta",
         "he": "דלתא"
@@ -679,6 +862,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Fjord",
         "he": "פיורד"
@@ -691,6 +877,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Plateau",
         "he": "רמה"
@@ -703,6 +892,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Desert",
         "he": "מדבר"
@@ -715,6 +907,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Glacier",
         "he": "קרחון"
@@ -727,6 +922,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Reef",
         "he": "ריף"
@@ -739,6 +937,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Peninsula",
         "he": "חצי אי"
@@ -751,6 +952,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Harbor",
         "he": "נמל"
@@ -763,6 +967,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Old Town",
         "he": "עיר עתיקה"
@@ -775,6 +982,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Monastery",
         "he": "מנזר"
@@ -787,6 +997,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Church",
         "he": "כנסיה"
@@ -799,6 +1012,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Synagogue",
         "he": "בית כנסת"
@@ -811,6 +1027,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Mosque",
         "he": "מסגד"
@@ -823,6 +1042,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Shrine",
         "he": "מקדש קטן"
@@ -835,6 +1057,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Pagoda",
         "he": "פגודה"
@@ -847,6 +1072,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Mountain Range",
         "he": "רכס הרים"
@@ -859,6 +1087,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Valley",
         "he": "עמק"
@@ -871,6 +1102,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Canyon",
         "he": "קניון"
@@ -883,6 +1117,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Volcano",
         "he": "הר געש"
@@ -895,6 +1132,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Waterfall",
         "he": "מפל"
@@ -907,6 +1147,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Lagoon",
         "he": "לגונה"
@@ -919,6 +1162,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Bay",
         "he": "מפרץ"
@@ -931,6 +1177,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Lake",
         "he": "אגם"
@@ -943,6 +1192,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Coastline",
         "he": "חוף"
@@ -955,6 +1207,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "National Park Area",
         "he": "אזור פארק לאומי"
@@ -967,6 +1222,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Nature Reserve Area",
         "he": "אזור שמורת טבע"
@@ -979,6 +1237,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Transit Hub Area",
         "he": "אזור מרכז תחבורה"
@@ -991,6 +1252,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Resort Complex",
         "he": "ריזורט"
@@ -1003,6 +1267,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Itinerary Route",
         "he": "מסלול תכנון"
@@ -1015,6 +1282,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Border Crossing",
         "he": "מעבר גבול"
@@ -1027,6 +1297,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Point Of Interest",
         "he": "נקודת עניין"
@@ -1039,6 +1312,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Reserve Area",
         "he": "אזור מוגן"
@@ -1051,6 +1327,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Forest Area",
         "he": "אזור יער"
@@ -1063,6 +1342,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cave Area",
         "he": "אזור מערות"
@@ -1073,8 +1355,11 @@
       "type": "market",
       "icon": "storefront",
       "category": "Activities",
-      "is_geo_location": false,
+      "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Market",
         "he": "שוק"
@@ -1082,11 +1367,19 @@
       "categoryGroup": "urban"
     },
     {
-      "type": "night market",
+      "type": "night_market",
       "icon": "store",
-      "category": "Geography",
+      "category": "Activities",
       "is_geo_location": true,
-      "hebrew": "שוק לילה"
+      "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
+      "names": {
+        "en": "Night Market",
+        "he": "שוק לילה"
+      },
+      "categoryGroup": "urban"
     },
     {
       "type": "park",
@@ -1094,6 +1387,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Park",
         "he": "פארק"
@@ -1106,6 +1402,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Landmark",
         "he": "נקודת ציון"
@@ -1118,6 +1417,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Natural",
         "he": "טבע"
@@ -1130,6 +1432,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Historical",
         "he": "היסטורי"
@@ -1142,6 +1447,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cultural",
         "he": "תרבות"
@@ -1154,6 +1462,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Amusement",
         "he": "שעשועים"
@@ -1166,6 +1477,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Beach",
         "he": "חוף"
@@ -1178,6 +1492,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Mountain",
         "he": "הר"
@@ -1190,6 +1507,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Wildlife",
         "he": "חיות בר"
@@ -1202,6 +1522,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Adventure",
         "he": "הרפתקה"
@@ -1214,6 +1537,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Religious",
         "he": "דתי"
@@ -1226,6 +1552,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Architectural",
         "he": "אדריכלות"
@@ -1238,6 +1567,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Underwater",
         "he": "תת ימי"
@@ -1250,6 +1582,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "National Park",
         "he": "פארק לאומי"
@@ -1262,6 +1597,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Scenic",
         "he": "נוף"
@@ -1274,6 +1612,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Museum",
         "he": "מוזיאון"
@@ -1286,6 +1627,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Shopping",
         "he": "קניות"
@@ -1298,6 +1642,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Zoo",
         "he": "גן חיות"
@@ -1310,6 +1657,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Theme Park",
         "he": "פארק שעשועים"
@@ -1322,6 +1672,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Botanical Garden",
         "he": "גן בוטני"
@@ -1334,6 +1687,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Sports",
         "he": "ספורט"
@@ -1346,6 +1702,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Music",
         "he": "מוזיקה"
@@ -1358,6 +1717,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Art",
         "he": "אומנות"
@@ -1370,6 +1732,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Nightlife",
         "he": "חיי לילה"
@@ -1382,6 +1747,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Spa",
         "he": "ספא"
@@ -1394,6 +1762,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Casino",
         "he": "קזינו"
@@ -1406,6 +1777,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Viewpoint",
         "he": "נקודת תצפית"
@@ -1418,6 +1792,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Hiking Trail",
         "he": "שביל הליכה"
@@ -1430,6 +1807,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Extreme Sports",
         "he": "ספורט אקסטרים"
@@ -1442,6 +1822,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Hidden Gem",
         "he": "אוצר נסתר"
@@ -1454,6 +1837,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Beach Club",
         "he": "מועדון חוף"
@@ -1466,6 +1852,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Stargazing",
         "he": "תצפית בכוכבים"
@@ -1478,6 +1867,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Street Art",
         "he": "אמנות רחוב"
@@ -1490,6 +1882,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Photography Spot",
         "he": "נקודת צילום"
@@ -1502,6 +1897,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Temple",
         "he": "מקדש"
@@ -1514,6 +1912,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Boat Tour",
         "he": "סיור בסירה"
@@ -1526,6 +1927,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Playground",
         "he": "גן משחקים"
@@ -1538,6 +1942,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Walking Tour",
         "he": "סיור רגלי"
@@ -1550,6 +1957,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Shopping Mall",
         "he": "קניון"
@@ -1562,6 +1972,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Historic Site",
         "he": "אתר היסטורי"
@@ -1574,6 +1987,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Water Park",
         "he": "פארק מים"
@@ -1586,6 +2002,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Ski Resort",
         "he": "אתר סקי"
@@ -1598,6 +2017,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Vineyard",
         "he": "יקב"
@@ -1609,6 +2031,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Brewery",
         "he": "מבשלת בירה"
@@ -1620,6 +2045,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Movie Theater",
         "he": "קולנוע"
@@ -1632,6 +2060,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Concert Hall",
         "he": "אולם קונצרטים"
@@ -1644,6 +2075,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Botanical Park",
         "he": "פארק בוטני"
@@ -1656,6 +2090,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Fishing Spot",
         "he": "נקודת דיג"
@@ -1668,6 +2105,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Bird Sanctuary",
         "he": "תצפית ציפורים"
@@ -1680,6 +2120,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Zip Line",
         "he": "זיפ ליין"
@@ -1692,6 +2135,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Hot Spring",
         "he": "מעיין חם"
@@ -1704,6 +2150,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Gym",
         "he": "חדר כושר"
@@ -1716,6 +2165,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Massage",
         "he": "מסאז'"
@@ -1728,6 +2180,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Yoga Studio",
         "he": "סטודיו יוגה"
@@ -1740,6 +2195,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Meditation Center",
         "he": "מרכז מדיטציה"
@@ -1752,6 +2210,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Thermal Bath",
         "he": "מרחץ תרמי"
@@ -1764,6 +2225,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Canyon Activity",
         "he": "קניונינג"
@@ -1776,6 +2240,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Volcano Activity",
         "he": "פעילות וולקנית"
@@ -1788,6 +2255,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Observatory",
         "he": "תצפית"
@@ -1800,6 +2270,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Lighthouse",
         "he": "מגדל אור"
@@ -1812,6 +2285,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Art Gallery",
         "he": "גלריה"
@@ -1824,6 +2300,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Aquarium",
         "he": "אקווריום"
@@ -1836,6 +2315,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cave",
         "he": "מערה"
@@ -1848,6 +2330,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Snorkeling",
         "he": "שנורקלינג"
@@ -1860,6 +2345,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Diving Activity",
         "he": "צלילה"
@@ -1872,6 +2360,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Surfing",
         "he": "גלישה"
@@ -1884,6 +2375,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Kayaking Activity",
         "he": "קייקים"
@@ -1896,6 +2390,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Rafting",
         "he": "רפטינג"
@@ -1908,6 +2405,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Climbing",
         "he": "טיפוס"
@@ -1920,6 +2420,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Trekking",
         "he": "טרקינג"
@@ -1932,6 +2435,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Jeep Tour",
         "he": "סיור גיפים"
@@ -1944,6 +2450,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Safari",
         "he": "ספארי"
@@ -1956,6 +2465,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Food Tour",
         "he": "סיור אוכל"
@@ -1968,6 +2480,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Street Market Tour",
         "he": "סיור שווקים"
@@ -1980,6 +2495,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cooking  Class",
         "he": "שיעור בישול"
@@ -1992,6 +2510,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Wine Tasting",
         "he": "טעימות יין"
@@ -2004,6 +2525,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Brewery Tour",
         "he": "סיור בירה"
@@ -2016,6 +2540,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Kids Attraction",
         "he": "פעילות ילדים"
@@ -2028,6 +2555,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Castle",
         "he": "טירה"
@@ -2040,6 +2570,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Fortress",
         "he": "מבצר"
@@ -2052,6 +2585,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Palace",
         "he": "ארמון"
@@ -2064,6 +2600,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Ruins",
         "he": "חרבות"
@@ -2076,6 +2615,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Archaeological Site",
         "he": " אתר ארכאולוגי"
@@ -2088,6 +2630,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Memorial",
         "he": "אתר זכרון"
@@ -2100,6 +2645,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Statue",
         "he": "פסל"
@@ -2112,6 +2660,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Monument",
         "he": "מונומנט"
@@ -2124,6 +2675,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Fountain",
         "he": "מזרקה"
@@ -2136,6 +2690,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Garden",
         "he": "גן"
@@ -2148,6 +2705,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Arboretum",
         "he": "יער"
@@ -2160,6 +2720,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Heritage Site",
         "he": "אתר מורשת"
@@ -2172,6 +2735,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Unesco Site",
         "he": "אתר אונסקו"
@@ -2184,6 +2750,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Sunset Spot",
         "he": "תצפית שקיעה"
@@ -2196,6 +2765,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Sunrise Spot",
         "he": "תצפית זריחה"
@@ -2208,6 +2780,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Panoramic View",
         "he": "תצפית פנורמית"
@@ -2220,6 +2795,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Romantic Spot",
         "he": "תצפית רומנטית"
@@ -2232,6 +2810,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Instagram Spot",
         "he": "תצפית אינסטגרם"
@@ -2244,6 +2825,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Picnic Area",
         "he": "אזור פיקניק"
@@ -2256,6 +2840,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Campfire Site",
         "he": "אתר קמפינג"
@@ -2268,6 +2855,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cape",
         "he": "כף"
@@ -2280,6 +2870,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Strait",
         "he": "מפרץ"
@@ -2292,6 +2885,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Basin",
         "he": "מערה"
@@ -2304,6 +2900,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cliff",
         "he": "מצוק"
@@ -2316,6 +2915,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Ridge",
         "he": "רכס"
@@ -2328,6 +2930,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Wetland",
         "he": "אזור ביצות"
@@ -2340,6 +2945,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Marsh",
         "he": "ביצה"
@@ -2352,6 +2960,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Savanna",
         "he": "סבנה"
@@ -2364,6 +2975,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Steppe",
         "he": "ערבה"
@@ -2376,6 +2990,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Tundra",
         "he": "טונדרה"
@@ -2388,6 +3005,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Oasis",
         "he": "נווה מדבר"
@@ -2400,6 +3020,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Gorge",
         "he": "ערוץ"
@@ -2412,6 +3035,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Sand Dune",
         "he": "דיונות"
@@ -2424,6 +3050,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Hot Desert Spring",
         "he": "מעיין"
@@ -2436,6 +3065,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Street Food Lane",
         "he": "סמטת אוכל רחוב"
@@ -2448,6 +3080,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Craft Market",
         "he": "שוק אומנים"
@@ -2460,6 +3095,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Local Farm Visit",
         "he": "ביקור בחווה מקומית"
@@ -2472,6 +3110,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cooking Workshop",
         "he": "סדנה לבישול"
@@ -2484,6 +3125,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Photo Tour",
         "he": "סיור צילום"
@@ -2496,6 +3140,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Wine Route",
         "he": "מסלול יין"
@@ -2508,6 +3155,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cycling Route",
         "he": "מסלול אופניים"
@@ -2520,6 +3170,9 @@
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Pilgrimage Route",
         "he": "מסלול עלייה לרגל"
@@ -2527,11 +3180,134 @@
       "categoryGroup": "religious"
     },
     {
+      "type": "dining",
+      "icon": "restaurant",
+      "category": "Activities",
+      "is_geo_location": false,
+      "spatial_type": "virtual",
+      "categoryGroup": "food_drink",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
+      "names": {
+        "en": "Dining & Gastronomy",
+        "he": "אכילה וקולינריה"
+      }
+    },
+    {
+      "type": "sightseeing",
+      "icon": "visibility",
+      "category": "Activities",
+      "is_geo_location": false,
+      "spatial_type": "virtual",
+      "categoryGroup": "landmarks",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
+      "names": {
+        "en": "Sightseeing",
+        "he": "סיור וביקור באתרים"
+      }
+    },
+    {
+      "type": "swimming_activity",
+      "icon": "pool",
+      "category": "Activities",
+      "is_geo_location": false,
+      "spatial_type": "virtual",
+      "categoryGroup": "outdoor_sports",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
+      "names": {
+        "en": "Swimming & Water Play",
+        "he": "שחייה ופעילות מים"
+      }
+    },
+    {
+      "type": "strolling",
+      "icon": "directions_walk",
+      "category": "Activities",
+      "is_geo_location": false,
+      "spatial_type": "virtual",
+      "categoryGroup": "landmarks",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
+      "names": {
+        "en": "Strolling & Wandering",
+        "he": "שוטטות והליכה"
+      }
+    },
+    {
+      "type": "relaxation",
+      "icon": "self_improvement",
+      "category": "Activities",
+      "is_geo_location": false,
+      "spatial_type": "virtual",
+      "categoryGroup": "Wellness",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
+      "names": {
+        "en": "Relaxation & Leisure",
+        "he": "מנוחה ופנאי"
+      }
+    },
+    {
+      "type": "shopping_activity",
+      "icon": "shopping_bag",
+      "category": "Activities",
+      "is_geo_location": false,
+      "spatial_type": "virtual",
+      "categoryGroup": "Urban",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
+      "names": {
+        "en": "Shopping Experience",
+        "he": "חווית קנייה"
+      }
+    },
+    {
+      "type": "logistics_setup",
+      "icon": "pending_actions",
+      "category": "Activities",
+      "is_geo_location": false,
+      "spatial_type": "virtual",
+      "categoryGroup": "Landmarks",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
+      "names": {
+        "en": "Organization & Prep",
+        "he": "התארגנות והכנה"
+      }
+    },
+    {
+      "type": "transit_activity",
+      "icon": "moving",
+      "category": "Activities",
+      "is_geo_location": false,
+      "spatial_type": "virtual",
+      "categoryGroup": "Landmarks",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
+      "names": {
+        "en": "Transit & Travel",
+        "he": "מעבר ונסיעה"
+      }
+    },
+    {
       "type": "other_activity",
       "icon": "more_horiz",
       "category": "Activities",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Other Activity",
         "he": "פעילות אחרת"
@@ -2544,6 +3320,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "National Holiday",
         "he": "חג לאומי"
@@ -2555,6 +3334,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Religious Holiday",
         "he": "חג דתי"
@@ -2566,6 +3348,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cultural Festival",
         "he": "פסטיבל תרבותי"
@@ -2577,6 +3362,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Festival",
         "he": "פסטיבל"
@@ -2588,6 +3376,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Music Festival",
         "he": "פסטיבל מוזיקה"
@@ -2599,6 +3390,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Carnival",
         "he": "קרנבל"
@@ -2610,6 +3404,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cultural Parade",
         "he": "תהלוכה"
@@ -2621,6 +3418,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Food Festival",
         "he": "פסטיבל אוכל"
@@ -2632,6 +3432,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Art Exhibition",
         "he": "תערוכת אומנות"
@@ -2643,6 +3446,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Fireworks",
         "he": "זיקוקים"
@@ -2654,6 +3460,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Sporting Event",
         "he": "אירוע ספורט"
@@ -2665,6 +3474,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Local Festival",
         "he": "פסטיבל מקומי"
@@ -2676,6 +3488,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Religious Festival",
         "he": "פסטיבל רוחני"
@@ -2687,6 +3502,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Street Parade",
         "he": "תהלוכה רחוב"
@@ -2698,6 +3516,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Sports Match",
         "he": "משחק ספורט"
@@ -2709,6 +3530,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Marathon",
         "he": "מרתון"
@@ -2720,6 +3544,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Concert",
         "he": "קונצרט"
@@ -2731,6 +3558,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Theater Show",
         "he": "הצגה"
@@ -2742,6 +3572,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Food Fair",
         "he": "יריד אוכל"
@@ -2753,6 +3586,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Film Festival",
         "he": "פסטיבל קולנוע"
@@ -2764,6 +3600,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Fashion Show",
         "he": "תצוגת אופנה"
@@ -2775,6 +3614,9 @@
       "category": "Events",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Food Truck Fair",
         "he": "יריד פודטראק"
@@ -2786,6 +3628,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Hotel",
         "he": "מלון"
@@ -2797,6 +3642,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Glamping",
         "he": "גלמפינג"
@@ -2808,6 +3656,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Hostel",
         "he": "הוסטל"
@@ -2819,6 +3670,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Villa",
         "he": "וילה"
@@ -2830,6 +3684,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Resort",
         "he": "ריזורט"
@@ -2841,6 +3698,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Apartment Stay",
         "he": "דירת נופש"
@@ -2852,6 +3712,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Guesthouse",
         "he": "בית הארחה"
@@ -2863,6 +3726,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Bed And Breakfast",
         "he": "בד אנד בריקפסט"
@@ -2874,6 +3740,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Motel",
         "he": "מוטל"
@@ -2885,6 +3754,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Lodge",
         "he": "בקתה"
@@ -2896,6 +3768,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Eco Lodge",
         "he": "בקתה אקולוגית"
@@ -2907,6 +3782,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Boutique Hotel",
         "he": "מלון בוטיק"
@@ -2918,6 +3796,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Capsule Hotel",
         "he": "מלון קפסולה"
@@ -2929,6 +3810,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Ryokan",
         "he": "ריוקן"
@@ -2940,6 +3824,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Homestay",
         "he": "הומסטיי"
@@ -2951,6 +3838,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Farm Stay",
         "he": "שהייה בחווה"
@@ -2962,6 +3852,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Cottage",
         "he": "קוטג'"
@@ -2973,6 +3866,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Chalet",
         "he": "שאלט"
@@ -2984,6 +3880,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Bungalow",
         "he": "בונגלו"
@@ -2995,6 +3894,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Treehouse",
         "he": "בית עץ"
@@ -3006,6 +3908,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Houseboat",
         "he": "בית ספינה"
@@ -3017,6 +3922,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Campground",
         "he": "חניון קמפינג"
@@ -3028,6 +3936,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Camping Tent",
         "he": "אוהל קמפינג"
@@ -3039,6 +3950,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Rv Park",
         "he": "חניון רכב"
@@ -3050,6 +3964,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Serviced Apartment",
         "he": "דירת שירות"
@@ -3061,6 +3978,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Long Stay Hotel",
         "he": "מלון שהייה ארוכה"
@@ -3072,6 +3992,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Luxury Hotel",
         "he": "מלון יוקרה"
@@ -3083,6 +4006,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Budget Hotel",
         "he": "מלון פשוט"
@@ -3094,6 +4020,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Other Accommodation",
         "he": "לינה אחרת"
@@ -3105,6 +4034,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Mountain Hut",
         "he": "בקתת הרים"
@@ -3116,6 +4048,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Desert Camp",
         "he": "מחנה במדבר"
@@ -3127,6 +4062,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Surf Hostel",
         "he": "הוסטיל גלישה"
@@ -3138,6 +4076,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Diving Resort",
         "he": "ריזורט צלילה"
@@ -3149,6 +4090,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Ski Lodge",
         "he": "בית סקי"
@@ -3160,6 +4104,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Wellness Resort",
         "he": "ריזורט בריאות"
@@ -3171,6 +4118,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Business Hotel",
         "he": "מלון עסקים"
@@ -3182,6 +4132,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Airport Hotel",
         "he": "מלון בשדה תעופה"
@@ -3193,6 +4146,9 @@
       "category": "Accommodations",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "City Aparthotel",
         "he": "אפרט-מלון עירוני"
@@ -3204,6 +4160,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Restaurant",
         "he": "מסעדה"
@@ -3215,6 +4174,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cafe",
         "he": "בית קפה"
@@ -3226,6 +4188,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Bakery",
         "he": "מאפייה"
@@ -3237,6 +4202,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Deli",
         "he": "דלי"
@@ -3248,6 +4216,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Bistro",
         "he": "ביסטרו"
@@ -3259,6 +4230,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Diner",
         "he": "דינר"
@@ -3270,6 +4244,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Food Truck",
         "he": "פודטראק"
@@ -3281,6 +4258,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Food Court",
         "he": "מרכז אוכל"
@@ -3292,6 +4272,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Buffet",
         "he": "בופט"
@@ -3303,6 +4286,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Ice Cream Parlor",
         "he": "גלידריה"
@@ -3314,6 +4300,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Juice Bar",
         "he": "בר מיצים"
@@ -3325,6 +4314,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Pub",
         "he": "פאב"
@@ -3336,6 +4328,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Bar",
         "he": "בר"
@@ -3347,6 +4342,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Tavern",
         "he": "טברנה"
@@ -3358,6 +4356,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Wine Bar",
         "he": "בר יין"
@@ -3369,6 +4370,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Brewpub",
         "he": "בר מבשלה"
@@ -3380,6 +4384,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Sushi Bar",
         "he": "בר סושי"
@@ -3391,6 +4398,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Teahouse",
         "he": "בית תה"
@@ -3402,6 +4412,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Steakhouse",
         "he": "סטיקהוס"
@@ -3413,6 +4426,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Tapas Bar",
         "he": "בר טפס"
@@ -3424,6 +4440,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Doughnut Shop",
         "he": "חנות דונאט"
@@ -3435,6 +4454,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Dessert Bar",
         "he": "בר קינוחים"
@@ -3446,6 +4468,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Street Food",
         "he": "אוכל רחוב"
@@ -3457,6 +4482,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Rooftop Bar",
         "he": "רופטופ בר"
@@ -3468,6 +4496,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Brunch Spot",
         "he": "מקום בראנץ'"
@@ -3479,6 +4510,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Speakeasy",
         "he": "ספריקסי"
@@ -3490,6 +4524,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Fine Dining",
         "he": "אוכל גורמה"
@@ -3501,6 +4538,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Local Cuisine",
         "he": "מטבח מקומי"
@@ -3512,6 +4552,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Vegan Restaurant",
         "he": "מסעדה טבעונית"
@@ -3523,6 +4566,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Vegetarian Restaurant",
         "he": "מסעדה צמחונית"
@@ -3534,6 +4580,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Seafood Restaurant",
         "he": "מסעדת פירות ים"
@@ -3545,6 +4594,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Family Restaurant",
         "he": "מסעדה משפחתית"
@@ -3556,6 +4608,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Other Eatery",
         "he": "אוכל אחר"
@@ -3567,6 +4622,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Ramen Shop",
         "he": "חנות רמן"
@@ -3578,6 +4636,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Burger Joint",
         "he": "בורגר"
@@ -3589,6 +4650,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Pizza Place",
         "he": "פיצריה"
@@ -3600,6 +4664,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Patisserie",
         "he": "פיטיסרי"
@@ -3611,6 +4678,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Gelato Shop",
         "he": "חנות גלאטו"
@@ -3622,6 +4692,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cocktail Bar",
         "he": "בר קוקטיילים"
@@ -3633,6 +4706,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Food Hall",
         "he": "אולם אוכל"
@@ -3644,6 +4720,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Local Bakery Cafe",
         "he": "קפה מטבח מקומי"
@@ -3655,6 +4734,9 @@
       "category": "Eateries",
       "is_geo_location": false,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Gelato Stand",
         "he": "דוכן גלידה"
@@ -3666,6 +4748,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Car",
         "he": "רכב"
@@ -3677,6 +4762,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Bus",
         "he": "אוטובוס"
@@ -3688,6 +4776,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Train",
         "he": "רכבת"
@@ -3699,6 +4790,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Subway",
         "he": "רכבת תחתית"
@@ -3710,6 +4804,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Bicycle",
         "he": "אופניים"
@@ -3721,6 +4818,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Motorcycle",
         "he": "אופנוע"
@@ -3732,6 +4832,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Taxi",
         "he": "מונית"
@@ -3743,6 +4846,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Ferry",
         "he": "מעבורת"
@@ -3754,6 +4860,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Airplane",
         "he": "מטוס"
@@ -3765,6 +4874,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Scooter",
         "he": "קורקינט"
@@ -3776,6 +4888,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Cruise",
         "he": "קרוז"
@@ -3787,6 +4902,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Tram",
         "he": "חשמלית"
@@ -3798,6 +4916,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Cruise Ship",
         "he": "אוניית קרוז"
@@ -3809,6 +4930,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Car Rental",
         "he": "שכירת רכב"
@@ -3820,6 +4944,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Domestic Flight",
         "he": "טיסה פנימית"
@@ -3831,6 +4958,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "International Flight",
         "he": "טיסה בין-לאומית"
@@ -3842,6 +4972,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Night Train",
         "he": "רכבת לילה"
@@ -3853,6 +4986,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "High Speed Train",
         "he": "רכבת מהירה"
@@ -3864,6 +5000,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Cable Car",
         "he": "רכבל"
@@ -3875,6 +5014,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Funicular",
         "he": "רכבל הר"
@@ -3886,6 +5028,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Boat Taxi Transport",
         "he": "סירת מונית"
@@ -3897,6 +5042,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Rideshare",
         "he": "נסיעה שיתופית"
@@ -3908,6 +5056,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Private Transfer",
         "he": "הסעה פרטית"
@@ -3919,6 +5070,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Rv",
         "he": "קראוון"
@@ -3930,6 +5084,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Bus Stop",
         "he": "תחנת אוטובוס"
@@ -3941,6 +5098,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Bus Station",
         "he": "תחנת אוטובוס"
@@ -3952,6 +5112,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Train Station",
         "he": "תחנת רכבת"
@@ -3963,6 +5126,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Railway Station",
         "he": "תחנת רכבת"
@@ -3974,6 +5140,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Subway Station",
         "he": "תחנת רכבת תחתית"
@@ -3985,6 +5154,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Metro Station",
         "he": "תחנת מטרו"
@@ -3996,6 +5168,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Tram Stop",
         "he": "תחנת חשמלית"
@@ -4007,6 +5182,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Tram Station",
         "he": "תחנת חשמלית"
@@ -4018,6 +5196,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Light Rail Station",
         "he": "תחנת רכבת קלה"
@@ -4029,6 +5210,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Ferry Terminal",
         "he": "תחנת מעבורת"
@@ -4040,6 +5224,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Harbor Terminal",
         "he": "תחנת נמל"
@@ -4051,6 +5238,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Port",
         "he": "נמל"
@@ -4062,6 +5252,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Airport",
         "he": "נמל תעופה"
@@ -4073,6 +5266,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Airport Terminal",
         "he": "טרמינל נמל תעופה"
@@ -4084,6 +5280,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Heliport",
         "he": "מנחת מסוקים"
@@ -4095,6 +5294,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Cable Car Station",
         "he": "תחנת רכבל"
@@ -4106,6 +5308,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Funicular Station",
         "he": "תחנת רכבת הרים"
@@ -4117,6 +5322,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Park And Ride",
         "he": "חנה וסע"
@@ -4128,6 +5336,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Taxi Stand",
         "he": "תחנת מוניות"
@@ -4139,6 +5350,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Ride Share Pickup",
         "he": "נקודת איסוף"
@@ -4150,6 +5364,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Transport Hub",
         "he": "מרכז תחבורה"
@@ -4161,6 +5378,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Intermodal Terminal",
         "he": "טרמינל"
@@ -4172,6 +5392,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Other Transportation",
         "he": "תחבורה אחרת"
@@ -4183,6 +5406,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Border Terminal",
         "he": "תחנת גבול"
@@ -4194,6 +5420,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Toll Station",
         "he": "תחנת גבייה"
@@ -4205,6 +5434,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Highway Rest Area",
         "he": "אזור מנוחה בכביש"
@@ -4216,6 +5448,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Gas Station",
         "he": "תחנת דלק"
@@ -4227,6 +5462,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Parking Garage",
         "he": "חניון"
@@ -4238,6 +5476,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Ev Charging Station",
         "he": "תחנת טעינה לרכב חשמלי"
@@ -4249,6 +5490,9 @@
       "category": "Transportation",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Bike Station",
         "he": "תחנת אופניים"
@@ -4260,6 +5504,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Shuttle Bus",
         "he": "שאטל"
@@ -4271,6 +5518,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Airport Shuttle Bus",
         "he": "שאטל לשדה תעופה"
@@ -4282,6 +5532,9 @@
       "category": "Transportation",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Harbor Shuttle Boat",
         "he": "שאטל לנמל"
@@ -4293,6 +5546,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Atm",
         "he": "כספומט"
@@ -4304,6 +5560,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Travel Agency",
         "he": "סוכנות נסיעות"
@@ -4315,6 +5574,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Laundry",
         "he": "מכבסה"
@@ -4326,6 +5588,9 @@
       "category": "Services",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Sim Card",
         "he": "כרטיס סים"
@@ -4337,6 +5602,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Hospital",
         "he": "בית חולים"
@@ -4348,6 +5616,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Pharmacy",
         "he": "בית מרקחת"
@@ -4359,6 +5630,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Currency Exchange",
         "he": "המרת מטבע"
@@ -4370,6 +5644,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Luggage Storage",
         "he": "אחסון מזוודות"
@@ -4381,6 +5658,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Tourist Info",
         "he": "מידע לתיירים"
@@ -4392,6 +5672,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Supermarket",
         "he": "סופרמרקט"
@@ -4403,6 +5686,9 @@
       "category": "Services",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Tour Guide",
         "he": "מדריך טיולים"
@@ -4414,6 +5700,9 @@
       "category": "Services",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Driver Service",
         "he": "שירות נהג"
@@ -4425,6 +5714,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Bike Rental",
         "he": "שכירת אופניים"
@@ -4436,6 +5728,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Scooter Rental",
         "he": "שכירת קורקינט"
@@ -4447,6 +5742,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Equipment Rental",
         "he": "שכירת ציוד"
@@ -4458,6 +5756,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Locker",
         "he": "לוקר"
@@ -4469,6 +5770,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Shower Facility",
         "he": "מתקן מקלחות"
@@ -4480,6 +5784,9 @@
       "category": "Services",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Wifi Hotspot",
         "he": "נקודה חמה"
@@ -4491,6 +5798,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Coworking Space",
         "he": "מרחב עבודה משותף"
@@ -4502,6 +5812,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Embassy",
         "he": "שגרירות"
@@ -4513,6 +5826,9 @@
       "category": "Services",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Other Service",
         "he": "שירות אחר"
@@ -4524,6 +5840,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Post Office",
         "he": "דואר"
@@ -4535,6 +5854,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Police Station",
         "he": "תחנת משטרה"
@@ -4546,6 +5868,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Fire Station",
         "he": "תחנת כיבוי"
@@ -4557,6 +5882,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Clinic",
         "he": "קליניקה"
@@ -4568,6 +5896,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Dentist",
         "he": "רופא שיניים"
@@ -4579,6 +5910,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Vet",
         "he": "וטרינר"
@@ -4590,6 +5924,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Bank",
         "he": "בנק"
@@ -4601,6 +5938,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Money Transfer",
         "he": "העברת כסף"
@@ -4612,6 +5952,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Convenience Store",
         "he": "חנות נוחות"
@@ -4623,6 +5966,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Local Sim Shop",
         "he": "סימ מקומי"
@@ -4634,6 +5980,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Luggage Repair",
         "he": "תיקון מזוודות"
@@ -4645,6 +5994,9 @@
       "category": "Services",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Camera Repair",
         "he": "תיקון מצלמות"
@@ -4656,6 +6008,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Best Time Visit",
         "he": "הזמן הטוב ביותר לביקור"
@@ -4667,6 +6022,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Safety Tip",
         "he": "טיפ בטיחות"
@@ -4678,6 +6036,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Packing Tip",
         "he": "טיפ לאריזה"
@@ -4689,6 +6050,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "App Recommendation",
         "he": "המלצת אפליקציה"
@@ -4700,6 +6064,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Budget Tip",
         "he": "טיפ תקציב"
@@ -4711,6 +6078,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Transport Tip",
         "he": "טיפ תחבורה"
@@ -4722,6 +6092,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Scam Warning",
         "he": "אזהרת הונאה"
@@ -4733,6 +6106,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Weather Tip",
         "he": "טיפ מזג אוויר"
@@ -4744,6 +6120,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Health Tip",
         "he": "טיפ לבריאות"
@@ -4755,6 +6134,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Visa Tips",
         "he": "טיפים לויזה"
@@ -4766,6 +6148,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Money Tip",
         "he": "טיפ כסף"
@@ -4777,6 +6162,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Local Etiquette Tip",
         "he": "טיפ לנימוסים מקומיים"
@@ -4788,6 +6176,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Connectivity Tip",
         "he": "טיפ תחבורה"
@@ -4799,6 +6190,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Family Travel Tip",
         "he": "טיפ לטיול משפחות"
@@ -4810,6 +6204,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Emergency Number Tip",
         "he": "טיפ למספר חירום"
@@ -4821,6 +6218,9 @@
       "category": "Tips",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Other Tip",
         "he": "טיפ אחר"
@@ -4832,6 +6232,9 @@
       "category": "Contacts",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Tour Guide Contact",
         "he": "איש קשר למדריך טיולים"
@@ -4843,6 +6246,9 @@
       "category": "Contacts",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Host Contact",
         "he": "איש קשר מארח"
@@ -4854,6 +6260,9 @@
       "category": "Contacts",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Driver Contact",
         "he": "איש קשר לנהג"
@@ -4865,6 +6274,9 @@
       "category": "Contacts",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Agency Contact",
         "he": "איש קשר סוכנות"
@@ -4876,6 +6288,9 @@
       "category": "Contacts",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Rental Contact",
         "he": "איש קשר להשכרה"
@@ -4887,6 +6302,9 @@
       "category": "Contacts",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Restaurant Contact",
         "he": "איש קשר למסעדה"
@@ -4898,6 +6316,9 @@
       "category": "Contacts",
       "is_geo_location": false,
       "spatial_type": "virtual",
+      "is_physical_place": false,
+      "is_hierarchy_area": false,
+      "is_activity": false,
       "names": {
         "en": "Other Contact",
         "he": "איש קשר אחר"
@@ -4909,6 +6330,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Running Track",
         "he": "מסלול ריצה"
@@ -4921,6 +6345,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Race Track",
         "he": "מסלול מרוץ"
@@ -4933,6 +6360,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Horse Riding",
         "he": "רכיבה על סוסים"
@@ -4945,6 +6375,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Golf Course",
         "he": "מגרש גולף"
@@ -4957,6 +6390,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Basketball Court",
         "he": "מגרש כדורסל"
@@ -4969,6 +6405,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Soccer Field",
         "he": "מגרש כדורגל"
@@ -4981,6 +6420,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Stadium",
         "he": "אצטדיון"
@@ -4993,6 +6435,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Tennis Court",
         "he": "מגרש טניס"
@@ -5005,6 +6450,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Swimming Pool",
         "he": "בריכת שחייה"
@@ -5017,6 +6465,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Cemetery",
         "he": "בית קברות"
@@ -5029,6 +6480,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Library",
         "he": "ספרייה"
@@ -5041,9 +6495,12 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Coffee Shop",
-        "he": "בית קפה"
+        "he": "קופישופ"
       },
       "categoryGroup": "urban"
     },
@@ -5053,6 +6510,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Nightclub",
         "he": "מועדון לילה"
@@ -5065,6 +6525,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Snooker",
         "he": "סנוקר"
@@ -5077,6 +6540,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Bowling",
         "he": "באולינג"
@@ -5089,6 +6555,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Escape Room",
         "he": "חדר בריחה"
@@ -5101,6 +6570,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Illusion Museum",
         "he": "מוזיאון אשליות"
@@ -5113,6 +6585,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Arcade",
         "he": "משחקייה"
@@ -5125,6 +6600,9 @@
       "category": "Activities",
       "is_geo_location": true,
       "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
       "names": {
         "en": "Climbing Wall",
         "he": "קיר טיפוס"

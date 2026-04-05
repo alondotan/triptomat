@@ -39,7 +39,7 @@ function makePOI(overrides: Partial<PointOfInterest> = {}): PointOfInterest {
     id: "poi-1",
     tripId: "trip-1",
     category: "eatery",
-    subCategory: "restaurant",
+    placeType: "restaurant",
     name: "Test Restaurant",
     status: "suggested",
     location: { city: "Tokyo", country: "Japan" },
@@ -64,7 +64,7 @@ describe("POICard", () => {
       expect(screen.getByText("Test Restaurant")).toBeInTheDocument();
     });
 
-    it("renders material icon when subCategory entry has icon", () => {
+    it("renders material icon when placeType entry has icon", () => {
       render(<POICard poi={makePOI()} level={1} />);
       expect(screen.getByText("restaurant")).toBeInTheDocument();
     });
@@ -210,7 +210,7 @@ describe("POICard", () => {
 
     it("renders subcategory label", () => {
       render(<POICard poi={makePOI()} level={3} />);
-      // getSubCategoryLabel is mocked to return the subCategory itself
+      // getSubCategoryLabel is mocked to return the placeType itself
       // "restaurant" appears both in SubCategoryIcon mock and label span
       const labels = screen.getAllByText("restaurant");
       expect(labels.length).toBeGreaterThanOrEqual(2);

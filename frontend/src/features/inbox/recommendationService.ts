@@ -145,7 +145,7 @@ export async function linkRecommendationToTrip(
       const { poi: resultPoi, merged } = await createOrMergePOI({
         tripId,
         category: poiCategory as PointOfInterest['category'],
-        subCategory: itemType,
+        placeType: itemType,
         name: item.name,
         status: 'suggested',
         location: { country: siteToCountry[(item.site || '').toLowerCase()] || undefined, city: item.site },

@@ -8,20 +8,25 @@ import {
   type SubCategoryEntry,
   getSubCategoriesForPOICategory,
   getTransportSubCategories,
+  getPhysicalPlaceEntries,
+  getHierarchyAreaEntries,
+  getActivityEntries,
   getLucideIcon,
   getSubCategoryLabel,
   loadSubCategoryConfig,
 } from '@/shared/lib/subCategoryConfig';
 
 interface SubCategorySelectorProps {
-  /** POI category ('accommodation','eatery','attraction','service') or 'transport' */
-  categoryFilter: string;
+  /** POI category ('accommodation','eatery','attraction','service') or 'transport' — used when flagFilter is not set */
+  categoryFilter?: string;
+  /** When set, filters by flag instead of category: 'physical' | 'hierarchy' | 'activity' */
+  flagFilter?: 'physical' | 'hierarchy' | 'activity';
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
 }
 
-export function SubCategorySelector({ categoryFilter, value, onChange, placeholder }: SubCategorySelectorProps) {
+export function SubCategorySelector({ categoryFilter, flagFilter, value, onChange, placeholder }: SubCategorySelectorProps) {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const effectivePlaceholder = placeholder ?? t('subCategorySelector.chooseType');
@@ -31,12 +36,15 @@ export function SubCategorySelector({ categoryFilter, value, onChange, placehold
 
   useEffect(() => {
     loadSubCategoryConfig().then(() => {
-      const list = categoryFilter === 'transport'
-        ? getTransportSubCategories()
-        : getSubCategoriesForPOICategory(categoryFilter);
+      let list: SubCategoryEntry[];
+      if (flagFilter === 'physical') list = getPhysicalPlaceEntries();
+      else if (flagFilter === 'hierarchy') list = getHierarchyAreaEntries();
+      else if (flagFilter === 'activity') list = getActivityEntries();
+      else if (categoryFilter === 'transport') list = getTransportSubCategories();
+      else list = getSubCategoriesForPOICategory(categoryFilter ?? '');
       setEntries(list);
     });
-  }, [categoryFilter]);
+  }, [categoryFilter, flagFilter]);
 
   const filtered = useMemo(() => {
     if (!search) return entries;

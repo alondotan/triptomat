@@ -62,10 +62,10 @@ const MapPage = () => {
       id: p.id,
       position: [p.location.coordinates!.lat, p.location.coordinates!.lng] as [number, number],
       name: p.name,
-      sub: [p.subCategory ? getSubCategoryLabel(p.subCategory) : getCategoryLabel(p.category), p.location.city].filter(Boolean).join(' · '),
+      sub: [p.placeType || p.activityType ? getSubCategoryLabel(p.placeType || p.activityType) : getCategoryLabel(p.category), p.location.city].filter(Boolean).join(' · '),
       status: p.status,
       color: POI_COLORS[p.category] ?? '#64748b',
-      materialIcon: p.subCategory ? mapData.typeIconMap[p.subCategory] : undefined,
+      materialIcon: p.placeType || p.activityType ? mapData.typeIconMap[p.placeType || p.activityType] : undefined,
       imageUrl: p.imageUrl,
       poiRef: p,
     })), [pois, mapData.typeIconMap]);

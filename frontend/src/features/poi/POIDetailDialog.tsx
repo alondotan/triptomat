@@ -68,7 +68,8 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
   const defaults = () => ({
     name: poi?.name || '',
     category: poi?.category || initialCategory || 'attraction' as POICategory,
-    subCategory: poi?.subCategory || '',
+    placeType: poi?.placeType || '',
+    activityType: poi?.activityType || '',
     isBooked: poi?.status === 'booked',
     city: poi?.location.city || '',
     country: poi?.location.country || defaultCountry,
@@ -99,7 +100,8 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
   // Editable fields
   const [name, setName] = useState('');
   const [category, setCategory] = useState<POICategory>('attraction');
-  const [subCategory, setSubCategory] = useState('');
+  const [placeType, setPlaceType] = useState('');
+  const [activityType, setActivityType] = useState('');
   const [isBooked, setIsBooked] = useState(false);
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
@@ -134,7 +136,8 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
     const d = defaults();
     setName(d.name);
     setCategory(d.category);
-    setSubCategory(d.subCategory);
+    setPlaceType(d.placeType);
+    setActivityType(d.activityType);
     setIsBooked(d.isBooked);
     setCity(d.city);
     setCountry(d.country);
@@ -246,7 +249,8 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
       await addPOI({
         tripId: activeTrip.id,
         category,
-        subCategory: subCategory || undefined,
+        placeType: placeType || undefined,
+        activityType: activityType || undefined,
         name: name.trim(),
         status: finalStatus,
         location: {
@@ -279,7 +283,8 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
         isPaid,
         name: name.trim(),
         category,
-        subCategory: subCategory || undefined,
+        placeType: placeType || undefined,
+        activityType: activityType || undefined,
         status: finalStatus,
         location: {
           ...poi.location,
@@ -376,8 +381,12 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
           </Select>
         </div>
         <div className="space-y-1">
-          <Label>{t('poiDetail.subCategory')}</Label>
-          <SubCategorySelector categoryFilter={category} value={subCategory} onChange={setSubCategory} />
+          <Label>{t('poiDetail.placeType')}</Label>
+          <SubCategorySelector flagFilter="physical" value={placeType} onChange={setPlaceType} placeholder={t('poiDetail.choosePlaceType')} />
+        </div>
+        <div className="space-y-1">
+          <Label>{t('poiDetail.activityType')}</Label>
+          <SubCategorySelector flagFilter="activity" value={activityType} onChange={setActivityType} placeholder={t('poiDetail.chooseActivityType')} />
         </div>
       </div>
     </div>

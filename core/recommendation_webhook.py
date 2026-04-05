@@ -763,7 +763,7 @@ def _process_poi_item(
             {
                 "trip_id": trip_id,
                 "category": poi_category,
-                "sub_category": item_type,
+                "place_type": item_type,
                 "name": item_name,
                 "status": "suggested",
                 "is_paid": False,

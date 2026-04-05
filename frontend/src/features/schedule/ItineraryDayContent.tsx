@@ -215,15 +215,15 @@ function SortableActivityItem({
 
       {activity.poi.imageUrl ? (
         <img src={activity.poi.imageUrl} alt="" width={32} height={32} className="w-8 h-8 rounded object-cover shrink-0" />
-      ) : activity.poi.subCategory ? (
-        <SubCategoryIcon type={activity.poi.subCategory} size={13} className="text-muted-foreground shrink-0" />
+      ) : activity.poi.placeType || poi.activityType ? (
+        <SubCategoryIcon type={activity.poi.placeType || poi.activityType} size={13} className="text-muted-foreground shrink-0" />
       ) : null}
 
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{activity.poi.name}</p>
-        {(activity.poi.subCategory || activity.poi.location?.city) && (
+        {(activity.poi.placeType || poi.activityType || activity.poi.location?.city) && (
           <p className="text-[10px] text-muted-foreground truncate">
-            {[activity.poi.subCategory, activity.poi.location?.city].filter(Boolean).join(' · ')}
+            {[activity.poi.placeType || poi.activityType, activity.poi.location?.city].filter(Boolean).join(' · ')}
           </p>
         )}
         {activity.poi.details?.activity_details?.duration && (
@@ -811,7 +811,7 @@ export function ItineraryDayContent({
             sublabel: d.poi.location?.city || '',
             status: d.poi.status,
             isSelected: d.is_selected,
-            subCategory: d.poi.subCategory || '',
+            placeType: d.poi.placeType || '',
           }))}
           onRemove={onRemoveAccommodation}
           availableItems={availableAccom}

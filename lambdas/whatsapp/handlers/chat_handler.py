@@ -119,9 +119,13 @@ GEMINI_TOOLS = [{
                         "enum": ["accommodation", "eatery", "attraction"],
                         "description": "The type of place",
                     },
-                    "sub_category": {
+                    "place_type": {
                         "type": "string",
-                        "description": "Specific sub-type. For eateries: restaurant, cafe, bar, bakery, fine_dining, street_food, sushi_bar, steakhouse, etc. For accommodations: hotel, hostel, resort, villa, apartment_stay, boutique_hotel, etc. For attractions: museum, beach, temple, national_park, viewpoint, hiking_trail, etc.",
+                        "description": "Physical place type (is_physical_place=true). For eateries: restaurant, cafe, bar, bakery, fine_dining, etc. For accommodations: hotel, hostel, resort, villa, boutique_hotel, etc. For attractions: museum, beach, temple, national_park, viewpoint, hiking_trail, etc.",
+                    },
+                    "activity_type": {
+                        "type": "string",
+                        "description": "Activity/experience type (is_activity=true). Can equal place_type for dual-use venues. Examples: dining, sightseeing, museum, beach, hiking_trail, surfing, food_tour, etc.",
                     },
                     "city": {
                         "type": "string",
@@ -534,7 +538,7 @@ def _try_handle_task_intent(text: str, trip_id: str, phone: str = "", webhook_to
 
 
 def _add_place_from_name(name: str, trip_id: str, webhook_token: str = "") -> str:
-    """Add a place by explicit name — guess category + sub_category from name."""
+    """Add a place by explicit name — guess category + place_type from name."""
     lower = name.lower()
     if any(w in lower for w in ("מסעדה", "restaurant")):
         category, sub = "eatery", "restaurant"
@@ -555,7 +559,7 @@ def _add_place_from_name(name: str, trip_id: str, webhook_token: str = "") -> st
     else:
         category, sub = "attraction", "point_of_interest"
     return _execute_function_call({"name": "add_place", "args": {
-        "name": name, "category": category, "sub_category": sub,
+        "name": name, "category": category, "place_type": sub, "activity_type": sub,
     }}, trip_id, webhook_token)
 
 
@@ -584,7 +588,7 @@ Previous recommendations:
 {last_recs}
 
 Respond ONLY with a JSON object (no markdown, no explanation):
-{{"name": "place name", "category": "eatery|attraction|accommodation", "sub_category": "specific type (e.g. restaurant, cafe, bar, museum, beach, hotel, hostel)", "city": "city name", "country": "country name"}}
+{{"name": "place name", "category": "eatery|attraction|accommodation", "place_type": "physical type (e.g. restaurant, museum, beach, hotel)", "activity_type": "activity type (e.g. dining, sightseeing, beach)", "city": "city name", "country": "country name"}}
 
 If the user said "the first one" or similar, pick the first mentioned place. If unclear, pick the most likely one."""
 
@@ -677,7 +681,8 @@ def _execute_function_call(function_call: dict, trip_id: str, webhook_token: str
         if not place_name:
             return "I need a place name to add it."
         category = args.get("category", "attraction")
-        sub_category = args.get("sub_category", "")
+        place_type = args.get("place_type", "")
+        activity_type = args.get("activity_type", "")
         city = args.get("city", "")
         country = args.get("country", "")
         address = args.get("address", "")
@@ -687,7 +692,7 @@ def _execute_function_call(function_call: dict, trip_id: str, webhook_token: str
             return "Cannot add places — webhook token missing."
         result = _create_poi(
             webhook_token, place_name, category,
-            sub_category=sub_category,
+            place_type=place_type, activity_type=activity_type,
             city=city, country=country, address=address, notes=notes,
         )
         if result:
@@ -701,7 +706,7 @@ def _execute_function_call(function_call: dict, trip_id: str, webhook_token: str
 
 def _create_poi(
     webhook_token: str, name: str, category: str,
-    sub_category: str = "", city: str = "", country: str = "",
+    place_type: str = "", activity_type: str = "", city: str = "", country: str = "",
     address: str = "", notes: str = "",
 ) -> bool:
     """Create a POI via the recommendation-webhook (same flow as video/web recs).
@@ -723,7 +728,7 @@ def _create_poi(
     # Build a recommendation payload matching the webhook's expected format
     recommendation = {
         "name": name,
-        "category": sub_category or category,
+        "category": place_type or category,
         "site": city or country or "",
         "paragraph": notes or f"Added via WhatsApp",
         "sentiment": "good",
@@ -751,8 +756,8 @@ def _create_poi(
         f"?token={webhook_token}"
     )
     data = json.dumps(payload).encode()
-    logger.info("Calling recommendation-webhook for '%s' (category=%s, sub=%s, token=%s...)",
-                name, category, sub_category, webhook_token[:8] if webhook_token else "NONE")
+    logger.info("Calling recommendation-webhook for '%s' (category=%s, place_type=%s, activity_type=%s, token=%s...)",
+                name, category, place_type, activity_type, webhook_token[:8] if webhook_token else "NONE")
 
     req = urllib.request.Request(webhook_url, data=data, method="POST", headers={
         "apikey": SUPABASE_SERVICE_KEY,

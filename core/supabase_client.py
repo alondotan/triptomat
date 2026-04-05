@@ -111,7 +111,7 @@ def get_trip_entities(
     pois = _supabase_get(
         supabase_url, supabase_key,
         f"/rest/v1/points_of_interest?trip_id=eq.{trip_id}"
-        f"&select=id,name,category,sub_category,location,details,status"
+        f"&select=id,name,category,place_type,activity_type,location,details,status"
         f"&is_cancelled=is.false"
     ) or []
 

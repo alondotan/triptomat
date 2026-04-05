@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     if (body.tripId) {
       const { data: pois, error } = await supabase
         .from('points_of_interest')
-        .select('id, name, category, sub_category, location, image_url')
+        .select('id, name, category, place_type, activity_type, location, image_url')
         .eq('trip_id', body.tripId)
         .eq('is_cancelled', false);
 
@@ -35,9 +35,9 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Filter to POIs missing coordinates, image, or subCategory
+      // Filter to POIs missing coordinates, image, or type
       const incomplete = (pois || []).filter((p: any) =>
-        !p.location?.coordinates?.lat || !p.image_url || !p.sub_category
+        !p.location?.coordinates?.lat || !p.image_url || (!p.place_type && !p.activity_type)
       );
 
       console.log(`[enrich-poi] Batch: ${incomplete.length}/${pois?.length || 0} POIs need enrichment for trip ${body.tripId}`);

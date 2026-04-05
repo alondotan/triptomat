@@ -22,7 +22,7 @@ export interface DaySectionItem {
   sublabel: string;
   status?: string;
   isSelected?: boolean;
-  subCategory?: string;
+  placeType?: string;
 }
 
 export interface LocationSuggestion {
@@ -144,7 +144,7 @@ export function DaySection({
             onClick={onOpen ? () => onOpen(item.id) : undefined}
             {...(onOpen ? { role: 'button' as const, tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(item.id); } } } : {})}
           >
-            {item.subCategory && <SubCategoryIcon type={item.subCategory} size={15} className="shrink-0 text-muted-foreground" />}
+            {item.placeType && <SubCategoryIcon type={item.placeType} size={15} className="shrink-0 text-muted-foreground" />}
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">{item.label}</p>
               {item.sublabel && <p className="text-xs text-muted-foreground">{item.sublabel}</p>}
@@ -387,7 +387,7 @@ function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookin
   // LocationSelector now reads from context directly
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
-  const [subCategory, setSubCategory] = useState('');
+  const [placeType, setPlaceType] = useState('');
   const [category, setCategory] = useState(entityType === 'transport' ? 'flight' : 'attraction');
   const [fromName, setFromName] = useState('');
   const [toName, setToName] = useState('');
@@ -401,7 +401,7 @@ function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookin
       if (entityType === 'transport') {
         await onSubmit({ category, fromName, toName }, createBookingMission);
       } else {
-        await onSubmit({ name, city, subCategory, category: entityType === 'accommodation' ? 'accommodation' : category }, createBookingMission);
+        await onSubmit({ name, city, placeType, category: entityType === 'accommodation' ? 'accommodation' : category }, createBookingMission);
       }
     } finally {
       setSubmitting(false);
@@ -465,7 +465,7 @@ function QuickCreateForm({ entityType, onSubmit, locationSuggestions, showBookin
       {entityType === 'accommodation' && (
         <div className="space-y-1">
           <Label className="text-xs">{t('timeline.type')}</Label>
-          <SubCategorySelector categoryFilter="accommodation" value={subCategory} onChange={setSubCategory} placeholder={t('timeline.chooseType')} />
+          <SubCategorySelector flagFilter="physical" value={placeType} onChange={setPlaceType} placeholder={t('timeline.chooseType')} />
         </div>
       )}
       <div className="space-y-1">

@@ -53,7 +53,7 @@ describe("mapPOI", () => {
       id: "poi-1",
       trip_id: "trip-1",
       category: "attraction",
-      sub_category: "museum",
+      place_type: "museum", activity_type: "museum",
       name: "Anne Frank House",
       status: "booked",
       location: { city: "Amsterdam", country: "Netherlands" },
@@ -69,7 +69,7 @@ describe("mapPOI", () => {
     expect(result.id).toBe("poi-1");
     expect(result.tripId).toBe("trip-1");
     expect(result.category).toBe("attraction");
-    expect(result.subCategory).toBe("museum");
+    expect(result.placeType).toBe("museum");
     expect(result.name).toBe("Anne Frank House");
     expect(result.status).toBe("booked");
     expect(result.location.city).toBe("Amsterdam");
@@ -89,7 +89,7 @@ describe("mapPOI", () => {
     };
 
     const result = mapPOI(row);
-    expect(result.subCategory).toBeUndefined();
+    expect(result.placeType).toBeUndefined();
     expect(result.status).toBe("suggested");
     expect(result.location).toEqual({});
     expect(result.sourceRefs).toEqual({ email_ids: [], recommendation_ids: [] });
@@ -152,7 +152,7 @@ describe("createOrMergePOI", () => {
     location: { city: "Amsterdam", country: "Netherlands" } as POILocation,
     sourceRefs: { email_ids: [], recommendation_ids: [] } as SourceRefs,
     details: {} as POIDetails,
-    subCategory: "museum",
+    placeType: "museum", activityType: "museum",
     isCancelled: false,
     isPaid: false,
   };
@@ -199,7 +199,7 @@ describe("createOrMergePOI", () => {
       location: { city: "Amsterdam", country: "Netherlands", address: "Prinsengracht 263" },
       source_refs: { email_ids: ["e1"], recommendation_ids: [] },
       details: { cost: { amount: 16, currency: "EUR" } },
-      sub_category: "museum",
+      place_type: "museum", activity_type: "museum",
       is_cancelled: false,
       is_paid: true,
       created_at: "2026-01-01",
@@ -395,13 +395,13 @@ describe("mergeTwoPOIs", () => {
     expect(result.isCancelled).toBe(false);
   });
 
-  it("fills subCategory from secondary if primary has none", async () => {
+  it("fills placeType from secondary if primary has none", async () => {
     setupMergeChains();
 
     const primary = makePOI({ id: "p1", subCategory: undefined });
-    const secondary = makePOI({ id: "p2", subCategory: "museum" });
+    const secondary = makePOI({ id: "p2", placeType: "museum", activityType: "museum" });
 
     const result = await mergeTwoPOIs(primary, secondary);
-    expect(result.subCategory).toBe("museum");
+    expect(result.placeType).toBe("museum");
   });
 });

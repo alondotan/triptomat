@@ -137,7 +137,7 @@ const POIsPage = ({ allowedCategories, titleKey, backTo }: POIsPageProps = {}) =
         (p.location.city || '').toLowerCase().includes(q) ||
         (p.location.country || '').toLowerCase().includes(q) ||
         (p.location.address || '').toLowerCase().includes(q) ||
-        (p.subCategory || '').toLowerCase().includes(q) ||
+        ((p.placeType || p.activityType) || '').toLowerCase().includes(q) ||
         (p.details.notes?.user_summary || '').toLowerCase().includes(q)
       );
     }
@@ -203,7 +203,7 @@ const POIsPage = ({ allowedCategories, titleKey, backTo }: POIsPageProps = {}) =
           let sub: string;
           if (groupBy === 'category') {
             // Use categoryGroup from config when available, fall back to subCategory
-            sub = (poi.subCategory && getSubCategoryGroup(poi.subCategory)) || poi.subCategory || '—';
+            sub = (poi.placeType || poi.activityType && getSubCategoryGroup(poi.placeType || poi.activityType)) || poi.placeType || poi.activityType || '—';
           } else {
             sub = poi.location.city || poi.location.country || '—';
           }

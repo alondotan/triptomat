@@ -6,23 +6,31 @@
 import { geocodeAddress, fetchPlaceImage } from './geocode.ts';
 import { fetchAndSetPoiImage } from './pexels.ts';
 
-// Default sub_category fallback by POI category
-const CATEGORY_FALLBACK_SUBCATEGORY: Record<string, string> = {
-  attraction: 'other_activity',
+// Default place_type fallback by POI category (is_physical_place=true values)
+const CATEGORY_FALLBACK_PLACE_TYPE: Record<string, string> = {
+  attraction: 'landmark',
   eatery: 'restaurant',
   accommodation: 'hotel',
-  service: 'other_service',
+  service: 'point_of_interest',
+  event: 'point_of_interest',
+};
+
+// Default activity_type fallback by POI category (is_activity=true values)
+const CATEGORY_FALLBACK_ACTIVITY_TYPE: Record<string, string> = {
+  attraction: 'sightseeing',
+  eatery: 'dining',
   event: 'other_activity',
 };
 
 interface EnrichResult {
   coordinates: { lat: number; lng: number } | null;
   imageUrl: string | null;
-  subCategory: string | null;
+  placeType: string | null;
+  activityType: string | null;
 }
 
 /**
- * Enrich a POI with coordinates, image, and subCategory fallback.
+ * Enrich a POI with coordinates, image, and type fallbacks.
  * Only updates fields that are currently missing (null/undefined).
  *
  * @param supabase - Supabase client (service role)
@@ -39,23 +47,25 @@ export async function enrichPoi(
   // Read current POI state to know what's missing
   const { data: poi, error: readErr } = await supabase
     .from('points_of_interest')
-    .select('location, image_url, sub_category, category')
+    .select('location, image_url, place_type, activity_type, category')
     .eq('id', poiId)
     .single();
 
   if (readErr || !poi) {
     console.error('[enrichPoi] Failed to read POI:', readErr);
-    return { coordinates: null, imageUrl: null, subCategory: null };
+    return { coordinates: null, imageUrl: null, placeType: null, activityType: null };
   }
 
   const existingCoords = poi.location?.coordinates;
   const hasCoords = existingCoords?.lat && existingCoords?.lng;
   const hasImage = !!poi.image_url;
-  const hasSubCategory = !!poi.sub_category;
+  const hasPlaceType = !!poi.place_type;
+  const hasActivityType = !!poi.activity_type;
 
   let coordinates = hasCoords ? existingCoords : null;
   let imageUrl: string | null = hasImage ? poi.image_url : null;
-  let subCategory: string | null = hasSubCategory ? poi.sub_category : null;
+  let placeType: string | null = hasPlaceType ? poi.place_type : null;
+  let activityType: string | null = hasActivityType ? poi.activity_type : null;
 
   // Step 1: Geocode if missing coordinates
   if (!hasCoords) {
@@ -109,24 +119,34 @@ export async function enrichPoi(
     }
   }
 
-  // Step 3: Set subCategory fallback if missing
-  if (!hasSubCategory) {
-    const category = opts.category || poi.category;
-    const fallback = CATEGORY_FALLBACK_SUBCATEGORY[category] ?? null;
-    if (fallback) {
-      const { error } = await supabase
-        .from('points_of_interest')
-        .update({ sub_category: fallback })
-        .eq('id', poiId)
-        .is('sub_category', null);
+  // Step 3: Set place_type / activity_type fallbacks if missing
+  const category = opts.category || poi.category;
+  const typeUpdates: Record<string, string> = {};
 
-      if (error) console.error('[enrichPoi] Failed to update subCategory:', error);
-      else {
-        subCategory = fallback;
-        console.log(`[enrichPoi] subCategory fallback set for ${poiId}: ${fallback}`);
-      }
+  if (!hasPlaceType) {
+    const fallback = CATEGORY_FALLBACK_PLACE_TYPE[category] ?? null;
+    if (fallback) {
+      typeUpdates.place_type = fallback;
+      placeType = fallback;
+    }
+  }
+  if (!hasActivityType) {
+    const fallback = CATEGORY_FALLBACK_ACTIVITY_TYPE[category] ?? null;
+    if (fallback) {
+      typeUpdates.activity_type = fallback;
+      activityType = fallback;
     }
   }
 
-  return { coordinates, imageUrl, subCategory };
+  if (Object.keys(typeUpdates).length > 0) {
+    const { error } = await supabase
+      .from('points_of_interest')
+      .update(typeUpdates)
+      .eq('id', poiId);
+
+    if (error) console.error('[enrichPoi] Failed to update type fields:', error);
+    else console.log(`[enrichPoi] Type fallbacks set for ${poiId}:`, typeUpdates);
+  }
+
+  return { coordinates, imageUrl, placeType, activityType };
 }

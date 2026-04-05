@@ -228,6 +228,9 @@ export interface SubCategoryEntry {
   icon: string;
   category: string;
   is_geo_location: boolean;
+  is_physical_place?: boolean;
+  is_hierarchy_area?: boolean;
+  is_activity?: boolean;
   spatial_type?: string;
   names?: { en?: string; he?: string };
   categoryGroup?: string;
@@ -342,6 +345,24 @@ export function getSubCategoriesForPOICategory(poiCategory: string): SubCategory
 export function getTransportSubCategories(): SubCategoryEntry[] {
   if (!cachedConfig) return [];
   return cachedConfig.master_list.filter(e => e.category === 'Transportation');
+}
+
+/** Returns all entries where is_physical_place=true (valid place_type values). */
+export function getPhysicalPlaceEntries(): SubCategoryEntry[] {
+  if (!cachedConfig) return [];
+  return cachedConfig.master_list.filter(e => e.is_physical_place);
+}
+
+/** Returns all entries where is_hierarchy_area=true (valid place_type for trip_locations). */
+export function getHierarchyAreaEntries(): SubCategoryEntry[] {
+  if (!cachedConfig) return [];
+  return cachedConfig.master_list.filter(e => e.is_hierarchy_area);
+}
+
+/** Returns all entries where is_activity=true (valid activity_type values). */
+export function getActivityEntries(): SubCategoryEntry[] {
+  if (!cachedConfig) return [];
+  return cachedConfig.master_list.filter(e => e.is_activity);
 }
 
 export function getLucideIcon(materialIcon: string): LucideIcon {

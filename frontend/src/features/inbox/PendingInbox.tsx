@@ -187,8 +187,8 @@ export function PendingInbox() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="p-1.5 rounded-full bg-muted">{renderCategoryIcon(item.parsedData?.metadata?.category)}</div>
-                        {item.parsedData?.metadata?.sub_category && (
-                          <Badge variant="outline" className="text-xs">{item.parsedData.metadata.sub_category}</Badge>
+                        {item.parsedData?.metadata?.place_type || metadata?.activity_type && (
+                          <Badge variant="outline" className="text-xs">{item.parsedData.metadata.place_type || metadata.activity_type}</Badge>
                         )}
                       </div>
                       <div className="flex items-center gap-1">

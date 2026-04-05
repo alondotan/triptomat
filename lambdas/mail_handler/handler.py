@@ -376,7 +376,8 @@ def lambda_handler(event, context):
                 if travel_data:
                     report_event(mail_job_id, "mail_handler", "completed", metadata={
                         "category": travel_data.get("metadata", {}).get("category", ""),
-                        "sub_category": travel_data.get("metadata", {}).get("sub_category", ""),
+                        "place_type": travel_data.get("metadata", {}).get("place_type", ""),
+                        "activity_type": travel_data.get("metadata", {}).get("activity_type", ""),
                         "action": travel_data.get("metadata", {}).get("action", ""),
                         "order_number": travel_data.get("metadata", {}).get("order_number", ""),
                         "subject": subject[:120],
@@ -460,7 +461,8 @@ def call_gemini(html_text, allowed_types, geo_types):
             ### Extraction Rules:
             1. Categorization:
             - "category": Must be "transportation", "accommodation", "attraction", or "eatery".
-            - "sub_category": Detailed types must be strictly from:  {", ".join(allowed_types)}
+            - "place_type": Physical place type (is_physical_place=true). Strictly from: {", ".join(allowed_types)}
+            - "activity_type": Activity/experience type (is_activity=true). Can be the same as place_type when both apply. Strictly from: {", ".join(allowed_types)}
 
             2. Location & Addresses:
             - All addresses MUST be in English.
@@ -497,7 +499,7 @@ def call_gemini(html_text, allowed_types, geo_types):
 
             ### JSON Schema Structure:
             {{
-            "metadata": {{"date":"", "category": "", "sub_category": "", "action": "create|update|cancel", "order_number": "", "is_paid": true}},
+            "metadata": {{"date":"", "category": "", "place_type": "", "activity_type": "", "action": "create|update|cancel", "order_number": "", "is_paid": true}},
             "sites_hierarchy": [
                             {{
                                 "site": "Country Name",

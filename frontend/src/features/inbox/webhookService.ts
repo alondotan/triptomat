@@ -212,7 +212,7 @@ export async function linkSourceEmailToTrip(sourceEmailId: string, tripId: strin
 
       const newData = {
         category: 'accommodation' as const,
-        sub_category: metadata?.sub_category || 'hotel',
+        place_type: metadata?.place_type || 'hotel',
         name: (accom.establishment_name as string) || 'Accommodation',
         status: 'booked',
         is_cancelled: false,
@@ -278,7 +278,7 @@ export async function linkSourceEmailToTrip(sourceEmailId: string, tripId: strin
       }));
 
       const newData = {
-        category: metadata?.sub_category?.toLowerCase() || 'flight',
+        category: metadata?.place_type?.toLowerCase() || 'flight',
         status: 'booked',
         is_cancelled: false,
         cost: { total_amount: cost?.amount || 0, currency: cost?.currency || 'USD' },
@@ -336,7 +336,8 @@ export async function linkSourceEmailToTrip(sourceEmailId: string, tripId: strin
 
         const newData = {
           category: category as string,
-          sub_category: isAttraction ? (details.attraction_type as string) : 'restaurant',
+          place_type: isAttraction ? (details.attraction_type as string) : 'restaurant',
+          activity_type: isAttraction ? (details.attraction_type as string) : 'dining',
           name: name || 'Activity',
           status: 'booked',
           is_cancelled: false,

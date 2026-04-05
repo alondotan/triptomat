@@ -415,7 +415,7 @@ function RecommendationCardContent({ rec, pois, transportation, contacts, expand
               <button key={poi.id}
                 className="flex items-center gap-2 p-1.5 rounded bg-primary/5 border border-primary/10 w-full text-left hover:bg-primary/10 transition-colors text-xs"
                 onClick={() => setSelectedPoi(poi)}>
-                <SubCategoryIcon type={poi.subCategory || poi.category} size={12} />
+                <SubCategoryIcon type={poi.placeType || poi.activityType || poi.category} size={12} />
                 <span className="font-medium truncate flex-1">{poi.name}</span>
                 <Badge variant="outline" className="text-[10px] shrink-0">{poi.status}</Badge>
               </button>

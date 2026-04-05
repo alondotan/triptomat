@@ -460,12 +460,14 @@ export type Database = {
           location: Json | null
           name: string
           source_refs: Json | null
+          activity_type: string | null
+          place_type: string | null
           status: string
-          sub_category: string | null
           trip_id: string
           updated_at: string
         }
         Insert: {
+          activity_type?: string | null
           category: string
           created_at?: string
           details?: Json | null
@@ -475,13 +477,14 @@ export type Database = {
           is_paid?: boolean
           location?: Json | null
           name: string
+          place_type?: string | null
           source_refs?: Json | null
           status?: string
-          sub_category?: string | null
           trip_id: string
           updated_at?: string
         }
         Update: {
+          activity_type?: string | null
           category?: string
           created_at?: string
           details?: Json | null
@@ -491,9 +494,9 @@ export type Database = {
           is_paid?: boolean
           location?: Json | null
           name?: string
+          place_type?: string | null
           source_refs?: Json | null
           status?: string
-          sub_category?: string | null
           trip_id?: string
           updated_at?: string
         }
@@ -716,7 +719,7 @@ export type Database = {
           name: string
           notes: string
           parent_id: string | null
-          site_type: string
+          place_type: string
           sort_order: number
           source: string
           trip_id: string
@@ -729,7 +732,7 @@ export type Database = {
           name: string
           notes?: string
           parent_id?: string | null
-          site_type: string
+          place_type: string
           sort_order?: number
           source?: string
           trip_id: string
@@ -742,7 +745,7 @@ export type Database = {
           name?: string
           notes?: string
           parent_id?: string | null
-          site_type?: string
+          place_type?: string
           sort_order?: number
           source?: string
           trip_id?: string

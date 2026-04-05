@@ -35,11 +35,11 @@ function POISummary({ poi }: { poi: PointOfInterest }) {
   return (
     <div className="space-y-2 text-sm">
       <div className="flex items-center gap-2">
-        <SubCategoryIcon type={poi.subCategory || poi.category} size={16} />
+        <SubCategoryIcon type={poi.placeType || poi.activityType || poi.category} size={16} />
         <span className="font-semibold text-base">{poi.name}</span>
       </div>
-      {poi.subCategory && (
-        <div className="text-muted-foreground text-xs">{poi.subCategory}</div>
+      {poi.placeType || poi.activityType && (
+        <div className="text-muted-foreground text-xs">{poi.placeType || poi.activityType}</div>
       )}
       <div className="flex flex-wrap gap-1.5">
         <Badge variant="outline" className="text-xs">{STATUS_KEYS[poi.status] ? t(STATUS_KEYS[poi.status]) : poi.status}</Badge>

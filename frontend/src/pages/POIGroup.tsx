@@ -122,17 +122,17 @@ const POIGroupPage = () => {
         const subCounts: Record<string, number> = {};
         for (const p of allInPrimary) {
           const sub = groupBy === 'category'
-            ? (p.subCategory || '—')
+            ? ((p.placeType || p.activityType) || '—')
             : (p.location.city || p.location.country || '—');
           subCounts[sub] = (subCounts[sub] || 0) + 1;
         }
         const poiSub = groupBy === 'category'
-          ? (poi.subCategory || '—')
+          ? (poi.placeType || poi.activityType || '—')
           : (poi.location.city || poi.location.country || '—');
         return subCounts[poiSub] < 5;
       }
 
-      if (groupBy === 'category') return (poi.subCategory || '—') === subKey;
+      if (groupBy === 'category') return (poi.placeType || poi.activityType || '—') === subKey;
       return (poi.location.city || poi.location.country || '—') === subKey;
     });
   }, [nonAccommodationPois, groupBy, groupKey, cityRegionMap]);
@@ -165,7 +165,7 @@ const POIGroupPage = () => {
         p.name.toLowerCase().includes(q) ||
         (p.location.city || '').toLowerCase().includes(q) ||
         (p.location.address || '').toLowerCase().includes(q) ||
-        (p.subCategory || '').toLowerCase().includes(q) ||
+        ((p.placeType || p.activityType) || '').toLowerCase().includes(q) ||
         (p.details.notes?.user_summary || '').toLowerCase().includes(q)
       );
     }
@@ -396,7 +396,7 @@ const POIGroupPage = () => {
                     <img src={poi.imageUrl} alt={poi.name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <SubCategoryIcon type={poi.subCategory || ''} size={48} className="text-muted-foreground/30" />
+                      <SubCategoryIcon type={poi.placeType || poi.activityType || ''} size={48} className="text-muted-foreground/30" />
                     </div>
                   )}
                   <button
@@ -424,10 +424,10 @@ const POIGroupPage = () => {
                   <div>
                     <h3 className="text-base font-semibold">{poi.name}</h3>
                     <div className="flex items-center gap-3 mt-0.5 text-sm text-muted-foreground flex-wrap">
-                      {poi.subCategory && (
+                      {poi.placeType || poi.activityType && (
                         <span className="flex items-center gap-1">
-                          <SubCategoryIcon type={poi.subCategory} size={13} />
-                          {getSubCategoryLabel(poi.subCategory)}
+                          <SubCategoryIcon type={poi.placeType || poi.activityType} size={13} />
+                          {getSubCategoryLabel(poi.placeType || poi.activityType)}
                         </span>
                       )}
                       {location && (

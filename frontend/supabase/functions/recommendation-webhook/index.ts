@@ -383,7 +383,7 @@ Deno.serve(async (req)=>{
               {
                 trip_id: matchedTripId,
                 category: poiCategory,
-                sub_category: itemType,
+                place_type: itemType,
                 name: item.name,
                 status: 'suggested',
                 is_paid: false,

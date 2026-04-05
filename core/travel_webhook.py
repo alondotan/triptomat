@@ -709,7 +709,7 @@ def _handle_accommodation(
 
     new_data = {
         "category": "accommodation",
-        "sub_category": metadata.get("sub_category") or "hotel",
+        "place_type": metadata.get("place_type") or "hotel",
         "name": accom.get("establishment_name") or "Accommodation",
         "status": "booked",
         "is_cancelled": False,
@@ -824,7 +824,7 @@ def _handle_transportation(
     ]
 
     new_data = {
-        "category": (metadata.get("sub_category") or "flight").lower(),
+        "category": (metadata.get("place_type") or "flight").lower(),
         "status": "booked",
         "is_cancelled": False,
         "cost": {
@@ -910,7 +910,8 @@ def _handle_attraction_or_eatery(
 
     new_data = {
         "category": cat,
-        "sub_category": details.get("attraction_type") if is_attraction else "restaurant",
+        "place_type": details.get("attraction_type") if is_attraction else "restaurant",
+            "activity_type": details.get("attraction_type") if is_attraction else "dining",
         "name": name or "Activity",
         "status": "booked",
         "is_cancelled": False,
