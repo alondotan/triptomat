@@ -52,6 +52,7 @@ export function useItineraryDraft() {
         locationContext: d.locationContext ?? raw.location_context as string | undefined,
         hotelId: (d.hotelId ?? raw.hotel_id) as string | undefined,
         hotelName: (d.hotelName ?? raw.hotel_name) as string | undefined,
+        hotelPlaceType: (d.hotelPlaceType ?? raw.hotel_place_type) as string | undefined,
         places: ((d.places || raw.places || []) as Record<string, unknown>[]).map(p => ({
           existingPoiId: (p.existingPoiId ?? p.place_id) as string | undefined,
           locationId: (p.locationId ?? p.location_id) as string | undefined,
@@ -59,6 +60,7 @@ export function useItineraryDraft() {
           eventId: (p.eventId ?? p.event_id) as string | undefined,
           name: ((p.name ?? p.place_name) as string) || '',
           category: CATEGORY_MAP[p.category as string] || p.category as string || 'attraction',
+          placeType: (p.placeType ?? p.place_type) as string | undefined,
           description: p.description as string | undefined,
           isSpecificPlace: p.isSpecificPlace as boolean | undefined ?? p.is_specific_place as boolean | undefined,
           city: p.city as string | undefined,

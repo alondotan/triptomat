@@ -358,6 +358,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
               tripId: tripContext.tripId,
               name: tc.args.name,
               category: (tc.args.category as PointOfInterest['category']) || 'attraction',
+              placeType: tc.args.place_type || undefined,
               status: 'suggested',
               location: {
                 city: tc.args.city || undefined,

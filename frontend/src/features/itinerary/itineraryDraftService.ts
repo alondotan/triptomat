@@ -152,6 +152,7 @@ export async function applyDraftToTrip(
         const { poi } = await createOrMergePOI({
           tripId,
           category: place.category as PointOfInterest['category'],
+          placeType: place.placeType || undefined,
           name: place.name,
           status: 'planned',
           location: { city: cityName, country },
@@ -219,6 +220,7 @@ export async function applyDraftToTrip(
       const { poi } = await createOrMergePOI({
         tripId,
         category: 'accommodation',
+        placeType: day.hotelPlaceType || undefined,
         name: day.hotelName,
         status: 'planned',
         location: { country },

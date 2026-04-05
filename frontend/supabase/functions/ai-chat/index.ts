@@ -90,7 +90,10 @@ Activities: market, park, landmark, natural, historical, cultural, amusement, be
 Eateries: vineyard, brewery, restaurant, cafe, bakery, deli, bistro, diner, food_truck, food_court, buffet, ice_cream_parlor, juice_bar, pub, bar, tavern, wine_bar_eatery, brewpub, sushi_bar, teahouse, steakhouse, tapas_bar, doughnut_shop, dessert_bar, street_food, rooftop_bar, brunch_spot, speakeasy, fine_dining, local_cuisine, vegan_restaurant, vegetarian_restaurant, seafood_restaurant, family_restaurant, other_eatery, ramen_shop, burger_joint, pizza_place, patisserie, gelato_shop, cocktail_bar, food_hall, local_bakery_cafe, gelato_stand
 Accommodations: hotel, glamping, hostel, villa, resort, apartment_stay, guesthouse, bed_and_breakfast, motel, lodge, eco_lodge, boutique_hotel, capsule_hotel, ryokan, homestay, farm_stay, cottage, chalet, bungalow, treehouse, houseboat, campground, camping_tent, rv_park, serviced_apartment, long_stay_hotel, luxury_hotel, budget_hotel, other_accommodation, mountain_hut, desert_camp, surf_hostel, diving_resort, ski_lodge, wellness_resort, business_hotel, airport_hotel, city_aparthotel
 Events: national_holiday, religious_holiday, cultural_festival, festival, music_festival, carnival, cultural_parade, food_festival, art_exhibition, fireworks, sporting_event, local_festival, religious_festival, street_parade, sports_match, marathon, concert, theater_show, food_fair, film_festival, fashion_show, food_truck_fair
-Transportation: car, bus, train, subway, bicycle, motorcycle, taxi, ferry, airplane, scooter, cruise, tram, cruise_ship, car_rental, domestic_flight, international_flight, night_train, high_speed_train, cable_car, funicular, boat_taxi_transport, rideshare, private_transfer, rv, other_transportation, shuttle_bus, airport_shuttle_bus, harbor_shuttle_boat`;
+Transportation: car, bus, train, subway, bicycle, motorcycle, taxi, ferry, airplane, scooter, cruise, tram, cruise_ship, car_rental, domestic_flight, international_flight, night_train, high_speed_train, cable_car, funicular, boat_taxi_transport, rideshare, private_transfer, rv, other_transportation, shuttle_bus, airport_shuttle_bus, harbor_shuttle_boat
+
+## Place sub-type rule
+When adding or scheduling an accommodation or eatery, always include the \`place_type\` field using the matching value from the list above (e.g. category="accommodation" → place_type="boutique_hotel"; category="eatery" → place_type="restaurant"). Choose the most specific match.`;
 
 interface TripContext {
   tripName?: string;
@@ -368,6 +371,7 @@ const BASE_TOOLS = {
         properties: {
           name: { type: 'STRING', description: 'Specific, searchable place name' },
           category: { type: 'STRING', description: 'One of: accommodation, eatery, attraction, service, event' },
+          place_type: { type: 'STRING', description: 'Sub-type of the place from the category list in the system prompt (e.g. "hotel", "boutique_hotel" for accommodation; "restaurant", "cafe" for eatery). Required for accommodation and eatery.' },
           city: { type: 'STRING', description: 'City where the place is located' },
           country: { type: 'STRING', description: 'Country where the place is located' },
           cost: { type: 'NUMBER', description: 'Estimated cost in the trip currency' },
@@ -444,6 +448,7 @@ const ITINERARY_TOOL = {
                     place_name: { type: 'STRING', description: 'The name of the place itself (e.g. "Angkor Wat", "Blue Pumpkin"). NOT an activity description. Required if place_id is null.' },
                     description: { type: 'STRING', description: 'What the user will do there (e.g. "Morning temple visit").' },
                     category: { type: 'STRING', description: 'Use a value from the category list in the system prompt.' },
+                    place_type: { type: 'STRING', description: 'Sub-type of the place from the category list in the system prompt (e.g. "hotel", "boutique_hotel" for accommodation; "restaurant", "cafe" for eatery). Required for accommodation and eatery.' },
                     is_specific_place: { type: 'BOOLEAN', description: 'True if this is a named specific place, false if it is a general activity.' },
                     day_part: { type: 'STRING', description: 'Morning, Afternoon, Evening, or Night' },
                     start_time: { type: 'STRING', description: 'HH:mm' },

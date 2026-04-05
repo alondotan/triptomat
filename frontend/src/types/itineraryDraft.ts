@@ -8,6 +8,7 @@ export interface DraftPlace {
   // Place data — required when existingPoiId is absent
   name: string;             // place_name from AI (name of the place, not an activity description)
   category: string;
+  placeType?: string;       // sub-type (e.g. "boutique_hotel", "restaurant")
   description?: string;     // what the user will do there
   isSpecificPlace?: boolean;
   city?: string;
@@ -31,4 +32,6 @@ export interface DraftDay {
   hotelId?: string;
   /** Hotel name when no hotelId is available */
   hotelName?: string;
+  /** Sub-type of the hotel (e.g. "boutique_hotel") when creating a new one */
+  hotelPlaceType?: string;
 }
