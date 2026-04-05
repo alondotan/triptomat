@@ -15,7 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { SubCategorySelector } from '@/shared/components/SubCategorySelector';
 import { LocationSelector } from '@/shared/components/LocationSelector';
 import type { PointOfInterest, POICategory, POIStatus, POIBooking } from '@/types/trip';
-import { getPOICategories, getCategoryLabel } from '@/shared/lib/subCategoryConfig';
+import { getPOICategories, getCategoryLabel, getSubCategoryEntry } from '@/shared/lib/subCategoryConfig';
 import { syncActivityBookingsToDays } from '@/features/itinerary/itineraryService';
 import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { useTripMode } from '@/shared/hooks/useTripMode';
@@ -166,6 +166,13 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
   useEffect(() => {
     if (open) resetFields();
   }, [open, poi?.id]);
+
+  // Auto-fill activityType from placeType when the place entry also has is_activity
+  useEffect(() => {
+    if (!placeType) return;
+    const entry = getSubCategoryEntry(placeType);
+    if (entry?.is_activity) setActivityType(placeType);
+  }, [placeType]);
 
   // Fetch recommendation quotes (edit mode only)
   useEffect(() => {
