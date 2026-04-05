@@ -27,4 +27,8 @@ export interface DraftDay {
   date?: string;
   locationContext?: string;
   places: DraftPlace[];
+  /** ID of accommodation POI where traveler sleeps this night */
+  hotelId?: string;
+  /** Hotel name when no hotelId is available */
+  hotelName?: string;
 }

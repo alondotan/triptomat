@@ -119,6 +119,10 @@ interface TripPlanDay {
   dayNumber: number;
   date?: string;
   places: TripPlanPlace[];
+  /** ID of the accommodation POI the traveler sleeps at on this night (from the hotels list) */
+  hotel_id?: string;
+  /** Hotel name when no hotel_id is available */
+  hotel_name?: string;
 }
 
 interface TripPlanLocation {
@@ -131,6 +135,8 @@ interface TripPlanLocation {
 interface TripPlan {
   locations: TripPlanLocation[];
   unassigned?: Array<{ id?: string; name: string; category: string; status: string }>;
+  /** All accommodation POIs available in this trip */
+  hotels?: Array<{ id: string; name: string; city?: string }>;
 }
 
 
@@ -139,6 +145,16 @@ function buildTripPlanText(tripPlan: TripPlan): string {
 
   // Collect all known place names for the "exact name" rule
   const allKnownNames: string[] = [];
+
+  // List available hotels at the top if any
+  if (tripPlan.hotels?.length) {
+    lines.push('### Available hotels');
+    for (const h of tripPlan.hotels) {
+      const city = h.city ? ` (${h.city})` : '';
+      lines.push(`  ${h.name}${city} [hotel_id: ${h.id}]`);
+    }
+    lines.push('');
+  }
 
   for (const loc of tripPlan.locations) {
     const dayNums = loc.days.map(d => d.dayNumber);
@@ -153,7 +169,13 @@ function buildTripPlanText(tripPlan: TripPlan): string {
         const id = p.id ? ` [place_id: ${p.id}]` : '';
         return p.time ? `${p.name}${id} @ ${p.time}` : `${p.name}${id}`;
       }).join(', ');
-      lines.push(`  Day ${day.dayNumber}: ${places || '(empty)'}`);
+      // Show hotel assignment if present
+      const hotelPart = day.hotel_id
+        ? ` | Hotel: [hotel_id: ${day.hotel_id}]`
+        : day.hotel_name
+          ? ` | Hotel: ${day.hotel_name}`
+          : '';
+      lines.push(`  Day ${day.dayNumber}:${hotelPart} ${places || '(empty)'}`);
       day.places.forEach(p => allKnownNames.push(p.name));
     }
 
@@ -266,6 +288,11 @@ Always include a short text explanation alongside the tool call.
 - User asks for open recommendations with no planning intent ("what are good restaurants in Tokyo?")
 - User asks a factual travel question or wants tips, and your response has no day-by-day structure
 
+### Hotel assignment per day:
+- Each day has optional hotel_id / hotel_name fields indicating where the traveler sleeps that night.
+- If the trip has hotels listed (see "Available hotels" in the plan), prefer hotel_id over hotel_name.
+- Only set hotel_id / hotel_name when you know or are assigning where the traveler stays; leave blank if unknown.
+
 ### Place naming rules for set_itinerary:
 - Use specific, searchable place names (e.g. "Senso-ji Temple", not "Buddhist temple")
 - Do not use generic descriptions as place names (e.g. NOT "local restaurant", "scenic viewpoint")
@@ -286,6 +313,11 @@ Always include a short text explanation alongside every tool call.
 - Do NOT call it for minor suggestions, tips, or when the user is still exploring options interactively.
 
 When answering questions or giving tips without changing the plan, respond with text only — do NOT call any tool.
+
+### Hotel assignment per day:
+- Each day has optional hotel_id / hotel_name fields indicating where the traveler sleeps that night.
+- If the trip has hotels listed (see "Available hotels" in the plan), prefer hotel_id over hotel_name.
+- Only set hotel_id / hotel_name when you know or are assigning where the traveler stays; leave blank if unknown.
 
 ### Place naming rules for set_itinerary:
 - Use specific, searchable place names (e.g. "Senso-ji Temple", not "Buddhist temple")
@@ -419,6 +451,8 @@ const ITINERARY_TOOL = {
                   },
                 },
               },
+              hotel_id: { type: 'STRING', description: 'ID of the accommodation (from the hotels list) where the traveler sleeps this night. Use when the hotel is already in the trip.' },
+              hotel_name: { type: 'STRING', description: 'Hotel name when the hotel is not in the trip yet and no hotel_id is available.' },
             },
             required: ['day_number', 'location_context', 'places'],
           },

@@ -12,24 +12,29 @@ export function useItineraryDraft() {
   const initFromReal = useCallback((itineraryDays: ItineraryDay[], pois: PointOfInterest[]) => {
     const poiMap = new Map(pois.map(p => [p.id, p]));
 
-    const draftDays: DraftDay[] = itineraryDays.map(day => ({
-      dayNumber: day.dayNumber,
-      date: day.date,
-      locationContext: day.locationContext,
-      places: (day.activities || [])
-        .filter(a => a.type === 'poi' && poiMap.has(a.id))
-        .sort((a, b) => a.order - b.order)
-        .map(a => {
-          const poi = poiMap.get(a.id)!;
-          return {
-            name: poi.name,
-            category: CATEGORY_MAP[poi.category || ''] || 'attraction',
-            city: poi.location?.city,
-            existingPoiId: a.id,
-            time: a.time_window?.start,
-          };
-        }),
-    }));
+    const draftDays: DraftDay[] = itineraryDays.map(day => {
+      const selectedHotel = day.accommodationOptions?.find(a => a.is_selected);
+      const hotelPoi = selectedHotel ? poiMap.get(selectedHotel.poi_id) : undefined;
+      return {
+        dayNumber: day.dayNumber,
+        date: day.date,
+        locationContext: undefined,
+        hotelId: hotelPoi?.id,
+        places: (day.activities || [])
+          .filter(a => a.type === 'poi' && poiMap.has(a.id))
+          .sort((a, b) => a.order - b.order)
+          .map(a => {
+            const poi = poiMap.get(a.id)!;
+            return {
+              name: poi.name,
+              category: CATEGORY_MAP[poi.category || ''] || 'attraction',
+              city: poi.location?.city,
+              existingPoiId: a.id,
+              time: a.time_window?.start,
+            };
+          }),
+      };
+    });
 
     setDraft(draftDays);
     setIsDirty(false);
@@ -45,6 +50,8 @@ export function useItineraryDraft() {
         dayNumber: (d.dayNumber ?? raw.day_number) as number,
         date: d.date,
         locationContext: d.locationContext ?? raw.location_context as string | undefined,
+        hotelId: (d.hotelId ?? raw.hotel_id) as string | undefined,
+        hotelName: (d.hotelName ?? raw.hotel_name) as string | undefined,
         places: ((d.places || raw.places || []) as Record<string, unknown>[]).map(p => ({
           existingPoiId: (p.existingPoiId ?? p.place_id) as string | undefined,
           locationId: (p.locationId ?? p.location_id) as string | undefined,

@@ -241,21 +241,31 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         potentialByCity.get(city)!.push({ id: poi.id, name: poi.name, category: poi.category, status: poi.status });
       }
 
+      // Build hotel list from accommodation POIs
+      const hotels = pois
+        .filter(p => p.category === 'accommodation')
+        .map(p => ({ id: p.id, name: p.name, city: p.location?.city }));
+
       // Build location entries for locations that have scheduled days
       const locations = [...locationDaysMap.entries()].map(([locName, days]) => ({
         id: tripLocationByName.get(locName.toLowerCase())?.id,
         name: locName,
-        days: days.map(day => ({
-          dayNumber: day.dayNumber,
-          date: day.date,
-          places: (day.activities ?? [])
-            .filter(a => a.type === 'poi' && poiMap.has(a.id))
-            .sort((a, b) => a.order - b.order)
-            .map(a => {
-              const poi = poiMap.get(a.id)!;
-              return { id: poi.id, name: poi.name, category: poi.category, time: a.time_window?.start };
-            }),
-        })),
+        days: days.map(day => {
+          const selectedHotel = (day.accommodationOptions ?? []).find(a => a.is_selected);
+          const hotelPoi = selectedHotel ? poiMap.get(selectedHotel.poi_id) : undefined;
+          return {
+            dayNumber: day.dayNumber,
+            date: day.date,
+            hotel_id: hotelPoi?.id,
+            places: (day.activities ?? [])
+              .filter(a => a.type === 'poi' && poiMap.has(a.id))
+              .sort((a, b) => a.order - b.order)
+              .map(a => {
+                const poi = poiMap.get(a.id)!;
+                return { id: poi.id, name: poi.name, category: poi.category, time: a.time_window?.start };
+              }),
+          };
+        }),
         potential: potentialByCity.get(locName) ?? [],
       }));
 
@@ -266,7 +276,11 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         }
       }
 
-      return { locations, unassigned: unassigned.length ? unassigned : undefined };
+      return {
+        locations,
+        unassigned: unassigned.length ? unassigned : undefined,
+        hotels: hotels.length ? hotels : undefined,
+      };
     })();
 
     try {
