@@ -359,10 +359,10 @@ export function getHierarchyAreaEntries(): SubCategoryEntry[] {
   return cachedConfig.master_list.filter(e => e.is_hierarchy_area);
 }
 
-/** Returns all entries where is_activity=true (valid activity_type values). */
+/** Returns entries where is_activity=true and is_physical_place is NOT true (pure activities, not physical places). */
 export function getActivityEntries(): SubCategoryEntry[] {
   if (!cachedConfig) return [];
-  return cachedConfig.master_list.filter(e => e.is_activity);
+  return cachedConfig.master_list.filter(e => e.is_activity && !e.is_physical_place);
 }
 
 export function getLucideIcon(materialIcon: string): LucideIcon {
