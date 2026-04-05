@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { X } from 'lucide-react';
-import type { DraftDay } from '@/types/itineraryDraft';
+import type { DraftDay, DraftPlace } from '@/types/itineraryDraft';
 import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { usePOI } from '@/features/poi/POIContext';
+import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { AppLayout } from '@/shared/components/layout';
 import { AIChatCore } from '@/features/chat/AIChatCore';
 import { HomeMapPanel } from '@/features/home/HomeMapPanel';
@@ -12,7 +13,21 @@ import { OverviewItineraryPanel } from '@/features/overview/OverviewItineraryPan
 import { loadFestivalData } from '@/features/geodata/festivalService';
 import { loadCountryData } from '@/features/trip/tripLocationService';
 import { suggestionsFromToolCall, type ChatSuggestion } from '@/features/home/chatSuggestions';
+import {
+  panelItemsFromItinerary,
+  panelItemsFromSuggestions,
+  type PanelItem,
+  type SelectedLevel,
+  type ContextMode,
+} from '@/features/home/panelItems';
 import type { TripContext } from '@/features/chat/AIChatSheet';
+
+const CATEGORY_MAP: Record<string, DraftPlace['category']> = {
+  accommodation: 'accommodation',
+  eatery: 'eatery',
+  attraction: 'attraction',
+  service: 'service',
+};
 
 // Simple month-name helper for festival period labels
 function monthsLabel(months?: number[]): string | undefined {
@@ -25,14 +40,15 @@ let nextSuggId = 1;
 
 const HomePage = () => {
   const { t } = useTranslation();
-  const { activeTrip, tripLocationTree } = useActiveTrip();
+  const { activeTrip, tripLocationTree, tripLocations, tripPlaces } = useActiveTrip();
   const { pois } = usePOI();
+  const { itineraryDays } = useItinerary();
 
   const [suggestions, setSuggestions] = useState<ChatSuggestion[]>([]);
   const [festivals, setFestivals] = useState<TripContext['festivals']>([]);
   const [locationsFlat, setLocationsFlat] = useState<string[]>([]);
   const [allPlaces, setAllPlaces] = useState<Array<{ name: string; category: string }>>([]);
-  // name (lowercase) → image URL, built from country geodata places (triggers re-render for suggestions panel)
+  // name (lowercase) → image URL, built from country geodata places
   const [placeImageMap, setPlaceImageMap] = useState<Map<string, string>>(new Map());
   // Tourist region markers for empty-state map display
   const [regionMarkers, setRegionMarkers] = useState<Array<{ id: string; name: string; pos?: [number, number]; boundary?: import('geojson').Geometry }>>([]);
@@ -40,6 +56,10 @@ const HomePage = () => {
   const placeCoordMapRef = useRef<Map<string, [number, number]>>(new Map());
   // Cross-panel selection: the currently highlighted place name (lowercase)
   const [selectedName, setSelectedName] = useState<string | null>(null);
+  // Selected tree level — drives filtering of map + objects list
+  const [selectedLevel, setSelectedLevel] = useState<SelectedLevel>({ type: 'trip' });
+  // Context mode: itinerary (AI set_itinerary) vs recommendation (AI suggest_places)
+  const [contextMode, setContextMode] = useState<ContextMode>('empty');
   const seenNamesRef = useRef<Set<string>>(new Set());
   // Snapshot preview: set when user clicks "View plan snapshot" in chat
   const [previewSnapshot, setPreviewSnapshot] = useState<DraftDay[] | null>(null);
@@ -99,8 +119,6 @@ const HomePage = () => {
         placeCoordMapRef.current = coordMap;
         setRegionMarkers(regions);
 
-        // Build flat lists for AI context from the last loaded country
-        // (for multi-country trips we accumulate across all)
         const flatLocs: string[] = [];
         const flatPlaces: Array<{ name: string; category: string }> = [];
         for (const country of activeTrip.countries) {
@@ -154,6 +172,35 @@ const HomePage = () => {
     };
   }, [activeTrip, tripLocationTree, pois, festivals, locationsFlat, allPlaces]);
 
+  // Derive live itinerary as DraftDay[] — used by OverviewItineraryPanel and panelItems
+  const liveDays = useMemo<DraftDay[]>(() => {
+    const poiMap = new Map(pois.map(p => [p.id, p]));
+    const placeLocMap = new Map(
+      tripPlaces.map(tp => {
+        const loc = tripLocations.find(l => l.id === tp.tripLocationId);
+        return [tp.id, loc?.name ?? ''];
+      })
+    );
+    return itineraryDays.map(day => ({
+      dayNumber: day.dayNumber,
+      date: day.date,
+      locationContext: (day.tripPlaceId && placeLocMap.get(day.tripPlaceId)) || undefined,
+      places: (day.activities || [])
+        .filter(a => a.type === 'poi' && poiMap.has(a.id))
+        .sort((a, b) => a.order - b.order)
+        .map(a => {
+          const poi = poiMap.get(a.id)!;
+          return {
+            name: poi.name,
+            category: CATEGORY_MAP[poi.category || ''] || 'attraction',
+            city: poi.location?.city,
+            existingPoiId: a.id,
+            time: a.time_window?.start,
+          };
+        }),
+    }));
+  }, [itineraryDays, pois, tripLocations, tripPlaces]);
+
   // Shared helper: add a list of place-name suggestions to the panel + map
   const addSuggestionsToPanel = useCallback((
     items: Array<{ name: string; location?: string; day?: number }>,
@@ -183,6 +230,7 @@ const HomePage = () => {
   ) => {
     const parsed = suggestionsFromToolCall(places, messageIndex);
     addSuggestionsToPanel(parsed, messageIndex);
+    setContextMode('itinerary');
   }, [addSuggestionsToPanel]);
 
   // Called when suggest_places fires — non-destructive recommendations
@@ -194,9 +242,16 @@ const HomePage = () => {
       .filter(p => p.name && p.name.length >= 2)
       .map(p => ({ name: p.name, location: p.city }));
     addSuggestionsToPanel(items, messageIndex);
+    setContextMode('recommendation');
   }, [addSuggestionsToPanel]);
 
-  // Clear suggestions when trip changes
+  // Handle level selection from the tree — also syncs selectedName for activity level
+  const handleSelectLevel = useCallback((level: SelectedLevel) => {
+    setSelectedLevel(level);
+    if (level.type === 'activity') setSelectedName(level.name);
+  }, []);
+
+  // Clear state when trip changes
   const lastTripIdRef = useRef(activeTrip?.id);
   useEffect(() => {
     if (activeTrip?.id !== lastTripIdRef.current) {
@@ -204,6 +259,8 @@ const HomePage = () => {
       setSuggestions([]);
       seenNamesRef.current.clear();
       setSelectedName(null);
+      setSelectedLevel({ type: 'trip' });
+      setContextMode('empty');
     }
   }, [activeTrip?.id]);
 
@@ -223,6 +280,18 @@ const HomePage = () => {
       }));
   }, [previewSnapshot, suggestions]);
 
+  // Unified panel items for map + suggestions strip
+  // placeCoordMapRef.current is a ref — intentionally not in deps (changes with geodata load)
+  const panelItems = useMemo<PanelItem[]>(() => {
+    if (previewSnapshot) {
+      return panelItemsFromSuggestions(snapshotSuggestions, pois, placeImageMap, placeCoordMapRef.current);
+    }
+    if (contextMode === 'itinerary' && liveDays.length > 0) {
+      return panelItemsFromItinerary(liveDays, pois, selectedLevel);
+    }
+    return panelItemsFromSuggestions(suggestions, pois, placeImageMap, placeCoordMapRef.current);
+  }, [contextMode, liveDays, pois, selectedLevel, suggestions, placeImageMap, previewSnapshot, snapshotSuggestions]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!activeTrip || !tripContext) {
     return (
       <AppLayout hideHero>
@@ -233,7 +302,7 @@ const HomePage = () => {
     );
   }
 
-  const activeSuggestions = previewSnapshot ? snapshotSuggestions : suggestions;
+  const displayDays = previewSnapshot ?? liveDays;
 
   return (
     <AppLayout hideHero fillHeight hideFAB>
@@ -258,12 +327,11 @@ const HomePage = () => {
           {/* LEFT: Map */}
           <div className="w-[34%] shrink-0 h-full p-3">
             <HomeMapPanel
-              suggestions={suggestions}
+              items={panelItems}
               countries={activeTrip.countries}
               regionMarkers={regionMarkers}
               selectedName={selectedName}
               onSelectName={setSelectedName}
-              overrideSuggestions={previewSnapshot ? snapshotSuggestions : undefined}
             />
           </div>
 
@@ -284,7 +352,9 @@ const HomePage = () => {
             <OverviewItineraryPanel
               selectedName={selectedName}
               onSelectName={setSelectedName}
-              overrideDays={previewSnapshot ?? undefined}
+              overrideDays={displayDays}
+              selectedLevel={selectedLevel}
+              onSelectLevel={handleSelectLevel}
             />
           </div>
         </div>
@@ -292,8 +362,7 @@ const HomePage = () => {
         {/* Bottom: Suggestions horizontal strip */}
         <div className="shrink-0 border-t h-[116px]">
           <HomeSuggestionsPanel
-            suggestions={activeSuggestions}
-            placeImageMap={placeImageMap}
+            items={panelItems}
             selectedName={selectedName}
             onSelectName={setSelectedName}
             isPreviewMode={!!previewSnapshot}
@@ -311,11 +380,10 @@ const HomePage = () => {
           onViewSnapshot={setPreviewSnapshot}
           instantApply
         />
-        {activeSuggestions.length > 0 && (
+        {panelItems.length > 0 && (
           <div className="shrink-0 max-h-40 border-t overflow-hidden">
             <HomeSuggestionsPanel
-              suggestions={activeSuggestions}
-              placeImageMap={placeImageMap}
+              items={panelItems}
               selectedName={selectedName}
               onSelectName={setSelectedName}
               isPreviewMode={!!previewSnapshot}

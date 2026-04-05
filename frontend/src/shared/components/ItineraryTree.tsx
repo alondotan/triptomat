@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { MapPin, Utensils, Hotel, Wrench, ChevronDown, ChevronRight } from 'lucide-react';
+import { MapPin, Utensils, Hotel, Wrench, ChevronDown, ChevronRight, Globe } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { useState, useMemo } from 'react';
 import type { DraftDay } from '@/types/itineraryDraft';
+import type { SelectedLevel } from '@/features/home/panelItems';
 
 export interface ItineraryTreeProps {
   days: DraftDay[];
@@ -15,6 +16,12 @@ export interface ItineraryTreeProps {
   selectedName?: string | null;
   /** Called when a place row is clicked */
   onSelectName?: (name: string | null) => void;
+  /** Currently selected tree level (drives map + objects list filtering) */
+  selectedLevel?: SelectedLevel;
+  /** Called when a level row is clicked */
+  onSelectLevel?: (level: SelectedLevel) => void;
+  /** Trip name shown as the root row */
+  tripName?: string;
 }
 
 const CATEGORY_ICONS: Record<string, typeof MapPin> = {
@@ -33,9 +40,10 @@ function defaultFormatDate(date: string): string {
 /**
  * Standalone itinerary tree component.
  * Groups consecutive days by location, shows dates when available.
- * Reusable outside the AI chat context.
+ * Supports level selection: clicking trip/location/day rows updates the selected level,
+ * which drives filtering of the map and objects list panels.
  */
-export function ItineraryTree({ days, className, formatDate, emptyText, selectedName, onSelectName }: ItineraryTreeProps) {
+export function ItineraryTree({ days, className, formatDate, emptyText, selectedName, onSelectName, selectedLevel, onSelectLevel, tripName }: ItineraryTreeProps) {
   const { t } = useTranslation();
   const fmt = formatDate ?? defaultFormatDate;
   const [collapsedLocations, setCollapsedLocations] = useState<Set<number>>(new Set());
@@ -83,23 +91,53 @@ export function ItineraryTree({ days, className, formatDate, emptyText, selected
     );
   }
 
+  const isTripSelected = selectedLevel?.type === 'trip';
+
   return (
     <div className={cn('space-y-1', className)}>
+      {/* Trip root row */}
+      {tripName && (
+        <button
+          onClick={() => onSelectLevel?.({ type: 'trip' })}
+          className={cn(
+            'flex items-center gap-1.5 w-full text-left py-1.5 px-1 rounded transition-colors',
+            isTripSelected
+              ? 'bg-primary/10 ring-1 ring-primary/20'
+              : 'hover:bg-muted/50',
+          )}
+        >
+          <Globe size={12} className="text-primary shrink-0" />
+          <span className="text-xs font-semibold text-foreground truncate">{tripName}</span>
+        </button>
+      )}
+
       {locationSpans.map((span, spanIdx) => {
         const isLocationCollapsed = collapsedLocations.has(spanIdx);
+        const isLocationSelected = selectedLevel?.type === 'location' && selectedLevel.name === span.location;
 
         return (
           <div key={spanIdx} className="mb-1">
             {/* Location header */}
             {span.location ? (
-              <button
-                onClick={() => toggleLocation(spanIdx)}
-                className="flex items-center gap-1.5 w-full text-left py-1.5 px-1 rounded hover:bg-muted/50 transition-colors"
+              <div
+                onClick={() => onSelectLevel?.({ type: 'location', name: span.location })}
+                className={cn(
+                  'flex items-center gap-1.5 w-full text-left py-1.5 px-1 rounded transition-colors cursor-pointer',
+                  isLocationSelected
+                    ? 'bg-primary/10 ring-1 ring-primary/20'
+                    : 'hover:bg-muted/50',
+                )}
               >
-                {isLocationCollapsed
-                  ? <ChevronRight size={14} className="text-muted-foreground shrink-0" />
-                  : <ChevronDown size={14} className="text-muted-foreground shrink-0" />
-                }
+                {/* Chevron handles collapse only */}
+                <span
+                  onClick={e => { e.stopPropagation(); toggleLocation(spanIdx); }}
+                  className="shrink-0 p-0.5 rounded hover:bg-muted/70"
+                >
+                  {isLocationCollapsed
+                    ? <ChevronRight size={14} className="text-muted-foreground" />
+                    : <ChevronDown size={14} className="text-muted-foreground" />
+                  }
+                </span>
                 <MapPin size={12} className="text-primary shrink-0" />
                 <span className="text-xs font-semibold text-foreground truncate">
                   {span.location}
@@ -110,7 +148,7 @@ export function ItineraryTree({ days, className, formatDate, emptyText, selected
                     : t('aiChat.dayLabel', { n: span.days[0].dayNumber })
                   }
                 </span>
-              </button>
+              </div>
             ) : null}
 
             {/* Days under this location */}
@@ -118,17 +156,29 @@ export function ItineraryTree({ days, className, formatDate, emptyText, selected
               <div className={span.location ? 'ms-4' : ''}>
                 {span.days.map(day => {
                   const isDayCollapsed = collapsedDays.has(day.dayNumber);
+                  const isDaySelected = selectedLevel?.type === 'day' && selectedLevel.dayNumber === day.dayNumber;
                   return (
                     <div key={day.dayNumber} className="mb-0.5">
                       {/* Day header */}
-                      <button
-                        onClick={() => toggleDay(day.dayNumber)}
-                        className="flex items-center gap-1.5 w-full text-left py-1 px-1 rounded hover:bg-muted/50 transition-colors"
+                      <div
+                        onClick={() => onSelectLevel?.({ type: 'day', dayNumber: day.dayNumber })}
+                        className={cn(
+                          'flex items-center gap-1.5 w-full text-left py-1 px-1 rounded transition-colors cursor-pointer',
+                          isDaySelected
+                            ? 'bg-primary/10 ring-1 ring-primary/20'
+                            : 'hover:bg-muted/50',
+                        )}
                       >
-                        {isDayCollapsed
-                          ? <ChevronRight size={12} className="text-muted-foreground shrink-0" />
-                          : <ChevronDown size={12} className="text-muted-foreground shrink-0" />
-                        }
+                        {/* Chevron handles collapse only */}
+                        <span
+                          onClick={e => { e.stopPropagation(); toggleDay(day.dayNumber); }}
+                          className="shrink-0 p-0.5 rounded hover:bg-muted/70"
+                        >
+                          {isDayCollapsed
+                            ? <ChevronRight size={12} className="text-muted-foreground" />
+                            : <ChevronDown size={12} className="text-muted-foreground" />
+                          }
+                        </span>
                         <span className="text-xs font-medium text-foreground">
                           {t('aiChat.dayLabel', { n: day.dayNumber })}
                         </span>
@@ -145,7 +195,7 @@ export function ItineraryTree({ days, className, formatDate, emptyText, selected
                         <span className="text-[10px] text-muted-foreground ms-auto shrink-0">
                           {day.places.length}
                         </span>
-                      </button>
+                      </div>
 
                       {/* Places */}
                       {!isDayCollapsed && (

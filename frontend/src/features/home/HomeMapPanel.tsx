@@ -2,15 +2,13 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import type { Geometry } from 'geojson';
-import { useItinerary } from '@/features/itinerary/ItineraryContext';
-import { usePOI } from '@/features/poi/POIContext';
 import { FitBounds } from '@/features/map/mapUtils';
-import type { ChatSuggestion } from './chatSuggestions';
+import type { PanelItem } from './panelItems';
 import 'leaflet/dist/leaflet.css';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
-// Suggestion is in the plan → solid green circle
+// Item is in the plan (linked to a real POI) → solid green circle
 const createPlannedIcon = (selected = false) =>
   new L.DivIcon({
     className: '',
@@ -19,7 +17,7 @@ const createPlannedIcon = (selected = false) =>
     iconAnchor: [selected ? 18 : 14, selected ? 18 : 14],
   });
 
-// Suggestion not yet in the plan → amber outline star
+// Item not yet in the plan → amber outline star
 const createSuggestionIcon = (selected = false) =>
   new L.DivIcon({
     className: '',
@@ -52,35 +50,21 @@ const regionStyle = {
 interface RegionMarker { id: string; name: string; pos?: [number, number]; boundary?: Geometry }
 
 interface HomeMapPanelProps {
-  suggestions: ChatSuggestion[];
+  items: PanelItem[];
   countries: string[];
   regionMarkers?: RegionMarker[];
   selectedName: string | null;
   onSelectName: (name: string | null) => void;
-  /** When set, show these suggestions instead of live ones (snapshot/preview mode) */
-  overrideSuggestions?: ChatSuggestion[];
 }
 
-export function HomeMapPanel({ suggestions, countries, regionMarkers = [], selectedName, onSelectName, overrideSuggestions }: HomeMapPanelProps) {
-  const activeSuggestions = overrideSuggestions ?? suggestions;
-  const { itineraryDays } = useItinerary();
-  const { pois } = usePOI();
-
-  // Names of POIs currently in the itinerary (any day)
-  const plannedNames = useMemo(() => {
-    const itineraryIds = new Set(
-      itineraryDays.flatMap(d => d.activities.filter(a => a.type === 'poi').map(a => a.id)),
-    );
-    return new Set(pois.filter(p => itineraryIds.has(p.id)).map(p => p.name.toLowerCase()));
-  }, [itineraryDays, pois]);
-
-  // Nominatim-geocoded coordinates for suggestions that don't have embedded coords
+export function HomeMapPanel({ items, countries, regionMarkers = [], selectedName, onSelectName }: HomeMapPanelProps) {
+  // Nominatim-geocoded coordinates for items that don't have embedded coords
   const [nominatimCoords, setNominatimCoords] = useState<Record<string, [number, number]>>({});
   const geocodedRef = useRef<Set<string>>(new Set());
 
-  // Geocode suggestions that don't already have coordinates
+  // Geocode items that don't already have coordinates
   useEffect(() => {
-    const todo = activeSuggestions.filter(s => !s.coordinates && !geocodedRef.current.has(s.id));
+    const todo = items.filter(s => !s.coordinates && !geocodedRef.current.has(s.id));
     if (!todo.length) return;
     let cancelled = false;
     (async () => {
@@ -94,11 +78,11 @@ export function HomeMapPanel({ suggestions, countries, regionMarkers = [], selec
       }
     })();
     return () => { cancelled = true; };
-  }, [activeSuggestions]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [items]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Build markers from suggestions — use embedded coords first, then Nominatim
+  // Build markers from items — use embedded coords first, then Nominatim
   const markers = useMemo(() =>
-    activeSuggestions
+    items
       .map(s => {
         const pos = s.coordinates ?? nominatimCoords[s.id] ?? null;
         if (!pos) return null;
@@ -106,14 +90,14 @@ export function HomeMapPanel({ suggestions, countries, regionMarkers = [], selec
           id: s.id,
           name: s.name,
           pos,
-          inPlan: plannedNames.has(s.name.toLowerCase()),
+          inPlan: !!s.poiId,
         };
       })
       .filter((m): m is NonNullable<typeof m> => m !== null),
-    [activeSuggestions, nominatimCoords, plannedNames],
+    [items, nominatimCoords],
   );
 
-  const isEmpty = activeSuggestions.length === 0;
+  const isEmpty = items.length === 0;
   const allCoords = markers.map(m => m.pos);
   const fitCoords = allCoords.length > 0 ? allCoords : (isEmpty ? regionMarkers.flatMap(r => r.pos ? [r.pos] : []) : []);
   const defaultCenter: [number, number] = fitCoords[0] ?? [35.6762, 139.6503];
