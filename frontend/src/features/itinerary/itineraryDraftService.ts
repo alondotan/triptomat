@@ -109,6 +109,8 @@ export async function applyDraftToTrip(
   for (const day of draft) {
     const newActivities: ActivityEntry[] = [];
     let dayTripPlaceId: string | null = null;
+    // Hotel resolved for this day (from hotelId field or accommodation-category place)
+    let accommodationPoiId: string | null = day.hotelId ?? null;
 
     for (let idx = 0; idx < day.places.length; idx++) {
       const place = day.places[idx];
@@ -184,6 +186,12 @@ export async function applyDraftToTrip(
         }
       }
 
+      // ── Accommodation → goes to accommodationOptions, not activities ────
+      if (place.category === 'accommodation') {
+        if (!accommodationPoiId) accommodationPoiId = poiId;
+        continue;
+      }
+
       // ── Build activity entry ────────────────────────────────────────────
       let scheduleState: 'scheduled' | 'potential' = 'potential';
       let timeWindow: { start?: string; end?: string } | undefined;
@@ -204,6 +212,23 @@ export async function applyDraftToTrip(
         schedule_state: scheduleState,
         ...(timeWindow ? { time_window: timeWindow } : {}),
       });
+    }
+
+    // ── Fallback: hotel_name with no id → create accommodation POI ────────
+    if (!accommodationPoiId && day.hotelName) {
+      const { poi } = await createOrMergePOI({
+        tripId,
+        category: 'accommodation',
+        name: day.hotelName,
+        status: 'planned',
+        location: { country },
+        sourceRefs: { email_ids: [], recommendation_ids: [] },
+        details: {},
+        isCancelled: false,
+        isPaid: false,
+      } as Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>);
+      accommodationPoiId = poi.id;
+      poiMap.set(poi.id, poi);
     }
 
     // ── Fallback: resolve day location from locationContext ────────────────
@@ -236,6 +261,9 @@ export async function applyDraftToTrip(
 
       const updatePayload: Record<string, unknown> = { activities: merged as unknown as Json };
       if (dayTripPlaceId) updatePayload.trip_place_id = dayTripPlaceId;
+      if (accommodationPoiId) {
+        updatePayload.accommodation_options = [{ is_selected: true, poi_id: accommodationPoiId }];
+      }
 
       await supabase.from('itinerary_days').update(updatePayload).eq('id', existingDay.id);
     } else {
@@ -244,6 +272,7 @@ export async function applyDraftToTrip(
         day_number: day.dayNumber,
         trip_place_id: dayTripPlaceId,
         activities: validActivities as unknown as Json,
+        ...(accommodationPoiId ? { accommodation_options: [{ is_selected: true, poi_id: accommodationPoiId }] } : {}),
       }]);
     }
   }
