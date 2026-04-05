@@ -334,7 +334,7 @@ export function POICard({
           {poi.location.city && (
             <p className="text-xs text-muted-foreground truncate">{poi.location.city}</p>
           )}
-          {poi.placeType || poi.activityType && (
+          {(poi.placeType || poi.activityType) && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
               <SubCategoryIcon type={poi.placeType || poi.activityType} size={11} />
               <span className="truncate">{getSubCategoryLabel(poi.placeType || poi.activityType)}</span>
