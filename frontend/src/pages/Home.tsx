@@ -251,6 +251,13 @@ const HomePage = () => {
     if (level.type === 'activity') setSelectedName(level.name);
   }, []);
 
+  // Auto-switch to itinerary mode on first load when there are live days
+  useEffect(() => {
+    if (contextMode === 'empty' && liveDays.length > 0) {
+      setContextMode('itinerary');
+    }
+  }, [liveDays.length, contextMode]);
+
   // Clear state when trip changes
   const lastTripIdRef = useRef(activeTrip?.id);
   useEffect(() => {

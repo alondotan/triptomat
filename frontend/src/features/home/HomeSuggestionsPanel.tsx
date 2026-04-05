@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/shared/lib/utils';
 import { usePOI } from '@/features/poi/POIContext';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
+import type { PointOfInterest } from '@/types/trip';
 import type { PanelItem } from './panelItems';
 
 interface HomeSuggestionsPanelProps {
@@ -20,10 +22,11 @@ interface SuggestionCardProps {
   selected: boolean;
   onSelect: () => void;
   onAdd: (item: PanelItem) => void;
+  onOpenDetails: (poi: PointOfInterest) => void;
   isPreviewMode?: boolean;
 }
 
-function SuggestionCard({ item, adding, selected, onSelect, onAdd, isPreviewMode }: SuggestionCardProps) {
+function SuggestionCard({ item, adding, selected, onSelect, onAdd, onOpenDetails, isPreviewMode }: SuggestionCardProps) {
   const inPlan = !!item.poiId;
 
   // Start with POI image if available, then try Wikipedia, then gradient
@@ -56,6 +59,7 @@ function SuggestionCard({ item, adding, selected, onSelect, onAdd, isPreviewMode
   return (
     <div
       onClick={onSelect}
+      onDoubleClick={() => { if (item.poi) onOpenDetails(item.poi); }}
       className={cn(
         'relative shrink-0 w-[140px] rounded-xl overflow-hidden border transition-all cursor-pointer',
         selected
@@ -115,6 +119,7 @@ export function HomeSuggestionsPanel({ items, selectedName, onSelectName, isPrev
   const { addPOI } = usePOI();
   const { activeTrip } = useActiveTrip();
   const [addingIds, setAddingIds] = useState<Set<string>>(new Set());
+  const [dialogPOI, setDialogPOI] = useState<PointOfInterest | null>(null);
 
   const handleAdd = async (item: PanelItem) => {
     if (!activeTrip || addingIds.has(item.id)) return;
@@ -141,6 +146,7 @@ export function HomeSuggestionsPanel({ items, selectedName, onSelectName, isPrev
   };
 
   return (
+    <>
     <div className="flex items-stretch h-full overflow-hidden">
       {/* Vertical label */}
       <div className="shrink-0 flex flex-col items-center justify-center gap-1 px-3 border-r bg-muted/30">
@@ -177,6 +183,7 @@ export function HomeSuggestionsPanel({ items, selectedName, onSelectName, isPrev
                   selected={isSelected}
                   onSelect={() => onSelectName(isSelected ? null : item.name)}
                   onAdd={handleAdd}
+                  onOpenDetails={setDialogPOI}
                   isPreviewMode={isPreviewMode}
                 />
               );
@@ -185,5 +192,12 @@ export function HomeSuggestionsPanel({ items, selectedName, onSelectName, isPrev
         )}
       </div>
     </div>
+
+    <POIDetailDialog
+      poi={dialogPOI ?? undefined}
+      open={!!dialogPOI}
+      onOpenChange={(open) => { if (!open) setDialogPOI(null); }}
+    />
+    </>
   );
 }

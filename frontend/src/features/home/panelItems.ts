@@ -10,6 +10,8 @@ export interface PanelItem {
   coordinates?: [number, number];
   /** Set when this item is linked to a real PointOfInterest in the DB */
   poiId?: string;
+  /** Full POI object when available — used to open the POI detail dialog */
+  poi?: PointOfInterest;
   dayNumber?: number;
   locationName?: string;
   /** True while the backing POI is still being created (brief lag after set_itinerary) */
@@ -66,6 +68,7 @@ export function panelItemsFromItinerary(
           imageUrl: poi.imageUrl,
           coordinates: coords,
           poiId: poi.id,
+          poi,
           dayNumber: day.dayNumber,
           locationName: day.locationContext,
         });
@@ -106,6 +109,7 @@ export function panelItemsFromSuggestions(
         imageUrl: poi.imageUrl,
         coordinates: coords,
         poiId: poi.id,
+        poi,
         locationName: s.location,
       };
     }
