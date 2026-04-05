@@ -56,6 +56,7 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
   const { addPOI, updatePOI, deletePOI } = usePOI();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingName, setEditingName] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const { activeTrip } = useActiveTrip();
   const { refetchItinerary } = useItinerary();
   const { isResearch, isPlanning } = useTripMode();
@@ -164,7 +165,7 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
 
   // Reset fields when dialog opens or poi changes
   useEffect(() => {
-    if (open) resetFields();
+    if (open) { resetFields(); setImgError(false); }
   }, [open, poi?.id]);
 
   // Auto-fill activityType from placeType when the place entry also has is_activity
@@ -716,9 +717,9 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
                   <Input name="name" value={name} onChange={e => setName(e.target.value)} placeholder={t('createPOI.namePlaceholder')} autoComplete="off" autoFocus />
                 </div>
               )}
-              {poi?.imageUrl && (
+              {poi?.imageUrl && !imgError && (
                 <div className="w-full h-40 overflow-hidden rounded-xl">
-                  <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" />
+                  <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" onError={() => setImgError(true)} />
                 </div>
               )}
               {hasCoordinates && poi && (
@@ -802,9 +803,9 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
             </div>
           )}
 
-          {poi?.imageUrl && (
+          {poi?.imageUrl && !imgError && (
             <div className="w-full h-48 overflow-hidden rounded-lg">
-              <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" />
+              <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" onError={() => setImgError(true)} />
             </div>
           )}
 

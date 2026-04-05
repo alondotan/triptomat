@@ -191,6 +191,7 @@ function SortableActivityItem({
   onRemove: (id: string) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const [imgError, setImgError] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: activity.id,
   });
@@ -213,8 +214,8 @@ function SortableActivityItem({
         <GripVertical size={14} />
       </button>
 
-      {activity.poi.imageUrl ? (
-        <img src={activity.poi.imageUrl} alt="" width={32} height={32} className="w-8 h-8 rounded object-cover shrink-0" />
+      {activity.poi.imageUrl && !imgError ? (
+        <img src={activity.poi.imageUrl} alt="" width={32} height={32} className="w-8 h-8 rounded object-cover shrink-0" onError={() => setImgError(true)} />
       ) : activity.poi.placeType || poi.activityType ? (
         <SubCategoryIcon type={activity.poi.placeType || poi.activityType} size={13} className="text-muted-foreground shrink-0" />
       ) : null}
@@ -415,6 +416,7 @@ function LockedNewSchedItem({
   onRemove: (id: string) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const [imgError, setImgError] = useState(false);
   return (
     <div className="rounded-xl border-2 overflow-hidden border-amber-400/60 bg-amber-50/5">
       <div className="px-2.5 py-0.5 border-b border-amber-400/30 flex items-center gap-1.5">
@@ -424,8 +426,8 @@ function LockedNewSchedItem({
       </div>
       <div className="flex items-center gap-2 px-2.5 py-2">
         <div className="shrink-0 w-[18px]" />
-        {imageUrl ? (
-          <img src={imageUrl} alt="" width={32} height={32} className="w-8 h-8 rounded object-cover shrink-0" />
+        {imageUrl && !imgError ? (
+          <img src={imageUrl} alt="" width={32} height={32} className="w-8 h-8 rounded object-cover shrink-0" onError={() => setImgError(true)} />
         ) : category ? (
           <SubCategoryIcon type={category} size={13} className="text-muted-foreground shrink-0" />
         ) : null}
@@ -471,6 +473,7 @@ function SortableNewSchedItem({
   onRemove: (id: string) => Promise<void>;
 }) {
   const { t } = useTranslation();
+  const [imgError, setImgError] = useState(false);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `newsched-${activityId}`,
   });
@@ -498,8 +501,8 @@ function SortableNewSchedItem({
         >
           <GripVertical size={13} />
         </button>
-        {imageUrl ? (
-          <img src={imageUrl} alt="" width={32} height={32} className="w-8 h-8 rounded object-cover shrink-0" />
+        {imageUrl && !imgError ? (
+          <img src={imageUrl} alt="" width={32} height={32} className="w-8 h-8 rounded object-cover shrink-0" onError={() => setImgError(true)} />
         ) : category ? (
           <SubCategoryIcon type={category} size={13} className="text-muted-foreground shrink-0" />
         ) : null}
