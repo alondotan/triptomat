@@ -1,6 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { createSupabaseClient } from '../_shared/supabase.ts';
-import { SQSClient, SendMessageCommand } from 'npm:@aws-sdk/client-sqs@3.700.0';
+import { SQSClient, SendMessageCommand } from 'https://esm.sh/@aws-sdk/client-sqs@3.600.0';
 
 /**
  * Send WhatsApp notifications via SQS queue.
