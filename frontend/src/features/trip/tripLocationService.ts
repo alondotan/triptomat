@@ -20,7 +20,8 @@ export interface CountryLocationNode {
 
 export interface CountryPlace {
   id: string;
-  placeType: string;
+  place_type?: string;
+  activity_type?: string;
   name: string;
   description?: string;
   maps_id?: string;
@@ -286,7 +287,8 @@ async function seedTripPOIs(
       const poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'> = {
         tripId,
         category: 'attraction',
-        placeType: place.placeType || undefined,
+        placeType: place.place_type || undefined,
+        activityType: place.activity_type || undefined,
         name: place.name,
         status: 'suggested',
         location: {
