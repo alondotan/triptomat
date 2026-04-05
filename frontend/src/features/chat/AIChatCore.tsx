@@ -17,6 +17,8 @@ import { applyDraftToTrip } from '@/features/itinerary/itineraryDraftService';
 import { useItineraryHistory } from '@/features/home/useItineraryHistory';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { useChatHistory } from './useChatHistory';
+import { useAtMention, extractMentionNames, stripMentionBrackets } from './useAtMention';
+import { AtMentionMenu } from './AtMentionMenu';
 import type { TripContext } from './AIChatSheet';
 import type { PointOfInterest } from '@/types/trip';
 
@@ -104,6 +106,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
   const history = useItineraryHistory();
   const { activeTrip, updateCurrentTrip, tripPlaces, tripLocations } = useActiveTrip();
   const [historyLoading, setHistoryLoading] = useState(false);
+  const mention = useAtMention();
   // In-memory map: assistant message index → itinerary snapshot (not persisted)
   const snapshotByMsgIdxRef = useRef<Map<number, import('@/types/itineraryDraft').DraftDay[]>>(new Map());
 
@@ -179,7 +182,13 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
       history.takeBackup(itineraryDays, pois, activeTrip);
     }
 
-    const userMsg: Message = { role: 'user', content: trimmed.slice(0, MAX_INPUT) };
+    // Enrich message with context for any @[Name] mentions
+    const mentionNames = extractMentionNames(trimmed);
+    const contextLines = mentionNames.length > 0 ? mention.getMentionContextLines(mentionNames) : [];
+    const enrichedContent = contextLines.length > 0
+      ? `${stripMentionBrackets(trimmed)}\n\n[mentioned: ${contextLines.join(', ')}]`
+      : stripMentionBrackets(trimmed);
+    const userMsg: Message = { role: 'user', content: enrichedContent.slice(0, MAX_INPUT) };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput('');
@@ -569,7 +578,30 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
     }
   }, [loading, integrating, messages, toast, tripContext, t]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (mention.isOpen) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); mention.navigateDown(); return; }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); mention.navigateUp();   return; }
+      if (e.key === 'Escape')    { e.preventDefault(); mention.close();         return; }
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const selected = mention.filtered[mention.selectedIndex];
+        if (selected) {
+          const ta = e.currentTarget;
+          const cursor = ta.selectionStart ?? input.length;
+          const { newInput, newCursor } = mention.selectItem(selected, input, cursor);
+          setInput(newInput);
+          // Restore cursor after React re-render
+          requestAnimationFrame(() => {
+            ta.setSelectionRange(newCursor, newCursor);
+            // Resize
+            ta.style.height = 'auto';
+            ta.style.height = Math.min(ta.scrollHeight, compact ? 80 : 120) + 'px';
+          });
+        }
+        return;
+      }
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -737,11 +769,35 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
 
       {/* Input area */}
       <div className="shrink-0 border-t p-2">
-        <div className="flex items-end gap-1.5">
+        <div className="relative flex items-end gap-1.5">
+          {mention.isOpen && (
+            <AtMentionMenu
+              items={mention.filtered}
+              selectedIndex={mention.selectedIndex}
+              onSelect={item => {
+                const ta = inputRef.current;
+                const cursor = ta?.selectionStart ?? input.length;
+                const { newInput, newCursor } = mention.selectItem(item, input, cursor);
+                setInput(newInput);
+                requestAnimationFrame(() => {
+                  if (ta) {
+                    ta.focus();
+                    ta.setSelectionRange(newCursor, newCursor);
+                    ta.style.height = 'auto';
+                    ta.style.height = Math.min(ta.scrollHeight, compact ? 80 : 120) + 'px';
+                  }
+                });
+              }}
+            />
+          )}
           <textarea
             ref={inputRef}
             value={input}
-            onChange={e => setInput(e.target.value.slice(0, MAX_INPUT))}
+            onChange={e => {
+              const val = e.target.value.slice(0, MAX_INPUT);
+              setInput(val);
+              mention.onInputChange(val, e.target.selectionStart ?? val.length);
+            }}
             onKeyDown={handleKeyDown}
             rows={1}
             className={cn(
