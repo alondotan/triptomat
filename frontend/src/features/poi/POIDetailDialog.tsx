@@ -382,15 +382,13 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
         </div>
         <div className="space-y-1">
           <Label>{t('poiDetail.placeType')}</Label>
-          {category === 'accommodation' ? (
-            <SubCategorySelector categoryFilter="accommodation" value={placeType} onChange={setPlaceType} placeholder={t('poiDetail.choosePlaceType')} />
-          ) : category === 'eatery' ? (
-            <SubCategorySelector categoryFilter="eatery" value={placeType} onChange={setPlaceType} placeholder={t('poiDetail.choosePlaceType')} />
+          {category === 'accommodation' || category === 'eatery' || category === 'service' || category === 'event' ? (
+            <SubCategorySelector categoryFilter={category} value={placeType} onChange={setPlaceType} placeholder={t('poiDetail.choosePlaceType')} />
           ) : (
             <SubCategorySelector flagFilter="physical" value={placeType} onChange={setPlaceType} placeholder={t('poiDetail.choosePlaceType')} />
           )}
         </div>
-        {category !== 'accommodation' && category !== 'eatery' && (
+        {category === 'attraction' && (
           <div className="space-y-1">
             <Label>{t('poiDetail.activityType')}</Label>
             <SubCategorySelector flagFilter="activity" value={activityType} onChange={setActivityType} placeholder={t('poiDetail.chooseActivityType')} />
