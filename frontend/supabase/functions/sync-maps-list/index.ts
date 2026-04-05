@@ -85,7 +85,7 @@ async function syncSitesHierarchyToTripLocations(
             trip_id: tripId,
             parent_id: parentId,
             name: node.site,
-            site_type: node.site_type,
+            place_type: node.site_type,
             source: 'webhook',
           })
           .select('id')
