@@ -182,13 +182,15 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
       history.takeBackup(itineraryDays, pois, activeTrip);
     }
 
-    // Enrich message with context for any @[Name] mentions
+    // Display content: strip @[Name] brackets → @Name (clean for the user to read)
+    const displayContent = stripMentionBrackets(trimmed);
+    // AI content: append mention IDs so the model can cross-reference tripPlan
     const mentionNames = extractMentionNames(trimmed);
     const contextLines = mentionNames.length > 0 ? mention.getMentionContextLines(mentionNames) : [];
-    const enrichedContent = contextLines.length > 0
-      ? `${stripMentionBrackets(trimmed)}\n\n[mentioned: ${contextLines.join(', ')}]`
-      : stripMentionBrackets(trimmed);
-    const userMsg: Message = { role: 'user', content: enrichedContent.slice(0, MAX_INPUT) };
+    const aiContent = contextLines.length > 0
+      ? `${displayContent}\n\n[mentioned: ${contextLines.join(', ')}]`
+      : displayContent;
+    const userMsg: Message = { role: 'user', content: displayContent.slice(0, MAX_INPUT) };
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInput('');
@@ -286,7 +288,11 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
     try {
       const { data, error: fnError } = await supabase.functions.invoke('ai-chat', {
         body: {
-          messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
+          messages: updatedMessages.map((m, i) => ({
+            role: m.role,
+            // Last message is the one just sent — use enriched AI content with mention IDs
+            content: i === updatedMessages.length - 1 && m.role === 'user' ? aiContent.slice(0, MAX_INPUT) : m.content,
+          })),
           tripContext: {
             tripName: tripContext.tripName,
             countries: tripContext.countries,
