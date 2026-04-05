@@ -60,7 +60,7 @@ export function useItineraryDraft() {
           eventId: (p.eventId ?? p.event_id) as string | undefined,
           name: ((p.name ?? p.place_name) as string) || '',
           category: CATEGORY_MAP[p.category as string] || p.category as string || 'attraction',
-          placeType: (p.placeType ?? p.place_type) as string | undefined,
+          placeType: (p.placeType ?? p.place_type ?? p.sub_category) as string | undefined,
           description: p.description as string | undefined,
           isSpecificPlace: p.isSpecificPlace as boolean | undefined ?? p.is_specific_place as boolean | undefined,
           city: p.city as string | undefined,

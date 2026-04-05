@@ -13,6 +13,7 @@ import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { usePOI } from '@/features/poi/POIContext';
 import { updatePOI as updatePOIService } from '@/features/poi/poiService';
 import { useItineraryDraft } from '@/features/itinerary/useItineraryDraft';
+import { CATEGORY_MAP } from '@/shared/utils/categoryMap';
 import { applyDraftToTrip } from '@/features/itinerary/itineraryDraftService';
 import { useItineraryHistory } from '@/features/home/useItineraryHistory';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
@@ -67,7 +68,7 @@ interface AIChatCoreProps {
   /** Called when set_itinerary fires — receives the clean, structured place list from the tool call + the assistant message index */
   onItineraryUpdate?: (places: Array<{ name: string; day: number; location?: string }>, messageIndex: number) => void;
   /** Called when suggest_places fires — receives recommended places to show on map / suggestions panel */
-  onSuggestPlaces?: (places: Array<{ name: string; category: string; city?: string; country?: string; why?: string }>, messageIndex: number) => void;
+  onSuggestPlaces?: (places: Array<{ name: string; category: string; sub_category?: string; location_id?: string; location_name?: string; city?: string; country?: string; why?: string }>, messageIndex: number) => void;
   /**
    * When true: set_itinerary is applied to the real trip immediately (no draft/apply step).
    * Shows undo-per-step and restore-to-pre-conversation buttons.
@@ -357,12 +358,12 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             await addPOI({
               tripId: tripContext.tripId,
               name: tc.args.name,
-              category: (tc.args.category as PointOfInterest['category']) || 'attraction',
-              placeType: tc.args.place_type || undefined,
+              category: (CATEGORY_MAP[tc.args.category as string] ?? tc.args.category as PointOfInterest['category']) || 'attraction',
+              placeType: (tc.args.sub_category || tc.args.place_type) as string | undefined,
               status: 'suggested',
               location: {
-                city: tc.args.city || undefined,
-                country: tc.args.country || undefined,
+                city: (tc.args.location_name || tc.args.city) as string | undefined,
+                country: tc.args.country as string | undefined,
               },
               details: {
                 ...(tc.args.cost !== undefined ? { cost: { amount: tc.args.cost, currency: tripContext.currency || '' } } : {}),
@@ -373,8 +374,10 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
               isPaid: false,
             } as Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>);
 
-          } else if (tc.name === 'update_place' && tc.args?.name) {
-            const existing = pois.find(p => p.name.toLowerCase() === String(tc.args.name).toLowerCase());
+          } else if (tc.name === 'update_place' && (tc.args?.place_id || tc.args?.name)) {
+            const existing = tc.args.place_id
+              ? pois.find(p => p.id === String(tc.args.place_id))
+              : pois.find(p => p.name.toLowerCase() === String(tc.args.name).toLowerCase());
             if (existing) {
               if (instantApply) history.pushHistory(itineraryDays, pois, activeTrip);
               const updates: Partial<PointOfInterest> = {};

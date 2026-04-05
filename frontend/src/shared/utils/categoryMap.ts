@@ -6,4 +6,10 @@ export const CATEGORY_MAP: Record<string, DraftPlace['category']> = {
   attraction: 'attraction',
   service: 'service',
   event: 'event',
+  // Enum group names (capitalized) used in newer tool schema
+  Activities: 'attraction',
+  Eateries: 'eatery',
+  Accommodations: 'accommodation',
+  Events: 'event',
+  Transportation: 'service',
 };

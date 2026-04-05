@@ -2040,6 +2040,21 @@
       }
     },
     {
+      "type": "farm",
+      "icon": "agriculture",
+      "category": "Activities",
+      "is_geo_location": true,
+      "spatial_type": "area",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
+      "names": {
+        "en": "Farm",
+        "he": "חווה"
+      },
+      "categoryGroup": "food_drink"
+    },
+    {
       "type": "movie_theater",
       "icon": "theaters",
       "category": "Activities",
@@ -2370,6 +2385,21 @@
       "categoryGroup": "outdoor_sports"
     },
     {
+      "type": "water_sports_center",
+      "icon": "pool",
+      "category": "Activities",
+      "is_geo_location": false,
+      "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
+      "names": {
+        "en": "Water Sports Center",
+        "he": "מרכז ספורט ימי"
+      },
+      "categoryGroup": "outdoor_sports"
+    },
+    {
       "type": "kayaking_activity",
       "icon": "kayaking",
       "category": "Activities",
@@ -2501,6 +2531,21 @@
       "names": {
         "en": "Cooking  Class",
         "he": "שיעור בישול"
+      },
+      "categoryGroup": "food_drink"
+    },
+    {
+      "type": "cooking_school",
+      "icon": "restaurant_menu",
+      "category": "Activities",
+      "is_geo_location": false,
+      "spatial_type": "point",
+      "is_physical_place": true,
+      "is_hierarchy_area": false,
+      "is_activity": true,
+      "names": {
+        "en": "Cooking School",
+        "he": "בית ספר לבישול"
       },
       "categoryGroup": "food_drink"
     },

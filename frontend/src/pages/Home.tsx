@@ -236,12 +236,12 @@ const HomePage = () => {
 
   // Called when suggest_places fires — non-destructive recommendations
   const handleSuggestPlaces = useCallback((
-    places: Array<{ name: string; category: string; city?: string; country?: string; why?: string }>,
+    places: Array<{ name: string; category: string; sub_category?: string; location_id?: string; location_name?: string; city?: string; country?: string; why?: string }>,
     messageIndex: number,
   ) => {
     const items = places
       .filter(p => p.name && p.name.length >= 2)
-      .map(p => ({ name: p.name, location: p.city }));
+      .map(p => ({ name: p.name, location: p.location_name ?? p.city }));
     addSuggestionsToPanel(items, messageIndex);
     setContextMode('recommendation');
   }, [addSuggestionsToPanel]);
