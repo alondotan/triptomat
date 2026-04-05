@@ -81,35 +81,31 @@ export function useAtMention() {
   const { transportation } = useTransport();
 
   // Build all candidate mention items (memoised so filter is fast)
-  const allItems = useMemo<MentionItem[]>(() => [
-    ...pois
-      .filter(p => p.name)
-      .map<MentionItem>(p => ({
-        id: p.id,
-        type: p.category as MentionItemType,
-        name: p.name,
-        subtitle: p.location?.city,
-        entity: p,
-      })),
-    ...contacts
-      .filter(c => c.name)
-      .map<MentionItem>(c => ({
-        id: c.id,
-        type: 'contact',
-        name: c.name,
-        subtitle: c.role,
-        entity: c,
-      })),
-    ...transportation
-      .filter(t => t.id)
-      .map<MentionItem>(t => ({
-        id: t.id,
-        type: 'transport',
-        name: getTransportName(t),
-        subtitle: getTransportRoute(t),
-        entity: t,
-      })),
-  ], [pois, contacts, transportation]);
+  const VALID_CATEGORIES = new Set<string>(['accommodation', 'eatery', 'attraction', 'service', 'event']);
+
+  const allItems = useMemo<MentionItem[]>(() => {
+    const items: MentionItem[] = [];
+    for (const p of pois) {
+      try {
+        if (!p.name || !p.category || !VALID_CATEGORIES.has(p.category)) continue;
+        items.push({ id: p.id, type: p.category as MentionItemType, name: p.name, subtitle: p.location?.city, entity: p });
+      } catch (e) { console.error('[mention] bad poi', p?.id, e); }
+    }
+    for (const c of contacts) {
+      try {
+        if (!c.name) continue;
+        items.push({ id: c.id, type: 'contact', name: c.name, subtitle: c.role, entity: c });
+      } catch (e) { console.error('[mention] bad contact', c?.id, e); }
+    }
+    for (const t of transportation) {
+      try {
+        if (!t.id) continue;
+        const name = getTransportName(t) || t.id;
+        items.push({ id: t.id, type: 'transport', name, subtitle: getTransportRoute(t), entity: t });
+      } catch (e) { console.error('[mention] bad transport', t?.id, e); }
+    }
+    return items;
+  }, [pois, contacts, transportation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // null = menu closed; string = current query (may be empty = show all)
   const [query, setQuery] = useState<string | null>(null);

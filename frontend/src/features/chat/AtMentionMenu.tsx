@@ -64,7 +64,7 @@ export function AtMentionMenu({ items, selectedIndex, onSelect }: AtMentionMenuP
     <div className="absolute bottom-full left-0 right-0 mb-1 z-50 rounded-xl border bg-popover shadow-lg overflow-hidden">
       <ul className="py-1 max-h-56 overflow-y-auto">
         {items.map((item, idx) => {
-          const meta = TYPE_META[item.type];
+          const meta = TYPE_META[item.type] ?? TYPE_META['attraction'];
           const transportCategory =
             item.type === 'transport'
               ? (item.entity as import('@/types/trip').Transportation).category
