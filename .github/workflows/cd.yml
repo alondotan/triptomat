@@ -50,6 +50,24 @@ jobs:
             --image-uri ${IMAGE_URI} \
             --region ${{ env.AWS_REGION }}
 
+  deploy-edge-functions:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Deploy Supabase Edge Functions
+        working-directory: frontend
+        run: npx supabase functions deploy --project-ref aqpzhflzsqkjceeeufyf
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
   deploy-frontend:
     runs-on: ubuntu-latest
     if: >
