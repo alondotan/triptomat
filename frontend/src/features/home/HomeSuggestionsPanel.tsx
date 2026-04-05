@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Sparkles, Plus, Loader2, Check } from 'lucide-react';
+import { SubCategoryIcon } from '@/shared/components/SubCategoryIcon';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/shared/lib/utils';
 import { usePOI } from '@/features/poi/POIContext';
@@ -79,7 +80,11 @@ function SuggestionCard({ item, adding, selected, onSelect, onAdd, onOpenDetails
           onError={() => setImgError(true)}
         />
       ) : (
-        <div className="w-full h-full" style={{ background: `hsl(${gradientHue}, 55%, 45%)` }} />
+        <div className="w-full h-full flex items-center justify-center" style={{ background: `hsl(${gradientHue}, 55%, 45%)` }}>
+          {(item.poi?.placeType || item.poi?.activityType)
+            ? <SubCategoryIcon type={(item.poi.placeType || item.poi.activityType)!} size={32} className="text-white/70" />
+            : null}
+        </div>
       )}
 
       {/* Dark gradient overlay */}

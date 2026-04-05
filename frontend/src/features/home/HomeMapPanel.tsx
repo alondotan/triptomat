@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import type { Geometry } from 'geojson';
-import { FitBounds } from '@/features/map/mapUtils';
+import { createPOIIcon, POI_COLORS, FitBounds } from '@/features/map/mapUtils';
+import { getSubCategoryEntry, loadSubCategoryConfig } from '@/shared/lib/subCategoryConfig';
 import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
 import type { PointOfInterest } from '@/types/trip';
 import type { PanelItem } from './panelItems';
@@ -10,36 +11,24 @@ import 'leaflet/dist/leaflet.css';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 
-// Category → color (matches ItineraryTree color scheme)
-const CATEGORY_COLORS: Record<string, string> = {
-  attraction: '#16a34a',     // green-600
-  eatery: '#f97316',         // orange-500
-  accommodation: '#3b82f6',  // blue-500
-  service: '#a855f7',        // purple-500
+// Fallback Material icon per category (used when no placeType is available)
+const CATEGORY_MATERIAL_ICON: Record<string, string> = {
+  attraction: 'place',
+  eatery: 'restaurant',
+  accommodation: 'hotel',
+  service: 'build',
 };
-const DEFAULT_COLOR = '#f59e0b'; // amber-500 for unknown/temporary
 
-// Inline Lucide SVG paths per category (same icons as ItineraryTree)
-const CATEGORY_SVG: Record<string, string> = {
-  attraction: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`,
-  eatery: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg>`,
-  accommodation: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
-  service: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
-};
-const DEFAULT_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`;
+function getMaterialIcon(placeType?: string, category?: string): string {
+  if (placeType) {
+    const entry = getSubCategoryEntry(placeType);
+    if (entry?.icon) return entry.icon;
+  }
+  return CATEGORY_MATERIAL_ICON[category ?? ''] ?? 'location_on';
+}
 
-function createCategoryIcon(category: string | undefined, selected: boolean) {
-  const color = CATEGORY_COLORS[category ?? ''] ?? DEFAULT_COLOR;
-  const svg = CATEGORY_SVG[category ?? ''] ?? DEFAULT_SVG;
-  const size = selected ? 36 : 30;
-  const shadow = selected ? `0 2px 12px ${color}99` : `0 2px 8px ${color}55`;
-  const borderW = selected ? 3 : 2;
-  return new L.DivIcon({
-    className: '',
-    html: `<div style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;background:${color};box-shadow:${shadow};border:${borderW}px solid white;">${svg}</div>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
-  });
+function getCategoryColor(category?: string): string {
+  return POI_COLORS[category ?? ''] ?? '#f59e0b';
 }
 
 async function geocodeByName(name: string, countries: string[]): Promise<[number, number] | null> {
@@ -75,6 +64,11 @@ interface HomeMapPanelProps {
 
 export function HomeMapPanel({ items, countries, regionMarkers = [], selectedName, onSelectName }: HomeMapPanelProps) {
   const [dialogPOI, setDialogPOI] = useState<PointOfInterest | null>(null);
+  // Force re-render once sub-category config is loaded so marker icons update
+  const [, setConfigLoaded] = useState(false);
+  useEffect(() => {
+    loadSubCategoryConfig().then(() => setConfigLoaded(true));
+  }, []);
 
   // Nominatim-geocoded coordinates for items that don't have embedded coords
   const [nominatimCoords, setNominatimCoords] = useState<Record<string, [number, number]>>({});
@@ -127,7 +121,10 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
 
           {markers.map(m => {
             const isSelected = selectedName?.toLowerCase() === m.name.toLowerCase();
-            const icon = createCategoryIcon(m.category, isSelected);
+            const placeType = m.poi?.placeType || m.poi?.activityType;
+            const materialIcon = getMaterialIcon(placeType, m.category);
+            const color = getCategoryColor(m.category);
+            const icon = createPOIIcon(color, materialIcon, isSelected);
             return (
               <Marker
                 key={m.id}

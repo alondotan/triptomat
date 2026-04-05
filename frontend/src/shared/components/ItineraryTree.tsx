@@ -4,6 +4,7 @@ import { cn } from '@/shared/lib/utils';
 import { useState, useMemo } from 'react';
 import type { DraftDay } from '@/types/itineraryDraft';
 import type { SelectedLevel } from '@/features/home/panelItems';
+import { SubCategoryIcon } from '@/shared/components/SubCategoryIcon';
 
 export interface ItineraryTreeProps {
   days: DraftDay[];
@@ -201,7 +202,11 @@ export function ItineraryTree({ days, className, formatDate, emptyText, selected
                       {!isDayCollapsed && (
                         <div className="ms-5 space-y-0.5">
                           {day.places.map((place, idx) => {
-                            const Icon = CATEGORY_ICONS[place.category] || MapPin;
+                            const FallbackIcon = CATEGORY_ICONS[place.category] || MapPin;
+                            const iconColorClass = place.category === 'eatery' ? 'text-orange-500' :
+                              place.category === 'accommodation' ? 'text-blue-500' :
+                              place.category === 'service' ? 'text-purple-500' :
+                              'text-green-600';
                             const isSelected = selectedName?.toLowerCase() === place.name.toLowerCase();
                             return (
                               <div
@@ -215,13 +220,10 @@ export function ItineraryTree({ days, className, formatDate, emptyText, selected
                                     : 'hover:bg-muted/30',
                                 )}
                               >
-                                <Icon size={12} className={cn(
-                                  'shrink-0',
-                                  place.category === 'eatery' ? 'text-orange-500' :
-                                  place.category === 'accommodation' ? 'text-blue-500' :
-                                  place.category === 'service' ? 'text-purple-500' :
-                                  'text-green-600'
-                                )} />
+                                {place.placeType
+                                  ? <SubCategoryIcon type={place.placeType} size={12} className={cn('shrink-0', iconColorClass)} />
+                                  : <FallbackIcon size={12} className={cn('shrink-0', iconColorClass)} />
+                                }
                                 <span className="truncate flex-1 font-medium">{place.name}</span>
                                 {place.time && (
                                   <span className="text-[10px] text-muted-foreground shrink-0">

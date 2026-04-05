@@ -193,6 +193,7 @@ const HomePage = () => {
           return {
             name: poi.name,
             category: CATEGORY_MAP[poi.category || ''] || 'attraction',
+            placeType: poi.placeType || poi.activityType || undefined,
             city: poi.location?.city,
             existingPoiId: a.id,
             time: a.time_window?.start,

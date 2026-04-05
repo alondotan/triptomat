@@ -2,14 +2,20 @@ import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
-export const createPOIIcon = (color: string, materialIcon?: string) => new L.DivIcon({
-  className: '',
-  html: `<div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${color};color:white;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white;">
-    <span class="material-symbols-outlined" style="font-size:16px;">${materialIcon || 'location_on'}</span>
+export const createPOIIcon = (color: string, materialIcon?: string, selected = false) => {
+  const size = selected ? 36 : 28;
+  const fontSize = selected ? 20 : 16;
+  const shadow = selected ? `0 2px 12px ${color}99` : '0 2px 6px rgba(0,0,0,0.3)';
+  const borderW = selected ? 3 : 2;
+  return new L.DivIcon({
+    className: '',
+    html: `<div style="display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:50%;background:${color};color:white;box-shadow:${shadow};border:${borderW}px solid white;">
+    <span class="material-symbols-outlined" style="font-size:${fontSize}px;">${materialIcon || 'location_on'}</span>
   </div>`,
-  iconSize: [28, 28],
-  iconAnchor: [14, 14],
-});
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+};
 
 export const createTransportIcon = (color: string) => new L.DivIcon({
   className: '',
