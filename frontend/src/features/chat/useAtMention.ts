@@ -24,17 +24,18 @@ export interface MentionItem {
 }
 
 function getTransportRoute(t: Transportation): string {
-  const seg0 = t.segments[0];
+  const segments = t.segments ?? [];
+  const seg0 = segments[0];
   if (!seg0) return t.category;
-  const segN = t.segments[t.segments.length - 1];
-  const from = seg0.from.address?.city || seg0.from.name;
-  const to = segN.to.address?.city || segN.to.name;
+  const segN = segments[segments.length - 1];
+  const from = seg0.from?.address?.city || seg0.from?.name || '';
+  const to = segN.to?.address?.city || segN.to?.name || '';
   return `${from} → ${to}`;
 }
 
 function getTransportName(t: Transportation): string {
-  if (t.booking.carrier_name) return t.booking.carrier_name;
-  if (t.segments.length > 0) return getTransportRoute(t);
+  if (t.booking?.carrier_name) return t.booking.carrier_name;
+  if ((t.segments ?? []).length > 0) return getTransportRoute(t);
   return t.category;
 }
 
@@ -56,7 +57,7 @@ export function buildMentionContext(item: MentionItem): string {
   if (item.type === 'transport') {
     const t = item.entity as Transportation;
     const route = getTransportRoute(t);
-    return `transport:${t.id} (${t.category}, ${route})`;
+    return `transport:${t.id} (${t.category}${route ? ', ' + route : ''})`;
   }
 
   // POI — AI already has it in tripPlan
@@ -81,27 +82,33 @@ export function useAtMention() {
 
   // Build all candidate mention items (memoised so filter is fast)
   const allItems = useMemo<MentionItem[]>(() => [
-    ...pois.map<MentionItem>(p => ({
-      id: p.id,
-      type: p.category as MentionItemType,
-      name: p.name,
-      subtitle: p.location?.city,
-      entity: p,
-    })),
-    ...contacts.map<MentionItem>(c => ({
-      id: c.id,
-      type: 'contact',
-      name: c.name,
-      subtitle: c.role,
-      entity: c,
-    })),
-    ...transportation.map<MentionItem>(t => ({
-      id: t.id,
-      type: 'transport',
-      name: getTransportName(t),
-      subtitle: getTransportRoute(t),
-      entity: t,
-    })),
+    ...pois
+      .filter(p => p.name)
+      .map<MentionItem>(p => ({
+        id: p.id,
+        type: p.category as MentionItemType,
+        name: p.name,
+        subtitle: p.location?.city,
+        entity: p,
+      })),
+    ...contacts
+      .filter(c => c.name)
+      .map<MentionItem>(c => ({
+        id: c.id,
+        type: 'contact',
+        name: c.name,
+        subtitle: c.role,
+        entity: c,
+      })),
+    ...transportation
+      .filter(t => t.id)
+      .map<MentionItem>(t => ({
+        id: t.id,
+        type: 'transport',
+        name: getTransportName(t),
+        subtitle: getTransportRoute(t),
+        entity: t,
+      })),
   ], [pois, contacts, transportation]);
 
   // null = menu closed; string = current query (may be empty = show all)
