@@ -313,7 +313,18 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
       });
 
       console.log('[ai-chat] data:', JSON.stringify(data)?.slice(0, 500), 'error:', fnError);
-      if (fnError) throw new Error(data?.error || fnError.message || 'Failed to get response');
+      if (fnError) {
+        let errorMsg = fnError.message || 'Failed to get response';
+        try {
+          const ctx = (fnError as { context?: Response }).context;
+          if (ctx) {
+            const body = await ctx.json();
+            console.error('[ai-chat] fnError body:', body);
+            errorMsg = body?.error || body?.message || errorMsg;
+          }
+        } catch { /* ignore */ }
+        throw new Error(errorMsg);
+      }
       if (data?.error === 'daily_limit_exceeded') {
         queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
         throw new Error(data.message || 'Daily AI chat limit reached');
