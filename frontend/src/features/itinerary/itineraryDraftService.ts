@@ -4,7 +4,7 @@ import type { Json } from '@/integrations/supabase/types';
 import { createOrMergePOI, updatePOI } from '@/features/poi/poiService';
 import { supabase, fuzzyMatch } from '@/shared/services/helpers';
 import { createTripPlace, findTripPlaceByLocationId } from '@/features/trip/tripPlaceService';
-import { addTripLocation, resolveOrAddLocation } from '@/features/trip/tripLocationService';
+import { addTripLocation, resolveOrAddLocation, findLocationByName } from '@/features/trip/tripLocationService';
 import type { TripPlace } from '@/types/trip';
 
 
@@ -53,7 +53,14 @@ async function resolveLocationId(
   }
 
   if (locationName) {
-    const loc = await resolveOrAddLocation(tripId, locationName, 'city', locationParentId ?? undefined);
+    // If we have a parent ID, check if the location already exists; otherwise create it under that parent
+    if (locationParentId) {
+      const found = await findLocationByName(tripId, locationName);
+      if (found) return found.id;
+      const created = await addTripLocation(tripId, locationName, 'city', locationParentId, 'ai', undefined);
+      return created.id;
+    }
+    const loc = await resolveOrAddLocation(tripId, locationName, 'city');
     return loc.id;
   }
 
@@ -98,9 +105,16 @@ export async function applyDraftToTrip(
 
     let tripPlace = findTripPlaceByLocationId(mutableTripPlaces, resolvedLocId);
     if (!tripPlace) {
+      // Always use the actual trip_location name from DB (guaranteed to be a city/region name)
+      // rather than the draft's locationName which could be a POI name if the AI mis-categorised it
+      const { data: loc } = await supabase
+        .from('trip_locations')
+        .select('name')
+        .eq('id', resolvedLocId)
+        .maybeSingle();
       tripPlace = await createTripPlace(tripId, resolvedLocId, {
         sortOrder: mutableTripPlaces.length,
-        locationName,
+        locationName: loc?.name || locationName,
       });
       mutableTripPlaces.push(tripPlace);
     }
