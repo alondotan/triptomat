@@ -68,7 +68,7 @@ import { Crown } from 'lucide-react';
 const navItems = [
   { path: '/', labelKey: 'nav.aiHome', icon: Bot },
   { path: '/schedule', labelKey: 'nav.timeline', icon: CalendarDays },
-  { path: '/overview', labelKey: 'nav.home', icon: Compass },
+  { path: '/recommendations', labelKey: 'nav.home', icon: Compass },
   { path: '/map', labelKey: 'nav.map', icon: Map },
   { path: '/weather', labelKey: 'nav.weather', icon: CloudSun },
   { path: '/budget', labelKey: 'nav.budget', icon: DollarSign },

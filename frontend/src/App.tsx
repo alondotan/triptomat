@@ -85,7 +85,8 @@ const App = () => (
                     <Routes>
                       <Route path="/" element={<ErrorBoundary><HomePage /></ErrorBoundary>} />
                       <Route path="/schedule" element={<ErrorBoundary><SchedulePage /></ErrorBoundary>} />
-                      <Route path="/overview" element={<ErrorBoundary><OverviewPage /></ErrorBoundary>} />
+                      <Route path="/overview" element={<Navigate to="/recommendations" replace />} />
+                      <Route path="/recommendations" element={<ErrorBoundary><OverviewPage /></ErrorBoundary>} />
                       <Route path="/itinerary" element={<ErrorBoundary><ItineraryPage /></ErrorBoundary>} />
                       <Route path="/attractions" element={<ErrorBoundary><AttractionsPage /></ErrorBoundary>} />
                       <Route path="/events" element={<ErrorBoundary><EventsPage /></ErrorBoundary>} />
@@ -94,7 +95,7 @@ const App = () => (
                       <Route path="/pois/group" element={<ErrorBoundary><POIGroupPage /></ErrorBoundary>} />
                       <Route path="/transport" element={<ErrorBoundary><TransportPage /></ErrorBoundary>} />
                       <Route path="/sources" element={<ErrorBoundary><SourcesPage /></ErrorBoundary>} />
-                      <Route path="/recommendations" element={<Navigate to="/sources" replace />} />
+                      <Route path="/sources-recommendations" element={<Navigate to="/sources" replace />} />
                       <Route path="/map" element={<ErrorBoundary><MapPage /></ErrorBoundary>} />
                       <Route path="/weather" element={<ErrorBoundary><WeatherPage /></ErrorBoundary>} />
                       <Route path="/budget" element={<ErrorBoundary><BudgetPage /></ErrorBoundary>} />
