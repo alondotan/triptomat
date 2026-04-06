@@ -728,8 +728,9 @@ function buildTools(instantApply) {
                     properties: {
                       place_id: { type: 'STRING', description: 'ID of existing place. If provided, omit all other fields except day_part/start_time/duration.' },
                       event_id: { type: 'STRING', description: 'ID of a festival/event from the provided list, if this activity is related to it.' },
-                      location_id: { type: 'STRING', description: 'ID of existing location. If provided, omit location_name.' },
+                      location_id: { type: 'STRING', description: 'ID of existing location. If provided, omit location_name and location_parent_id.' },
                       location_name: { type: 'STRING', description: 'New location name. Use only if location_id is null.' },
+                      location_parent_id: { type: 'STRING', description: 'Parent location ID when creating a new location by name. Use only if location_id is null.' },
                       place_name: { type: 'STRING', description: 'The name of the place itself (e.g. "Angkor Wat", "Blue Pumpkin"). NOT an activity description. Required if place_id is null.' },
                       description: { type: 'STRING', description: 'What the user will do there (e.g. "Morning temple visit").' },
                       category: { type: 'STRING', enum: ['Activities', 'Eateries', 'Events', 'Transportation'], description: 'Category group. Do NOT use Accommodations here — hotels go in hotel_id/hotel_name/hotel_type.' },
