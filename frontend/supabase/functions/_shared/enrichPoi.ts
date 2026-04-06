@@ -67,31 +67,30 @@ export async function enrichPoi(
   let placeType: string | null = hasPlaceType ? poi.place_type : null;
   let activityType: string | null = hasActivityType ? poi.activity_type : null;
 
-  // Step 1: Geocode if missing coordinates
-  if (!hasCoords) {
+  // Step 1: Geocode if missing coordinates or address
+  const hasAddress = !!poi.location?.address;
+  if (!hasCoords || !hasAddress) {
     const parts = [name, opts.address, opts.city, opts.country].filter(Boolean);
     const query = parts.join(', ');
     console.log(`[enrichPoi] Geocoding: "${query}"`);
 
     const geo = await geocodeAddress(query);
-    if (geo.coordinates) {
-      coordinates = geo.coordinates;
+    if (geo.coordinates || geo.formattedAddress) {
+      if (geo.coordinates) coordinates = geo.coordinates;
 
       const updatedLocation = {
         ...poi.location,
-        coordinates: geo.coordinates,
+        ...(geo.coordinates && !hasCoords ? { coordinates: geo.coordinates } : {}),
+        ...(geo.formattedAddress && !hasAddress ? { address: geo.formattedAddress } : {}),
       };
-      if (geo.formattedAddress && !poi.location?.address) {
-        updatedLocation.address = geo.formattedAddress;
-      }
 
       const { error } = await supabase
         .from('points_of_interest')
         .update({ location: updatedLocation })
         .eq('id', poiId);
 
-      if (error) console.error('[enrichPoi] Failed to update coordinates:', error);
-      else console.log(`[enrichPoi] Coordinates set for ${poiId}: ${geo.coordinates.lat},${geo.coordinates.lng}`);
+      if (error) console.error('[enrichPoi] Failed to update location:', error);
+      else console.log(`[enrichPoi] Location updated for ${poiId}:`, { coords: !!geo.coordinates, address: !!geo.formattedAddress });
     }
   }
 

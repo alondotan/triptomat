@@ -77,7 +77,11 @@ export async function fetchPlaceImage(
 
     const photoName = data.places?.[0]?.photos?.[0]?.name;
     if (photoName) {
-      return `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=800&maxWidthPx=800&key=${GOOGLE_MAPS_API_KEY}`;
+      // Follow the redirect server-side so we store the final public CDN URL
+      // (not the key-bearing Places API URL, which fails from the browser)
+      const mediaUrl = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=800&maxWidthPx=800&key=${GOOGLE_MAPS_API_KEY}`;
+      const imgRes = await fetch(mediaUrl, { redirect: 'follow', signal: AbortSignal.timeout(10_000) });
+      if (imgRes.ok) return imgRes.url;
     }
   } catch (e) {
     console.error('[geocode] Places API error:', e);
