@@ -740,8 +740,9 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('ai-chat error:', err);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('ai-chat error:', msg);
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
