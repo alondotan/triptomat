@@ -309,6 +309,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
           mode: 'planner',
           tripPlan,
           instantApply,
+          tripId: tripContext.tripId,
         },
       });
 

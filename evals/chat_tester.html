@@ -222,12 +222,15 @@
     <option value="">— select country —</option>
     <option>Afghanistan</option><option>Albania</option><option>Algeria</option><option>Andorra</option><option>Angola</option><option>Antigua and Barbuda</option><option>Argentina</option><option>Armenia</option><option>Australia</option><option>Austria</option><option>Azerbaijan</option><option>Bahrain</option><option>Bangladesh</option><option>Barbados</option><option>Belarus</option><option>Belgium</option><option>Belize</option><option>Benin</option><option>Bhutan</option><option>Bolivia</option><option>Bosnia and Herzegovina</option><option>Botswana</option><option>Brazil</option><option>Brunei</option><option>Bulgaria</option><option>Burkina Faso</option><option>Burundi</option><option selected>Cambodia</option><option>Cameroon</option><option>Canada</option><option>Central African Republic</option><option>Chad</option><option>Chile</option><option>China</option><option>Colombia</option><option>Comoros</option><option>Costa Rica</option><option>Croatia</option><option>Cuba</option><option>Cyprus</option><option>Czech Republic</option><option>Côte d'Ivoire</option><option>Democratic Republic of the Congo</option><option>Denmark</option><option>Djibouti</option><option>Dominica</option><option>Dominican Republic</option><option>Ecuador</option><option>Egypt</option><option>El Salvador</option><option>Equatorial Guinea</option><option>Eritrea</option><option>Estonia</option><option>Ethiopia</option><option>Fiji</option><option>Finland</option><option>France</option><option>French Polynesia</option><option>Gabon</option><option>Georgia</option><option>Germany</option><option>Ghana</option><option>Greece</option><option>Grenada</option><option>Guatemala</option><option>Guinea</option><option>Guinea-Bissau</option><option>Guyana</option><option>Haiti</option><option>Honduras</option><option>Hungary</option><option>Iceland</option><option>India</option><option>Indonesia</option><option>Iran</option><option>Iraq</option><option>Ireland</option><option>Israel</option><option>Italy</option><option>Jamaica</option><option>Japan</option><option>Jordan</option><option>Kazakhstan</option><option>Kenya</option><option>Kosovo</option><option>Kuwait</option><option>Kyrgyzstan</option><option>Laos</option><option>Latvia</option><option>Lebanon</option><option>Liberia</option><option>Libya</option><option>Liechtenstein</option><option>Lithuania</option><option>Luxembourg</option><option>Madagascar</option><option>Malawi</option><option>Malaysia</option><option>Maldives</option><option>Mali</option><option>Malta</option><option>Mauritania</option><option>Mauritius</option><option>Mexico</option><option>Moldova</option><option>Monaco</option><option>Mongolia</option><option>Montenegro</option><option>Morocco</option><option>Mozambique</option><option>Myanmar</option><option>Namibia</option><option>Nepal</option><option>Netherlands</option><option>New Zealand</option><option>Nicaragua</option><option>Niger</option><option>Nigeria</option><option>North Korea</option><option>North Macedonia</option><option>Norway</option><option>Oman</option><option>Pakistan</option><option>Panama</option><option>Papua New Guinea</option><option>Paraguay</option><option>Peru</option><option>Philippines</option><option>Poland</option><option>Portugal</option><option>Qatar</option><option>Republic of the Congo</option><option>Romania</option><option>Russia</option><option>Rwanda</option><option>Saint Kitts and Nevis</option><option>Saint Lucia</option><option>Saint Vincent and the Grenadines</option><option>Samoa</option><option>San Marino</option><option>Saudi Arabia</option><option>Senegal</option><option>Serbia</option><option>Seychelles</option><option>Sierra Leone</option><option>Singapore</option><option>Slovakia</option><option>Slovenia</option><option>Somalia</option><option>South Africa</option><option>South Korea</option><option>Spain</option><option>Sri Lanka</option><option>Sudan</option><option>Suriname</option><option>Sweden</option><option>Switzerland</option><option>Syria</option><option>São Tomé and Príncipe</option><option>Taiwan</option><option>Tajikistan</option><option>Tanzania</option><option>Thailand</option><option>The Bahamas</option><option>The Gambia</option><option>Timor-Leste</option><option>Togo</option><option>Trinidad and Tobago</option><option>Tunisia</option><option>Turkey</option><option>Turkmenistan</option><option>Uganda</option><option>Ukraine</option><option>United Arab Emirates</option><option>United Kingdom</option><option>United States of America</option><option>Uruguay</option><option>Uzbekistan</option><option>Vanuatu</option><option>Vatican City</option><option>Venezuela</option><option>Vietnam</option><option>Yemen</option><option>Zambia</option><option>Zimbabwe</option>
   </select>
-  <select id="modeSelect" style="background:#111;border:1px solid #333;color:#e0e0e0;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:12px;">
-    <option value="instant">instantApply</option>
-    <option value="planner">planner (apply_itinerary)</option>
-  </select>
+  <input id="apiKeyInput" type="password" placeholder="Gemini API key…" style="width:220px;flex:0 0 220px;" oninput="localStorage.setItem('gemini_api_key',this.value)" />
   <button class="btn-clear" onclick="resetConversation()" style="margin-left:8px;">↺ Reset</button>
 </header>
+<script src="config.js"></script>
+<script>
+  // Restore saved API key: config.js > localStorage
+  const _savedKey = window.GEMINI_API_KEY || localStorage.getItem('gemini_api_key');
+  if (_savedKey) document.getElementById('apiKeyInput').value = _savedKey;
+</script>
 
 <div class="main">
   <!-- LEFT: JSON editors -->
@@ -348,8 +351,11 @@
 </div>
 
 <script>
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview-customtools:generateContent';
-const API_KEY = 'AIzaSyAVbLD1kqTgcZsf_m3zoJATZ_eB-1CpAHQ';
+const GEMINI_MODEL = 'gemini-2.5-pro';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+function getApiKey() {
+  return document.getElementById('apiKeyInput')?.value?.trim() || window.GEMINI_API_KEY || '';
+}
 
 // ── Conversation history ────────────────────────────────────────────────────
 let history = [];
@@ -447,17 +453,16 @@ function rebuildFinalPrompt() {
     const tripContext = JSON.parse(document.getElementById('tripContext').value);
     const tripPlan = JSON.parse(document.getElementById('tripPlan').value);
     const countryData = JSON.parse(document.getElementById('countryData').value);
-    const instantApply = document.getElementById('modeSelect').value === 'instant';
+    const mode = 'twostep';
     const sp = document.getElementById('systemPrompt');
     if (!sp.hasAttribute('readonly')) return; // user is editing manually — don't overwrite
-    sp.value = buildSystemPrompt(tripContext, tripPlan, countryData, instantApply);
+    sp.value = buildSystemPrompt(tripContext, tripPlan, countryData, mode);
   } catch(e) { /* JSON mid-edit, ignore */ }
 }
 
 ['tripContext', 'tripPlan', 'countryData', 'basePrompt'].forEach(id => {
   document.getElementById(id).addEventListener('input', rebuildFinalPrompt);
 });
-document.getElementById('modeSelect').addEventListener('change', rebuildFinalPrompt);
 
 // ── System prompt builder (mirrors buildSystemPrompt in edge function) ──────
 const DEFAULT_BASE = `You are Triptomat AI, a helpful travel planning assistant embedded in a trip planning application.
@@ -527,7 +532,7 @@ Then use the matching sub-type field (see below). Always include the relevant su
 
 **Transportation** — use \`transport_type\`: car, bus, train, subway, bicycle, motorcycle, taxi, ferry, airplane, scooter, cruise, tram, cruise_ship, car_rental, domestic_flight, international_flight, night_train, high_speed_train, cable_car, funicular, boat_taxi_transport, rideshare, private_transfer, rv, other_transportation, shuttle_bus, airport_shuttle_bus, harbor_shuttle_boat`;
 
-function buildSystemPrompt(tripContext, tripPlan, countryData, instantApply) {
+function buildSystemPrompt(tripContext, tripPlan, countryData, mode) {
   const BASE = document.getElementById('basePrompt').value.trim() || DEFAULT_BASE;
   let prompt = BASE;
 
@@ -603,7 +608,7 @@ function buildSystemPrompt(tripContext, tripPlan, countryData, instantApply) {
       ? '\nWhen referencing any place that appears in the current plan, use the EXACT name as listed — do not shorten, translate, or paraphrase it.'
       : '';
 
-    if (instantApply) {
+    if (mode === 'instant') {
       prompt += `\n\n## Itinerary Planner Mode (Live)
 Every call to set_itinerary is saved to the trip immediately — the user sees changes in real time.
 ${nameRule}
@@ -637,6 +642,37 @@ Always include a short text explanation alongside the tool call.
 - Do not use generic descriptions as place names (e.g. NOT "local restaurant", "scenic viewpoint")
 - One entry per named place — do not combine multiple places in one name
 - If a place appears in the current plan, copy its name EXACTLY as listed
+
+\n\nCurrent plan:\n${planText}`;
+    } else if (mode === 'twostep') {
+      prompt += `\n\n## Itinerary Planner Mode (2-step)
+${nameRule}
+
+Build itineraries in two steps:
+
+**Step 1 — upsert_places**: Call first to register all NEW locations and places.
+- **Only items NOT already in the trip data** — do not repeat existing location_ids or place_ids.
+- "locations": new geographic areas (city, region, etc.) — assign a temp_id, provide location_name, location_type, and optionally location_parent_id (existing ID or another temp_id from this list).
+- "places": new places — assign a temp_id, provide place_name, category, types, and location_id (existing ID or temp_id from locations above).
+- The response returns a flat id_map: { "your-temp-id": "real-system-id", ... } — use these real IDs in set_itinerary.
+
+**Step 2 — set_itinerary**: Call AFTER receiving the upsert_places response.
+- Each place entry needs ONLY: place_id (from step 1), day_part, start_time, duration
+- Always include ALL days in one call.
+- Always include a short text explanation alongside the tool call.
+
+**apply_itinerary** — Call automatically right after set_itinerary when the user asks to plan, build, or create an itinerary.
+
+### CRITICAL RULE — CALL upsert_places IMMEDIATELY, NEVER ASK PERMISSION:
+- If the user asks to plan, build, create, or suggest an itinerary in ANY form, you MUST call upsert_places in the SAME response.
+- NEVER write a day-by-day plan in text and then ask "should I schedule this?" — call upsert_places directly.
+- NEVER return a text itinerary without calling upsert_places first.
+- In set_itinerary places, use ONLY place_id — do not include place_name or any other metadata.
+
+### Hotel assignment per day:
+- Each day has optional hotel_id / hotel_name fields indicating where the traveler sleeps.
+- If the trip has hotels listed, prefer hotel_id over hotel_name.
+- Only set hotel_id / hotel_name when known; leave blank otherwise.
 
 \n\nCurrent plan:\n${planText}`;
     } else {
@@ -686,7 +722,7 @@ const EATERY_TYPE_FIELD = { type: 'STRING', description: 'Eatery sub-type for Ea
 const TRANSPORT_TYPE_FIELD = { type: 'STRING', description: 'Transport sub-type for Transportation (e.g. "train", "domestic_flight", "ferry").' };
 const EVENT_TYPE_FIELD = { type: 'STRING', description: 'Event sub-type for Events (e.g. "festival", "concert", "cultural_parade").' };
 
-function buildTools(instantApply) {
+function buildTools(mode) {
   const base = [
     {
       name: 'suggest_places',
@@ -756,7 +792,100 @@ function buildTools(instantApply) {
     },
   ];
 
-  if (!instantApply) {
+  if (mode === 'twostep') {
+    // Remove the default set_itinerary and replace with upsert_places + simplified set_itinerary
+    const idx = base.findIndex(t => t.name === 'set_itinerary');
+    if (idx !== -1) base.splice(idx, 1);
+
+    base.push({
+      name: 'upsert_places',
+      description: 'Register new locations and places before scheduling. Only include items NOT already in the trip data. The response maps each temp_id to a real system ID — use those real IDs in set_itinerary.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          locations: {
+            type: 'ARRAY',
+            description: 'New locations not already in the trip data. Do NOT include existing locations from the input.',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                temp_id: { type: 'STRING', description: 'Temporary ID you assign (e.g. "loc-1"). Returned in the response mapped to a real ID.' },
+                location_name: { type: 'STRING', description: 'Name of the location (e.g. "Siem Reap", "South Coast").' },
+                location_parent_id: { type: 'STRING', description: 'ID of the parent location — either an existing location_id from the trip data, or a temp_id defined earlier in this list.' },
+                location_type: { type: 'STRING', enum: ['continent','country','state','province','region','tourism_region','metropolitan_area','municipality','city','town','village','suburb','district','neighborhood','quarter','borough','area','historic_district','pedestrian_zone','county','department','township','prefecture','governorate','metropolis','canton','voivodeship','federal_entity','autonomous_community','capital_city','entity','federal_city','territory','atoll','other_geography'], description: 'Geographic hierarchy type.' },
+              },
+              required: ['temp_id', 'location_name', 'location_type'],
+            },
+          },
+          places: {
+            type: 'ARRAY',
+            description: 'New places not already in the trip data. Do NOT include existing places.',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                temp_id: { type: 'STRING', description: 'Temporary ID you assign (e.g. "place-1"). Returned in the response mapped to a real ID.' },
+                location_id: { type: 'STRING', description: 'Location for this place — either an existing location_id from the trip data, or a temp_id from the locations list above.' },
+                place_name: { type: 'STRING', description: 'Specific searchable name (e.g. "Angkor Wat").' },
+                category: { type: 'STRING', enum: ['Activities', 'Eateries', 'Events', 'Transportation'] },
+                place_type: PLACE_TYPE_FIELD,
+                activity_type: ACTIVITY_TYPE_FIELD,
+                eatery_type: EATERY_TYPE_FIELD,
+                transport_type: TRANSPORT_TYPE_FIELD,
+                event_type: EVENT_TYPE_FIELD,
+                is_specific_place: { type: 'BOOLEAN', description: 'True if this is a specific named place.' },
+              },
+              required: ['temp_id', 'place_name', 'category'],
+            },
+          },
+        },
+        required: ['locations', 'places'],
+      },
+    });
+
+    base.push({
+      name: 'set_itinerary',
+      description: 'Build the day-by-day schedule. Each place entry uses a place_id from upsert_places. Always include ALL days and ALL places in every call.',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          days: {
+            type: 'ARRAY',
+            description: 'Array of days in the itinerary, ordered by day number',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                day_number: { type: 'INTEGER', description: 'Day number (1-based)' },
+                location_id: { type: 'STRING', description: 'Required. Real ID from the upsert_places id_map (or existing location_id from the trip data).' },
+                hotel_id: { type: 'STRING', description: 'ID of the accommodation where the traveler sleeps this night.' },
+                hotel_name: { type: 'STRING', description: 'Hotel name when no hotel_id is available.' },
+                hotel_type: ACCOMMODATION_TYPE_FIELD,
+                places: {
+                  type: 'ARRAY',
+                  description: 'Ordered list of places for this day — only place_id and timing fields',
+                  items: {
+                    type: 'OBJECT',
+                    properties: {
+                      place_id: { type: 'STRING', description: 'Required. Real ID from the upsert_places id_map response (or existing place_id from the trip data).' },
+                      description: { type: 'STRING', description: 'What the traveler does there (e.g. "Morning temple visit", "Sunset drinks").' },
+                      event_id: { type: 'STRING', description: 'Festival/event ID if this activity is related to a festival.' },
+                      day_part: { type: 'STRING', description: 'Morning, Afternoon, Evening, or Night' },
+                      start_time: { type: 'STRING', description: 'HH:mm' },
+                      duration: { type: 'STRING', description: "e.g. '2h' or '45m'" },
+                    },
+                    required: ['place_id'],
+                  },
+                },
+              },
+              required: ['day_number', 'places'],
+            },
+          },
+        },
+        required: ['days'],
+      },
+    });
+
+    base.push({ name: 'apply_itinerary', description: 'Save the itinerary draft to the real trip. Call this automatically right after set_itinerary whenever the user asks you to recommend, plan, build, or create an itinerary. Also call it when the user explicitly asks to update/save/apply the plan.', parameters: { type: 'OBJECT', properties: {} } });
+  } else if (mode !== 'instant') {
     base.push({ name: 'apply_itinerary', description: 'Save the itinerary draft to the real trip. Call this automatically right after set_itinerary whenever the user asks you to recommend, plan, build, or create an itinerary. Also call it when the user explicitly asks to update/save/apply the plan.', parameters: { type: 'OBJECT', properties: {} } });
   }
 
@@ -776,11 +905,11 @@ async function send() {
   try { countryData = JSON.parse(document.getElementById('countryData').value); }
   catch(e) { alert('countryData JSON invalid:\n' + e.message); return; }
 
-  const instantApply = document.getElementById('modeSelect').value === 'instant';
+  const mode = 'twostep';
 
   // Use whatever is in the systemPrompt textarea (user may have edited it)
   const systemPrompt = document.getElementById('systemPrompt').value.trim()
-    || buildSystemPrompt(tripContext, tripPlan, countryData, instantApply);
+    || buildSystemPrompt(tripContext, tripPlan, countryData, mode);
 
   // Add user message to UI and history
   history.push({ role: 'user', parts: [{ text: promptText }] });
@@ -789,27 +918,37 @@ async function send() {
   autoResize(document.getElementById('prompt'));
 
   let tools;
-  try {
-    const raw = document.getElementById('toolsSchema').value.trim();
-    const declarations = JSON.parse(raw);
-    tools = [{ functionDeclarations: declarations }];
-  } catch(e) {
-    alert('toolsSchema JSON invalid:\n' + e.message); return;
+  if (mode === 'twostep') {
+    tools = buildTools('twostep');
+  } else {
+    try {
+      const raw = document.getElementById('toolsSchema').value.trim();
+      const declarations = JSON.parse(raw);
+      tools = [{ functionDeclarations: declarations }];
+    } catch(e) {
+      alert('toolsSchema JSON invalid:\n' + e.message); return;
+    }
   }
 
   setLoading(true);
 
   try {
 
+    const toolConfig = mode === 'twostep'
+      ? { functionCallingConfig: { mode: 'ANY', allowedFunctionNames: ['upsert_places'] } }
+      : { functionCallingConfig: { mode: 'AUTO' } };
+
     const body = {
       system_instruction: { parts: [{ text: systemPrompt }] },
       contents: history,
       tools,
-      toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
+      toolConfig,
       generationConfig: { maxOutputTokens: 16384, temperature: 0.7 },
     };
 
-    const resp = await fetch(`${GEMINI_URL}?key=${API_KEY}`, {
+    const apiKey = getApiKey();
+    if (!apiKey) { appendMessage('assistant', '❌ Missing Gemini API key — enter it in the header field.'); return; }
+    const resp = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -822,7 +961,7 @@ async function send() {
 
     const data = await resp.json();
     const parts = data.candidates?.[0]?.content?.parts || [];
-    const textParts = parts.filter(p => p.text).map(p => p.text).join('');
+    const textParts = parts.filter(p => p.text && !p.thought).map(p => p.text).join('');
     const functionCalls = parts.filter(p => p.functionCall);
 
     // Add assistant turn to history
@@ -840,6 +979,76 @@ async function send() {
       appendMessage('assistant', '(empty response — finishReason: ' + (data.candidates?.[0]?.finishReason || '?') + ')');
     }
 
+    // Auto-simulate upsert_places response in 2-step mode
+    const upsertCall = functionCalls.find(p => p.functionCall.name === 'upsert_places');
+    if (upsertCall) {
+      await simulateUpsertAndContinue(upsertCall.functionCall, systemPrompt, tools);
+    }
+
+  } catch(e) {
+    appendError(e.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function simulateUpsertAndContinue(call, systemPrompt, tools) {
+  let locCounter = 1001, placeCounter = 1001;
+
+  // Map temp_id → real_id for locations
+  const idMap = {};
+  (call.args.locations || []).forEach(loc => {
+    idMap[loc.temp_id] = `loc-${locCounter++}`;
+  });
+  (call.args.places || []).forEach(p => {
+    idMap[p.temp_id] = `place-${placeCounter++}`;
+  });
+
+  // Response: flat temp_id → real_id mapping
+  const simResponse = { id_map: idMap };
+
+  // Show simulated response in UI
+  const wrapper = document.createElement('div');
+  wrapper.className = 'msg assistant';
+  wrapper.innerHTML = '<div class="msg-role">⚙️ simulated tool response</div>';
+  const pre = document.createElement('pre');
+  pre.style.cssText = 'font-size:11px;color:#80c8a0;padding:8px;overflow:auto;';
+  pre.textContent = JSON.stringify(simResponse, null, 2);
+  wrapper.appendChild(pre);
+  document.getElementById('messages').appendChild(wrapper);
+  scrollBottom();
+
+  // Push function response into history
+  history.push({
+    role: 'user',
+    parts: [{ functionResponse: { name: 'upsert_places', response: simResponse } }],
+  });
+
+  // Auto-continue: call Gemini again
+  setLoading(true);
+  try {
+    const apiKey = getApiKey();
+    const body = {
+      system_instruction: { parts: [{ text: systemPrompt }] },
+      contents: history,
+      tools,
+      toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
+      generationConfig: { maxOutputTokens: 16384, temperature: 0.7 },
+    };
+    const resp = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) { const err = await resp.text(); throw new Error(`Gemini error ${resp.status}: ${err.slice(0, 300)}`); }
+    const data = await resp.json();
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    const textParts = parts.filter(p => p.text && !p.thought).map(p => p.text).join('');
+    const functionCalls2 = parts.filter(p => p.functionCall);
+    history.push({ role: 'model', parts });
+    if (textParts) appendMessage('assistant', textParts);
+    if (functionCalls2.length > 0) appendToolCalls(functionCalls2.map(p => p.functionCall));
+    if (!textParts && functionCalls2.length === 0) appendMessage('assistant', '(empty response — finishReason: ' + (data.candidates?.[0]?.finishReason || '?') + ')');
   } catch(e) {
     appendError(e.message);
   } finally {
@@ -883,6 +1092,7 @@ function countPlaces(call) {
     return (call.args?.days || []).reduce((s, d) => s + (d.places?.length || 0), 0) + ' places in ' + (call.args?.days?.length || 0) + ' days';
   }
   if (call.name === 'suggest_places') return (call.args?.places?.length || 0) + ' places';
+  if (call.name === 'upsert_places') return (call.args?.places?.length || 0) + ' places';
   return '';
 }
 
@@ -958,7 +1168,7 @@ function resetConversation() {
 document.getElementById('basePrompt').value = DEFAULT_BASE;
 
 // Initialize tools tab with the default full tools schema (pretty-printed)
-const DEFAULT_TOOLS = buildTools(false)[0].functionDeclarations;
+const DEFAULT_TOOLS = buildTools('twostep')[0].functionDeclarations;
 document.getElementById('toolsSchema').value = JSON.stringify(DEFAULT_TOOLS, null, 2);
 
 rebuildFinalPrompt();

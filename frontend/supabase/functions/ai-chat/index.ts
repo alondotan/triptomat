@@ -272,67 +272,43 @@ function buildSystemPrompt(tripContext?: TripContext, tripPlan?: TripPlan | null
       ? `\nWhen referencing any place that appears in the current plan, use the EXACT name as listed — do not shorten, translate, or paraphrase it.`
       : '';
 
-    if (instantApply) {
-      prompt += `\n\n## Itinerary Planner Mode (Live)
-Every call to set_itinerary is saved to the trip immediately — the user sees changes in real time.
+    // Both instant and non-instant now use 2-step (upsert_places → set_itinerary)
+    const applyInstruction = instantApply
+      ? `Every call to set_itinerary is saved to the trip immediately.`
+      : `**apply_itinerary** — Call automatically right after set_itinerary when the user asks to plan/build/create an itinerary.`;
+
+    prompt += `\n\n## Itinerary Planner Mode (2-step)
 ${knownNamesRule}
 
-**set_itinerary** — The only tool available. Always include ALL days and ALL places in every call.
-Place categories: accommodation, eatery, attraction, service.
-Always include a short text explanation alongside the tool call.
+Build itineraries in two steps:
 
-### CRITICAL RULE — CALL set_itinerary IMMEDIATELY, NEVER ASK PERMISSION:
-- If your response contains a day-by-day itinerary in ANY form, you MUST call set_itinerary in the SAME response.
-- NEVER write a plan in text and then ask "should I add this to your schedule?" — call set_itinerary directly.
-- NEVER say "would you like me to update the itinerary?" — just update it.
-- The user can undo any change, so call set_itinerary without asking permission first.
+**Step 1 — upsert_places**: Call first to register all NEW locations and places.
+- Only include items NOT already in the trip data — do not repeat existing location_ids or place_ids.
+- "locations": new geographic areas — assign a temp_id, provide location_name, location_type, and optionally location_parent_id (existing ID or another temp_id from this list).
+- "places": new places — assign a temp_id, provide place_name, category, types, and location_id (existing ID or temp_id from locations above).
+- The response returns a flat id_map: { "your-temp-id": "real-system-id", ... } — use these real IDs in set_itinerary.
 
-### When to call set_itinerary:
-- User asks you to plan, suggest, build, or create an itinerary of any length
-- User asks to add, remove, or move a specific place
-- Your response contains a day-by-day breakdown of any kind
+**Step 2 — set_itinerary**: Call AFTER receiving the upsert_places response.
+- Each day: location_id (real ID from id_map or existing), hotel_id/hotel_name (optional)
+- Each place: place_id (real ID from id_map or existing), description, day_part, start_time, duration
+- Always include ALL days in one call.
+- Always include a short text explanation alongside the tool call.
 
-### When NOT to call set_itinerary:
+${applyInstruction}
+
+### CRITICAL RULE — CALL upsert_places IMMEDIATELY, NEVER ASK PERMISSION:
+- If the user asks to plan, build, create, or suggest an itinerary in ANY form, you MUST call upsert_places in the SAME response.
+- NEVER write a day-by-day plan in text — call upsert_places directly.
+- NEVER skip step 1 — always call upsert_places before set_itinerary.
+
+### When NOT to call upsert_places/set_itinerary:
 - User asks for open recommendations with no planning intent ("what are good restaurants in Tokyo?")
-- User asks a factual travel question or wants tips, and your response has no day-by-day structure
+- User asks a factual travel question or wants tips only
 
 ### Hotel assignment per day:
-- Each day has optional hotel_id / hotel_name fields indicating where the traveler sleeps that night.
+- Each day has optional hotel_id / hotel_name fields indicating where the traveler sleeps.
 - If the trip has hotels listed (see "Available hotels" in the plan), prefer hotel_id over hotel_name.
-- Only set hotel_id / hotel_name when you know or are assigning where the traveler stays; leave blank if unknown.
-
-### Place naming rules for set_itinerary:
-- Use specific, searchable place names (e.g. "Senso-ji Temple", not "Buddhist temple")
-- Do not use generic descriptions as place names (e.g. NOT "local restaurant", "scenic viewpoint")
-- One entry per named place — do not combine multiple places in one name
-- If a place appears in the current plan, copy its name EXACTLY as listed`;
-    } else {
-      prompt += `\n\n## Itinerary Planner Mode
-You have two tools: set_itinerary and apply_itinerary.
-${knownNamesRule}
-
-**set_itinerary** — Call this whenever you modify the itinerary. Always include ALL days and places, not just changes.
-Categories: accommodation, eatery, attraction, service.
-Always include a short text explanation alongside every tool call.
-
-**apply_itinerary** — Saves the itinerary to the real trip.
-- Call it AUTOMATICALLY right after set_itinerary when the user asks you to recommend, plan, build, or create an itinerary.
-- Also call it when the user explicitly says to save/update/apply.
-- Do NOT call it for minor suggestions, tips, or when the user is still exploring options interactively.
-
-When answering questions or giving tips without changing the plan, respond with text only — do NOT call any tool.
-
-### Hotel assignment per day:
-- Each day has optional hotel_id / hotel_name fields indicating where the traveler sleeps that night.
-- If the trip has hotels listed (see "Available hotels" in the plan), prefer hotel_id over hotel_name.
-- Only set hotel_id / hotel_name when you know or are assigning where the traveler stays; leave blank if unknown.
-
-### Place naming rules for set_itinerary:
-- Use specific, searchable place names (e.g. "Senso-ji Temple", not "Buddhist temple")
-- Do not use generic descriptions as place names (e.g. NOT "local restaurant", "scenic viewpoint")
-- One entry per named place — do not combine multiple places in one name
-- If a place appears in the current plan, copy its name EXACTLY as listed`;
-    }
+- Only set hotel_id / hotel_name when known; leave blank otherwise.`;
 
     prompt += `\n\nCurrent plan:\n${planText}`;
   }
@@ -517,12 +493,200 @@ const ITINERARY_TOOL_INSTANT = {
   functionDeclarations: [ITINERARY_TOOL.functionDeclarations[0]],
 };
 
+// Category mapping: AI label → DB value
+const AI_CATEGORY_TO_DB: Record<string, string> = {
+  Activities: 'attraction',
+  Eateries: 'eatery',
+  Events: 'event',
+  Transportation: 'service',
+  Accommodations: 'accommodation',
+};
+
+const UPSERT_PLACES_DECL = {
+  name: 'upsert_places',
+  description: 'Register new locations and places before scheduling. Only include items NOT already in the trip data. Response maps each temp_id to a real system ID — use those real IDs in set_itinerary.',
+  parameters: {
+    type: 'OBJECT',
+    properties: {
+      locations: {
+        type: 'ARRAY',
+        description: 'New geographic areas not in trip data. Do NOT include existing locations from the input.',
+        items: {
+          type: 'OBJECT',
+          properties: {
+            temp_id: { type: 'STRING', description: 'Temporary ID you assign (e.g. "loc-1"). Returned mapped to a real ID.' },
+            location_name: { type: 'STRING', description: 'Name of the location (e.g. "Siem Reap").' },
+            location_parent_id: { type: 'STRING', description: 'Parent location — either an existing location_id from the trip data, or a temp_id defined earlier in this list.' },
+            location_type: { type: 'STRING', enum: ['continent','country','state','province','region','tourism_region','metropolitan_area','municipality','city','town','village','suburb','district','neighborhood','quarter','borough','area','historic_district','pedestrian_zone','county','department','township','prefecture','governorate','metropolis','canton','voivodeship','federal_entity','autonomous_community','capital_city','entity','federal_city','territory','atoll','other_geography'], description: 'Geographic hierarchy type.' },
+          },
+          required: ['temp_id', 'location_name', 'location_type'],
+        },
+      },
+      places: {
+        type: 'ARRAY',
+        description: 'New places not in trip data.',
+        items: {
+          type: 'OBJECT',
+          properties: {
+            temp_id: { type: 'STRING', description: 'Temporary ID you assign (e.g. "place-1"). Returned mapped to a real ID.' },
+            location_id: { type: 'STRING', description: 'Location for this place — existing location_id or a temp_id from the locations list above.' },
+            place_name: { type: 'STRING', description: 'Specific searchable name (e.g. "Angkor Wat").' },
+            category: { type: 'STRING', enum: ['Activities', 'Eateries', 'Events', 'Transportation'] },
+            place_type: PLACE_TYPE_FIELD,
+            activity_type: ACTIVITY_TYPE_FIELD,
+            eatery_type: EATERY_TYPE_FIELD,
+            transport_type: TRANSPORT_TYPE_FIELD,
+            event_type: EVENT_TYPE_FIELD,
+            is_specific_place: { type: 'BOOLEAN', description: 'True if this is a specific named place.' },
+          },
+          required: ['temp_id', 'place_name', 'category'],
+        },
+      },
+    },
+    required: ['locations', 'places'],
+  },
+};
+
+const SIMPLIFIED_SET_ITINERARY_DECL = {
+  name: 'set_itinerary',
+  description: 'Build the day-by-day schedule using real IDs from upsert_places id_map (or existing IDs from the trip data). Always include ALL days and places.',
+  parameters: {
+    type: 'OBJECT',
+    properties: {
+      days: {
+        type: 'ARRAY',
+        description: 'Array of days, ordered by day number',
+        items: {
+          type: 'OBJECT',
+          properties: {
+            day_number: { type: 'INTEGER' },
+            location_id: { type: 'STRING', description: 'Real location ID from id_map or existing location_id.' },
+            hotel_id: { type: 'STRING', description: 'Accommodation POI ID for the night.' },
+            hotel_name: { type: 'STRING', description: 'Hotel name when no hotel_id available.' },
+            hotel_type: ACCOMMODATION_TYPE_FIELD,
+            places: {
+              type: 'ARRAY',
+              description: 'Ordered places for this day — use real IDs only.',
+              items: {
+                type: 'OBJECT',
+                properties: {
+                  place_id: { type: 'STRING', description: 'Real ID from id_map or existing place_id.' },
+                  description: { type: 'STRING', description: 'What the traveler does there.' },
+                  event_id: { type: 'STRING', description: 'Festival/event ID if applicable.' },
+                  day_part: { type: 'STRING', description: 'Morning, Afternoon, Evening, or Night' },
+                  start_time: { type: 'STRING', description: 'HH:mm' },
+                  duration: { type: 'STRING', description: "e.g. '2h' or '45m'" },
+                },
+                required: ['place_id'],
+              },
+            },
+          },
+          required: ['day_number', 'places'],
+        },
+      },
+    },
+    required: ['days'],
+  },
+};
+
+// 2-step planner tool set
+const ITINERARY_TOOL_TWOSTEP = {
+  functionDeclarations: [UPSERT_PLACES_DECL, SIMPLIFIED_SET_ITINERARY_DECL],
+};
+
+const ITINERARY_TOOL_TWOSTEP_WITH_APPLY = {
+  functionDeclarations: [UPSERT_PLACES_DECL, SIMPLIFIED_SET_ITINERARY_DECL, ITINERARY_TOOL.functionDeclarations[1]], // apply_itinerary
+};
+
 const SAFETY_SETTINGS = [
   { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
   { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
   { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
   { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
 ];
+
+async function handleUpsertPlaces(
+  // deno-lint-ignore no-explicit-any
+  args: { locations?: any[]; places?: any[] },
+  tripId: string,
+  // deno-lint-ignore no-explicit-any
+  db: any,
+): Promise<Record<string, string>> {
+  const idMap: Record<string, string> = {};
+
+  // 1. Create new locations (in order — parent before child)
+  for (const loc of (args.locations || [])) {
+    const parentId: string | null = loc.location_parent_id
+      ? (idMap[loc.location_parent_id] ?? loc.location_parent_id)
+      : null;
+
+    const { data, error } = await db
+      .from('trip_locations')
+      .insert({
+        trip_id: tripId,
+        name: loc.location_name,
+        place_type: loc.location_type,
+        parent_id: parentId,
+        source: 'ai',
+      })
+      .select('id')
+      .single();
+
+    if (error || !data) {
+      console.error('upsert_places: failed to create location', loc.location_name, error?.message);
+      idMap[loc.temp_id] = loc.temp_id; // fallback — won't break downstream
+    } else {
+      idMap[loc.temp_id] = data.id;
+    }
+  }
+
+  // 2. Create new places (POIs)
+  for (const place of (args.places || [])) {
+    const locationId: string | null = place.location_id
+      ? (idMap[place.location_id] ?? place.location_id)
+      : null;
+
+    // Get city name from location for POI.location.city
+    let cityName: string | undefined;
+    if (locationId) {
+      const { data: loc } = await db
+        .from('trip_locations')
+        .select('name')
+        .eq('id', locationId)
+        .maybeSingle();
+      cityName = loc?.name;
+    }
+
+    const category = AI_CATEGORY_TO_DB[place.category] ?? 'attraction';
+    const placeType = place.place_type || place.eatery_type || place.transport_type || place.event_type;
+
+    const { data, error } = await db
+      .from('points_of_interest')
+      .insert({
+        trip_id: tripId,
+        name: place.place_name,
+        category,
+        place_type: placeType || null,
+        activity_type: place.activity_type || null,
+        status: 'planned',
+        location: cityName ? { city: cityName } : {},
+        source_refs: { email_ids: [], recommendation_ids: [] },
+        details: {},
+        is_cancelled: false,
+      })
+      .select('id')
+      .single();
+
+    if (error || !data) {
+      console.error('upsert_places: failed to create POI', place.place_name, error?.message);
+      idMap[place.temp_id] = place.temp_id;
+    } else {
+      idMap[place.temp_id] = data.id;
+    }
+  }
+
+  return idMap;
+}
 
 async function callGemini(body: Record<string, unknown>) {
   const response = await fetch(GEMINI_URL, {
@@ -652,24 +816,66 @@ Deno.serve(async (req) => {
     };
 
     // Always enable base tools (suggest_places, add_place, update_place, add_days, shift_trip_dates).
-    // In planner mode, also add set_itinerary (and apply_itinerary if not instant-apply).
+    // In planner mode, also add the 2-step upsert_places + set_itinerary tools.
     if (isPlanner) {
       const itineraryDeclarations = isInstantApply
-        ? ITINERARY_TOOL_INSTANT.functionDeclarations
-        : ITINERARY_TOOL.functionDeclarations;
+        ? ITINERARY_TOOL_TWOSTEP.functionDeclarations
+        : ITINERARY_TOOL_TWOSTEP_WITH_APPLY.functionDeclarations;
       geminiBody.tools = [{
         functionDeclarations: [
           ...BASE_TOOLS.functionDeclarations,
           ...itineraryDeclarations,
         ],
       }];
+      // Force upsert_places on first turn
+      geminiBody.toolConfig = { functionCallingConfig: { mode: 'ANY', allowedFunctionNames: ['upsert_places'] } };
     } else {
       geminiBody.tools = [BASE_TOOLS];
+      geminiBody.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
     }
-    geminiBody.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
 
     // First Gemini call
     const result = await callGemini(geminiBody);
+
+    // ── 2-step: handle upsert_places then continue with set_itinerary ──────
+    if (isPlanner && bodyTripId) {
+      const firstParts = result.candidates?.[0]?.content?.parts || [];
+      const upsertFc = firstParts.find(
+        (p: { functionCall?: { name: string; args: unknown } }) => p.functionCall?.name === 'upsert_places'
+      );
+
+      if (upsertFc) {
+        let idMap: Record<string, string> = {};
+        try {
+          idMap = await handleUpsertPlaces(
+            upsertFc.functionCall.args as { locations?: unknown[]; places?: unknown[] },
+            bodyTripId,
+            serviceClient,
+          );
+        } catch (err) {
+          console.error('handleUpsertPlaces error:', err);
+        }
+
+        // Build second turn: append model's upsert_places call + function response
+        const secondContents = [
+          ...sanitized,
+          { role: 'model', parts: firstParts },
+          {
+            role: 'user',
+            parts: [{ functionResponse: { name: 'upsert_places', response: { id_map: idMap } } }],
+          },
+        ];
+
+        geminiBody.contents = secondContents;
+        geminiBody.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
+
+        const result2 = await callGemini(geminiBody);
+
+        // Use result2 for the rest of the flow
+        Object.assign(result, result2);
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     // Check if response was blocked by safety filters
     if (result.candidates?.[0]?.finishReason === 'SAFETY') {

@@ -1,5 +1,6 @@
 # Python / backend
 .env
+evals/config.js
 .env.local
 .env.*.local
 __pycache__/
