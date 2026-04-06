@@ -30,6 +30,7 @@ async function resolveLocationId(
   tripId: string,
   locationId: string | undefined,
   locationName: string | undefined,
+  locationParentId?: string | undefined,
 ): Promise<string | null> {
   if (locationId) {
     // Verify the location exists
@@ -52,7 +53,7 @@ async function resolveLocationId(
   }
 
   if (locationName) {
-    const loc = await resolveOrAddLocation(tripId, locationName, 'city');
+    const loc = await resolveOrAddLocation(tripId, locationName, 'city', locationParentId ?? undefined);
     return loc.id;
   }
 
@@ -91,7 +92,7 @@ export async function applyDraftToTrip(
   // Cache: locationId → trip_place.id (to avoid duplicate creates)
   const tripPlaceByLocationId = new Map<string, string>();
 
-  async function getOrCreateTripPlace(resolvedLocId: string): Promise<string> {
+  async function getOrCreateTripPlace(resolvedLocId: string, locationName?: string): Promise<string> {
     const cached = tripPlaceByLocationId.get(resolvedLocId);
     if (cached) return cached;
 
@@ -99,6 +100,7 @@ export async function applyDraftToTrip(
     if (!tripPlace) {
       tripPlace = await createTripPlace(tripId, resolvedLocId, {
         sortOrder: mutableTripPlaces.length,
+        locationName,
       });
       mutableTripPlaces.push(tripPlace);
     }
@@ -136,6 +138,7 @@ export async function applyDraftToTrip(
           tripId,
           place.locationId,
           place.locationName ?? place.city,
+          place.locationParentId,
         );
 
         // Find city name for the POI from the resolved location
@@ -171,7 +174,7 @@ export async function applyDraftToTrip(
 
         // Assign day to this location (first resolved location wins)
         if (resolvedLocId && !dayTripPlaceId) {
-          dayTripPlaceId = await getOrCreateTripPlace(resolvedLocId);
+          dayTripPlaceId = await getOrCreateTripPlace(resolvedLocId, cityName ?? undefined);
         }
       }
 
@@ -181,9 +184,10 @@ export async function applyDraftToTrip(
           tripId,
           place.locationId,
           place.locationName,
+          place.locationParentId,
         );
         if (resolvedLocId) {
-          dayTripPlaceId = await getOrCreateTripPlace(resolvedLocId);
+          dayTripPlaceId = await getOrCreateTripPlace(resolvedLocId, place.locationName ?? undefined);
         }
       }
 
@@ -233,10 +237,17 @@ export async function applyDraftToTrip(
       poiMap.set(poi.id, poi);
     }
 
-    // ── Fallback: resolve day location from locationContext ────────────────
-    if (!dayTripPlaceId && day.locationContext) {
-      const loc = await resolveOrAddLocation(tripId, day.locationContext, 'city');
-      dayTripPlaceId = await getOrCreateTripPlace(loc.id);
+    // ── Fallback: resolve day location from locationId/locationName ───────────
+    if (!dayTripPlaceId && (day.locationId || day.locationName || day.locationContext)) {
+      const resolvedLocId = await resolveLocationId(
+        tripId,
+        day.locationId,
+        day.locationName ?? day.locationContext,
+        day.locationParentId,
+      );
+      if (resolvedLocId) {
+        dayTripPlaceId = await getOrCreateTripPlace(resolvedLocId, day.locationName ?? day.locationContext ?? undefined);
+      }
     }
 
     // ── Write itinerary day ───────────────────────────────────────────────

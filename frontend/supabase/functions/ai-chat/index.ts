@@ -343,8 +343,9 @@ When answering questions or giving tips without changing the plan, respond with 
 // Base tools — always available in all modes
 const CATEGORY_ENUM = { type: 'STRING', enum: ['Activities', 'Eateries', 'Accommodations', 'Events', 'Transportation'], description: 'The main category group.' };
 const LOCATION_FIELDS = {
-  location_id: { type: 'STRING', description: 'ID of existing location. If provided, omit location_name.' },
+  location_id: { type: 'STRING', description: 'ID of existing location. If provided, omit location_name and location_parent_id.' },
   location_name: { type: 'STRING', description: 'Location name. Use only if location_id is null.' },
+  location_parent_id: { type: 'STRING', description: 'Parent location ID when creating a new location by name. Use only if location_id is null.' },
 };
 // Sub-type fields — each relevant to one category only
 const PLACE_TYPE_FIELD = { type: 'STRING', description: 'Physical place type for Activities (e.g. "museum", "beach", "castle"). Use the value from the place_type list.' };
@@ -463,7 +464,9 @@ const ITINERARY_TOOL = {
             type: 'OBJECT',
             properties: {
               day_number: { type: 'INTEGER', description: 'Day number (1-based)' },
-              location_context: { type: 'STRING', description: 'General area for the day (e.g. "South Coast")' },
+              location_id: { type: 'STRING', description: 'ID of existing trip location for this day. If provided, omit location_name and location_parent_id.' },
+              location_name: { type: 'STRING', description: 'Location name for this day (e.g. "Siem Reap", "South Coast"). Use only if location_id is null.' },
+              location_parent_id: { type: 'STRING', description: 'Parent location ID when creating a new location by name. Use only if location_id is null.' },
               places: {
                 type: 'ARRAY',
                 description: 'Ordered list of places/activities for this day',
@@ -493,7 +496,7 @@ const ITINERARY_TOOL = {
               hotel_name: { type: 'STRING', description: 'Hotel name when the hotel is not in the trip yet and no hotel_id is available.' },
               hotel_type: ACCOMMODATION_TYPE_FIELD,
             },
-            required: ['day_number', 'location_context', 'places'],
+            required: ['day_number', 'places'],
           },
         },
       },

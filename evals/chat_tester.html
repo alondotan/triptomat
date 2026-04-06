@@ -675,8 +675,9 @@ Always include a short text explanation alongside every tool call.
 
 const CATEGORY_ENUM = { type: 'STRING', enum: ['Activities', 'Eateries', 'Accommodations', 'Events', 'Transportation'], description: 'The main category group.' };
 const LOCATION_FIELDS = {
-  location_id: { type: 'STRING', description: 'ID of existing location. If provided, omit location_name.' },
-  location_name: { type: 'STRING', description: 'New location name. Use only if location_id is null.' },
+  location_id: { type: 'STRING', description: 'ID of existing location. If provided, omit location_name and location_parent_id.' },
+  location_name: { type: 'STRING', description: 'Location name. Use only if location_id is null.' },
+  location_parent_id: { type: 'STRING', description: 'Parent location ID when creating a new location by name. Use only if location_id is null.' },
 };
 const PLACE_TYPE_FIELD = { type: 'STRING', description: 'Physical place type for Activities (e.g. "museum", "beach", "castle"). Use the value from the place_type list.' };
 const ACTIVITY_TYPE_FIELD = { type: 'STRING', description: 'Activity type for Activities (e.g. "hiking_trail", "snorkeling", "food_tour"). Use the value from the activity_type list.' };
@@ -713,7 +714,9 @@ function buildTools(instantApply) {
               type: 'OBJECT',
               properties: {
                 day_number: { type: 'INTEGER', description: 'Day number (1-based)' },
-                location_context: { type: 'STRING', description: 'General area for the day (e.g. "South Coast")' },
+                location_id: { type: 'STRING', description: 'ID of existing trip location for this day. If provided, omit location_name and location_parent_id.' },
+                location_name: { type: 'STRING', description: 'Location name for this day (e.g. "Siem Reap", "South Coast"). Use only if location_id is null.' },
+                location_parent_id: { type: 'STRING', description: 'Parent location ID when creating a new location by name. Use only if location_id is null.' },
                 hotel_id: { type: 'STRING', description: 'ID of the accommodation (from the hotels list) where the traveler sleeps this night.' },
                 hotel_name: { type: 'STRING', description: 'Hotel name when the hotel is not in the trip yet and no hotel_id is available.' },
                 hotel_type: ACCOMMODATION_TYPE_FIELD,
@@ -743,7 +746,7 @@ function buildTools(instantApply) {
                   },
                 },
               },
-              required: ['day_number', 'location_context', 'places'],
+              required: ['day_number', 'places'],
             },
           },
         },
