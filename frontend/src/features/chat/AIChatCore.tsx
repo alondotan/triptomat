@@ -68,7 +68,7 @@ interface AIChatCoreProps {
   /** Called when set_itinerary fires — receives the clean, structured place list from the tool call + the assistant message index */
   onItineraryUpdate?: (places: Array<{ name: string; day: number; location?: string }>, messageIndex: number) => void;
   /** Called when suggest_places fires — receives recommended places to show on map / suggestions panel */
-  onSuggestPlaces?: (places: Array<{ name: string; category: string; sub_category?: string; location_id?: string; location_name?: string; city?: string; country?: string; why?: string }>, messageIndex: number) => void;
+  onSuggestPlaces?: (places: Array<{ name: string; category: string; place_type?: string; activity_type?: string; accommodation_type?: string; eatery_type?: string; transport_type?: string; event_type?: string; location_id?: string; location_name?: string; city?: string; country?: string; why?: string }>, messageIndex: number) => void;
   /**
    * When true: set_itinerary is applied to the real trip immediately (no draft/apply step).
    * Shows undo-per-step and restore-to-pre-conversation buttons.
@@ -359,7 +359,8 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
               tripId: tripContext.tripId,
               name: tc.args.name,
               category: (CATEGORY_MAP[tc.args.category as string] ?? tc.args.category as PointOfInterest['category']) || 'attraction',
-              placeType: (tc.args.sub_category || tc.args.place_type) as string | undefined,
+              placeType: (tc.args.place_type || tc.args.accommodation_type || tc.args.eatery_type || tc.args.transport_type || tc.args.event_type) as string | undefined,
+              activityType: tc.args.activity_type as string | undefined,
               status: 'suggested',
               location: {
                 city: (tc.args.location_name || tc.args.city) as string | undefined,

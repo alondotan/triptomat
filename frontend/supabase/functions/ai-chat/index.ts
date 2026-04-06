@@ -84,15 +84,21 @@ The \`place_name\` field must be the name of the place itself — never an activ
 ✓ Correct: "Angkor Wat", "Blue Pumpkin Café"
 ✗ Wrong: "Visit Angkor Wat", "Dinner at Blue Pumpkin Café"
 
-## Place categories and sub-categories
+## Place categories and sub-types
 Use the \`category\` field for the main group — one of: **Activities**, **Eateries**, **Accommodations**, **Events**, **Transportation**.
-Use the \`sub_category\` field for the specific type within that group. Always include \`sub_category\` — choose the most specific match.
+Then use the matching sub-type field (see below). Always include the relevant sub-type field.
 
-Activities sub-categories: market, park, landmark, natural, historical, cultural, amusement, beach, mountain, wildlife, adventure, religious, architectural, underwater, national_park, scenic, museum, shopping, zoo, theme_park, botanical_garden, sports, music, art, nightlife, spa, casino, viewpoint, hiking_trail, extreme_sports, hidden_gem, beach_club, stargazing, street_art, photography_spot, temple, boat_tour, playground, walking_tour, shopping_mall, historic_site, water_park, ski_resort, movie_theater, concert_hall, botanical_park, fishing_spot, bird_sanctuary, zip_line, hot_spring, canyon_activity, volcano_activity, observatory, lighthouse, art_gallery, aquarium, cave, snorkeling, diving_activity, surfing, kayaking_activity, rafting, climbing, trekking, jeep_tour, safari, food_tour, street_market_tour, cooking_class, wine_tasting, brewery_tour, kids_attraction, castle, fortress, palace, ruins, archaeological_site, memorial, statue, monument, fountain, garden, arboretum, heritage_site, unesco_site, sunset_spot, sunrise_spot, panoramic_view, romantic_spot, instagram_spot, picnic_area, campfire_site, street_food_lane, craft_market, local_farm_visit, cooking_workshop, photo_tour, wine_route, cycling_route, pilgrimage_route, other_activity
-Eateries sub-categories: vineyard, brewery, restaurant, cafe, bakery, deli, bistro, diner, food_truck, food_court, buffet, ice_cream_parlor, juice_bar, pub, bar, tavern, wine_bar_eatery, brewpub, sushi_bar, teahouse, steakhouse, tapas_bar, doughnut_shop, dessert_bar, street_food, rooftop_bar, brunch_spot, speakeasy, fine_dining, local_cuisine, vegan_restaurant, vegetarian_restaurant, seafood_restaurant, family_restaurant, other_eatery, ramen_shop, burger_joint, pizza_place, patisserie, gelato_shop, cocktail_bar, food_hall, local_bakery_cafe, gelato_stand
-Accommodations sub-categories: hotel, glamping, hostel, villa, resort, apartment_stay, guesthouse, bed_and_breakfast, motel, lodge, eco_lodge, boutique_hotel, capsule_hotel, ryokan, homestay, farm_stay, cottage, chalet, bungalow, treehouse, houseboat, campground, camping_tent, rv_park, serviced_apartment, long_stay_hotel, luxury_hotel, budget_hotel, other_accommodation, mountain_hut, desert_camp, surf_hostel, diving_resort, ski_lodge, wellness_resort, business_hotel, airport_hotel, city_aparthotel
-Events sub-categories: national_holiday, religious_holiday, cultural_festival, festival, music_festival, carnival, cultural_parade, food_festival, art_exhibition, fireworks, sporting_event, local_festival, religious_festival, street_parade, sports_match, marathon, concert, theater_show, food_fair, film_festival, fashion_show, food_truck_fair
-Transportation sub-categories: car, bus, train, subway, bicycle, motorcycle, taxi, ferry, airplane, scooter, cruise, tram, cruise_ship, car_rental, domestic_flight, international_flight, night_train, high_speed_train, cable_car, funicular, boat_taxi_transport, rideshare, private_transfer, rv, other_transportation, shuttle_bus, airport_shuttle_bus, harbor_shuttle_boat`;
+**Activities** — use both \`place_type\` (the physical location) and \`activity_type\` (what you do there) when applicable:
+- place_type values (physical place): river, delta, fjord, plateau, desert, glacier, reef, peninsula, harbor, old_town, monastery, church, synagogue, mosque, shrine, pagoda, mountain_range, valley, canyon, volcano, waterfall, lagoon, bay, lake, coastline, national_park_area, nature_reserve_area, transit_hub_area, resort_complex, border_crossing, point_of_interest, reserve_area, forest_area, cave_area, market, night_market, park, landmark, natural, historical, cultural, amusement, beach, mountain, wildlife, religious, architectural, underwater, national_park, scenic, museum, shopping, zoo, theme_park, botanical_garden, sports, art, nightlife, spa, casino, viewpoint, hiking_trail, hidden_gem, beach_club, stargazing, street_art, photography_spot, temple, playground, shopping_mall, historic_site, water_park, ski_resort, farm, movie_theater, concert_hall, botanical_park, fishing_spot, bird_sanctuary, zip_line, hot_spring, gym, massage, yoga_studio, meditation_center, thermal_bath, observatory, lighthouse, art_gallery, aquarium, cave, water_sports_center, cooking_school, kids_attraction, castle, fortress, palace, ruins, archaeological_site, memorial, statue, monument, fountain, garden, arboretum, heritage_site, unesco_site, sunset_spot, sunrise_spot, panoramic_view, romantic_spot, instagram_spot, picnic_area, campfire_site, cape, strait, basin, cliff, ridge, wetland, marsh, savanna, steppe, tundra, oasis, gorge, sand_dune, hot_desert_spring, street_food_lane, craft_market, wine_route, cycling_route, pilgrimage_route, running_track, race_track, horse_riding, golf_course, basketball_court, soccer_field, stadium, tennis_court, swimming_pool, cemetery, library, coffee_shop, nightclub, snooker, bowling, escape_room, illusion_museum, arcade, climbing_wall
+- activity_type values (what you do): river, delta, fjord, plateau, desert, glacier, reef, peninsula, harbor, old_town, monastery, church, synagogue, mosque, shrine, pagoda, mountain_range, valley, canyon, volcano, waterfall, lagoon, bay, lake, coastline, national_park_area, nature_reserve_area, transit_hub_area, resort_complex, itinerary_route, border_crossing, point_of_interest, reserve_area, forest_area, cave_area, market, night_market, park, landmark, natural, historical, cultural, amusement, beach, mountain, wildlife, adventure, religious, architectural, underwater, national_park, scenic, museum, shopping, zoo, theme_park, botanical_garden, sports, music, art, nightlife, spa, casino, viewpoint, hiking_trail, extreme_sports, hidden_gem, beach_club, stargazing, street_art, photography_spot, temple, boat_tour, playground, walking_tour, shopping_mall, historic_site, water_park, ski_resort, farm, movie_theater, concert_hall, botanical_park, fishing_spot, bird_sanctuary, zip_line, hot_spring, gym, massage, yoga_studio, meditation_center, thermal_bath, canyon_activity, volcano_activity, observatory, lighthouse, art_gallery, aquarium, cave, snorkeling, diving_activity, surfing, water_sports_center, kayaking_activity, rafting, climbing, trekking, jeep_tour, safari, food_tour, street_market_tour, cooking_class, cooking_school, wine_tasting, brewery_tour, kids_attraction, castle, fortress, palace, ruins, archaeological_site, memorial, statue, monument, fountain, garden, arboretum, heritage_site, unesco_site, sunset_spot, sunrise_spot, panoramic_view, romantic_spot, instagram_spot, picnic_area, campfire_site, cape, strait, basin, cliff, ridge, wetland, marsh, savanna, steppe, tundra, oasis, gorge, sand_dune, hot_desert_spring, street_food_lane, craft_market, local_farm_visit, cooking_workshop, photo_tour, wine_route, cycling_route, pilgrimage_route, dining, sightseeing, swimming_activity, strolling, relaxation, shopping_activity, logistics_setup, transit_activity, other_activity, running_track, race_track, horse_riding, golf_course, basketball_court, soccer_field, stadium, tennis_court, swimming_pool, cemetery, library, coffee_shop, nightclub, snooker, bowling, escape_room, illusion_museum, arcade, climbing_wall
+
+**Eateries** — use \`eatery_type\`: vineyard, brewery, restaurant, cafe, bakery, deli, bistro, diner, food_truck, food_court, buffet, ice_cream_parlor, juice_bar, pub, bar, tavern, wine_bar_eatery, brewpub, sushi_bar, teahouse, steakhouse, tapas_bar, doughnut_shop, dessert_bar, street_food, rooftop_bar, brunch_spot, speakeasy, fine_dining, local_cuisine, vegan_restaurant, vegetarian_restaurant, seafood_restaurant, family_restaurant, other_eatery, ramen_shop, burger_joint, pizza_place, patisserie, gelato_shop, cocktail_bar, food_hall, local_bakery_cafe, gelato_stand
+
+**Accommodations** — use \`accommodation_type\`: hotel, glamping, hostel, villa, resort, apartment_stay, guesthouse, bed_and_breakfast, motel, lodge, eco_lodge, boutique_hotel, capsule_hotel, ryokan, homestay, farm_stay, cottage, chalet, bungalow, treehouse, houseboat, campground, camping_tent, rv_park, serviced_apartment, long_stay_hotel, luxury_hotel, budget_hotel, other_accommodation, mountain_hut, desert_camp, surf_hostel, diving_resort, ski_lodge, wellness_resort, business_hotel, airport_hotel, city_aparthotel
+
+**Events** — use \`event_type\`: national_holiday, religious_holiday, cultural_festival, festival, music_festival, carnival, cultural_parade, food_festival, art_exhibition, fireworks, sporting_event, local_festival, religious_festival, street_parade, sports_match, marathon, concert, theater_show, food_fair, film_festival, fashion_show, food_truck_fair
+
+**Transportation** — use \`transport_type\`: car, bus, train, subway, bicycle, motorcycle, taxi, ferry, airplane, scooter, cruise, tram, cruise_ship, car_rental, domestic_flight, international_flight, night_train, high_speed_train, cable_car, funicular, boat_taxi_transport, rideshare, private_transfer, rv, other_transportation, shuttle_bus, airport_shuttle_bus, harbor_shuttle_boat`;
 
 interface TripContext {
   tripName?: string;
@@ -336,11 +342,17 @@ When answering questions or giving tips without changing the plan, respond with 
 
 // Base tools — always available in all modes
 const CATEGORY_ENUM = { type: 'STRING', enum: ['Activities', 'Eateries', 'Accommodations', 'Events', 'Transportation'], description: 'The main category group.' };
-const SUB_CATEGORY_FIELD = { type: 'STRING', description: 'The specific sub-value from the provided list (e.g. "boutique_hotel", "restaurant", "museum").' };
 const LOCATION_FIELDS = {
   location_id: { type: 'STRING', description: 'ID of existing location. If provided, omit location_name.' },
   location_name: { type: 'STRING', description: 'Location name. Use only if location_id is null.' },
 };
+// Sub-type fields — each relevant to one category only
+const PLACE_TYPE_FIELD = { type: 'STRING', description: 'Physical place type for Activities (e.g. "museum", "beach", "castle"). Use the value from the place_type list.' };
+const ACTIVITY_TYPE_FIELD = { type: 'STRING', description: 'Activity type for Activities (e.g. "hiking_trail", "snorkeling", "food_tour"). Use the value from the activity_type list.' };
+const ACCOMMODATION_TYPE_FIELD = { type: 'STRING', description: 'Accommodation sub-type for Accommodations (e.g. "boutique_hotel", "hostel", "ryokan").' };
+const EATERY_TYPE_FIELD = { type: 'STRING', description: 'Eatery sub-type for Eateries (e.g. "restaurant", "cafe", "street_food").' };
+const TRANSPORT_TYPE_FIELD = { type: 'STRING', description: 'Transport sub-type for Transportation (e.g. "train", "domestic_flight", "ferry").' };
+const EVENT_TYPE_FIELD = { type: 'STRING', description: 'Event sub-type for Events (e.g. "festival", "concert", "cultural_parade").' };
 
 const BASE_TOOLS = {
   functionDeclarations: [
@@ -358,7 +370,12 @@ const BASE_TOOLS = {
               properties: {
                 name: { type: 'STRING', description: 'Specific, searchable place name' },
                 category: CATEGORY_ENUM,
-                sub_category: SUB_CATEGORY_FIELD,
+                place_type: PLACE_TYPE_FIELD,
+                activity_type: ACTIVITY_TYPE_FIELD,
+                accommodation_type: ACCOMMODATION_TYPE_FIELD,
+                eatery_type: EATERY_TYPE_FIELD,
+                transport_type: TRANSPORT_TYPE_FIELD,
+                event_type: EVENT_TYPE_FIELD,
                 ...LOCATION_FIELDS,
                 country: { type: 'STRING' },
                 why: { type: 'STRING', description: 'One-line reason why this place is recommended' },
@@ -378,7 +395,12 @@ const BASE_TOOLS = {
         properties: {
           name: { type: 'STRING', description: 'Specific, searchable place name' },
           category: CATEGORY_ENUM,
-          sub_category: SUB_CATEGORY_FIELD,
+          place_type: PLACE_TYPE_FIELD,
+          activity_type: ACTIVITY_TYPE_FIELD,
+          accommodation_type: ACCOMMODATION_TYPE_FIELD,
+          eatery_type: EATERY_TYPE_FIELD,
+          transport_type: TRANSPORT_TYPE_FIELD,
+          event_type: EVENT_TYPE_FIELD,
           ...LOCATION_FIELDS,
           country: { type: 'STRING' },
           cost: { type: 'NUMBER', description: 'Estimated cost in the trip currency' },
@@ -454,8 +476,12 @@ const ITINERARY_TOOL = {
                     location_name: { type: 'STRING', description: 'New location name. Use only if location_id is null.' },
                     place_name: { type: 'STRING', description: 'The name of the place itself (e.g. "Angkor Wat", "Blue Pumpkin"). NOT an activity description. Required if place_id is null.' },
                     description: { type: 'STRING', description: 'What the user will do there (e.g. "Morning temple visit").' },
-                    category: CATEGORY_ENUM,
-                    sub_category: SUB_CATEGORY_FIELD,
+                    category: { type: 'STRING', enum: ['Activities', 'Eateries', 'Events', 'Transportation'], description: 'Category group. Do NOT use Accommodations here — hotels go in hotel_id/hotel_name/hotel_type.' },
+                    place_type: PLACE_TYPE_FIELD,
+                    activity_type: ACTIVITY_TYPE_FIELD,
+                    eatery_type: EATERY_TYPE_FIELD,
+                    transport_type: TRANSPORT_TYPE_FIELD,
+                    event_type: EVENT_TYPE_FIELD,
                     is_specific_place: { type: 'BOOLEAN', description: 'True if this is a named specific place, false if it is a general activity.' },
                     day_part: { type: 'STRING', description: 'Morning, Afternoon, Evening, or Night' },
                     start_time: { type: 'STRING', description: 'HH:mm' },
@@ -465,6 +491,7 @@ const ITINERARY_TOOL = {
               },
               hotel_id: { type: 'STRING', description: 'ID of the accommodation (from the hotels list) where the traveler sleeps this night. Use when the hotel is already in the trip.' },
               hotel_name: { type: 'STRING', description: 'Hotel name when the hotel is not in the trip yet and no hotel_id is available.' },
+              hotel_type: ACCOMMODATION_TYPE_FIELD,
             },
             required: ['day_number', 'location_context', 'places'],
           },
