@@ -468,8 +468,17 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         }
       }
     } catch (err: unknown) {
-      console.error('[ai-chat] outer error:', err);
-      setError((err as Error).message || 'Something went wrong. Please try again.');
+      // Try to read the actual error body from FunctionsHttpError.context
+      let errMsg = (err as Error).message || 'Something went wrong. Please try again.';
+      try {
+        const ctx = (err as { context?: Response }).context;
+        if (ctx) {
+          const body = await ctx.json();
+          errMsg = body?.error || errMsg;
+        }
+      } catch { /* ignore parse errors */ }
+      console.error('[ai-chat] outer error:', errMsg, err);
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
