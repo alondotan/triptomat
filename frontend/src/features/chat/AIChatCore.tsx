@@ -515,6 +515,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [input, loading, messages, lastSentAt, tripContext, draft, applyToolCall, queryClient, onNewAssistantMessage, onSuggestPlaces, pois, itineraryDays, toast, t, initFromReal, instantApply, history, addPOI, activeTrip, updateCurrentTrip, tripPlaces, appendMessages]);
 
   // Undo last AI change (instant-apply mode)

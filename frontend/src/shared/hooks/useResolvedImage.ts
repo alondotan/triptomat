@@ -48,7 +48,6 @@ export function useResolvedImage(
     const s = source.photo_url || source.image || source.imageUrl || null;
     setUrl(s);
     setPhase(s ? 'static' : 'wiki');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source.photo_url, source.image, source.imageUrl]);
 
   // Fetch Wikipedia when entering 'wiki' phase

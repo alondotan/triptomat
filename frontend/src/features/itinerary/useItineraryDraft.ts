@@ -42,7 +42,7 @@ export function useItineraryDraft() {
   }, []);
 
   /** Normalize a raw day object from the AI (handles snake_case) */
-  const normalizeDay = (d: unknown): DraftDay => {
+  const normalizeDay = useCallback((d: unknown): DraftDay => {
     const raw = d as Record<string, unknown>;
     return {
       dayNumber: (raw.dayNumber ?? raw.day_number) as number,
@@ -73,7 +73,7 @@ export function useItineraryDraft() {
         duration: p.duration as string | undefined,
       })) as DraftPlace[],
     };
-  };
+  }, []);
 
   /** Apply AI tool call result — replaces the entire draft. Returns the normalized days. */
   const applyToolCall = useCallback((days: DraftDay[]): DraftDay[] => {
