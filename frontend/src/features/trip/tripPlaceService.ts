@@ -67,11 +67,23 @@ async function fetchAndPersistTripPlaceImage(tripPlaceId: string, locationName: 
     let imageUrl: string | null = null;
 
     for (const part of nameParts) {
-      const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(part)}`);
-      if (res.ok) {
-        const data = await res.json();
-        imageUrl = data?.originalimage?.source || data?.thumbnail?.source || null;
-        if (imageUrl) break;
+      // Use MediaWiki API (always returns 200, no 404 console noise for missing articles)
+      const params = new URLSearchParams({
+        action: 'query',
+        prop: 'pageimages',
+        titles: part,
+        pithumbsize: '800',
+        format: 'json',
+        origin: '*',
+      });
+      const res = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const pages = (data?.query?.pages ?? {}) as Record<string, { missing?: boolean; thumbnail?: { source?: string } }>;
+      const page = Object.values(pages)[0];
+      if (page && !page.missing && page.thumbnail?.source) {
+        imageUrl = page.thumbnail.source;
+        break;
       }
     }
 

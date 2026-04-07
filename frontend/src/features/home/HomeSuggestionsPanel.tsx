@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Sparkles, Plus, Loader2, Check } from 'lucide-react';
 import { SubCategoryIcon } from '@/shared/components/SubCategoryIcon';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import { cn } from '@/shared/lib/utils';
 import { usePOI } from '@/features/poi/POIContext';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
+import { useResolvedImage } from '@/shared/hooks/useResolvedImage';
 import type { PointOfInterest } from '@/types/trip';
 import type { PanelItem } from './panelItems';
 
@@ -30,29 +31,7 @@ interface SuggestionCardProps {
 function SuggestionCard({ item, adding, selected, onSelect, onAdd, onOpenDetails, isPreviewMode }: SuggestionCardProps) {
   const inPlan = !!item.poiId;
 
-  // Start with POI image if available, then try Wikipedia, then gradient
-  const [imgUrl, setImgUrl] = useState<string | null>(item.imageUrl ?? null);
-  const [imgError, setImgError] = useState(false);
-
-  useEffect(() => {
-    setImgUrl(item.imageUrl ?? null);
-    setImgError(false);
-
-    if (item.imageUrl) return; // already have image
-
-    // Wikipedia REST API fallback
-    let active = true;
-    const wikiName = item.name.replace(/ /g, '_');
-    fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiName)}`)
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (!active) return;
-        const url = data?.originalimage?.source || data?.thumbnail?.source || null;
-        if (url) setImgUrl(url);
-      })
-      .catch(() => {});
-    return () => { active = false; };
-  }, [item.name, item.imageUrl]);
+  const { url: imgUrl, onError: onImageError } = useResolvedImage({ imageUrl: item.imageUrl }, item.name);
 
   // Deterministic gradient fallback based on name
   const gradientHue = (item.name.charCodeAt(0) * 37 + (item.name.charCodeAt(1) || 0) * 13) % 360;
@@ -72,12 +51,12 @@ function SuggestionCard({ item, adding, selected, onSelect, onAdd, onOpenDetails
       style={{ height: '100px' }}
     >
       {/* Image */}
-      {imgUrl && !imgError ? (
+      {imgUrl ? (
         <img
           src={imgUrl}
           alt={item.name}
           className="w-full h-full object-cover"
-          onError={() => setImgError(true)}
+          onError={onImageError}
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center" style={{ background: `hsl(${gradientHue}, 55%, 45%)` }}>

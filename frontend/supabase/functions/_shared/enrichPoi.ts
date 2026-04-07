@@ -5,6 +5,7 @@
 
 import { geocodeAddress, fetchPlaceImage } from './geocode.ts';
 import { fetchAndSetPoiImage } from './pexels.ts';
+import { fetchWikipediaImage } from './wikipedia.ts';
 
 // Default place_type fallback by POI category (is_physical_place=true values)
 const CATEGORY_FALLBACK_PLACE_TYPE: Record<string, string> = {
@@ -96,8 +97,20 @@ export async function enrichPoi(
 
   // Step 2: Fetch image if missing
   if (!hasImage) {
-    // Try Google Places API first (needs coordinates)
-    if (coordinates?.lat && coordinates?.lng) {
+    // Try Wikipedia first
+    imageUrl = await fetchWikipediaImage(name);
+    if (imageUrl) {
+      const { error } = await supabase
+        .from('points_of_interest')
+        .update({ image_url: imageUrl })
+        .eq('id', poiId)
+        .is('image_url', null);
+      if (error) console.error('[enrichPoi] Failed to update Wikipedia image:', error);
+      else console.log(`[enrichPoi] Wikipedia image set for ${poiId}`);
+    }
+
+    // Try Google Places API (needs coordinates)
+    if (!imageUrl && coordinates?.lat && coordinates?.lng) {
       imageUrl = await fetchPlaceImage(name, coordinates.lat, coordinates.lng);
       if (imageUrl) {
         const { error } = await supabase
@@ -106,7 +119,7 @@ export async function enrichPoi(
           .eq('id', poiId)
           .is('image_url', null);
 
-        if (error) console.error('[enrichPoi] Failed to update image:', error);
+        if (error) console.error('[enrichPoi] Failed to update Google image:', error);
         else console.log(`[enrichPoi] Google Places image set for ${poiId}`);
       }
     }

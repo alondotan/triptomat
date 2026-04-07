@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Clock, Heart, Pencil } from 'lucide-react';
 import { SubCategoryIcon } from '@/shared/components/SubCategoryIcon';
@@ -6,6 +6,7 @@ import { POIDetailDialog } from './POIDetailDialog';
 import { getSubCategoryEntry, getSubCategoryLabel } from '@/shared/lib/subCategoryConfig';
 import { usePOI } from '@/features/poi/POIContext';
 import { useToggleLike } from '@/shared/hooks/useToggleLike';
+import { useResolvedImage } from '@/shared/hooks/useResolvedImage';
 import type { PointOfInterest } from '@/types/trip';
 
 function formatDuration(minutes: number): string {
@@ -52,8 +53,7 @@ export function POICard({
   const { updatePOI } = usePOI();
   const { toggleLike } = useToggleLike();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [imgError, setImgError] = useState(false);
-  useEffect(() => { setImgError(false); }, [poi.id]);
+  const { url: resolvedImage, onError: onImageError } = useResolvedImage({ imageUrl: poi.imageUrl }, poi.name);
 
   // Level 2 inline edit state
   const [editingNotes, setEditingNotes] = useState(false);
@@ -118,7 +118,7 @@ export function POICard({
 
     return (
       <>
-        {poi.imageUrl && !imgError && (
+        {resolvedImage && (
           <button
             type="button"
             aria-label={t('poiCard.enlargeImage')}
@@ -126,12 +126,12 @@ export function POICard({
             onClick={handleCardClick}
           >
             <img
-              src={poi.imageUrl}
+              src={resolvedImage}
               alt=""
               width={56}
               height={56}
               className="w-14 h-14 rounded-lg object-cover"
-              onError={() => setImgError(true)}
+              onError={onImageError}
             />
           </button>
         )}
@@ -143,7 +143,7 @@ export function POICard({
         >
           {/* Name row */}
           <div className="flex items-center gap-2">
-            {(!poi.imageUrl || imgError) && (iconName
+            {!resolvedImage && (iconName
               ? <span className="material-symbols-outlined text-sm shrink-0" aria-hidden="true">{iconName}</span>
               : <SubCategoryIcon type={poi.placeType || poi.activityType || ''} size={14} className="shrink-0" />
             )}
@@ -300,8 +300,8 @@ export function POICard({
       >
         {/* Square image with heart overlay */}
         <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
-          {poi.imageUrl && !imgError ? (
-            <img src={poi.imageUrl} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" onError={() => setImgError(true)} />
+          {resolvedImage ? (
+            <img src={resolvedImage} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" onError={onImageError} />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <SubCategoryIcon type={poi.placeType || poi.activityType || ''} size={32} className="text-muted-foreground/40" />

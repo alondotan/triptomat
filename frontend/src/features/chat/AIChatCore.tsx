@@ -103,7 +103,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
 
   const { itineraryDays } = useItinerary();
   const { pois, addPOI } = usePOI();
-  const { draft, isInitialized, initFromReal, applyToolCall } = useItineraryDraft();
+  const { draft, isInitialized, initFromReal, applyToolCall, applyDayUpdate } = useItineraryDraft();
   const history = useItineraryHistory();
   const { activeTrip, updateCurrentTrip, tripPlaces, tripLocations } = useActiveTrip();
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -359,6 +359,27 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
                   .filter(p => p.name));
               onItineraryUpdate(places, updatedMessages.length);
             }
+          } else if (tc.name === 'update_day' && tc.args?.day) {
+            if (instantApply) {
+              history.pushHistory(itineraryDays, pois, activeTrip);
+            }
+            newDays = applyDayUpdate(tc.args.day);
+            if (newDays) {
+              snapshotByMsgIdxRef.current.set(updatedMessages.length, newDays);
+            }
+            if (onItineraryUpdate) {
+              const day = tc.args.day as { day_number?: number; dayNumber?: number; location_name?: string; places?: Array<{ name?: string; place_name?: string; is_specific_place?: boolean; place_id?: string }> };
+              const places = (day.places ?? [])
+                .filter(p => p.place_id || p.is_specific_place !== false)
+                .map(p => ({
+                  name: p.place_name ?? p.name ?? '',
+                  day: day.day_number ?? day.dayNumber ?? 0,
+                  location: day.location_name,
+                }))
+                .filter(p => p.name);
+              onItineraryUpdate(places, updatedMessages.length);
+            }
+
           } else if (tc.name === 'apply_itinerary') {
             shouldApply = true;
 

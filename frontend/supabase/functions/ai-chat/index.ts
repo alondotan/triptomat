@@ -63,9 +63,15 @@ You have tools to interact directly with the user's trip. Use them proactively �
 **shift_trip_dates** — Use when user wants to move the entire trip to different dates.
 - "Move my trip to start on March 15" → call shift_trip_dates
 
-**set_itinerary** — Use for building or restructuring the full day-by-day schedule.
-- "Plan me a 5-day itinerary in Japan" → call set_itinerary
-- "Reorganize my schedule" → call set_itinerary
+**update_day** — Use when the user asks to add, change, or remove something on a single specific day.
+- "Add the Eiffel Tower to day 3" → call update_day for day 3
+- "Remove the museum from day 2" → call update_day for day 2
+- Send only the ONE affected day (complete replacement of that day's places)
+
+**set_itinerary** — Use for building or restructuring MULTIPLE days or the entire schedule.
+- "Plan me a 5-day itinerary in Japan" → call set_itinerary with ALL days
+- "Reorganize my schedule" → call set_itinerary with ALL days
+- NOT for single-day changes — use update_day instead.
 - Always include ALL days in one call. Never ask permission — just build it.
 - Before calling it, if the trip has no scheduled days and no existing POIs, ask the user for a starting point and ending point — or pick sensible defaults based on the country and trip duration if the user says to decide.
 
@@ -274,34 +280,42 @@ function buildSystemPrompt(tripContext?: TripContext, tripPlan?: TripPlan | null
 
     // Both instant and non-instant now use 2-step (upsert_places → set_itinerary)
     const applyInstruction = instantApply
-      ? `Every call to set_itinerary is saved to the trip immediately.`
-      : `**apply_itinerary** — Call automatically right after set_itinerary when the user asks to plan/build/create an itinerary.`;
+      ? `Every call to set_itinerary or update_day is saved to the trip immediately.`
+      : `**apply_itinerary** — Call automatically right after set_itinerary or update_day when the user asks to plan/build/create/update an itinerary.`;
 
     prompt += `\n\n## Itinerary Planner Mode (2-step)
 ${knownNamesRule}
 
-Build itineraries in two steps:
+Build or update itineraries in two steps:
 
 **Step 1 — upsert_places**: Call first to register all NEW locations and places.
 - Only include items NOT already in the trip data — do not repeat existing location_ids or place_ids.
 - "locations": new geographic areas — assign a temp_id, provide location_name, location_type, and optionally location_parent_id (existing ID or another temp_id from this list).
 - "places": new places — assign a temp_id, provide place_name, category, types, and location_id (existing ID or temp_id from locations above).
-- The response returns a flat id_map: { "your-temp-id": "real-system-id", ... } — use these real IDs in set_itinerary.
+- The response returns a flat id_map: { "your-temp-id": "real-system-id", ... } — use these real IDs in set_itinerary or update_day.
+- If no new locations or places are needed, call upsert_places with empty arrays.
 
-**Step 2 — set_itinerary**: Call AFTER receiving the upsert_places response.
-- Each day: location_id (real ID from id_map or existing), hotel_id/hotel_name (optional)
-- Each place: place_id (real ID from id_map or existing), description, day_part, start_time, duration
-- Always include ALL days in one call.
-- ALWAYS include a day-by-day text summary alongside the tool call (1-2 lines per day). This is required — never call set_itinerary without a text response.
+**Step 2 — choose ONE of:**
+- **set_itinerary**: For building or restructuring MULTIPLE days. Include ALL days.
+  - Each day: location_id (real ID from id_map or existing), hotel_id/hotel_name (optional)
+  - Each place: place_id (real ID from id_map or existing), description, day_part, start_time, duration
+  - ALWAYS include a day-by-day text summary alongside the tool call (1-2 lines per day).
+- **update_day**: For changing a SINGLE day only. Send one day object with the complete final list of places for that day.
+  - Same fields as a set_itinerary day object.
+  - Include a brief text description of what changed.
 
 ${applyInstruction}
 
 ### CRITICAL RULE — CALL upsert_places IMMEDIATELY, NEVER ASK PERMISSION:
-- If the user asks to plan, build, create, or suggest an itinerary in ANY form, you MUST call upsert_places in the SAME response.
+- If the user asks to plan, build, create, or update an itinerary in ANY form, you MUST call upsert_places in the SAME response.
 - NEVER write a day-by-day plan in text — call upsert_places directly.
-- NEVER skip step 1 — always call upsert_places before set_itinerary.
+- NEVER skip step 1 — always call upsert_places before set_itinerary or update_day.
 
-### When NOT to call upsert_places/set_itinerary:
+### Choosing set_itinerary vs update_day:
+- Single day affected → use update_day
+- Multiple days affected or full plan → use set_itinerary
+
+### When NOT to call upsert_places/set_itinerary/update_day:
 - User asks for open recommendations with no planning intent ("what are good restaurants in Tokyo?")
 - User asks a factual travel question or wants tips only
 
@@ -589,13 +603,52 @@ const SIMPLIFIED_SET_ITINERARY_DECL = {
   },
 };
 
+const UPDATE_DAY_DECL = {
+  name: 'update_day',
+  description: 'Update a single specific day in the itinerary. Use instead of set_itinerary when only one day is affected. Replaces that day\'s places completely with the new list.',
+  parameters: {
+    type: 'OBJECT',
+    properties: {
+      day: {
+        type: 'OBJECT',
+        description: 'The single day to update.',
+        properties: {
+          day_number: { type: 'INTEGER' },
+          location_id: { type: 'STRING', description: 'Real location ID from id_map or existing location_id.' },
+          hotel_id: { type: 'STRING', description: 'Accommodation POI ID for the night.' },
+          hotel_name: { type: 'STRING', description: 'Hotel name when no hotel_id available.' },
+          hotel_type: ACCOMMODATION_TYPE_FIELD,
+          places: {
+            type: 'ARRAY',
+            description: 'Complete ordered list of places for this day — use real IDs only.',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                place_id: { type: 'STRING', description: 'Real ID from id_map or existing place_id.' },
+                description: { type: 'STRING', description: 'What the traveler does there.' },
+                event_id: { type: 'STRING', description: 'Festival/event ID if applicable.' },
+                day_part: { type: 'STRING', description: 'Morning, Afternoon, Evening, or Night' },
+                start_time: { type: 'STRING', description: 'HH:mm' },
+                duration: { type: 'STRING', description: "e.g. '2h' or '45m'" },
+              },
+              required: ['place_id'],
+            },
+          },
+        },
+        required: ['day_number', 'places'],
+      },
+    },
+    required: ['day'],
+  },
+};
+
 // 2-step planner tool set
 const ITINERARY_TOOL_TWOSTEP = {
-  functionDeclarations: [UPSERT_PLACES_DECL, SIMPLIFIED_SET_ITINERARY_DECL],
+  functionDeclarations: [UPSERT_PLACES_DECL, SIMPLIFIED_SET_ITINERARY_DECL, UPDATE_DAY_DECL],
 };
 
 const ITINERARY_TOOL_TWOSTEP_WITH_APPLY = {
-  functionDeclarations: [UPSERT_PLACES_DECL, SIMPLIFIED_SET_ITINERARY_DECL, ITINERARY_TOOL.functionDeclarations[1]], // apply_itinerary
+  functionDeclarations: [UPSERT_PLACES_DECL, SIMPLIFIED_SET_ITINERARY_DECL, UPDATE_DAY_DECL, ITINERARY_TOOL.functionDeclarations[1]], // apply_itinerary
 };
 
 const SAFETY_SETTINGS = [
