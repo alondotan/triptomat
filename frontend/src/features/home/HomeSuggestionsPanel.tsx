@@ -156,6 +156,7 @@ export function HomeSuggestionsPanel({ items, selectedName, onSelectName, isPrev
   };
 
   const handleHeart = async (item: PanelItem) => {
+    console.log('[handleHeart] called', { id: item.id, name: item.name, hasPoi: !!item.poi, isTemp: item.isTemporary });
     if (heartingIds.has(item.id)) return;
     setHeartingIds(prev => new Set([...prev, item.id]));
     try {
@@ -163,8 +164,12 @@ export function HomeSuggestionsPanel({ items, selectedName, onSelectName, isPrev
         await toggleLike(item.poi);
       } else {
         // Temporary suggestion — create as interested
-        if (!activeTrip) return;
-        await addPOI({
+        if (!activeTrip) {
+          console.warn('[handleHeart] no activeTrip, aborting');
+          return;
+        }
+        console.log('[handleHeart] creating POI for temporary item:', item.name);
+        const result = await addPOI({
           tripId: activeTrip.id,
           category: 'attraction',
           name: item.name,
@@ -177,9 +182,10 @@ export function HomeSuggestionsPanel({ items, selectedName, onSelectName, isPrev
           isCancelled: false,
           isPaid: false,
         });
+        console.log('[handleHeart] addPOI result:', result);
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.error('[handleHeart] error:', err);
     } finally {
       setHeartingIds(prev => { const n = new Set(prev); n.delete(item.id); return n; });
     }
