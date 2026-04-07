@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, Plus, Loader2, Check } from 'lucide-react';
+import { Sparkles, Plus, Loader2, Check, Heart } from 'lucide-react';
 import { SubCategoryIcon } from '@/shared/components/SubCategoryIcon';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/shared/lib/utils';
@@ -7,8 +7,11 @@ import { usePOI } from '@/features/poi/POIContext';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
 import { useResolvedImage } from '@/shared/hooks/useResolvedImage';
+import { useToggleLike } from '@/shared/hooks/useToggleLike';
 import type { PointOfInterest } from '@/types/trip';
 import type { PanelItem } from './panelItems';
+
+const LOCKED_STATUSES = ['planned', 'scheduled', 'booked', 'visited', 'skipped'] as const;
 
 interface HomeSuggestionsPanelProps {
   items: PanelItem[];
@@ -21,15 +24,19 @@ interface HomeSuggestionsPanelProps {
 interface SuggestionCardProps {
   item: PanelItem;
   adding: boolean;
+  hearting: boolean;
   selected: boolean;
   onSelect: () => void;
   onAdd: (item: PanelItem) => void;
+  onHeart: (item: PanelItem) => void;
   onOpenDetails: (poi: PointOfInterest) => void;
   isPreviewMode?: boolean;
 }
 
-function SuggestionCard({ item, adding, selected, onSelect, onAdd, onOpenDetails, isPreviewMode }: SuggestionCardProps) {
+function SuggestionCard({ item, adding, hearting, selected, onSelect, onAdd, onHeart, onOpenDetails, isPreviewMode }: SuggestionCardProps) {
   const inPlan = !!item.poiId;
+  const isLiked = item.poi?.status === 'interested';
+  const isLocked = !!item.poi && (LOCKED_STATUSES as readonly string[]).includes(item.poi.status);
 
   const { url: imgUrl, onError: onImageError } = useResolvedImage({ imageUrl: item.imageUrl }, item.name);
 
@@ -76,7 +83,24 @@ function SuggestionCard({ item, adding, selected, onSelect, onAdd, onOpenDetails
         </p>
       </div>
 
-      {/* Status / add button */}
+      {/* Heart button — top-left */}
+      <Button
+        size="icon"
+        className={cn(
+          'absolute top-1.5 left-1.5 h-5 w-5 rounded-full shadow',
+          isLocked ? 'bg-black/20 opacity-40 cursor-not-allowed' : 'bg-black/40 hover:bg-black/60',
+        )}
+        variant="ghost"
+        onClick={e => { e.stopPropagation(); if (!isLocked && !isPreviewMode) onHeart(item); }}
+        disabled={hearting || isLocked || isPreviewMode}
+        title={isLocked ? 'Cannot change' : isLiked ? 'Remove from favorites' : 'Add to favorites'}
+      >
+        {hearting
+          ? <Loader2 size={9} className="animate-spin text-white" />
+          : <Heart size={9} className={isLiked ? 'text-red-400 fill-red-400' : 'text-white/70'} />}
+      </Button>
+
+      {/* Status / add button — top-right */}
       {inPlan ? (
         <div className="absolute top-1.5 right-1.5 bg-green-500 rounded-full p-0.5">
           <Check size={9} className="text-white" />
@@ -102,7 +126,9 @@ function SuggestionCard({ item, adding, selected, onSelect, onAdd, onOpenDetails
 export function HomeSuggestionsPanel({ items, selectedName, onSelectName, isPreviewMode = false }: HomeSuggestionsPanelProps) {
   const { addPOI } = usePOI();
   const { activeTrip } = useActiveTrip();
+  const { toggleLike } = useToggleLike();
   const [addingIds, setAddingIds] = useState<Set<string>>(new Set());
+  const [heartingIds, setHeartingIds] = useState<Set<string>>(new Set());
   const [dialogPOI, setDialogPOI] = useState<PointOfInterest | null>(null);
 
   const handleAdd = async (item: PanelItem) => {
@@ -126,6 +152,36 @@ export function HomeSuggestionsPanel({ items, selectedName, onSelectName, isPrev
       // ignore
     } finally {
       setAddingIds(prev => { const n = new Set(prev); n.delete(item.id); return n; });
+    }
+  };
+
+  const handleHeart = async (item: PanelItem) => {
+    if (heartingIds.has(item.id)) return;
+    setHeartingIds(prev => new Set([...prev, item.id]));
+    try {
+      if (item.poi) {
+        await toggleLike(item.poi);
+      } else {
+        // Temporary suggestion — create as interested
+        if (!activeTrip) return;
+        await addPOI({
+          tripId: activeTrip.id,
+          category: 'attraction',
+          name: item.name,
+          status: 'interested',
+          location: item.coordinates
+            ? { coordinates: { lat: item.coordinates[0], lng: item.coordinates[1] } }
+            : {},
+          sourceRefs: { recommendation_ids: [], email_ids: [], map_list_ids: [] },
+          details: { notes: { raw_notes: 'Added from AI chat suggestion' } },
+          isCancelled: false,
+          isPaid: false,
+        });
+      }
+    } catch {
+      // ignore
+    } finally {
+      setHeartingIds(prev => { const n = new Set(prev); n.delete(item.id); return n; });
     }
   };
 
@@ -164,9 +220,11 @@ export function HomeSuggestionsPanel({ items, selectedName, onSelectName, isPrev
                   key={item.id}
                   item={item}
                   adding={addingIds.has(item.id)}
+                  hearting={heartingIds.has(item.id)}
                   selected={isSelected}
                   onSelect={() => onSelectName(isSelected ? null : item.name)}
                   onAdd={handleAdd}
+                  onHeart={handleHeart}
                   onOpenDetails={setDialogPOI}
                   isPreviewMode={isPreviewMode}
                 />
