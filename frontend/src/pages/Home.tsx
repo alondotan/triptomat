@@ -363,6 +363,7 @@ const HomePage = () => {
               overrideDays={displayDays}
               selectedLevel={selectedLevel}
               onSelectLevel={handleSelectLevel}
+              hideDayLevel={contextMode === 'recommendation'}
             />
           </div>
         </div>

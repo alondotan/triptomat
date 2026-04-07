@@ -13,9 +13,11 @@ interface OverviewItineraryPanelProps {
   selectedLevel?: SelectedLevel;
   /** Called when user clicks a level row in the tree */
   onSelectLevel?: (level: SelectedLevel) => void;
+  /** When true, skips Day rows and shows places directly under Location (research mode) */
+  hideDayLevel?: boolean;
 }
 
-export function OverviewItineraryPanel({ selectedName, onSelectName, overrideDays, selectedLevel, onSelectLevel }: OverviewItineraryPanelProps = {}) {
+export function OverviewItineraryPanel({ selectedName, onSelectName, overrideDays, selectedLevel, onSelectLevel, hideDayLevel }: OverviewItineraryPanelProps = {}) {
   const { t } = useTranslation();
   const { activeTrip } = useActiveTrip();
 
@@ -31,6 +33,7 @@ export function OverviewItineraryPanel({ selectedName, onSelectName, overrideDay
           selectedLevel={selectedLevel}
           onSelectLevel={onSelectLevel}
           tripName={activeTrip?.name}
+          hideDayLevel={hideDayLevel}
         />
       </div>
     </div>
