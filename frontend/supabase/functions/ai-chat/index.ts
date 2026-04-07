@@ -49,9 +49,13 @@ You have tools to interact directly with the user's trip. Use them proactively �
 - User asks "what should I see in Rome?" → call suggest_places
 - Do NOT use for factual questions with no place list ("how much does the Colosseum cost?")
 
-**add_place** — Use when user explicitly wants to add/save a place to their trip.
+**add_place** — Use when user explicitly wants to add/save a single place to their trip.
 - "Add the Colosseum to my trip" → call add_place
 - "Save this restaurant for later" → call add_place
+
+**add_places** — Use when user wants to add multiple places at once.
+- "Add all of these to my trip" (after suggest_places) → call add_places with the full list
+- "Save these restaurants for later" → call add_places
 
 **update_place** — Use when user wants to update details of an existing place.
 - "Set the Louvre entry cost to €17" → call update_place
@@ -62,6 +66,11 @@ You have tools to interact directly with the user's trip. Use them proactively �
 
 **shift_trip_dates** — Use when user wants to move the entire trip to different dates.
 - "Move my trip to start on March 15" → call shift_trip_dates
+
+**add_place vs set_itinerary/update_day — how to choose:**
+- "Add", "save", "keep for later", or "add all of these" with no mention of a specific day → use add_place / add_places
+- "Plan", "schedule", "put on day X", "build an itinerary" → use set_itinerary / update_day
+- After suggest_places, if user says "add them" or "add all" with no day reference → add_places (not set_itinerary)
 
 **update_day** — Use when the user asks to add, change, or remove something on a single specific day.
 - "Add the Eiffel Tower to day 3" → call update_day for day 3
@@ -398,6 +407,38 @@ const BASE_TOOLS = {
           notes: { type: 'STRING', description: 'Optional note about this place' },
         },
         required: ['name', 'category'],
+      },
+    },
+    {
+      name: 'add_places',
+      description: 'Add multiple places to the trip\'s place list in one call. Use when the user wants to save several places at once (e.g. "add all of these", "save these restaurants").',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          places: {
+            type: 'ARRAY',
+            description: 'List of places to add',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                name: { type: 'STRING', description: 'Specific, searchable place name' },
+                category: CATEGORY_ENUM,
+                place_type: PLACE_TYPE_FIELD,
+                activity_type: ACTIVITY_TYPE_FIELD,
+                accommodation_type: ACCOMMODATION_TYPE_FIELD,
+                eatery_type: EATERY_TYPE_FIELD,
+                transport_type: TRANSPORT_TYPE_FIELD,
+                event_type: EVENT_TYPE_FIELD,
+                ...LOCATION_FIELDS,
+                country: { type: 'STRING' },
+                cost: { type: 'NUMBER', description: 'Estimated cost in the trip currency' },
+                notes: { type: 'STRING', description: 'Optional note about this place' },
+              },
+              required: ['name', 'category'],
+            },
+          },
+        },
+        required: ['places'],
       },
     },
     {

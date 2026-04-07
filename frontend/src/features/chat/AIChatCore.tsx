@@ -386,6 +386,30 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
           } else if (tc.name === 'suggest_places' && tc.args?.places) {
             onSuggestPlaces?.(tc.args.places, updatedMessages.length);
 
+          } else if (tc.name === 'add_places' && Array.isArray(tc.args?.places) && (tc.args.places as unknown[]).length > 0) {
+            if (instantApply) history.pushHistory(itineraryDays, pois, activeTrip);
+            await Promise.all((tc.args.places as Record<string, unknown>[]).map(p =>
+              addPOI({
+                tripId: tripContext.tripId,
+                name: p.name as string,
+                category: (CATEGORY_MAP[p.category as string] ?? p.category as PointOfInterest['category']) || 'attraction',
+                placeType: (p.place_type || p.accommodation_type || p.eatery_type || p.transport_type || p.event_type) as string | undefined,
+                activityType: p.activity_type as string | undefined,
+                status: 'suggested',
+                location: {
+                  city: (p.location_name || p.city) as string | undefined,
+                  country: p.country as string | undefined,
+                },
+                details: {
+                  ...(p.cost !== undefined ? { cost: { amount: p.cost as number, currency: tripContext.currency || '' } } : {}),
+                  ...(p.notes ? { notes: { user_summary: p.notes as string } } : {}),
+                },
+                sourceRefs: { email_ids: [], recommendation_ids: [] },
+                isCancelled: false,
+                isPaid: false,
+              } as Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>)
+            ));
+
           } else if (tc.name === 'add_place' && tc.args?.name) {
             if (instantApply) history.pushHistory(itineraryDays, pois, activeTrip);
             await addPOI({
