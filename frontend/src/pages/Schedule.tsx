@@ -2189,7 +2189,10 @@ export default function SchedulePage() {
           remark: poi.details?.notes?.user_summary,
           poi,
         };
-        const isScheduled = a.schedule_state === 'scheduled' || !!time;
+        // Only treat as scheduled if explicitly marked OR has a real booking hour.
+        // time_window.start can be a day-part label ("Morning" etc.) for potential items
+        // — those should stay potential, not create separate locked timeline groups.
+        const isScheduled = a.schedule_state === 'scheduled' || !!bookingHour;
         if (isScheduled) {
           newScheduled.push(item);
           if (time) newLocked.add(a.id);
