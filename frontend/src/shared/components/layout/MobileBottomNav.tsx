@@ -10,14 +10,16 @@ import {
   CheckSquare,
   FileText,
   CloudSun,
-  Bot,
+  Home,
+  Compass,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 
 const primaryItems = [
-  { path: '/', labelKey: 'nav.aiHome', icon: Bot },
+  { path: '/', labelKey: 'nav.aiHome', icon: Home },
   { path: '/schedule', labelKey: 'nav.timeline', icon: CalendarDays },
+  { path: '/recommendations', labelKey: 'nav.home', icon: Compass },
   { path: '/map', labelKey: 'nav.map', icon: Map },
 ];
 

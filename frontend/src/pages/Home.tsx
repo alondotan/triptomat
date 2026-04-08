@@ -47,7 +47,7 @@ const HomePage = () => {
   const [suggestions, setSuggestions] = useState<ChatSuggestion[]>([]);
   const [festivals, setFestivals] = useState<TripContext['festivals']>([]);
   const [locationsFlat, setLocationsFlat] = useState<string[]>([]);
-  const [allPlaces, setAllPlaces] = useState<Array<{ name: string; category: string }>>([]);
+  const [allPlaces, setAllPlaces] = useState<Array<{ name: string }>>([]);
   // name (lowercase) → image URL, built from country geodata places
   const [placeImageMap, setPlaceImageMap] = useState<Map<string, string>>(new Map());
   // Tourist region markers for empty-state map display
@@ -74,6 +74,16 @@ const HomePage = () => {
       const coordMap = new Map<string, [number, number]>();
       const regions: Array<{ id: string; name: string; pos: [number, number] }> = [];
 
+      // Derive trip month range for festival filtering (1-based months)
+      const tripMonths = new Set<number>();
+      if (activeTrip.startDate && activeTrip.endDate) {
+        const start = new Date(activeTrip.startDate);
+        const end = new Date(activeTrip.endDate);
+        for (let d = new Date(start); d <= end; d.setMonth(d.getMonth() + 1)) {
+          tripMonths.add(d.getMonth() + 1);
+        }
+      }
+
       for (const country of activeTrip.countries) {
         const [festData, countryData] = await Promise.all([
           loadFestivalData(country),
@@ -83,10 +93,16 @@ const HomePage = () => {
 
         if (festData) {
           festData.public_holidays.forEach(h => {
-            festivalResult.push({ name: h.name, country, period: h.date?.slice(0, 2) ? `Month ${h.date.slice(0, 2)}` : undefined });
+            const month = h.date ? parseInt(h.date.slice(0, 2), 10) : null;
+            if (tripMonths.size === 0 || !month || tripMonths.has(month)) {
+              festivalResult.push({ name: h.name, country, period: month ? `Month ${month}` : undefined });
+            }
           });
           festData.cultural_festivals.forEach(f => {
-            festivalResult.push({ name: f.name, country, period: monthsLabel(f.typical_months) });
+            const months: number[] = f.typical_months ?? [];
+            if (tripMonths.size === 0 || months.length === 0 || months.some(m => tripMonths.has(m))) {
+              festivalResult.push({ name: f.name, country, period: monthsLabel(months) });
+            }
           });
         }
 
@@ -120,7 +136,7 @@ const HomePage = () => {
         setRegionMarkers(regions);
 
         const flatLocs: string[] = [];
-        const flatPlaces: Array<{ name: string; category: string }> = [];
+        const flatPlaces: Array<{ name: string }> = [];
         for (const country of activeTrip.countries) {
           const cd = await loadCountryData(country);
           if (!cd) continue;
@@ -133,8 +149,8 @@ const HomePage = () => {
             }
           }
           collectCityNames(cd.locations ?? []);
-          (cd.places ?? []).forEach((p: { name?: string; category?: string }) => {
-            if (p.name) flatPlaces.push({ name: p.name, category: p.category || 'attraction' });
+          (cd.places ?? []).forEach((p: { name?: string }) => {
+            if (p.name) flatPlaces.push({ name: p.name });
           });
         }
         if (!cancelled) {
@@ -207,7 +223,15 @@ const HomePage = () => {
     items: Array<{ name: string; location?: string; day?: number }>,
     messageIndex: number,
   ) => {
-    const fresh = items.filter(s => !seenNamesRef.current.has(s.name.toLowerCase()));
+    // Dedup within this batch first, then against cross-call seen set
+    const withinBatchSeen = new Set<string>();
+    const unique = items.filter(s => {
+      const key = s.name.toLowerCase();
+      if (withinBatchSeen.has(key)) return false;
+      withinBatchSeen.add(key);
+      return true;
+    });
+    const fresh = unique.filter(s => !seenNamesRef.current.has(s.name.toLowerCase()));
     if (!fresh.length) return;
     fresh.forEach(s => seenNamesRef.current.add(s.name.toLowerCase()));
     setSuggestions(prev => {
@@ -241,7 +265,7 @@ const HomePage = () => {
   ) => {
     const items = places
       .filter(p => p.name && p.name.length >= 2)
-      .map(p => ({ name: p.name, location: p.location_name ?? p.city }));
+      .map(p => ({ name: p.name, location: p.location_name ?? p.city, category: p.category }));
     addSuggestionsToPanel(items, messageIndex);
     setContextMode('recommendation');
   }, [addSuggestionsToPanel]);
@@ -288,6 +312,11 @@ const HomePage = () => {
       }));
   }, [previewSnapshot, suggestions]);
 
+  // Mobile home tab state
+  const [mobileHomeTab, setMobileHomeTab] = useState<'chat' | 'map' | 'plan'>('chat');
+  // Map filter: show only itinerary (plan) items vs all panel items
+  const [mobilePlanOnly, setMobilePlanOnly] = useState(true);
+
   // Unified panel items for map + suggestions strip
   // placeCoordMapRef.current is a ref — intentionally not in deps (changes with geodata load)
   const panelItems = useMemo<PanelItem[]>(() => {
@@ -299,6 +328,14 @@ const HomePage = () => {
     }
     return panelItemsFromSuggestions(suggestions, pois, placeImageMap, placeCoordMapRef.current);
   }, [contextMode, liveDays, pois, selectedLevel, suggestions, placeImageMap, previewSnapshot, snapshotSuggestions]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Itinerary items only (for mobile map "plan only" filter)
+  const planItems = useMemo<PanelItem[]>(
+    () => panelItemsFromItinerary(liveDays, pois, { type: 'trip' }),
+    [liveDays, pois],
+  );
+  const hasPlanItems = planItems.length > 0;
+  const mobileMapItems = mobilePlanOnly && hasPlanItems ? planItems : panelItems;
 
   if (!activeTrip || !tripContext) {
     return (
@@ -379,23 +416,99 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* ── Mobile: stacked chat (full screen) ── */}
+      {/* ── Mobile: tabs (Chat / Map / Plan) ── */}
       <div className="lg:hidden flex flex-col flex-1 min-h-0 overflow-hidden">
-        <AIChatCore
-          tripContext={tripContext}
-          compact
-          className="flex-1 min-h-0"
-          onItineraryUpdate={handleItineraryUpdate}
-          onViewSnapshot={setPreviewSnapshot}
-          instantApply
-        />
-        {panelItems.length > 0 && (
-          <div className="shrink-0 max-h-40 border-t overflow-hidden">
-            <HomeSuggestionsPanel
-              items={panelItems}
+
+        {/* Tab bar */}
+        <div className="flex shrink-0 border-b">
+          {(['chat', 'map', 'plan'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setMobileHomeTab(tab)}
+              className={`flex-1 py-2 text-xs font-semibold transition-colors ${
+                mobileHomeTab === tab
+                  ? 'text-primary border-b-2 border-primary'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              {tab === 'chat' ? t('aiChat.chatTab') : tab === 'map' ? t('nav.map') : t('aiChat.planTab')}
+            </button>
+          ))}
+        </div>
+
+        {/* Chat tab */}
+        {mobileHomeTab === 'chat' && (
+          <>
+            <AIChatCore
+              tripContext={tripContext}
+              compact
+              className="flex-1 min-h-0"
+              onItineraryUpdate={handleItineraryUpdate}
+              onViewSnapshot={setPreviewSnapshot}
+              instantApply
+            />
+            {panelItems.length > 0 && (
+              <div className="shrink-0 max-h-40 border-t overflow-hidden">
+                <HomeSuggestionsPanel
+                  items={panelItems}
+                  selectedName={selectedName}
+                  onSelectName={setSelectedName}
+                  isPreviewMode={!!previewSnapshot}
+                />
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Map tab */}
+        {mobileHomeTab === 'map' && (
+          <div className="flex-1 min-h-0 flex flex-col">
+            {hasPlanItems && (
+              <div className="shrink-0 flex gap-1 px-3 py-1.5 border-b">
+                <button
+                  onClick={() => setMobilePlanOnly(true)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
+                    mobilePlanOnly
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-muted text-muted-foreground border-border'
+                  }`}
+                >
+                  {t('nav.planOnly')}
+                </button>
+                <button
+                  onClick={() => setMobilePlanOnly(false)}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
+                    !mobilePlanOnly
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-muted text-muted-foreground border-border'
+                  }`}
+                >
+                  {t('nav.showAll')}
+                </button>
+              </div>
+            )}
+            <div className="flex-1 min-h-0">
+              <HomeMapPanel
+                items={mobileMapItems}
+                countries={activeTrip.countries}
+                regionMarkers={regionMarkers}
+                selectedName={selectedName}
+                onSelectName={setSelectedName}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Plan tab */}
+        {mobileHomeTab === 'plan' && (
+          <div className="flex-1 overflow-y-auto px-3 py-2">
+            <OverviewItineraryPanel
               selectedName={selectedName}
               onSelectName={setSelectedName}
-              isPreviewMode={!!previewSnapshot}
+              overrideDays={displayDays}
+              selectedLevel={selectedLevel}
+              onSelectLevel={handleSelectLevel}
+              hideDayLevel={contextMode === 'recommendation'}
             />
           </div>
         )}

@@ -28,10 +28,14 @@ const en = {
     home: 'Recommendations',
     aiHome: 'Home',
     weather: 'Weather',
+    planOnly: 'Plan only',
+    showAll: 'All',
   },
 
   // ── Common ──
   common: {
+    showMore: 'Show more',
+    showLess: 'Show less',
     save: 'Save',
     cancel: 'Cancel',
     delete: 'Delete',
@@ -678,6 +682,8 @@ const en = {
     drag: 'Drag',
     remove: 'Remove',
     dragActivityToSchedule: 'Drag activity to schedule — or add from list',
+    generalInfo: 'General Info',
+    weatherChart: 'Climate',
     addActivity: 'Add activity',
     dragPotentialHere: 'Drag potential activities here',
     dropHere: 'Drop here',
@@ -739,6 +745,7 @@ const en = {
     day: 'Day',
     byPlaces: 'By places',
     byDays: 'By days',
+    byTree: 'Plan tree',
     backToLocation: 'Back to location',
     noItemsYet: 'No activities for this day yet',
     activity: 'Activity',

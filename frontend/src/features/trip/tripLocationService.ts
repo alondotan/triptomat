@@ -11,6 +11,8 @@ export interface CountryLocationNode {
   type: string;
   name: string;
   name_he?: string;
+  description?: string;
+  description_he?: string;
   coordinates?: { lat: number; lng: number };
   population?: number;
   is_capital?: boolean;
@@ -43,6 +45,8 @@ export interface CountryData {
     site_type: string;
     name: string;
     name_he?: string;
+    description?: string;
+    description_he?: string;
     currency?: string;
     phone_prefix?: string;
     timezone?: string;
@@ -167,6 +171,80 @@ export async function deleteTripLocation(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// ── Country weather (climatology) ────────────────
+
+export interface WeatherMonth {
+  temp_high_c: number;
+  temp_low_c: number;
+  precipitation_mm: number;
+  rain_days: number;
+  snow_days: number;
+  sunshine_hours: number;
+}
+
+export interface WeatherRegionData {
+  name: string;
+  name_he?: string;
+  monthly: Record<string, WeatherMonth>; // keys "1"–"12"
+}
+
+export interface CountryWeatherData {
+  country: string;
+  regions: Record<string, WeatherRegionData>; // keys are region externalIds
+}
+
+const countryWeatherCache = new Map<string, CountryWeatherData | null>();
+
+export async function loadCountryWeatherData(countryName: string): Promise<CountryWeatherData | null> {
+  if (countryWeatherCache.has(countryName)) return countryWeatherCache.get(countryName)!;
+  try {
+    const res = await fetch(
+      `https://triptomat-media.s3.eu-central-1.amazonaws.com/geodata/countries_weather/${encodeURIComponent(countryName)}.json`,
+      { cache: 'no-store' },
+    );
+    if (!res.ok) { countryWeatherCache.set(countryName, null); return null; }
+    const data: CountryWeatherData = await res.json();
+    countryWeatherCache.set(countryName, data);
+    return data;
+  } catch {
+    countryWeatherCache.set(countryName, null);
+    return null;
+  }
+}
+
+/** Find the best-matching monthly weather data for a location.
+ *  Tries: exact externalId → prefix match → name match → first region. */
+export function findWeatherMonthly(
+  weatherData: CountryWeatherData,
+  externalId: string | null,
+  locationName: string,
+): WeatherMonth[] | null {
+  const regions = weatherData.regions;
+
+  let regionData: WeatherRegionData | undefined;
+
+  if (externalId) {
+    regionData = regions[externalId];
+    if (!regionData) {
+      // prefix match: location is a child of a region
+      for (const [regionId, rd] of Object.entries(regions)) {
+        if (externalId.startsWith(regionId + '/') || externalId === regionId) {
+          regionData = rd; break;
+        }
+      }
+    }
+  }
+  if (!regionData) {
+    regionData = Object.values(regions).find(
+      rd => rd.name === locationName || rd.name_he === locationName,
+    );
+  }
+  if (!regionData) regionData = Object.values(regions)[0];
+  if (!regionData) return null;
+
+  return Array.from({ length: 12 }, (_, i) => regionData!.monthly[String(i + 1)]).filter(Boolean) as WeatherMonth[];
+}
+
 // ── Seeding ─────────────────────────────────────
 
 // Cache per-country data to avoid re-fetching
@@ -177,7 +255,7 @@ export async function loadCountryData(countryName: string): Promise<CountryData 
   if (countryDataCache.has(countryName)) return countryDataCache.get(countryName)!;
 
   try {
-    const res = await fetch(`https://triptomat-media.s3.eu-central-1.amazonaws.com/geodata/countries/${encodeURIComponent(countryName)}.json`);
+    const res = await fetch(`https://triptomat-media.s3.eu-central-1.amazonaws.com/geodata/countries/${encodeURIComponent(countryName)}.json`, { cache: 'no-store' });
     if (!res.ok) {
       countryDataCache.set(countryName, null);
       return null;
@@ -201,6 +279,41 @@ function countryLocationToSiteNode(node: CountryLocationNode): SiteNode {
       ? node.children.map(countryLocationToSiteNode)
       : undefined,
   };
+}
+
+/** Build a map of externalId AND name → {description, description_he} from all loaded country data.
+ *  Indexed by both node.id (externalId) and node.name / node.name_he so callers can look up
+ *  even when the stored externalId doesn't match the JSON id. */
+export function buildDescriptionMap(
+  countries: Array<CountryData | null>,
+): Map<string, { description?: string; description_he?: string }> {
+  const map = new Map<string, { description?: string; description_he?: string }>();
+
+  function setEntry(key: string | undefined, entry: { description?: string; description_he?: string }) {
+    if (key && !map.has(key)) map.set(key, entry);
+  }
+
+  for (const data of countries) {
+    if (!data) continue;
+    const countryEntry = { description: data.data.description, description_he: data.data.description_he };
+    if (data.data.description || data.data.description_he) {
+      setEntry(data.id, countryEntry);
+      setEntry(data.data.name, countryEntry);
+      setEntry(data.data.name_he, countryEntry);
+    }
+
+    function walkNode(node: CountryLocationNode) {
+      if (node.description || node.description_he) {
+        const entry = { description: node.description, description_he: node.description_he };
+        setEntry(node.id, entry);
+        setEntry(node.name, entry);
+        setEntry(node.name_he, entry);
+      }
+      for (const child of node.children || []) walkNode(child);
+    }
+    for (const loc of data.locations) walkNode(loc);
+  }
+  return map;
 }
 
 /** Build a flat map of locationId → node name from the country locations tree */
@@ -301,7 +414,7 @@ async function seedTripPOIs(
         details: {},
         isCancelled: false,
         isPaid: false,
-        imageUrl: place.photo_url || place.image || undefined,
+        imageUrl: place.image || place.photo_url || undefined,
       };
 
       try {

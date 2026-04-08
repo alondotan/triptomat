@@ -28,10 +28,14 @@ const he = {
     home: 'המלצות',
     aiHome: 'בית',
     weather: 'מזג אוויר',
+    planOnly: 'תכנון בלבד',
+    showAll: 'הכל',
   },
 
   // ── Common ──
   common: {
+    showMore: 'קרא עוד',
+    showLess: 'פחות',
     save: 'שמור',
     cancel: 'ביטול',
     delete: 'מחק',
@@ -676,6 +680,8 @@ const he = {
     drag: 'גרור',
     remove: 'הסר',
     dragActivityToSchedule: 'גרור פעילות ללו״ז — או הוסף מהרשימה',
+    generalInfo: 'מידע כללי',
+    weatherChart: 'אקלים',
     addActivity: 'הוסף פעילות',
     dragPotentialHere: 'גרור פעילויות פוטנציאליות לכאן',
     dropHere: 'שחרר כאן',
@@ -737,6 +743,7 @@ const he = {
     day: 'יום',
     byPlaces: 'לפי מקומות',
     byDays: 'לפי ימים',
+    byTree: 'עץ תכנון',
     backToLocation: 'חזרה למקום',
     noItemsYet: 'אין פעילויות ליום זה עדיין',
     activity: 'פעילות',

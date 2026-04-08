@@ -6,7 +6,7 @@ import { useTransport } from '@/features/transport/TransportContext';
 import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { updateItineraryDay, createItineraryDay } from '@/features/itinerary/itineraryService';
 import { geocodeLocation } from '@/features/geodata/weatherService';
-import { findInFlatList } from '@/features/trip/tripLocationService';
+import { findInFlatList, loadCountryData, buildDescriptionMap, loadCountryWeatherData, findWeatherMonthly, type CountryWeatherData } from '@/features/trip/tripLocationService';
 import { createTripPlace, deleteTripPlace, reorderTripPlaces, updateTripPlace, findTripPlaceByLocationId } from '@/features/trip/tripPlaceService';
 import { rebuildPOIBookingsFromDays } from '@/features/poi/poiService';
 import { LocationContextPicker } from '@/shared/components/LocationContextPicker';
@@ -59,8 +59,10 @@ import { useTripList } from '@/features/trip/TripListContext';
 import { DaySection } from '@/features/schedule/DaySection';
 import { getSubCategoryEntry, getSubCategoryLabel } from '@/shared/lib/subCategoryConfig';
 import { SubCategoryIcon } from '@/shared/components/SubCategoryIcon';
+import { ItineraryTree } from '@/shared/components/ItineraryTree';
 import { useRouteCalculation } from '@/features/transport/useRouteCalculation';
 import { RouteMapPanel } from '@/features/transport/RouteMapPanel';
+import { OrientationMap } from '@/features/map/OrientationMap';
 import { TravelLegRow } from '@/features/transport/TravelLegRow';
 import { TRANSPORT_CATEGORY_CONFIG, formatDuration, type RouteLeg, type LegOverride } from '@/features/transport/routeService';
 import { useIsMobile } from '@/shared/hooks/use-mobile';
@@ -81,6 +83,15 @@ interface Item {
   poi?: PointOfInterest; // original POI object when item represents a POI
   isTimeBlock?: boolean; // named section divider
 }
+
+// Temperature → hue: -10°C=220 (blue) → 35°C=0 (red)
+function tempToHsl(temp: number): string {
+  const hue = Math.max(0, Math.min(220, 220 - ((temp + 10) / 45) * 220));
+  return `hsl(${hue},75%,55%)`;
+}
+
+const MONTH_LABELS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTH_LABELS_HE = ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
 
 // Emoji by POI category
 function categoryEmoji(category: string): string {
@@ -976,24 +987,114 @@ export default function SchedulePage() {
   const { isRTL } = useLanguage();
   const { t } = useTranslation();
   const [mobileTab, setMobileTab] = useState<'schedule' | 'map'>('schedule');
-  const [viewMode, setViewMode] = useState<'places' | 'days'>('places');
+  const [viewMode, setViewMode] = useState<'places' | 'days' | 'tree'>('places');
+
+  // Location descriptions loaded from country JSON files (externalId → {description, description_he})
+  const [locationDescriptions, setLocationDescriptions] = useState<Map<string, { description?: string; description_he?: string }>>(new Map());
+  useEffect(() => {
+    const countries = activeTrip?.countries;
+    if (!countries?.length) return;
+    let cancelled = false;
+    Promise.all(countries.map(c => loadCountryData(c))).then(results => {
+      if (cancelled) return;
+      setLocationDescriptions(buildDescriptionMap(results));
+    });
+    return () => { cancelled = true; };
+  }, [activeTrip?.countries?.join(',')]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Country weather data (climatology) for the weather chart
+  const [countryWeatherMap, setCountryWeatherMap] = useState<Map<string, CountryWeatherData>>(new Map());
+  useEffect(() => {
+    const countries = activeTrip?.countries;
+    if (!countries?.length) return;
+    let cancelled = false;
+    Promise.all(countries.map(c => loadCountryWeatherData(c).then(d => [c, d] as const))).then(results => {
+      if (cancelled) return;
+      const m = new Map<string, CountryWeatherData>();
+      for (const [c, d] of results) if (d) m.set(c, d);
+      setCountryWeatherMap(m);
+    });
+    return () => { cancelled = true; };
+  }, [activeTrip?.countries?.join(',')]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Description expand/collapse
+  const [descExpanded, setDescExpanded] = useState(false);
 
   // hasDays: true when trip has a day count or exact dates
   const hasDays = !!(activeTrip?.numberOfDays && activeTrip.numberOfDays > 0) || !!activeTrip?.startDate;
 
+  // Derive live days as DraftDay[] for the tree view
+  const treeDays = useMemo<import('@/types/itineraryDraft').DraftDay[]>(() => {
+    const poiMap = new Map(pois.map(p => [p.id, p]));
+    const placeLocMap = new Map(tripPlaces.map(tp => {
+      const loc = tripLocations.find(l => l.id === tp.tripLocationId);
+      return [tp.id, loc?.name ?? ''];
+    }));
+    return itineraryDays.map(day => ({
+      dayNumber: day.dayNumber,
+      date: day.date,
+      locationContext: (day.tripPlaceId && placeLocMap.get(day.tripPlaceId)) || undefined,
+      places: (day.activities || [])
+        .filter(a => a.type === 'poi' && poiMap.has(a.id))
+        .sort((a, b) => a.order - b.order)
+        .map(a => {
+          const poi = poiMap.get(a.id)!;
+          const catMap: Record<string, import('@/types/itineraryDraft').DraftPlace['category']> = { accommodation: 'accommodation', eatery: 'eatery', attraction: 'attraction', service: 'service' };
+          return { name: poi.name, category: catMap[poi.category || ''] || 'attraction', placeType: poi.placeType || poi.activityType || undefined, city: poi.location?.city, existingPoiId: a.id, time: a.time_window?.start };
+        }),
+    }));
+  }, [itineraryDays, pois, tripLocations, tripPlaces]);
+
+  // Reverse map: location name → tripPlace ID (used by tree view navigation)
+  const locNameToIdMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const tp of tripPlaces) {
+      const loc = tripLocations.find(l => l.id === tp.tripLocationId);
+      if (loc) map.set(loc.name, tp.id);
+    }
+    return map;
+  }, [tripPlaces, tripLocations]);
+
   // Research/places mode location strip state
   const [selectedResearchLocId, setSelectedResearchLocId] = useState<string | null>(null);
   const [mobileDetailLocId, setMobileDetailLocId] = useState<string | null>(null);
+  useEffect(() => { setDescExpanded(false); }, [selectedResearchLocId, mobileDetailLocId]);
   const [addLocationOpen, setAddLocationOpen] = useState(false);
   const [addActivityOpen, setAddActivityOpen] = useState(false);
   const [editingLocDays, setEditingLocDays] = useState(false);
   const [locDetailSelectedDayNum, setLocDetailSelectedDayNum] = useState<number | null>(null);
 
+  // Suppresses the auto-reset of locDetailSelectedDayNum when navigating from tree
+  const skipDayResetRef = useRef(false);
+
   // Reset day selection + edit mode when entering a different location
   useEffect(() => {
+    if (skipDayResetRef.current) { skipDayResetRef.current = false; return; }
     setEditingLocDays(false);
     setLocDetailSelectedDayNum(null);
   }, [selectedResearchLocId, mobileDetailLocId]);
+
+  // Tree view: clicking a location/day navigates to the places view
+  const handleTreeSelectLevel = useCallback((level: import('@/features/home/panelItems').SelectedLevel) => {
+    if (level.type === 'location') {
+      const id = locNameToIdMap.get(level.name);
+      if (!id) return;
+      setViewMode('places');
+      setSelectedResearchLocId(id);
+      setMobileDetailLocId(id);
+    } else if (level.type === 'day') {
+      const day = treeDays.find(d => d.dayNumber === level.dayNumber);
+      const id = day?.locationContext ? locNameToIdMap.get(day.locationContext) : null;
+      skipDayResetRef.current = true;
+      setViewMode('places');
+      if (id) {
+        setSelectedResearchLocId(id);
+        setMobileDetailLocId(id);
+      }
+      setLocDetailSelectedDayNum(level.dayNumber);
+      setSelectedDayNum(level.dayNumber);
+    }
+  }, [locNameToIdMap, treeDays]);
 
   // Listen for FAB "add location" event in research mode
   useEffect(() => {
@@ -2780,36 +2881,63 @@ export default function SchedulePage() {
           onDragEnd={handleDragEnd}
           onDragCancel={() => { setActiveId(null); setActiveDragGroupCount(0); setActiveDragItem(null); document.documentElement.style.overscrollBehaviorY = ''; }}
         >
-          {/* ── View mode toggle (by places / by days) — only on main grid, not inside location/day detail ── */}
-          {hasDays && !selectedResearchLocId && !mobileDetailLocId && (
+          {/* ── View mode toggle — not inside location/day detail ── */}
+          {!selectedResearchLocId && !mobileDetailLocId && (
             <div className="flex gap-1 shrink-0">
+              {hasDays && (
+                <button
+                  type="button"
+                  onClick={() => setViewMode('places')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
+                    viewMode === 'places'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-muted text-muted-foreground border-border hover:border-primary/40'
+                  }`}
+                >
+                  {t('timeline.byPlaces')}
+                </button>
+              )}
+              {hasDays && (
+                <button
+                  type="button"
+                  onClick={() => setViewMode('days')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
+                    viewMode === 'days'
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'bg-muted text-muted-foreground border-border hover:border-primary/40'
+                  }`}
+                >
+                  {t('timeline.byDays')}
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setViewMode('places')}
+                onClick={() => setViewMode('tree')}
                 className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
-                  viewMode === 'places'
+                  viewMode === 'tree'
                     ? 'bg-primary text-primary-foreground border-primary'
                     : 'bg-muted text-muted-foreground border-border hover:border-primary/40'
                 }`}
               >
-                {t('timeline.byPlaces')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('days')}
-                className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
-                  viewMode === 'days'
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-muted text-muted-foreground border-border hover:border-primary/40'
-                }`}
-              >
-                {t('timeline.byDays')}
+                {t('timeline.byTree')}
               </button>
             </div>
           )}
 
+          {/* ── Tree view ── */}
+          {viewMode === 'tree' && (
+            <div className="flex-1 overflow-y-auto px-2 py-2">
+              <ItineraryTree
+                days={treeDays}
+                tripName={activeTrip?.name}
+                emptyText={t('overview.noItinerary')}
+                onSelectLevel={handleTreeSelectLevel}
+              />
+            </div>
+          )}
+
           {/* ── Day pills + Location strip (sticky, never scrolls) ── */}
-          {!hasDays || viewMode === 'places' ? (
+          {viewMode !== 'tree' && ((!hasDays || viewMode === 'places') ? (
             <div className={`flex flex-col w-full gap-3 md:overflow-hidden ${locDetailSelectedDayNum == null ? 'md:h-[calc(100dvh-5.5rem)]' : ''}`}>
 
               {/* ════════════════════════════════════════════════════════════════ */}
@@ -2819,6 +2947,12 @@ export default function SchedulePage() {
                 {mobileDetailLocId ? (() => {
                   const detailLoc = researchLocations.find(l => l.id === mobileDetailLocId);
                   const detailName = mobileDetailLocId ? researchLocNameMap.get(mobileDetailLocId) || '?' : '';
+                  const detailTripLoc = detailLoc ? tripLocations.find(l => l.id === detailLoc.tripLocationId) : undefined;
+                  const detailDescEntry = (detailTripLoc?.externalId ? locationDescriptions.get(detailTripLoc.externalId) : undefined) ?? (detailTripLoc ? locationDescriptions.get(detailTripLoc.name) : undefined);
+                  const detailDescription = isRTL ? (detailDescEntry?.description_he || detailDescEntry?.description) : (detailDescEntry?.description || detailDescEntry?.description_he);
+                  const detailMobileCountry = activeTrip?.countries?.[0];
+                  const detailMobileWeatherData = detailMobileCountry ? countryWeatherMap.get(detailMobileCountry) : undefined;
+                  const detailMobileMonthly = detailMobileWeatherData ? findWeatherMonthly(detailMobileWeatherData, detailTripLoc?.externalId ?? null, detailName) : null;
                   const detailDay = itineraryDays.find(d => d.tripPlaceId === mobileDetailLocId);
                   const detailItems: Item[] = [];
                   for (const a of detailDay?.activities || []) {
@@ -2833,12 +2967,12 @@ export default function SchedulePage() {
                       <div className="flex items-center gap-2 shrink-0 pb-2">
                         <button
                           type="button"
-                          onClick={() => setMobileDetailLocId(null)}
+                          onClick={() => { setMobileDetailLocId(null); setSelectedResearchLocId(null); }}
                           className="p-1.5 rounded-lg hover:bg-muted transition-colors"
                         >
                           <ChevronLeft size={20} className={isRTL ? 'rotate-180' : ''} />
                         </button>
-                        <div className="flex-1" />
+                        <h2 className="flex-1 font-semibold text-sm truncate">{detailName}</h2>
                         <button
                           type="button"
                           onClick={() => handleDeleteResearchLocation(mobileDetailLocId)}
@@ -2847,6 +2981,18 @@ export default function SchedulePage() {
                           <Trash2 size={16} />
                         </button>
                       </div>
+                      {/* Location description */}
+                      {detailDescription && (
+                        <div className="shrink-0 pb-4">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{t('timeline.generalInfo')}</p>
+                          <p className={`text-sm text-muted-foreground leading-relaxed ${descExpanded ? '' : 'line-clamp-3'}`}>{detailDescription}</p>
+                          {detailDescription.length > 200 && (
+                            <button type="button" onClick={() => setDescExpanded(v => !v)} className="text-xs text-primary hover:underline mt-1">
+                              {descExpanded ? t('common.showLess') : t('common.showMore')}
+                            </button>
+                          )}
+                        </div>
+                      )}
                       {/* Days strip — shown when trip has days */}
                       {hasDays && activeTrip && activeTrip.numberOfDays && (
                         <div className="shrink-0 pb-2">
@@ -2996,6 +3142,36 @@ export default function SchedulePage() {
                           </div>
                         )}
 
+                        {/* Monthly weather chart */}
+                        {detailMobileMonthly && detailMobileMonthly.length === 12 && (() => {
+                          const maxTemp = Math.max(...detailMobileMonthly.map(m => m.temp_high_c));
+                          const minTemp = Math.min(...detailMobileMonthly.map(m => m.temp_high_c));
+                          const maxPrecip = Math.max(...detailMobileMonthly.map(m => m.precipitation_mm));
+                          const BAR_MAX_PX = 44; const BAR_MIN_PX = 6;
+                          const monthLabels = isRTL ? MONTH_LABELS_HE : MONTH_LABELS_EN;
+                          return (
+                            <div>
+                              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">{t('timeline.weatherChart')}</p>
+                              <div className="flex items-end gap-[1px]" style={{ height: 60 }}>
+                                {detailMobileMonthly.map((m, i) => {
+                                  const barPx = Math.round(BAR_MIN_PX + ((m.temp_high_c - minTemp) / (maxTemp - minTemp || 1)) * (BAR_MAX_PX - BAR_MIN_PX));
+                                  const precipPct = Math.round((m.precipitation_mm / maxPrecip) * 40);
+                                  return (
+                                    <div key={i} className="flex-1 flex flex-col items-center justify-end gap-[1px]"
+                                      title={`${monthLabels[i]}: ${m.temp_high_c}°/${m.temp_low_c}° · ${m.precipitation_mm}mm`}>
+                                      <div className="w-full relative overflow-hidden rounded-[2px]"
+                                        style={{ height: barPx, backgroundColor: tempToHsl(m.temp_high_c) }}>
+                                        <div className="absolute bottom-0 left-0 right-0 bg-blue-400/40" style={{ height: `${precipPct}%` }} />
+                                      </div>
+                                      <span className="text-[9px] leading-none text-muted-foreground/70">{monthLabels[i]}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+
                         {/* Horizontal POI thumbnails */}
                         {detailItems.length > 0 && (
                           <div>
@@ -3126,14 +3302,22 @@ export default function SchedulePage() {
                   // Detail view (same data as mobile detail)
                   const detailLoc = researchLocations.find(l => l.id === selectedResearchLocId);
                   const detailName = researchLocNameMap.get(selectedResearchLocId) || '?';
+                  const detailTripLoc = detailLoc ? tripLocations.find(l => l.id === detailLoc.tripLocationId) : undefined;
+                  const detailDescEntry = (detailTripLoc?.externalId ? locationDescriptions.get(detailTripLoc.externalId) : undefined) ?? (detailTripLoc ? locationDescriptions.get(detailTripLoc.name) : undefined);
+                  const detailDescription = isRTL ? (detailDescEntry?.description_he || detailDescEntry?.description) : (detailDescEntry?.description || detailDescEntry?.description_he);
+                  const detailCountry = activeTrip?.countries?.[0];
+                  const detailWeatherData = detailCountry ? countryWeatherMap.get(detailCountry) : undefined;
+                  const detailMonthly = detailWeatherData ? findWeatherMonthly(detailWeatherData, detailTripLoc?.externalId ?? null, detailName) : null;
+
+
                   return (
                     <div className="flex flex-col flex-1 min-h-0">
                       {/* Header */}
-                      <div className="flex items-center gap-2 shrink-0 pb-3">
-                        <button type="button" onClick={() => setSelectedResearchLocId(null)} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                      <div className="flex items-center gap-2 shrink-0 pb-2">
+                        <button type="button" onClick={() => { setSelectedResearchLocId(null); setMobileDetailLocId(null); }} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
                           <ChevronLeft size={20} className={isRTL ? 'rotate-180' : ''} />
                         </button>
-                        <div className="flex-1" />
+                        <h2 className="flex-1 font-semibold text-sm truncate">{detailName}</h2>
                         <button
                           type="button"
                           onClick={() => handleDeleteResearchLocation(selectedResearchLocId)}
@@ -3142,6 +3326,18 @@ export default function SchedulePage() {
                           <Trash2 size={16} />
                         </button>
                       </div>
+                      {/* Location description */}
+                      {detailDescription && (
+                        <div className="shrink-0 pb-4">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{t('timeline.generalInfo')}</p>
+                          <p className={`text-sm text-muted-foreground leading-relaxed ${descExpanded ? '' : 'line-clamp-3'}`}>{detailDescription}</p>
+                          {detailDescription.length > 200 && (
+                            <button type="button" onClick={() => setDescExpanded(v => !v)} className="text-xs text-primary hover:underline mt-1">
+                              {descExpanded ? t('common.showLess') : t('common.showMore')}
+                            </button>
+                          )}
+                        </div>
+                      )}
                       {/* Days strip — shown when trip has days */}
                       {hasDays && activeTrip && activeTrip.numberOfDays && (
                         <div className="shrink-0 pb-2">
@@ -3363,7 +3559,7 @@ export default function SchedulePage() {
 
                         {/* Right 1/3: image, map, notes */}
                         <div className="w-1/3 shrink-0 flex flex-col gap-2 min-h-0 overflow-hidden">
-                          <div className="rounded-lg overflow-hidden border bg-muted flex-1 min-h-[160px] shrink-0">
+                          <div className="relative rounded-lg overflow-hidden border bg-muted flex-1 min-h-[160px] shrink-0">
                             {locationCoords ? (
                               <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Loading...</div>}>
                                 <LazyMiniMap coordinates={locationCoords} className="w-full h-full" zoom={isCity ? 13 : 9} boundary={locationBoundary ?? undefined} markers={researchMapMarkers} />
@@ -3373,7 +3569,39 @@ export default function SchedulePage() {
                                 <MapPin size={24} className="text-muted-foreground/30" />
                               </div>
                             )}
+                            {activeTrip?.countries && activeTrip.countries.length > 0 && (
+                              <OrientationMap cityName={detailName} countries={activeTrip.countries} />
+                            )}
                           </div>
+                          {/* Monthly weather chart */}
+                          {detailMonthly && detailMonthly.length === 12 && (() => {
+                            const maxTemp = Math.max(...detailMonthly.map(m => m.temp_high_c));
+                            const minTemp = Math.min(...detailMonthly.map(m => m.temp_high_c));
+                            const maxPrecip = Math.max(...detailMonthly.map(m => m.precipitation_mm));
+                            const BAR_MAX_PX = 40; const BAR_MIN_PX = 6;
+                            const monthLabels = isRTL ? MONTH_LABELS_HE : MONTH_LABELS_EN;
+                            return (
+                              <div className="shrink-0">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">{t('timeline.weatherChart')}</p>
+                                <div className="flex items-end gap-[1px]" style={{ height: 56 }}>
+                                  {detailMonthly.map((m, i) => {
+                                    const barPx = Math.round(BAR_MIN_PX + ((m.temp_high_c - minTemp) / (maxTemp - minTemp || 1)) * (BAR_MAX_PX - BAR_MIN_PX));
+                                    const precipPct = Math.round((m.precipitation_mm / maxPrecip) * 40);
+                                    return (
+                                      <div key={i} className="flex-1 flex flex-col items-center justify-end gap-[1px] group"
+                                        title={`${monthLabels[i]}: ${m.temp_high_c}°/${m.temp_low_c}° · ${m.precipitation_mm}mm`}>
+                                        <div className="w-full relative overflow-hidden rounded-[2px] transition-opacity group-hover:opacity-75"
+                                          style={{ height: barPx, backgroundColor: tempToHsl(m.temp_high_c) }}>
+                                          <div className="absolute bottom-0 left-0 right-0 bg-blue-400/40" style={{ height: `${precipPct}%` }} />
+                                        </div>
+                                        <span className="text-[9px] leading-none text-muted-foreground/70">{monthLabels[i]}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })()}
                           <div className="flex flex-col gap-1 shrink-0">
                             <h4 className="text-xs font-semibold flex items-center gap-1.5 text-muted-foreground">
                               <NotebookPen size={12} /> {t('timeline.locationNotes')}
@@ -3540,7 +3768,7 @@ export default function SchedulePage() {
             </div>
           ) : (
             <p className="text-xs text-muted-foreground">{t('timeline.noActiveTrip')}</p>
-          )}
+          ))}
 
           {hasDays && viewMode === 'days' && (<>
           {/* Location picker dialog */}
@@ -3883,7 +4111,10 @@ export default function SchedulePage() {
 
             {/* ── Column 3: Route map ─────────── */}
             {(!isMobile || mobileTab === 'map') && (
-              <div className={`${isMobile ? 'min-h-[calc(100vh-12rem)]' : 'hidden md:block md:min-h-0'} border rounded-lg overflow-hidden`}>
+              <div className={`${isMobile ? 'min-h-[calc(100vh-12rem)]' : 'hidden md:block md:min-h-0'} border rounded-lg overflow-hidden relative`}>
+                {currentDayLocation && activeTrip?.countries && activeTrip.countries.length > 0 && (
+                  <OrientationMap cityName={currentDayLocation} countries={activeTrip.countries} />
+                )}
                 <RouteMapPanel
                   dayPOIs={dayPOIs}
                   stops={routeStops}

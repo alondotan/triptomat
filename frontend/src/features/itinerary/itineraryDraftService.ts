@@ -273,20 +273,16 @@ export async function applyDraftToTrip(
       .maybeSingle();
 
     const validActivities = newActivities.filter(a => a.id);
-    const draftPoiIds = new Set(validActivities.map(a => a.id));
+    const droppedActivities = newActivities.filter(a => !a.id);
+    if (droppedActivities.length > 0) {
+      console.error(
+        `[applyDraftToTrip] Day ${day.dayNumber}: dropped ${droppedActivities.length} activities with missing POI IDs`,
+        droppedActivities,
+      );
+    }
 
     if (existingDay) {
-      const existingActivities = (existingDay.activities || []) as unknown as ActivityEntry[];
-      const preserved = existingActivities.filter(
-        a => a.type !== 'poi' || !draftPoiIds.has(a.id),
-      );
-      const maxOrder = validActivities.length;
-      const merged = [
-        ...validActivities,
-        ...preserved.map((a, i) => ({ ...a, order: maxOrder + i + 1 })),
-      ];
-
-      const updatePayload: Record<string, unknown> = { activities: merged as unknown as Json };
+      const updatePayload: Record<string, unknown> = { activities: validActivities as unknown as Json };
       if (dayTripPlaceId) updatePayload.trip_place_id = dayTripPlaceId;
       if (accommodationPoiId) {
         updatePayload.accommodation_options = [{ is_selected: true, poi_id: accommodationPoiId }];

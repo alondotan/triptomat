@@ -127,6 +127,23 @@ describe("fuzzyMatch", () => {
     expect(fuzzyMatch(null as unknown as string, "a")).toBe(false);
     expect(fuzzyMatch("a", undefined as unknown as string)).toBe(false);
   });
+
+  it("levenshtein: matches typos for similarly-lengthed strings", () => {
+    expect(fuzzyMatch("Bangkok", "Bankok")).toBe(true);       // 1 deletion
+    expect(fuzzyMatch("Sagrada Familia", "Sagrada Famlia")).toBe(true); // 1 deletion
+    expect(fuzzyMatch("Louvre", "Luvre")).toBe(true);         // 1 deletion
+  });
+
+  it("returns false for short generic words that are substrings", () => {
+    expect(fuzzyMatch("Bar", "Sky Bar")).toBe(false);         // "bar" < 4 chars
+    expect(fuzzyMatch("Spa", "Hotel Spa")).toBe(false);       // "spa" < 4 chars
+    expect(fuzzyMatch("The", "The Eiffel Tower")).toBe(false); // "the" < 4 chars
+  });
+
+  it("returns false when strings are too different in length for levenshtein", () => {
+    expect(fuzzyMatch("Hilton", "Marriott Bonvoy")).toBe(false);
+    expect(fuzzyMatch("Rome", "Romantic Getaway")).toBe(false);
+  });
 });
 
 describe("mergeSourceRefs", () => {

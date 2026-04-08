@@ -4,6 +4,8 @@ export interface ChatSuggestion {
   /** Day number if from a tool call, undefined if from text parsing */
   day?: number;
   location?: string;
+  /** POI category — available when suggestion comes from a structured tool call */
+  category?: string;
   sourceMessageIndex: number;
   coordinates?: [number, number];
 }

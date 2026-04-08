@@ -10,7 +10,6 @@ import {
   CheckSquare,
   Inbox,
   Menu,
-  ChevronDown,
   Plus,
   Trash2,
   LogOut,
@@ -19,7 +18,7 @@ import {
   Check,
   Network,
   Share2,
-  Bot,
+  Home,
   MoreVertical,
   ListIcon,
   FileText,
@@ -37,7 +36,6 @@ import { CreateTripForm } from '@/features/trip/CreateTripForm';
 import { EditTripDialog } from '@/features/trip/EditTripDialog';
 import { LocationTreeDialog } from '@/features/trip/LocationTreeDialog';
 import { ShareTripDialog } from '@/features/trip/ShareTripDialog';
-import { AIChatSheet, type TripContext } from '@/features/chat/AIChatSheet';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchLinkedEmailsCount } from '@/features/inbox/recommendationService';
@@ -66,7 +64,7 @@ import { useAiUsage } from '@/shared/hooks/useAiUsage';
 import { Crown } from 'lucide-react';
 
 const navItems = [
-  { path: '/', labelKey: 'nav.aiHome', icon: Bot },
+  { path: '/', labelKey: 'nav.aiHome', icon: Home },
   { path: '/schedule', labelKey: 'nav.timeline', icon: CalendarDays },
   { path: '/recommendations', labelKey: 'nav.home', icon: Compass },
   { path: '/map', labelKey: 'nav.map', icon: Map },
@@ -120,8 +118,6 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false, heroTitle
   const { activeTrip, setActiveTrip, deleteCurrentTrip, updateCurrentTrip, tripLocationTree, myRole } = useActiveTrip();
   const [locationTreeOpen, setLocationTreeOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [aiChatOpen, setAiChatOpen] = useState(false);
-  const [aiChatInitialMessage, setAiChatInitialMessage] = useState<string | undefined>();
   const [tierDialogOpen, setTierDialogOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -148,18 +144,12 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false, heroTitle
     return () => window.removeEventListener('inboxUnreadChanged', handler);
   }, []);
 
-  // Listen for research-recommend event to open AI chat with a pre-filled message
+  // Listen for research-recommend event to navigate to home for AI chat
   useEffect(() => {
-    const handler = (e: Event) => {
-      const locationName = (e as CustomEvent).detail?.locationName;
-      if (locationName) {
-        setAiChatInitialMessage(t('timeline.recommendPrompt', { location: locationName }));
-        setAiChatOpen(true);
-      }
-    };
+    const handler = () => { navigate('/', { replace: false }); };
     window.addEventListener('research-recommend', handler);
     return () => window.removeEventListener('research-recommend', handler);
-  }, [t]);
+  }, [navigate]);
 
   // Recalculate unread count from DB — called on mount + real-time changes
   const refreshUnread = useCallback(async () => {
@@ -252,15 +242,8 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false, heroTitle
             </span>
           </div>
 
-          {/* Right: AI + Inbox + User menu */}
+          {/* Right: Inbox only */}
           <div className="flex items-center justify-end">
-            <button
-              onClick={() => setAiChatOpen(true)}
-              className="relative p-2 rounded-lg transition-colors text-muted-foreground"
-              aria-label="AI Chat"
-            >
-              <Bot size={22} />
-            </button>
             <button
               onClick={() => { if (location.pathname !== '/inbox') navigate('/inbox', { replace: true }); }}
               className={cn(
@@ -275,92 +258,12 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false, heroTitle
                 </span>
               )}
             </button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="p-2 rounded-lg transition-colors text-muted-foreground" aria-label={t('nav.menu')}>
-                  <MoreVertical size={22} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => setTierDialogOpen(true)}>
-                  <Crown size={14} className="mr-2" />
-                  <span className="flex-1">{t('aiTier.dialogTitle')}</span>
-                  <Badge variant={userTier === 'pro' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0 h-4 font-semibold ml-1">
-                    {userTier === 'pro' ? t('aiTier.pro') : t('aiTier.free')}
-                  </Badge>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => { setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }}>
-                  <Settings size={14} className="mr-2" /> {t('nav.settings')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleSignOut}>
-                  <LogOut size={14} className="mr-2" /> {t('nav.signOut')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
 
         {/* ── DESKTOP HEADER ── */}
         <div className="hidden md:flex items-center gap-1">
           <img src="/icon.png" alt="Triptomat" className="h-7 w-7 rounded shrink-0" />
-          {activeTrip ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label={t('nav.menu')}>
-                  <ChevronDown size={16} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                {recentTrips.map(trip => (
-                  <DropdownMenuItem
-                    key={trip.id}
-                    onClick={() => setActiveTrip(trip.id)}
-                    className={cn(trip.id === activeTrip?.id && 'bg-accent')}
-                  >
-                    <div className="flex flex-col">
-                      <span className="flex items-center gap-1.5">
-                        {trip.name}
-                        {trip.myRole === 'editor' && (
-                          <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 font-normal">{t('tripsPage.shared')}</Badge>
-                        )}
-                      </span>
-                      <span className="text-xs text-muted-foreground">{trip.countries.join(', ')}</span>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/trips')}>
-                  <ListIcon size={14} className="mr-2" /> {t('nav.showTrips')}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={openEditDialog}>
-                  <Pencil size={14} className="mr-2" /> {t('editTrip.editTrip')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLocationTreeOpen(true)}>
-                  <Network size={14} className="mr-2" /> {t('locationTree.title')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShareOpen(true)}>
-                  <Share2 size={14} className="mr-2" /> {t('shareTrip.title')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setNewTripOpen(true)}>
-                  <Plus size={14} className="mr-2" /> {t('createTrip.newTrip')}
-                </DropdownMenuItem>
-                {myRole === 'owner' && (
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={() => setDeleteDialogOpen(true)}
-                  >
-                    <Trash2 size={14} className="mr-2" /> {t('deleteTrip.button')}
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <RouterNavLink to="/" className="flex items-center" aria-label={t('nav.triptomat')}>
-              <span className="sr-only">Triptomat</span>
-            </RouterNavLink>
-          )}
         </div>
 
         {/* Trip name — fades in when hero is scrolled past */}
@@ -405,18 +308,64 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false, heroTitle
           })}
         </nav>
 
-        {/* Desktop user actions */}
+        {/* Desktop user actions — single combined menu */}
         <div className="hidden md:flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => setAiChatOpen(true)} aria-label="AI Chat" title={t('nav.aiAssistant')} className="relative">
-            <Bot size={18} />
-          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" aria-label={t('nav.menu')} title={t('nav.menu')}>
                 <MoreVertical size={18} />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-56">
+              {/* Trip switcher */}
+              {recentTrips.map(trip => (
+                <DropdownMenuItem
+                  key={trip.id}
+                  onClick={() => setActiveTrip(trip.id)}
+                  className={cn(trip.id === activeTrip?.id && 'bg-accent')}
+                >
+                  <div className="flex flex-col">
+                    <span className="flex items-center gap-1.5">
+                      {trip.name}
+                      {trip.myRole === 'editor' && (
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 font-normal">{t('tripsPage.shared')}</Badge>
+                      )}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{trip.countries.join(', ')}</span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuItem onClick={() => navigate('/trips')}>
+                <ListIcon size={14} className="mr-2" /> {t('nav.showTrips')}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {/* Trip actions */}
+              {activeTrip && (
+                <>
+                  <DropdownMenuItem onClick={openEditDialog}>
+                    <Pencil size={14} className="mr-2" /> {t('editTrip.editTrip')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLocationTreeOpen(true)}>
+                    <Network size={14} className="mr-2" /> {t('locationTree.title')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShareOpen(true)}>
+                    <Share2 size={14} className="mr-2" /> {t('shareTrip.title')}
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuItem onClick={() => setNewTripOpen(true)}>
+                <Plus size={14} className="mr-2" /> {t('createTrip.newTrip')}
+              </DropdownMenuItem>
+              {myRole === 'owner' && activeTrip && (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  <Trash2 size={14} className="mr-2" /> {t('deleteTrip.button')}
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              {/* User/app settings */}
               <DropdownMenuItem onClick={() => setTierDialogOpen(true)}>
                 <Crown size={14} className="mr-2" />
                 <span className="flex-1">{t('aiTier.dialogTitle')}</span>
@@ -523,6 +472,35 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false, heroTitle
               )}
             </div>
 
+            <div className="mx-6 border-t border-border" />
+
+            {/* Settings & account */}
+            <div className="py-3">
+              <p className="px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{t('nav.settings')}</p>
+              <button
+                onClick={() => { setHamburgerOpen(false); setTierDialogOpen(true); }}
+                className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
+              >
+                <Crown size={16} />
+                <span className="flex-1">{t('aiTier.dialogTitle')}</span>
+                <Badge variant={userTier === 'pro' ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0 h-4 font-semibold">
+                  {userTier === 'pro' ? t('aiTier.pro') : t('aiTier.free')}
+                </Badge>
+              </button>
+              <button
+                onClick={() => { setHamburgerOpen(false); setPrefsCurrency(activeTrip?.currency || 'ILS'); setPrefsOpen(true); }}
+                className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
+              >
+                <Settings size={16} /> {t('nav.settings')}
+              </button>
+              <button
+                onClick={() => { setHamburgerOpen(false); handleSignOut(); }}
+                className="w-full flex items-center gap-3 px-6 py-2.5 text-sm font-medium text-destructive hover:bg-muted transition-colors"
+              >
+                <LogOut size={16} /> {t('nav.signOut')}
+              </button>
+            </div>
+
           </div>
         </SheetContent>
       </Sheet>
@@ -559,24 +537,6 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false, heroTitle
 
       {/* Share Trip Dialog */}
       <ShareTripDialog open={shareOpen} onOpenChange={setShareOpen} />
-
-      {/* AI Chat */}
-      <AIChatSheet
-        open={aiChatOpen}
-        onOpenChange={(open) => { setAiChatOpen(open); if (!open) setAiChatInitialMessage(undefined); }}
-        tripContext={activeTrip ? {
-          tripId: activeTrip.id,
-          tripName: activeTrip.name,
-          countries: activeTrip.countries,
-          startDate: activeTrip.startDate,
-          endDate: activeTrip.endDate,
-          numberOfDays: activeTrip.numberOfDays,
-          status: activeTrip.status,
-          currency: activeTrip.currency,
-          locations: (tripLocationTree || []).flatMap(n => [n.site, ...(n.sub_sites || []).flatMap(s => [s.site, ...(s.sub_sites || []).map(c => c.site)])]),
-        } : null}
-        initialMessage={aiChatInitialMessage}
-      />
 
       {/* User Preferences Dialog */}
       <Dialog open={prefsOpen} onOpenChange={setPrefsOpen}>

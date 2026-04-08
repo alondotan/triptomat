@@ -54,10 +54,14 @@ export function panelItemsFromItinerary(
   }
 
   const items: PanelItem[] = [];
+  const seenIds = new Set<string>();
+  const seenNames = new Set<string>();
   for (const day of filteredDays) {
     for (const place of day.places) {
       const poi = place.existingPoiId ? poiMap.get(place.existingPoiId) : undefined;
       if (poi) {
+        if (seenIds.has(poi.id)) continue;
+        seenIds.add(poi.id);
         const coords = poi.location?.coordinates
           ? [poi.location.coordinates.lat, poi.location.coordinates.lng] as [number, number]
           : undefined;
@@ -74,6 +78,9 @@ export function panelItemsFromItinerary(
         });
       } else {
         // POI not yet in local cache (brief realtime lag)
+        const nameKey = place.name.toLowerCase();
+        if (seenNames.has(nameKey)) continue;
+        seenNames.add(nameKey);
         items.push({
           id: `tmp-${day.dayNumber}-${place.name}`,
           name: place.name,
@@ -95,32 +102,42 @@ export function panelItemsFromSuggestions(
   placeImageMap: Map<string, string>,
   placeCoordMap: Map<string, [number, number]>,
 ): PanelItem[] {
-  return suggestions.map(s => {
+  const seenPoiIds = new Set<string>();
+  const seenNames = new Set<string>();
+  const result: PanelItem[] = [];
+  for (const s of suggestions) {
     const nameLower = s.name.toLowerCase();
     const poi = pois.find(p => p.name.toLowerCase() === nameLower);
     if (poi) {
+      if (seenPoiIds.has(poi.id)) continue;
+      seenPoiIds.add(poi.id);
       const coords = poi.location?.coordinates
         ? [poi.location.coordinates.lat, poi.location.coordinates.lng] as [number, number]
         : s.coordinates ?? placeCoordMap.get(nameLower);
-      return {
+      result.push({
         id: s.id,
         name: poi.name,
         category: poi.category,
-        imageUrl: poi.imageUrl,
+        imageUrl: placeImageMap.get(nameLower) || poi.imageUrl,
         coordinates: coords,
         poiId: poi.id,
         poi,
         locationName: s.location,
-      };
+      });
+    } else {
+      if (seenNames.has(nameLower)) continue;
+      seenNames.add(nameLower);
+      // No matching POI — use geodata fallback
+      result.push({
+        id: s.id,
+        name: s.name,
+        category: s.category,
+        imageUrl: placeImageMap.get(nameLower),
+        coordinates: s.coordinates ?? placeCoordMap.get(nameLower),
+        locationName: s.location,
+        isTemporary: true,
+      });
     }
-    // No matching POI — use geodata fallback
-    return {
-      id: s.id,
-      name: s.name,
-      imageUrl: placeImageMap.get(nameLower),
-      coordinates: s.coordinates ?? placeCoordMap.get(nameLower),
-      locationName: s.location,
-      isTemporary: true,
-    };
-  });
+  }
+  return result;
 }

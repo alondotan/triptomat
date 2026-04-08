@@ -68,6 +68,21 @@ export async function createOrMergePOI(
 
     await updatePOI(existingPoi.id, updates);
     const merged: PointOfInterest = { ...existingPoi, ...updates };
+
+    // Fire-and-forget: enrich merged POI if still missing image / coords / type
+    if (!existingPoi.imageUrl || !existingPoi.location?.coordinates?.lat || (!existingPoi.placeType && !existingPoi.activityType)) {
+      supabase.functions.invoke('fetch-poi-image', {
+        body: {
+          poiId: existingPoi.id,
+          name: existingPoi.name,
+          category: existingPoi.category,
+          city: mergedLocation.city ?? existingPoi.location?.city,
+          country: mergedLocation.country ?? existingPoi.location?.country,
+          address: mergedLocation.address ?? existingPoi.location?.address,
+        },
+      }).catch(err => console.warn('[poiService] Enrich merged POI failed:', err));
+    }
+
     return { poi: merged, merged: true };
   }
 
@@ -162,6 +177,9 @@ export async function mergeTwoPOIs(
   }
   if (!hasValue(primary.activityType) && hasValue(secondary.activityType)) {
     updates.activityType = secondary.activityType;
+  }
+  if (!hasValue(primary.imageUrl) && hasValue(secondary.imageUrl)) {
+    updates.imageUrl = secondary.imageUrl;
   }
 
   // Status: never downgrade

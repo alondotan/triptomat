@@ -39,7 +39,7 @@ export interface TripContext {
   /** Flat list of all city/area names available in this country (from geodata) */
   locationsFlat?: string[];
   /** All known attractions/places in this country (from geodata) */
-  allPlaces?: Array<{ name: string; category: string }>;
+  allPlaces?: Array<{ name: string }>;
 }
 
 interface AIChatSheetProps {

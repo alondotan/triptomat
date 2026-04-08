@@ -9,7 +9,13 @@ import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
 import { useResolvedImage } from '@/shared/hooks/useResolvedImage';
 import { useToggleLike } from '@/shared/hooks/useToggleLike';
 import type { PointOfInterest } from '@/types/trip';
+import { CATEGORY_MAP } from '@/shared/utils/categoryMap';
 import type { PanelItem } from './panelItems';
+
+function resolveCategory(raw?: string): PointOfInterest['category'] {
+  if (!raw) return 'attraction';
+  return (CATEGORY_MAP[raw] ?? raw) as PointOfInterest['category'] || 'attraction';
+}
 
 const LOCKED_STATUSES = ['planned', 'scheduled', 'booked', 'visited', 'skipped'] as const;
 
@@ -137,7 +143,7 @@ export function HomeSuggestionsPanel({ items, selectedName, onSelectName, isPrev
     try {
       await addPOI({
         tripId: activeTrip.id,
-        category: 'attraction',
+        category: resolveCategory(item.category),
         name: item.name,
         status: 'suggested',
         location: item.coordinates
@@ -171,7 +177,7 @@ export function HomeSuggestionsPanel({ items, selectedName, onSelectName, isPrev
         console.log('[handleHeart] creating POI for temporary item:', item.name);
         const result = await addPOI({
           tripId: activeTrip.id,
-          category: 'attraction',
+          category: resolveCategory(item.category),
           name: item.name,
           status: 'interested',
           location: item.coordinates
