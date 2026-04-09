@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocalizeLocation } from '@/features/geodata/useLocationDescriptions';
 import { useTranslation } from 'react-i18next';
 import { usePOI } from '@/features/poi/POIContext';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
@@ -53,6 +54,7 @@ interface RecommendationQuote {
 
 export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: POIDetailDialogProps) {
   const { t } = useTranslation();
+  const localizeLocation = useLocalizeLocation();
   const { addPOI, updatePOI, deletePOI } = usePOI();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -423,7 +425,7 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
               <SelectTrigger className="flex-1"><SelectValue placeholder={t('createPOI.chooseCountry')} /></SelectTrigger>
               <SelectContent>
                 {tripCountries.map(c => (
-                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                  <SelectItem key={c} value={c}>{localizeLocation(c)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -479,7 +481,7 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
     </div>
   );
 
-  const accommodationFields = !isResearch && (
+  const accommodationFields = (
     <div className="rounded-xl bg-secondary/40 p-3 space-y-2">
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-1">
@@ -516,7 +518,7 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
         </div>
         <div className="space-y-1">
           <Label>{t('poiDetail.occupancy')}</Label>
-          <Input name="occupancy" value={occupancy} onChange={e => setOccupancy(e.target.value)} placeholder={t('poiDetail.occupancyPlaceholder')} />
+          <Input name="occupancy" type="number" min="1" value={occupancy} onChange={e => setOccupancy(e.target.value)} placeholder={t('poiDetail.occupancyPlaceholder')} />
         </div>
       </div>
     </div>
