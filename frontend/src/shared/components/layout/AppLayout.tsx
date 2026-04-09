@@ -29,9 +29,6 @@ function getHeroHeight() {
 
 export function AppLayout({ children, hideHero = false, fillHeight = false, hideFAB = false, heroImageOverride, heroTitleOverride }: AppLayoutProps) {
   const isV2 = useV2Mode();
-  // In V2 mode, skip the shell entirely — V2Layout handles chrome
-  if (isV2) return <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">{children}</div>;
-
   const { trips, activeTripId } = useTripList();
   const activeTrip = trips.find(t => t.id === activeTripId) || null;
   // A hero is expected when the trip has countries (or an override is provided),
@@ -87,6 +84,9 @@ export function AppLayout({ children, hideHero = false, fillHeight = false, hide
       document.body.style.overflow = '';
     };
   }, [fillHeight]);
+
+  // In V2 mode, skip the shell entirely — V2Layout handles chrome
+  if (isV2) return <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">{children}</div>;
 
   // fillHeight mode (Map): fixed layout, no document scroll
   if (fillHeight) {
