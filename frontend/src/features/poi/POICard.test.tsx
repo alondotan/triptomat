@@ -4,7 +4,7 @@ import type { PointOfInterest } from "@/types/trip";
 
 // Mock dependencies
 vi.mock("react-i18next", () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({ t: (key: string) => key, i18n: { language: 'en' } }),
 }));
 
 vi.mock("@/features/poi/POIContext", () => ({
@@ -30,6 +30,18 @@ vi.mock("@/shared/components/SubCategoryIcon", () => ({
 vi.mock("./POIDetailDialog", () => ({
   POIDetailDialog: ({ open }: { open: boolean }) =>
     open ? <div data-testid="poi-dialog">Dialog</div> : null,
+}));
+
+vi.mock("@/features/geodata/useLocationDescriptions", () => ({
+  useLocationDescriptions: () => new Map(),
+}));
+
+vi.mock("@/shared/hooks/useToggleLike", () => ({
+  useToggleLike: () => ({ toggleLike: vi.fn() }),
+}));
+
+vi.mock("@/shared/hooks/useResolvedImage", () => ({
+  useResolvedImage: ({ imageUrl }: { imageUrl?: string }) => ({ url: imageUrl ?? null, onError: vi.fn() }),
 }));
 
 import { POICard } from "./POICard";
