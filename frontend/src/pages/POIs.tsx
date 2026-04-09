@@ -5,7 +5,7 @@ import { usePOI } from '@/features/poi/POIContext';
 import { AppLayout } from '@/shared/components/layout/AppLayout';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, LayoutGrid, Search, Merge, ChevronLeft, ChevronDown, ChevronUp, ArrowUpDown, SlidersHorizontal, Sparkles, ArrowRight } from 'lucide-react';
+import { MapPin, LayoutGrid, Search, Merge, ChevronDown, ChevronUp, ArrowUpDown, SlidersHorizontal, Sparkles, ArrowRight } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { MergeConfirmDialog } from '@/features/inbox/MergeConfirmDialog';
 import type { PointOfInterest, POIStatus, POICategory } from '@/types/trip';
 import { flattenTripLocations } from '@/features/trip/tripLocationService';
+import { useLocationDescriptions } from '@/features/geodata/useLocationDescriptions';
 import { POICard } from '@/features/poi/POICard';
 import { getCategoryIcon, getCategoryLabel, getSubCategoryLabel, getCategoryGroupLabel, getSubCategoryGroup, getPOICategories } from '@/shared/lib/subCategoryConfig';
 
@@ -29,9 +30,10 @@ interface POIsPageProps {
 }
 
 const POIsPage = ({ allowedCategories, titleKey, backTo }: POIsPageProps = {}) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { activeTrip, tripLocations } = useActiveTrip();
+  const locationDescriptions = useLocationDescriptions();
   const { pois, mergePOIs } = usePOI();
   const [statusFilters, setStatusFilters] = useState<Set<POIStatus | 'all'>>(new Set(['all']));
   const [categoryFilters, setCategoryFilters] = useState<Set<POICategory | 'all'>>(new Set(['all']));
@@ -266,15 +268,22 @@ const POIsPage = ({ allowedCategories, titleKey, backTo }: POIsPageProps = {}) =
     }
   }, [scrollToCategory, grouped]);
 
+  const translateLocationName = (name: string): string => {
+    if (i18n.language !== 'he') return name;
+    return locationDescriptions.get(name)?.name_he ?? name;
+  };
+
   const getGroupLabel = (key: string): string => {
     // Handle split sub-group keys like "category::subName"
     const [primary, sub] = key.split('::');
     const baseLabel = groupBy === 'category' ? getCategoryLabel(primary)
       : groupBy === 'status' ? (t(`status.${primary}`, primary))
-      : primary;
+      : translateLocationName(primary);
     if (!sub) return baseLabel;
     // Try categoryGroup label first, then subCategory label
-    const subLabel = getCategoryGroupLabel(sub) !== sub ? getCategoryGroupLabel(sub) : getSubCategoryLabel(sub);
+    const subLabel = groupBy === 'location'
+      ? translateLocationName(sub)
+      : (getCategoryGroupLabel(sub) !== sub ? getCategoryGroupLabel(sub) : getSubCategoryLabel(sub));
     return `${baseLabel} | ${subLabel}`;
   };
 
@@ -479,17 +488,22 @@ const POIsPage = ({ allowedCategories, titleKey, backTo }: POIsPageProps = {}) =
           }}>
             <button
               onClick={() => navigate(`/pois/group?groupBy=${groupBy}&key=${encodeURIComponent(key)}`)}
-              className="flex items-center gap-2 hover:text-primary transition-colors group/header"
+              className="flex items-end justify-between w-full hover:text-primary transition-colors group/header"
             >
-              {getGroupIcon(key)}
-              <span className="text-lg font-semibold">{getGroupLabel(key)}</span>
-              <Badge variant="secondary" className="text-xs ml-1">{pois.length}</Badge>
-              <ChevronLeft size={16} className="text-muted-foreground group-hover/header:text-primary transition-colors" />
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  {getGroupIcon(key)}
+                  <span className="text-xl font-semibold">{getGroupLabel(key)}</span>
+                  <Badge variant="secondary" className="text-xs">{pois.length}</Badge>
+                </div>
+                <div className="h-0.5 w-8 bg-primary rounded-full" />
+              </div>
+              <span className="text-[10px] text-muted-foreground group-hover/header:text-primary transition-colors me-3">{t('overview.viewAll')}</span>
             </button>
             <div className="w-full overflow-x-auto will-change-transform" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)' }}>
               <div className="flex gap-3 pb-3" style={{ minWidth: 'max-content' }}>
                 {pois.map(p => (
-                  <div key={p.id} className="w-36 shrink-0 relative">
+                  <div key={p.id} className="w-[66vw] sm:w-36 shrink-0 relative">
                     {mergeMode && (
                       <div className="absolute top-1.5 left-1.5 z-10" onClick={e => e.stopPropagation()}>
                         <Checkbox

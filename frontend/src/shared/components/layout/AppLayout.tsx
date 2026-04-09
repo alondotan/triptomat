@@ -4,6 +4,7 @@ import { MobileBottomNav } from './MobileBottomNav';
 import { MobileFAB } from './MobileFAB';
 import { DestinationHero, HERO_HEIGHT, HERO_HEIGHT_MOBILE } from './DestinationBackdrop';
 import { useTripList } from '@/features/trip/TripListContext';
+import { useV2Mode } from '@/context/V2ModeContext';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -27,6 +28,10 @@ function getHeroHeight() {
 }
 
 export function AppLayout({ children, hideHero = false, fillHeight = false, hideFAB = false, heroImageOverride, heroTitleOverride }: AppLayoutProps) {
+  const isV2 = useV2Mode();
+  // In V2 mode, skip the shell entirely — V2Layout handles chrome
+  if (isV2) return <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">{children}</div>;
+
   const { trips, activeTripId } = useTripList();
   const activeTrip = trips.find(t => t.id === activeTripId) || null;
   // A hero is expected when the trip has countries (or an override is provided),

@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { GeoJSON } from 'geojson';
 import {
   loadCountryData,
+  getNodeName,
+  getCountryName,
   type CountryData,
   type CountryLocationNode,
   type CountryPlace,
@@ -136,10 +138,12 @@ export function useCountryMapData(countries: string[]) {
 
     const isHe = document.documentElement.lang === 'he';
 
+    const lang = isHe ? 'he' : 'en';
+
     function toNavNode(node: CountryLocationNode): NavigationNode {
       return {
         id: node.id,
-        name: (isHe && node.name_he) ? node.name_he : node.name,
+        name: getNodeName(node, lang),
         type: node.type,
         coordinates: node.coordinates,
         topAttractions: node.topAttractions,
@@ -152,7 +156,7 @@ export function useCountryMapData(countries: string[]) {
       const data = entries[0];
       return {
         id: data.id,
-        name: (isHe && data.data.name_he) ? data.data.name_he : data.data.name,
+        name: getCountryName(data, lang),
         type: 'country',
         topAttractions: data.topAttractions,
         children: data.locations.map(toNavNode),
@@ -178,7 +182,7 @@ export function useCountryMapData(countries: string[]) {
         }
         return {
           id: data.id,
-          name: (isHe && data.data.name_he) ? data.data.name_he : data.data.name,
+          name: getCountryName(data, lang),
           type: 'country',
           coordinates,
           topAttractions: data.topAttractions,

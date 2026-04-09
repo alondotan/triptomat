@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTripList } from '@/features/trip/TripListContext';
 import { useWorldTree, type WorldTreeNode } from '@/features/geodata/useWorldTree';
+import { useLocalizeLocation } from '@/features/geodata/useLocationDescriptions';
 
 const COUNTRY_ALIASES: Record<string, string> = {
   'usa': 'united states of america',
@@ -56,6 +57,7 @@ export function DestinationHero({ heroImageOverride, heroTitleOverride }: { hero
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId) || null, [trips, activeTripId]);
   const defaultImageUrl = useDestinationImageUrl();
   const imageUrl = heroImageOverride || defaultImageUrl;
+  const localizeLocation = useLocalizeLocation();
 
   if (!imageUrl) return null;
 
@@ -80,7 +82,7 @@ export function DestinationHero({ heroImageOverride, heroTitleOverride }: { hero
             </h1>
             {!heroTitleOverride && activeTrip?.countries && activeTrip.countries.length > 0 && (
               <p className="text-sm text-white/80 mt-1 drop-shadow">
-                {activeTrip.countries.join(' · ')}
+                {activeTrip.countries.map(c => localizeLocation(c)).join(' · ')}
               </p>
             )}
           </div>
@@ -106,7 +108,7 @@ export function DestinationHero({ heroImageOverride, heroTitleOverride }: { hero
             </h1>
             {!heroTitleOverride && activeTrip?.countries && activeTrip.countries.length > 0 && (
               <p className="text-xs text-white/80 drop-shadow">
-                {activeTrip.countries.join(' · ')}
+                {activeTrip.countries.map(c => localizeLocation(c)).join(' · ')}
               </p>
             )}
           </div>

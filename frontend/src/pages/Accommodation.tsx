@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useLocalizeLocation } from '@/features/geodata/useLocationDescriptions';
 import { useTranslation } from 'react-i18next';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { usePOI } from '@/features/poi/POIContext';
@@ -18,6 +19,7 @@ import type { PointOfInterest } from '@/types/trip';
 
 const AccommodationPage = () => {
   const { t } = useTranslation();
+  const localizeLocation = useLocalizeLocation();
   const { activeTrip, sourceEmailMap } = useActiveTrip();
   const navigate = useNavigate();
   const { pois, deletePOI, mergePOIs } = usePOI();
@@ -154,7 +156,7 @@ const AccommodationPage = () => {
                           <CardTitle className="text-base">{poi.name}</CardTitle>
                           {(poi.location.city || poi.location.country) && (
                             <p className="text-xs text-muted-foreground">
-                              📍 {[poi.location.city, poi.location.country].filter(Boolean).join(', ')}
+                              📍 {[localizeLocation(poi.location.city), localizeLocation(poi.location.country)].filter(Boolean).join(', ')}
                             </p>
                           )}
                         </div>

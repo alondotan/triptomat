@@ -9,7 +9,12 @@ import type { PointOfInterest } from '@/types/trip';
 export interface CountryLocationNode {
   id: string;
   type: string;
-  name: string;
+  // New format
+  names?: { en: string; he: string };
+  descriptions?: { en: string; he: string };
+  image?: string;
+  // Legacy flat fields (backward compat)
+  name?: string;
   name_he?: string;
   description?: string;
   description_he?: string;
@@ -18,6 +23,16 @@ export interface CountryLocationNode {
   is_capital?: boolean;
   topAttractions?: string[];
   children?: CountryLocationNode[];
+}
+
+/** Get the display name of a location node in the given language */
+export function getNodeName(node: CountryLocationNode, lang: 'en' | 'he' = 'en'): string {
+  return node.names?.[lang] ?? (lang === 'he' ? node.name_he : undefined) ?? node.names?.en ?? node.name ?? node.id;
+}
+
+/** Get the description of a location node in the given language */
+export function getNodeDescription(node: CountryLocationNode, lang: 'en' | 'he' = 'en'): string | undefined {
+  return node.descriptions?.[lang] ?? (lang === 'he' ? node.description_he : node.description);
 }
 
 export interface CountryPlace {
@@ -40,10 +55,15 @@ export interface CountryPlace {
 export interface CountryData {
   id: string;
   type: string;
+  // New format (at root level, alongside data/locations)
+  names?: { en: string; he: string };
+  descriptions?: { en: string; he: string };
+  image?: string;
   data: {
     country_code: string;
     site_type: string;
-    name: string;
+    // Legacy flat fields (backward compat)
+    name?: string;
     name_he?: string;
     description?: string;
     description_he?: string;
@@ -56,6 +76,16 @@ export interface CountryData {
   places?: CountryPlace[];
   geoData?: unknown;
   boundaries?: unknown;
+}
+
+/** Get the display name of a country from CountryData in the given language */
+export function getCountryName(data: CountryData, lang: 'en' | 'he' = 'en'): string {
+  return data.names?.[lang] ?? (lang === 'he' ? data.data.name_he : undefined) ?? data.names?.en ?? data.data.name ?? data.id;
+}
+
+/** Get the description of a country from CountryData in the given language */
+export function getCountryDescription(data: CountryData, lang: 'en' | 'he' = 'en'): string | undefined {
+  return data.descriptions?.[lang] ?? (lang === 'he' ? data.data.description_he : data.data.description);
 }
 
 export interface TripLocation {
@@ -84,16 +114,23 @@ export async function fetchTripLocations(tripId: string): Promise<TripLocation[]
   return (data || []).map(mapTripLocation);
 }
 
-export function buildLocationTree(locations: TripLocation[]): SiteNode[] {
+export function buildLocationTree(
+  locations: TripLocation[],
+  descMap?: Map<string, { name_he?: string }>,
+): SiteNode[] {
   const byId = new Map<string, SiteNode & { _id: string; _parentId: string | null }>();
   const roots: (SiteNode & { _id: string })[] = [];
 
   // First pass: create all nodes
   for (const loc of locations) {
+    const name_he = descMap
+      ? (descMap.get(loc.externalId ?? '')?.name_he ?? descMap.get(loc.name)?.name_he)
+      : undefined;
     byId.set(loc.id, {
       _id: loc.id,
       _parentId: loc.parentId,
       site: loc.name,
+      site_he: name_he || undefined,
       site_type: loc.placeType,
       external_id: loc.externalId || undefined,
       sub_sites: [],
@@ -272,7 +309,8 @@ export async function loadCountryData(countryName: string): Promise<CountryData 
 /** Convert per-country location tree to SiteNode format for the existing RPC */
 function countryLocationToSiteNode(node: CountryLocationNode): SiteNode {
   return {
-    site: node.name,
+    site: getNodeName(node, 'en'),
+    site_he: getNodeName(node, 'he'),
     site_type: node.type,
     external_id: node.id,
     sub_sites: node.children && node.children.length > 0
@@ -281,33 +319,39 @@ function countryLocationToSiteNode(node: CountryLocationNode): SiteNode {
   };
 }
 
-/** Build a map of externalId AND name → {description, description_he} from all loaded country data.
+/** Build a map of externalId AND name → {description, description_he, image} from all loaded country data.
  *  Indexed by both node.id (externalId) and node.name / node.name_he so callers can look up
  *  even when the stored externalId doesn't match the JSON id. */
 export function buildDescriptionMap(
   countries: Array<CountryData | null>,
-): Map<string, { description?: string; description_he?: string }> {
-  const map = new Map<string, { description?: string; description_he?: string }>();
+): Map<string, { name_he?: string; description?: string; description_he?: string; image?: string }> {
+  const map = new Map<string, { name_he?: string; description?: string; description_he?: string; image?: string }>();
 
-  function setEntry(key: string | undefined, entry: { description?: string; description_he?: string }) {
+  function setEntry(key: string | undefined, entry: { name_he?: string; description?: string; description_he?: string; image?: string }) {
     if (key && !map.has(key)) map.set(key, entry);
   }
 
   for (const data of countries) {
     if (!data) continue;
-    const countryEntry = { description: data.data.description, description_he: data.data.description_he };
-    if (data.data.description || data.data.description_he) {
+    const countryDesc = data.descriptions?.en ?? data.data.description;
+    const countryDescHe = data.descriptions?.he ?? data.data.description_he;
+    const countryNameHe = data.names?.he ?? data.data.name_he;
+    const countryEntry = { name_he: countryNameHe, description: countryDesc, description_he: countryDescHe, image: data.image };
+    if (countryDesc || countryDescHe || data.image || countryNameHe) {
       setEntry(data.id, countryEntry);
-      setEntry(data.data.name, countryEntry);
-      setEntry(data.data.name_he, countryEntry);
+      setEntry(data.names?.en ?? data.data.name, countryEntry);
+      setEntry(data.names?.he ?? data.data.name_he, countryEntry);
     }
 
     function walkNode(node: CountryLocationNode) {
-      if (node.description || node.description_he) {
-        const entry = { description: node.description, description_he: node.description_he };
+      const desc = node.descriptions?.en ?? node.description;
+      const descHe = node.descriptions?.he ?? node.description_he;
+      const nameHe = getNodeName(node, 'he');
+      if (desc || descHe || node.image || nameHe) {
+        const entry = { name_he: nameHe, description: desc, description_he: descHe, image: node.image };
         setEntry(node.id, entry);
-        setEntry(node.name, entry);
-        setEntry(node.name_he, entry);
+        setEntry(getNodeName(node, 'en'), entry);
+        setEntry(getNodeName(node, 'he'), entry);
       }
       for (const child of node.children || []) walkNode(child);
     }
@@ -316,11 +360,11 @@ export function buildDescriptionMap(
   return map;
 }
 
-/** Build a flat map of locationId → node name from the country locations tree */
+/** Build a flat map of locationId → node name (English) from the country locations tree */
 export function buildLocationIdMap(nodes: CountryLocationNode[]): Map<string, string> {
   const map = new Map<string, string>();
   function walk(node: CountryLocationNode) {
-    map.set(node.id, node.name);
+    map.set(node.id, getNodeName(node, 'en'));
     for (const c of (node.children || [])) walk(c);
   }
   for (const n of nodes) walk(n);
@@ -340,7 +384,8 @@ export async function seedTripLocations(tripId: string, countries: string[]): Pr
       // Convert locations → SiteNode, wrapped in a country-level node
       const subSites = countryData.locations.map(countryLocationToSiteNode);
       const countryNode: SiteNode = {
-        site: countryData.data.name,
+        site: getCountryName(countryData, 'en'),
+        site_he: getCountryName(countryData, 'he'),
         site_type: 'country',
         sub_sites: subSites.length > 0 ? subSites : undefined,
       };
@@ -350,7 +395,7 @@ export async function seedTripLocations(tripId: string, countries: string[]): Pr
       // Collect places to seed as POIs
       if (countryData.places && countryData.places.length > 0) {
         placesToSeed.push({
-          countryName: countryData.data.name,
+          countryName: getCountryName(countryData, 'en'),
           places: countryData.places,
           locationIdMap: buildLocationIdMap(countryData.locations),
         });

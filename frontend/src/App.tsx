@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { TripProvider } from "@/context/TripProviderComposed";
 import { AuthGuard } from "@/shared/components/AuthGuard";
+import { V2LayoutWithMode } from "@/layouts/V2Layout";
 import { AdminGuard } from "@/features/admin/AdminGuard";
 import { AdminLayout } from "@/features/admin/AdminLayout";
 import { ErrorBoundary } from "@/shared/components/ErrorBoundary";
@@ -35,6 +36,26 @@ const OverviewPage = lazy(() => import("@/pages/Overview"));
 const HomePage = lazy(() => import("@/pages/Home"));
 const WeatherPage = lazy(() => import("@/pages/Weather"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+
+// V2 pages (new design)
+const HomeV2Page           = lazy(() => import("@/pages/v2/HomeV2"));
+const ScheduleV2Page       = lazy(() => import("@/pages/v2/ScheduleV2"));
+const BudgetV2Page         = lazy(() => import("@/pages/v2/BudgetV2"));
+const RecommendationsV2Page= lazy(() => import("@/pages/v2/RecommendationsV2"));
+const InboxV2Page          = lazy(() => import("@/pages/v2/InboxV2"));
+const TasksV2Page          = lazy(() => import("@/pages/v2/TasksV2"));
+const SourcesV2Page        = lazy(() => import("@/pages/v2/SourcesV2"));
+const DocumentsV2Page      = lazy(() => import("@/pages/v2/DocumentsV2"));
+const AttractionsV2Page    = lazy(() => import("@/pages/v2/AttractionsV2"));
+const EateriesV2Page       = lazy(() => import("@/pages/v2/EateriesV2"));
+const EventsV2Page         = lazy(() => import("@/pages/v2/EventsV2"));
+const AccommodationV2Page  = lazy(() => import("@/pages/v2/AccommodationV2"));
+const TransportV2Page      = lazy(() => import("@/pages/v2/TransportV2"));
+const ContactsV2Page       = lazy(() => import("@/pages/v2/ContactsV2"));
+const TripsV2Page          = lazy(() => import("@/pages/v2/TripsV2"));
+const ItineraryV2Page      = lazy(() => import("@/pages/v2/ItineraryV2"));
+const MapV2Page            = lazy(() => import("@/pages/v2/MapV2"));
+const WeatherV2Page        = lazy(() => import("@/pages/v2/WeatherV2"));
 
 // Admin pages (lazy-loaded)
 const AdminOverviewPage = lazy(() => import("@/pages/admin/Overview"));
@@ -109,6 +130,37 @@ const App = () => (
                       <Route path="/share-target" element={<ErrorBoundary><ShareTargetPage /></ErrorBoundary>} />
                       <Route path="*" element={<NotFound />} />
                     </Routes>
+                  </TripProvider>
+                </AuthGuard>
+              } />
+
+              {/* ── V2 new design (parallel site) ── */}
+              <Route path="/v2/*" element={
+                <AuthGuard>
+                  <TripProvider>
+                    <V2LayoutWithMode>
+                      <Routes>
+                        <Route path="/" element={<ErrorBoundary><HomeV2Page /></ErrorBoundary>} />
+                        <Route path="/schedule" element={<ErrorBoundary><ScheduleV2Page /></ErrorBoundary>} />
+                        <Route path="/itinerary" element={<ErrorBoundary><ItineraryV2Page /></ErrorBoundary>} />
+                        <Route path="/recommendations" element={<ErrorBoundary><RecommendationsV2Page /></ErrorBoundary>} />
+                        <Route path="/attractions" element={<ErrorBoundary><AttractionsV2Page /></ErrorBoundary>} />
+                        <Route path="/eateries" element={<ErrorBoundary><EateriesV2Page /></ErrorBoundary>} />
+                        <Route path="/events" element={<ErrorBoundary><EventsV2Page /></ErrorBoundary>} />
+                        <Route path="/accommodation" element={<ErrorBoundary><AccommodationV2Page /></ErrorBoundary>} />
+                        <Route path="/transport" element={<ErrorBoundary><TransportV2Page /></ErrorBoundary>} />
+                        <Route path="/budget" element={<ErrorBoundary><BudgetV2Page /></ErrorBoundary>} />
+                        <Route path="/inbox" element={<ErrorBoundary><InboxV2Page /></ErrorBoundary>} />
+                        <Route path="/tasks" element={<ErrorBoundary><TasksV2Page /></ErrorBoundary>} />
+                        <Route path="/sources" element={<ErrorBoundary><SourcesV2Page /></ErrorBoundary>} />
+                        <Route path="/documents" element={<ErrorBoundary><DocumentsV2Page /></ErrorBoundary>} />
+                        <Route path="/contacts" element={<ErrorBoundary><ContactsV2Page /></ErrorBoundary>} />
+                        <Route path="/map" element={<ErrorBoundary><MapV2Page /></ErrorBoundary>} />
+                        <Route path="/weather" element={<ErrorBoundary><WeatherV2Page /></ErrorBoundary>} />
+                        <Route path="/trips" element={<ErrorBoundary><TripsV2Page /></ErrorBoundary>} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </V2LayoutWithMode>
                   </TripProvider>
                 </AuthGuard>
               } />

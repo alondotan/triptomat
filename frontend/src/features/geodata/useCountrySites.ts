@@ -1,5 +1,6 @@
 export interface SiteNode {
   site: string;
+  site_he?: string;
   site_type: string;
   external_id?: string;
   sub_sites?: SiteNode[];

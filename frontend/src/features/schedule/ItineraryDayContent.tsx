@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocalizeLocation } from '@/features/geodata/useLocationDescriptions';
 import { format } from 'date-fns';
 import {
   useDroppable,
@@ -708,6 +709,7 @@ export function ItineraryDayContent({
   onRemoveAccommodation, onAddAccommodation, onCreateNewAccommodation, maxNights,
 }: ItineraryDayContentProps) {
   const { t } = useTranslation();
+  const localizeLocation = useLocalizeLocation();
   const morningAccom = prevDayAccommodations.find(a => a.is_selected) ?? prevDayAccommodations[0];
 
   return (
@@ -725,7 +727,7 @@ export function ItineraryDayContent({
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{morningAccom.poi.name}</p>
               {morningAccom.poi.location?.city && (
-                <p className="text-xs text-muted-foreground">{morningAccom.poi.location.city}</p>
+                <p className="text-xs text-muted-foreground">{localizeLocation(morningAccom.poi.location.city)}</p>
               )}
             </div>
           </div>

@@ -4,7 +4,7 @@ import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { updateTrip, deleteTrip } from '@/features/trip/tripService';
 import { ExchangeRates, fetchExchangeRates } from '@/features/finance/exchangeRateService';
 
-import { fetchTripLocations, buildLocationTree, addTripLocation, findInFlatList, type TripLocation } from '@/features/trip/tripLocationService';
+import { fetchTripLocations, buildLocationTree, loadCountryData, buildDescriptionMap, addTripLocation, findInFlatList, type TripLocation } from '@/features/trip/tripLocationService';
 import { fetchTripPlaces, type TripPlace } from '@/features/trip/tripPlaceService';
 import type { SiteNode } from '@/features/geodata/useCountrySites';
 import { useToast } from '@/shared/hooks/use-toast';
@@ -127,16 +127,22 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     }
   }, [activeTrip, removeTrip, toast]);
 
-  // Load trip locations from DB
+  // Load trip locations from DB, enriched with Hebrew names from country JSON
   const loadLocations = useCallback(async (tripId: string) => {
     try {
       const flat = await fetchTripLocations(tripId);
-      const tree = buildLocationTree(flat);
+      // Enrich with Hebrew names from country data
+      const countries = activeTrip?.countries ?? [];
+      const countryResults = countries.length > 0
+        ? await Promise.all(countries.map(c => loadCountryData(c)))
+        : [];
+      const descMap = countryResults.length > 0 ? buildDescriptionMap(countryResults) : undefined;
+      const tree = buildLocationTree(flat, descMap);
       dispatch({ type: 'SET_TRIP_LOCATIONS', payload: { flat, tree } });
     } catch (e) {
       console.error('Failed to load trip locations:', e);
     }
-  }, []);
+  }, [activeTrip?.countries]);
 
   const loadPlaces = useCallback(async (tripId: string) => {
     try {

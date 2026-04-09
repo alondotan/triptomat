@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useLocalizeLocation } from '@/features/geodata/useLocationDescriptions';
 import { useTranslation } from 'react-i18next';
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import L from 'leaflet';
@@ -24,6 +25,7 @@ const ALL_STATUSES: POIStatus[] = ['suggested', 'interested', 'planned', 'schedu
 
 const MapPage = () => {
   const { t } = useTranslation();
+  const localizeLocation = useLocalizeLocation();
   const { activeTrip } = useActiveTrip();
   const { pois } = usePOI();
   const { toggleLike } = useToggleLike();
@@ -62,7 +64,7 @@ const MapPage = () => {
       id: p.id,
       position: [p.location.coordinates!.lat, p.location.coordinates!.lng] as [number, number],
       name: p.name,
-      sub: [p.placeType || p.activityType ? getSubCategoryLabel(p.placeType || p.activityType) : getCategoryLabel(p.category), p.location.city].filter(Boolean).join(' · '),
+      sub: [p.placeType || p.activityType ? getSubCategoryLabel(p.placeType || p.activityType) : getCategoryLabel(p.category), localizeLocation(p.location.city)].filter(Boolean).join(' · '),
       status: p.status,
       color: POI_COLORS[p.category] ?? '#64748b',
       materialIcon: p.placeType || p.activityType ? mapData.typeIconMap[p.placeType || p.activityType] : undefined,

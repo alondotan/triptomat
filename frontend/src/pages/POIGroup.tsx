@@ -10,6 +10,8 @@ import { AppLayout } from '@/shared/components/layout/AppLayout';
 import { Badge } from '@/components/ui/badge';
 import { SubCategoryIcon } from '@/shared/components/SubCategoryIcon';
 import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
+import { getHeartStatusClass } from '@/features/poi/POICard';
+import { useResolvedImage } from '@/shared/hooks/useResolvedImage';
 import { Heart, ArrowRight, MapPin, Clock, CalendarDays, ExternalLink, Search, ArrowUpDown, SlidersHorizontal, ChevronUp, ChevronDown, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -29,6 +31,33 @@ const statusLabels: Record<string, string> = {
   visited: 'Visited',
   skipped: 'Skipped',
 };
+
+function POIGroupImage({ poi, onToggleLike }: { poi: PointOfInterest; onToggleLike: (poi: PointOfInterest, e: React.MouseEvent) => void }) {
+  const { url: resolvedImage, onError: onImageError } = useResolvedImage({ imageUrl: poi.imageUrl }, poi.name);
+  return (
+    <div className="relative w-full aspect-[16/9] overflow-hidden rounded-xl bg-muted">
+      {resolvedImage ? (
+        <img src={resolvedImage} alt={poi.name} className="w-full h-full object-cover" onError={onImageError} />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <SubCategoryIcon type={poi.placeType || poi.activityType || ''} size={48} className="text-muted-foreground/30" />
+        </div>
+      )}
+      <button
+        onClick={(e) => onToggleLike(poi, e)}
+        className={`absolute top-2.5 right-2.5 p-1.5 rounded-full bg-black/30 backdrop-blur-sm transition-colors ${getHeartStatusClass(poi.status)}`}
+      >
+        <Heart size={16} fill={poi.status !== 'suggested' ? 'currentColor' : 'none'} />
+      </button>
+      <Badge
+        variant={poi.status === 'booked' ? 'default' : 'secondary'}
+        className="absolute bottom-2.5 left-2.5 text-xs backdrop-blur-sm"
+      >
+        {statusLabels[poi.status] || poi.status}
+      </Badge>
+    </div>
+  );
+}
 
 function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes}'`;
@@ -390,33 +419,7 @@ const POIGroupPage = () => {
                 className={`cursor-pointer rounded-xl overflow-hidden transition-colors hover:bg-muted/30 ${poi.isCancelled ? 'opacity-50' : ''}`}
                 onClick={() => setDialogPoi(poi)}
               >
-                {/* Image with heart overlay */}
-                <div className="relative w-full aspect-[16/9] overflow-hidden rounded-xl bg-muted">
-                  {poi.imageUrl ? (
-                    <img src={poi.imageUrl} alt={poi.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <SubCategoryIcon type={poi.placeType || poi.activityType || ''} size={48} className="text-muted-foreground/30" />
-                    </div>
-                  )}
-                  <button
-                    onClick={(e) => handleToggleLike(poi, e)}
-                    className={`absolute top-2.5 right-2.5 p-1.5 rounded-full bg-black/30 backdrop-blur-sm transition-colors ${
-                      poi.status === 'interested' || poi.status === 'planned' || poi.status === 'scheduled' ? 'text-red-500' :
-                      poi.status === 'booked' || poi.status === 'visited' || poi.status === 'skipped' ? 'text-white/40 cursor-default' :
-                      'text-white/70 hover:text-red-400'
-                    }`}
-                  >
-                    <Heart size={16} fill={poi.status !== 'suggested' ? 'currentColor' : 'none'} />
-                  </button>
-                  {/* Status badge on image */}
-                  <Badge
-                    variant={poi.status === 'booked' ? 'default' : 'secondary'}
-                    className="absolute bottom-2.5 left-2.5 text-xs backdrop-blur-sm"
-                  >
-                    {statusLabels[poi.status] || poi.status}
-                  </Badge>
-                </div>
+                <POIGroupImage poi={poi} onToggleLike={handleToggleLike} />
 
                 {/* Details below image */}
                 <div className="px-1 pt-2.5 pb-1 space-y-2">

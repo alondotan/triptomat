@@ -985,12 +985,12 @@ export default function SchedulePage() {
   // ── Mobile layout ──────────────────────────────────────────────────────────
   const isMobile = useIsMobile();
   const { isRTL } = useLanguage();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [mobileTab, setMobileTab] = useState<'schedule' | 'map'>('schedule');
   const [viewMode, setViewMode] = useState<'places' | 'days' | 'tree'>('places');
 
-  // Location descriptions loaded from country JSON files (externalId → {description, description_he})
-  const [locationDescriptions, setLocationDescriptions] = useState<Map<string, { description?: string; description_he?: string }>>(new Map());
+  // Location descriptions loaded from country JSON files (externalId → {description, description_he, image})
+  const [locationDescriptions, setLocationDescriptions] = useState<Map<string, { description?: string; description_he?: string; image?: string }>>(new Map());
   useEffect(() => {
     const countries = activeTrip?.countries;
     if (!countries?.length) return;
@@ -1147,12 +1147,15 @@ export default function SchedulePage() {
   // Map trip_place.id → location name (via trip_locations hierarchy)
   const researchLocNameMap = useMemo(() => {
     const map = new Map<string, string>();
+    const isHe = i18n.language === 'he';
     for (const tp of researchLocations) {
       const loc = tripLocations.find(l => l.id === tp.tripLocationId);
-      if (loc) map.set(tp.id, loc.name);
+      if (!loc) continue;
+      const nameHe = isHe ? (locationDescriptions.get(loc.externalId ?? '')?.name_he ?? locationDescriptions.get(loc.name)?.name_he) : undefined;
+      map.set(tp.id, nameHe || loc.name);
     }
     return map;
-  }, [researchLocations, tripLocations]);
+  }, [researchLocations, tripLocations, locationDescriptions, i18n.language]);
 
   // Holding day for selected research place (stores potential POIs)
   const selectedResearchDay = useMemo(() => {
@@ -1315,16 +1318,23 @@ export default function SchedulePage() {
     activeDetailLocId ? researchLocations.find(l => l.id === activeDetailLocId) : undefined,
     [researchLocations, activeDetailLocId],
   );
-  const locationImageUrl = activeDetailLoc?.imageUrl || null;
-
   // Resolve the geo hierarchy node for the active trip_place
   const activeDetailTripLoc = useMemo(() =>
     activeDetailLoc ? tripLocations.find(l => l.id === activeDetailLoc.tripLocationId) : undefined,
     [activeDetailLoc, tripLocations],
   );
 
+  const locationImageUrl = activeDetailLoc?.imageUrl
+    || (activeDetailTripLoc ? (locationDescriptions.get(activeDetailTripLoc.externalId ?? '') ?? locationDescriptions.get(activeDetailTripLoc.name))?.image : undefined)
+    || null;
+
   // Geocode selected research location for map + fetch boundary + image
   const selectedLocName = activeDetailTripLoc?.name;
+  const selectedLocNameDisplay = (() => {
+    if (!activeDetailTripLoc || i18n.language !== 'he') return selectedLocName;
+    const entry = locationDescriptions.get(activeDetailTripLoc.externalId ?? '') ?? locationDescriptions.get(activeDetailTripLoc.name);
+    return entry?.name_he || selectedLocName;
+  })();
   const selectedTripLocation = activeDetailTripLoc;
   const isCity = selectedTripLocation?.placeType === 'city' || selectedTripLocation?.placeType === 'town' || selectedTripLocation?.placeType === 'village';
 
@@ -1333,7 +1343,16 @@ export default function SchedulePage() {
 
   // Find the country of the selected location (for geocoding disambiguation)
   const selectedLocCountry = useMemo(() => {
-    if (!activeDetailTripLoc) return activeTrip?.countries?.[0];
+    const isHe = i18n.language === 'he';
+    const getCountryDisplayName = (englishName: string) => {
+      if (!isHe) return englishName;
+      const entry = locationDescriptions.get(englishName);
+      return entry?.name_he || englishName;
+    };
+    if (!activeDetailTripLoc) {
+      const c = activeTrip?.countries?.[0];
+      return c ? getCountryDisplayName(c) : undefined;
+    }
     // Walk up the hierarchy to find the country ancestor
     let current = activeDetailTripLoc;
     while (current.parentId) {
@@ -1341,8 +1360,9 @@ export default function SchedulePage() {
       if (!parent) break;
       current = parent;
     }
-    return current.placeType === 'country' ? current.name : activeTrip?.countries?.[0];
-  }, [activeDetailTripLoc, tripLocations, activeTrip?.countries]);
+    const englishName = current.placeType === 'country' ? current.name : activeTrip?.countries?.[0];
+    return englishName ? getCountryDisplayName(englishName) : undefined;
+  }, [activeDetailTripLoc, tripLocations, activeTrip?.countries, locationDescriptions, i18n.language]);
 
   // Geocode + boundary
   useEffect(() => {
@@ -1487,15 +1507,20 @@ export default function SchedulePage() {
   const tripDays = useTripDays();
   const { weatherByDate } = useTripWeather(activeTrip ?? undefined, itineraryDays);
 
-  // Build lookup: trip_place_id → location name
+  // Build lookup: trip_place_id → location name (Hebrew when in Hebrew mode)
   const itinLocNameMap = useMemo(() => {
     const map = new Map<string, string>();
+    const isHe = i18n.language === 'he';
     for (const tp of tripPlaces) {
       const loc = tripLocations.find(l => l.id === tp.tripLocationId);
-      if (loc) map.set(tp.id, loc.name);
+      if (!loc) continue;
+      const nameHe = isHe
+        ? (locationDescriptions.get(loc.externalId ?? '')?.name_he ?? locationDescriptions.get(loc.name)?.name_he)
+        : undefined;
+      map.set(tp.id, nameHe || loc.name);
     }
     return map;
-  }, [tripPlaces, tripLocations]);
+  }, [tripPlaces, tripLocations, locationDescriptions, i18n.language]);
 
   const locationSpans = useMemo(() => {
     if (tripDays.length === 0) return [];
@@ -2871,7 +2896,7 @@ export default function SchedulePage() {
   }
 
   return (
-    <AppLayout heroImageOverride={locationImageUrl} heroTitleOverride={selectedLocName ? `${selectedLocCountry || ''} — ${selectedLocName}` : undefined}>
+    <AppLayout heroImageOverride={locationImageUrl} heroTitleOverride={selectedLocNameDisplay ? `${selectedLocCountry || ''} — ${selectedLocNameDisplay}` : undefined}>
       <div className="flex flex-col gap-3 w-full px-1 sm:px-4 md:h-full" dir={isRTL ? 'rtl' : 'ltr'}>
 
         <DndContext
@@ -2950,6 +2975,7 @@ export default function SchedulePage() {
                   const detailTripLoc = detailLoc ? tripLocations.find(l => l.id === detailLoc.tripLocationId) : undefined;
                   const detailDescEntry = (detailTripLoc?.externalId ? locationDescriptions.get(detailTripLoc.externalId) : undefined) ?? (detailTripLoc ? locationDescriptions.get(detailTripLoc.name) : undefined);
                   const detailDescription = isRTL ? (detailDescEntry?.description_he || detailDescEntry?.description) : (detailDescEntry?.description || detailDescEntry?.description_he);
+                  const detailImage = detailDescEntry?.image;
                   const detailMobileCountry = activeTrip?.countries?.[0];
                   const detailMobileWeatherData = detailMobileCountry ? countryWeatherMap.get(detailMobileCountry) : undefined;
                   const detailMobileMonthly = detailMobileWeatherData ? findWeatherMonthly(detailMobileWeatherData, detailTripLoc?.externalId ?? null, detailName) : null;
@@ -2981,6 +3007,12 @@ export default function SchedulePage() {
                           <Trash2 size={16} />
                         </button>
                       </div>
+                      {/* Location image */}
+                      {detailImage && (
+                        <div className="shrink-0 w-full aspect-[16/9] rounded-xl overflow-hidden mb-3 bg-muted">
+                          <img src={detailImage} alt={detailName} className="w-full h-full object-cover" />
+                        </div>
+                      )}
                       {/* Location description */}
                       {detailDescription && (
                         <div className="shrink-0 pb-4">
@@ -3247,7 +3279,9 @@ export default function SchedulePage() {
                         const holdingDay = itineraryDays.find(d => d.tripPlaceId === il.id);
                         const poiCount = holdingDay?.activities?.length ?? 0;
                         const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.tripPlaceId === il.id).length : 0;
-                        const imgUrl = il.imageUrl;
+                        const tripLoc = tripLocations.find(l => l.id === il.tripLocationId);
+                        const locDescEntry = (tripLoc?.externalId ? locationDescriptions.get(tripLoc.externalId) : undefined) ?? (tripLoc ? locationDescriptions.get(tripLoc.name) : undefined);
+                        const imgUrl = il.imageUrl || locDescEntry?.image;
                         return (
                           <button
                             key={il.id}
@@ -3305,6 +3339,7 @@ export default function SchedulePage() {
                   const detailTripLoc = detailLoc ? tripLocations.find(l => l.id === detailLoc.tripLocationId) : undefined;
                   const detailDescEntry = (detailTripLoc?.externalId ? locationDescriptions.get(detailTripLoc.externalId) : undefined) ?? (detailTripLoc ? locationDescriptions.get(detailTripLoc.name) : undefined);
                   const detailDescription = isRTL ? (detailDescEntry?.description_he || detailDescEntry?.description) : (detailDescEntry?.description || detailDescEntry?.description_he);
+                  const detailImage = detailDescEntry?.image;
                   const detailCountry = activeTrip?.countries?.[0];
                   const detailWeatherData = detailCountry ? countryWeatherMap.get(detailCountry) : undefined;
                   const detailMonthly = detailWeatherData ? findWeatherMonthly(detailWeatherData, detailTripLoc?.externalId ?? null, detailName) : null;
@@ -3326,6 +3361,12 @@ export default function SchedulePage() {
                           <Trash2 size={16} />
                         </button>
                       </div>
+                      {/* Location image */}
+                      {detailImage && (
+                        <div className="shrink-0 w-full aspect-[16/9] rounded-xl overflow-hidden mb-3 bg-muted">
+                          <img src={detailImage} alt={detailName} className="w-full h-full object-cover" />
+                        </div>
+                      )}
                       {/* Location description */}
                       {detailDescription && (
                         <div className="shrink-0 pb-4">
@@ -3633,7 +3674,9 @@ export default function SchedulePage() {
                           const holdingDay = itineraryDays.find(d => d.tripPlaceId === il.id);
                           const poiCount = holdingDay?.activities?.length ?? 0;
                           const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.tripPlaceId === il.id).length : 0;
-                          const imgUrl = il.imageUrl;
+                          const tripLoc2 = tripLocations.find(l => l.id === il.tripLocationId);
+                          const locDescEntry2 = (tripLoc2?.externalId ? locationDescriptions.get(tripLoc2.externalId) : undefined) ?? (tripLoc2 ? locationDescriptions.get(tripLoc2.name) : undefined);
+                          const imgUrl = il.imageUrl || locDescEntry2?.image;
                           return (
                             <button
                               key={il.id}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocalizeLocation } from '@/features/geodata/useLocationDescriptions';
 import { useTranslation } from 'react-i18next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ interface MergeConfirmDialogProps {
 
 function POISummary({ poi }: { poi: PointOfInterest }) {
   const { t } = useTranslation();
+  const localizeLocation = useLocalizeLocation();
   const sourceCount =
     (poi.sourceRefs.email_ids?.length || 0) +
     (poi.sourceRefs.recommendation_ids?.length || 0);
@@ -48,7 +50,7 @@ function POISummary({ poi }: { poi: PointOfInterest }) {
       </div>
       {(poi.location.city || poi.location.country) && (
         <div className="text-muted-foreground">
-          {[poi.location.city, poi.location.country].filter(Boolean).join(', ')}
+          {[localizeLocation(poi.location.city), localizeLocation(poi.location.country)].filter(Boolean).join(', ')}
         </div>
       )}
       {poi.location.address && (

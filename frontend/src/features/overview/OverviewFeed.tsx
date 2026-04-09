@@ -268,7 +268,7 @@ export function OverviewFeed() {
           ) : (
             <HorizontalCarousel>
               {attractionsCarousel.map(poi => (
-                <div key={poi.id} className="shrink-0 w-[130px]">
+                <div key={poi.id} className="shrink-0 w-[66vw] sm:w-[130px]">
                   <POICard poi={poi} level={3} />
                 </div>
               ))}
@@ -289,7 +289,7 @@ export function OverviewFeed() {
           ) : (
             <HorizontalCarousel>
               {eventsCarousel.map(poi => (
-                <div key={poi.id} className="shrink-0 w-[130px]">
+                <div key={poi.id} className="shrink-0 w-[66vw] sm:w-[130px]">
                   <POICard poi={poi} level={3} />
                 </div>
               ))}
@@ -310,7 +310,7 @@ export function OverviewFeed() {
           ) : (
             <HorizontalCarousel>
               {eateriesCarousel.map(poi => (
-                <div key={poi.id} className="shrink-0 w-[130px]">
+                <div key={poi.id} className="shrink-0 w-[66vw] sm:w-[130px]">
                   <POICard poi={poi} level={3} />
                 </div>
               ))}
@@ -331,7 +331,7 @@ export function OverviewFeed() {
           ) : (
             <HorizontalCarousel>
               {hotelsCarousel.map(poi => (
-                <div key={poi.id} className="shrink-0 w-[130px]">
+                <div key={poi.id} className="shrink-0 w-[66vw] sm:w-[130px]">
                   <POICard poi={poi} level={3} />
                 </div>
               ))}
@@ -449,7 +449,7 @@ export function OverviewFeed() {
           ) : (
             <HorizontalCarousel>
               {contactsCarousel.map(c => (
-                <div key={c.id} className="shrink-0 w-[130px]">
+                <div key={c.id} className="shrink-0 w-[66vw] sm:w-[130px]">
                   <div className="rounded-lg border bg-card p-3 h-full flex flex-col items-center gap-2 text-center">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                       <Users size={18} className="text-primary" />

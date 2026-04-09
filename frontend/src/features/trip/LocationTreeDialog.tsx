@@ -7,10 +7,10 @@ import { TYPE_LABEL_KEYS } from '@/shared/components/LocationSelector';
 import { cn } from '@/shared/lib/utils';
 
 function TreeNode({ node, depth = 0 }: { node: SiteNode; depth?: number }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const hasChildren = node.sub_sites && node.sub_sites.length > 0;
   const [expanded, setExpanded] = useState(depth < 2);
-
+  const displayName = i18n.language === 'he' && node.site_he ? node.site_he : node.site;
   const typeLabel = TYPE_LABEL_KEYS[node.site_type] ? t(TYPE_LABEL_KEYS[node.site_type]) : node.site_type;
 
   return (
@@ -30,7 +30,7 @@ function TreeNode({ node, depth = 0 }: { node: SiteNode; depth?: number }) {
         ) : (
           <span className="w-3.5 shrink-0" />
         )}
-        <span className={cn('font-medium', depth === 0 && 'text-base')}>{node.site}</span>
+        <span className={cn('font-medium', depth === 0 && 'text-base')}>{displayName}</span>
         <span className="text-[10px] text-muted-foreground mr-auto">{typeLabel}</span>
       </button>
       {hasChildren && expanded && (

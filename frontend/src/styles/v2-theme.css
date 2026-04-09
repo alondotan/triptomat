@@ -1,0 +1,130 @@
+/* ─────────────────────────────────────────────
+   Triptomat V2 — Material Design 3 Theme Tokens
+   Light: "The Editorial Explorer"
+   Dark:  "Midnight Cartographer"
+   ───────────────────────────────────────────── */
+
+/* ── Google Fonts ── */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
+
+/* ── Light theme (default) ── */
+:root {
+  --v2-primary:                    #006094;
+  --v2-on-primary:                 #ebf3ff;
+  --v2-primary-container:          #67bafd;
+  --v2-on-primary-container:       #003655;
+  --v2-primary-fixed:              #67bafd;
+  --v2-primary-fixed-dim:          #58acef;
+  --v2-inverse-primary:            #67bafd;
+
+  --v2-secondary:                  #29664c;
+  --v2-on-secondary:               #c8ffe0;
+  --v2-secondary-container:        #b1f0ce;
+  --v2-on-secondary-container:     #1d5c42;
+  --v2-secondary-fixed:            #b1f0ce;
+  --v2-secondary-fixed-dim:        #a3e2c0;
+
+  --v2-tertiary:                   #735801;
+  --v2-on-tertiary:                #fff1d8;
+  --v2-tertiary-container:         #f9d377;
+  --v2-on-tertiary-container:      #5f4800;
+  --v2-tertiary-fixed:             #f9d377;
+  --v2-tertiary-fixed-dim:         #eac56b;
+
+  --v2-error:                      #b31b25;
+  --v2-on-error:                   #ffefee;
+  --v2-error-container:            #fb5151;
+  --v2-on-error-container:         #570008;
+
+  --v2-background:                 #f5f6f7;
+  --v2-on-background:              #2c2f30;
+  --v2-surface:                    #f5f6f7;
+  --v2-on-surface:                 #2c2f30;
+  --v2-surface-variant:            #dadddf;
+  --v2-on-surface-variant:         #595c5d;
+  --v2-surface-tint:               #006094;
+  --v2-surface-bright:             #f5f6f7;
+  --v2-surface-dim:                #d1d5d7;
+  --v2-surface-container:          #e6e8ea;
+  --v2-surface-container-low:      #eff1f2;
+  --v2-surface-container-high:     #e0e3e4;
+  --v2-surface-container-highest:  #dadddf;
+  --v2-surface-container-lowest:   #ffffff;
+
+  --v2-outline:                    #757778;
+  --v2-outline-variant:            #abadae;
+  --v2-inverse-surface:            #0c0f10;
+  --v2-inverse-on-surface:         #9b9d9e;
+
+  /* Typography */
+  --v2-font-headline:  'Plus Jakarta Sans', sans-serif;
+  --v2-font-body:      'Manrope', sans-serif;
+}
+
+/* ── Dark theme ("Midnight Cartographer") ── */
+.dark {
+  --v2-primary:                    #c0c1ff;
+  --v2-on-primary:                 #1000a9;
+  --v2-primary-container:          #8083ff;
+  --v2-on-primary-container:       #0d0096;
+  --v2-primary-fixed:              #e1e0ff;
+  --v2-primary-fixed-dim:          #c0c1ff;
+  --v2-inverse-primary:            #494bd6;
+
+  --v2-secondary:                  #ffb2b9;
+  --v2-on-secondary:               #67001f;
+  --v2-secondary-container:        #891933;
+  --v2-on-secondary-container:     #ff97a3;
+  --v2-secondary-fixed:            #ffdadc;
+  --v2-secondary-fixed-dim:        #ffb2b9;
+
+  --v2-tertiary:                   #bfc6dd;
+  --v2-on-tertiary:                #293042;
+  --v2-tertiary-container:         #8990a6;
+  --v2-on-tertiary-container:      #22293b;
+  --v2-tertiary-fixed:             #dbe2fa;
+  --v2-tertiary-fixed-dim:         #bfc6dd;
+
+  --v2-error:                      #ffb4ab;
+  --v2-on-error:                   #690005;
+  --v2-error-container:            #93000a;
+  --v2-on-error-container:         #ffdad6;
+
+  --v2-background:                 #131313;
+  --v2-on-background:              #e5e2e1;
+  --v2-surface:                    #131313;
+  --v2-on-surface:                 #e5e2e1;
+  --v2-surface-variant:            #353534;
+  --v2-on-surface-variant:         #c7c4d7;
+  --v2-surface-tint:               #c0c1ff;
+  --v2-surface-bright:             #393939;
+  --v2-surface-dim:                #131313;
+  --v2-surface-container:          #201f1f;
+  --v2-surface-container-low:      #1c1b1b;
+  --v2-surface-container-high:     #2a2a2a;
+  --v2-surface-container-highest:  #353534;
+  --v2-surface-container-lowest:   #0e0e0e;
+
+  --v2-outline:                    #908fa0;
+  --v2-outline-variant:            #464554;
+  --v2-inverse-surface:            #e5e2e1;
+  --v2-inverse-on-surface:         #313030;
+}
+
+/* ── Utility ── */
+.v2-hide-scrollbar::-webkit-scrollbar { display: none; }
+.v2-hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.v2-glass {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(171, 173, 174, 0.15);
+}
+
+.dark .v2-glass {
+  border-color: rgba(70, 69, 84, 0.15);
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}

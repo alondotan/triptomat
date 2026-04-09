@@ -7,6 +7,7 @@ import { getSubCategoryEntry, getSubCategoryLabel } from '@/shared/lib/subCatego
 import { usePOI } from '@/features/poi/POIContext';
 import { useToggleLike } from '@/shared/hooks/useToggleLike';
 import { useResolvedImage } from '@/shared/hooks/useResolvedImage';
+import { useLocationDescriptions } from '@/features/geodata/useLocationDescriptions';
 import type { PointOfInterest } from '@/types/trip';
 
 function formatDuration(minutes: number): string {
@@ -14,6 +15,13 @@ function formatDuration(minutes: number): string {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return m === 0 ? `${h}h` : `${h}:${m.toString().padStart(2, '0')}`;
+}
+
+/** Shared heart-button color class based on POI status */
+export function getHeartStatusClass(status: string): string {
+  if (status === 'interested' || status === 'planned' || status === 'scheduled') return 'text-red-500';
+  if (status === 'booked' || status === 'visited' || status === 'skipped') return 'text-white/40 cursor-default';
+  return 'text-white/70 hover:text-red-400';
 }
 
 const STATUS_KEYS: Record<string, string> = {
@@ -49,9 +57,10 @@ export function POICard({
   isSelected,
   className = '',
 }: POICardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { updatePOI } = usePOI();
   const { toggleLike } = useToggleLike();
+  const locationDescriptions = useLocationDescriptions();
   const [dialogOpen, setDialogOpen] = useState(false);
   const { url: resolvedImage, onError: onImageError } = useResolvedImage({ imageUrl: poi.imageUrl }, poi.name);
 
@@ -298,8 +307,8 @@ export function POICard({
         className={`cursor-pointer group ${poi.isCancelled ? 'opacity-50' : ''} ${className} bg-transparent border-0 p-0 text-start w-full`}
         onClick={() => setDialogOpen(true)}
       >
-        {/* Square image with heart overlay */}
-        <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
+        {/* Image — portrait rectangle on mobile, square on sm+ */}
+        <div className="relative aspect-[3/4] sm:aspect-square w-full overflow-hidden rounded-lg bg-muted">
           {resolvedImage ? (
             <img src={resolvedImage} alt={poi.name} width={400} height={300} className="w-full h-full object-cover" onError={onImageError} />
           ) : (
@@ -317,11 +326,7 @@ export function POICard({
           <button
             aria-label={t('poiCard.favorite')}
             onClick={handleToggleLike}
-            className={`absolute top-1.5 right-1.5 p-1 rounded-full bg-black/30 backdrop-blur-sm transition-colors ${
-              poi.status === 'interested' || poi.status === 'planned' || poi.status === 'scheduled' ? 'text-red-500' :
-              poi.status === 'booked' || poi.status === 'visited' || poi.status === 'skipped' ? 'text-white/40 cursor-default' :
-              'text-white/70 hover:text-red-400'
-            }`}
+            className={`absolute top-1.5 right-1.5 p-1 rounded-full bg-black/30 backdrop-blur-sm transition-colors ${getHeartStatusClass(poi.status)}`}
             title={['planned', 'scheduled', 'booked', 'visited', 'skipped'].includes(poi.status) ? t(STATUS_KEYS[poi.status]) : poi.status === 'interested' ? t('poiCard.removeInterest') : t('poiCard.interestedInThis')}
           >
             <Heart
@@ -329,20 +334,23 @@ export function POICard({
               fill={poi.status !== 'suggested' ? 'currentColor' : 'none'}
             />
           </button>
-        </div>
-
-        {/* Details below image */}
-        <div className="mt-1.5 space-y-0.5">
-          <p className="text-sm font-medium truncate">{poi.name}</p>
-          {poi.location.city && (
-            <p className="text-xs text-muted-foreground truncate">{poi.location.city}</p>
-          )}
-          {(poi.placeType || poi.activityType) && (
-            <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
-              <SubCategoryIcon type={poi.placeType || poi.activityType} size={11} />
-              <span className="truncate">{getSubCategoryLabel(poi.placeType || poi.activityType)}</span>
-            </div>
-          )}
+          {/* Dark gradient + text overlay at bottom */}
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent pt-8 pb-2 px-2">
+            <p className="text-white text-xs font-semibold leading-tight truncate">{poi.name}</p>
+            {poi.location.city && (
+              <p className="text-white/70 text-[10px] truncate">
+                {i18n.language === 'he'
+                  ? (locationDescriptions.get(poi.location.city)?.name_he ?? poi.location.city)
+                  : poi.location.city}
+              </p>
+            )}
+            {(poi.placeType || poi.activityType) && (
+              <div className="flex items-center gap-1 text-[10px] text-white/60 mt-0.5">
+                <SubCategoryIcon type={poi.placeType || poi.activityType} size={9} className="shrink-0" />
+                <span className="truncate">{getSubCategoryLabel(poi.placeType || poi.activityType)}</span>
+              </div>
+            )}
+          </div>
         </div>
       </button>
 

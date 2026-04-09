@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLocalizeLocation } from '@/features/geodata/useLocationDescriptions';
 import { Check, ChevronsUpDown, ChevronDown, ChevronLeft, Plus, Search } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -62,6 +63,7 @@ export function LocationSelector({ value, onChange, placeholder, className, inli
   const { t } = useTranslation();
   const effectivePlaceholder = placeholder ?? t('locationSelector.chooseLocation');
   const { tripLocationTree, addSiteToHierarchy } = useActiveTrip();
+  const localizeLocation = useLocalizeLocation();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
@@ -130,7 +132,7 @@ export function LocationSelector({ value, onChange, placeholder, className, inli
               className="flex-1 justify-between font-normal"
             >
               {value ? (
-                <span className="truncate">{value}</span>
+                <span className="truncate">{localizeLocation(value)}</span>
               ) : (
                 <span className="text-muted-foreground">{effectivePlaceholder}</span>
               )}
@@ -153,7 +155,7 @@ export function LocationSelector({ value, onChange, placeholder, className, inli
             onClick={() => { setOpen(!open); if (open) setSearch(''); }}
           >
             {value ? (
-              <span className="truncate">{value}</span>
+              <span className="truncate">{localizeLocation(value)}</span>
             ) : (
               <span className="text-muted-foreground">{effectivePlaceholder}</span>
             )}
@@ -334,10 +336,11 @@ function ManualEntryFooter({ onSelect, onAddToTree }: { onSelect: (label: string
 }
 
 function TreeNode({ node, depth, value, onSelect, onAddToTree }: TreeNodeProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const hasChildren = node.sub_sites && node.sub_sites.length > 0;
   const isCountry = node.site_type === 'country';
   const [expanded, setExpanded] = useState(depth < 1);
+  const displayName = i18n.language === 'he' && node.site_he ? node.site_he : node.site;
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
 
@@ -387,7 +390,7 @@ function TreeNode({ node, depth, value, onSelect, onAddToTree }: TreeNodeProps) 
             isCountry ? 'hover:bg-muted/50 cursor-pointer' : 'hover:bg-accent cursor-pointer',
           )}
         >
-          <span className={cn('truncate', isCountry && 'font-semibold')}>{node.site}</span>
+          <span className={cn('truncate', isCountry && 'font-semibold')}>{displayName}</span>
           {!isCountry && (
             <span className="text-[10px] text-muted-foreground mr-auto shrink-0">{typeLabel}</span>
           )}
