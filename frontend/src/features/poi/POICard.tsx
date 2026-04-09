@@ -18,6 +18,7 @@ function formatDuration(minutes: number): string {
 }
 
 /** Shared heart-button color class based on POI status */
+// eslint-disable-next-line react-refresh/only-export-components
 export function getHeartStatusClass(status: string): string {
   if (status === 'interested' || status === 'planned' || status === 'scheduled') return 'text-red-500';
   if (status === 'booked' || status === 'visited' || status === 'skipped') return 'text-white/40 cursor-default';
