@@ -88,9 +88,11 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'source_recommendations', filter: `recommendation_id=eq.${jobId}` },
         (payload) => {
-          const newStatus = (payload.new as any)?.status;
+          const rec = payload.new as Record<string, unknown>;
+          const newStatus = rec?.status as string | undefined;
           if (newStatus && newStatus !== 'processing') {
-            const items: ExtractedItem[] = (payload.new as any)?.analysis?.extracted_items || [];
+            const analysis = rec?.analysis as { extracted_items?: ExtractedItem[] } | undefined;
+            const items: ExtractedItem[] = analysis?.extracted_items || [];
             const summary = buildItemSummary(items, t);
             setItemSummary(summary ? t('urlSubmit.analysisComplete', { summary }) : t('urlSubmit.analysisDone'));
             setMessage('');
@@ -173,7 +175,8 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-        const items: ExtractedItem[] = existing?.analysis?.extracted_items || [];
+        const analysis = existing?.analysis as unknown as { extracted_items?: ExtractedItem[] } | null;
+        const items: ExtractedItem[] = analysis?.extracted_items || [];
         const summary = buildItemSummary(items, t);
         setMessage(t('urlSubmit.alreadyAnalyzed'));
         if (summary) setItemSummary(summary);
