@@ -324,7 +324,7 @@ def lambda_handler(event, context):
                                 "url": url,
                                 "source_type": "web",
                                 "source_metadata": source_metadata,
-                                "text": text[:5000] if text else "",
+                                "text": text[:15000] if text else "",
                                 "webhook_token": webhook_token,
                             })
                         )

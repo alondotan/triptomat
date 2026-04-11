@@ -177,7 +177,15 @@ def lambda_handler(event, context):
                                         f"{text}\n\n{main_prompt}"
                                     )
                                 else:
-                                    prompt = f"Analyze this text and extract locations:\n{text}\n\n{main_prompt}"
+                                    prompt = (
+                                        f"The following is the text of a travel article or web page. "
+                                        f"Your task is to extract EVERY specific place mentioned — "
+                                        f"attractions, restaurants, hotels, neighborhoods, beaches, viewpoints, "
+                                        f"activities, and any other location worth visiting. "
+                                        f"Be exhaustive: do not skip any place, even if it is mentioned only briefly. "
+                                        f"Each distinct place must be its own recommendation entry.\n\n"
+                                        f"{text}\n\n{main_prompt}"
+                                    )
                                 response_text = gemini.analyze_text(prompt)
                                 response_json = json.loads(response_text)
 

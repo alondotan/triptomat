@@ -2,16 +2,29 @@ import requests
 
 
 def extract_text_from_url(url):
-    """Extracts visible text content from a web page."""
+    """Extracts visible text content from a web page, focusing on the main article body."""
     from bs4 import BeautifulSoup
 
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
         res = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(res.text, 'html.parser')
-        for s in soup(["script", "style", "nav", "footer", "header"]):
+
+        # Remove noise elements
+        for s in soup(["script", "style", "nav", "footer", "header", "aside",
+                        "form", "button", "noscript", "iframe", "svg"]):
             s.decompose()
-        return ' '.join(soup.get_text().split())
+
+        # Try to find the main article body first
+        article_body = (
+            soup.find("article") or
+            soup.find("main") or
+            soup.find(class_=lambda c: c and any(k in c for k in ("article", "post", "entry", "content", "body"))) or
+            soup.find(id=lambda i: i and any(k in i for k in ("article", "post", "entry", "content", "body")))
+        )
+        target = article_body if article_body else soup
+
+        return ' '.join(target.get_text().split())
     except Exception:
         return None
 

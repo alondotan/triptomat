@@ -1,7 +1,7 @@
 def build_main_prompt(allowed_types, geo_types):
     """Builds the main analysis prompt with the given type lists."""
     return f"""
-Extract the recommendations from the input you got.
+Extract ALL recommendations from the input. Be exhaustive — every specific place, attraction, restaurant, hotel, beach, viewpoint, neighborhood, or activity must appear as a separate entry. Do not merge multiple places into one. Do not skip any place even if only briefly mentioned.
 Your output must be a RFC8259 compliant JSON object with the following structure:
 
 {{
