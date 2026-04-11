@@ -91,8 +91,8 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
           const rec = payload.new as Record<string, unknown>;
           const newStatus = rec?.status as string | undefined;
           if (newStatus && newStatus !== 'processing') {
-            const analysis = rec?.analysis as { extracted_items?: ExtractedItem[] } | undefined;
-            const items: ExtractedItem[] = analysis?.extracted_items || [];
+            const analysis = rec?.analysis as { recommendations?: ExtractedItem[]; extracted_items?: ExtractedItem[] } | undefined;
+            const items: ExtractedItem[] = analysis?.recommendations || analysis?.extracted_items || [];
             const summary = buildItemSummary(items, t);
             setItemSummary(summary ? t('urlSubmit.analysisComplete', { summary }) : t('urlSubmit.analysisDone'));
             setMessage('');
@@ -175,8 +175,8 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-        const analysis = existing?.analysis as unknown as { extracted_items?: ExtractedItem[] } | null;
-        const items: ExtractedItem[] = analysis?.extracted_items || [];
+        const analysis = existing?.analysis as unknown as { recommendations?: ExtractedItem[]; extracted_items?: ExtractedItem[] } | null;
+        const items: ExtractedItem[] = analysis?.recommendations || analysis?.extracted_items || [];
         const summary = buildItemSummary(items, t);
         setMessage(t('urlSubmit.alreadyAnalyzed'));
         if (summary) setItemSummary(summary);

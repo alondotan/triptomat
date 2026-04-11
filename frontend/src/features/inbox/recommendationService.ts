@@ -69,8 +69,9 @@ export async function fetchPendingRecommendations(): Promise<SourceRecommendatio
   const { data, error } = await supabase
     .from('source_recommendations')
     .select('*')
-    .eq('status', 'pending')
-    .order('created_at', { ascending: false });
+    .in('status', ['pending', 'linked', 'processing', 'failed'])
+    .order('created_at', { ascending: false })
+    .limit(50);
 
   if (error) throw error;
   return (data || []).map(mapRecommendation);

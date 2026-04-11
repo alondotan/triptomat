@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Inbox, Link2, ExternalLink, Trash2, Star } from 'lucide-react';
+import { Inbox, Link2, ExternalLink, Trash2, Star, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { getCategoryIcon } from '@/shared/lib/subCategoryConfig';
 import { SourceEmail, SourceRecommendation } from '@/types/webhook';
 import { fetchSourceEmails, linkSourceEmailToTrip, deleteSourceEmail } from '@/features/inbox/webhookService';
@@ -135,7 +135,8 @@ export function PendingInbox() {
     return pd?.metadata?.order_number || t('common.unknown');
   };
 
-  const totalPending = emails.length + recommendations.length;
+  const pendingRecs = recommendations.filter(r => r.status === 'pending');
+  const totalPending = emails.length + pendingRecs.length;
 
   if (isLoading) {
     return <Card><CardContent className="p-6 text-center" aria-live="polite">{t('common.loading')}</CardContent></Card>;
@@ -176,6 +177,7 @@ export function PendingInbox() {
                 {t('nav.recommendations')} {recommendations.length > 0 && <Badge variant="secondary" className="ml-1.5 text-xs">{recommendations.length}</Badge>}
               </TabsTrigger>
             </TabsList>
+
 
             <TabsContent value="emails" className="space-y-3 mt-3">
               {emails.length === 0 ? (
@@ -220,42 +222,61 @@ export function PendingInbox() {
               {recommendations.length === 0 ? (
                 <p className="text-center py-4 text-muted-foreground text-sm">{t('inboxPage.noPendingRecs')}</p>
               ) : (
-                recommendations.map(rec => (
-                  <div key={rec.id} className="p-3 rounded-lg border bg-card space-y-1">
-                    {/* Row 1: icons */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-full bg-muted">
-                          <Star className="h-4 w-4" aria-hidden="true" />
+                recommendations.map(rec => {
+                  const recItems = rec.analysis.recommendations || rec.analysis.extracted_items || [];
+                  const recTitle = rec.sourceTitle || rec.analysis.sites_hierarchy?.[0]?.site || t('nav.recommendations');
+                  const isPending = rec.status === 'pending';
+                  const isLinked = rec.status === 'linked';
+                  const isProcessing = rec.status === 'processing';
+                  const isFailed = rec.status === 'failed';
+                  return (
+                    <div key={rec.id} className={`p-3 rounded-lg border bg-card space-y-1 ${isLinked ? 'opacity-75' : ''}`}>
+                      {/* Row 1: icon + status + actions */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 rounded-full bg-muted">
+                            {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> :
+                             isLinked ? <CheckCircle2 className="h-4 w-4 text-green-600" aria-hidden="true" /> :
+                             isFailed ? <AlertCircle className="h-4 w-4 text-destructive" aria-hidden="true" /> :
+                             <Star className="h-4 w-4" aria-hidden="true" />}
+                          </div>
+                          {isLinked && <Badge variant="secondary" className="text-xs">{t('inboxPage.linked')}</Badge>}
+                          {isProcessing && <Badge variant="outline" className="text-xs">{t('common.loading')}</Badge>}
+                          {isFailed && <Badge variant="destructive" className="text-xs">{t('common.error')}</Badge>}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {isPending && (
+                            <Button size="sm" variant="outline" onClick={() => openLinkDialog(rec.id, 'recommendation')}>
+                              <Link2 className="h-4 w-4 mr-1" /> {t('inboxPage.linkItem')}
+                            </Button>
+                          )}
+                          {rec.sourceUrl && (
+                            <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer" className="p-2" aria-label={t('sourceEmails.openEmail')}>
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          )}
+                          <Button size="sm" variant="ghost" aria-label={t('common.delete')} onClick={() => { if (window.confirm(t('sourceEmails.confirmDelete'))) handleDeleteRecommendation(rec.id); }}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Button size="sm" variant="outline" onClick={() => openLinkDialog(rec.id, 'recommendation')}>
-                          <Link2 className="h-4 w-4 mr-1" /> {t('inboxPage.linkItem')}
-                        </Button>
-                        {rec.sourceUrl && (
-                          <a href={rec.sourceUrl} target="_blank" rel="noopener noreferrer" className="p-2" aria-label={t('sourceEmails.openEmail')}>
-                            <ExternalLink className="h-4 w-4" />
-                          </a>
-                        )}
-                        <Button size="sm" variant="ghost" aria-label={t('common.delete')} onClick={() => { if (window.confirm(t('sourceEmails.confirmDelete'))) handleDeleteRecommendation(rec.id); }}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
+                      {/* Row 2: title */}
+                      <div className="font-medium truncate">{recTitle}</div>
+                      {/* Row 3: details */}
+                      {rec.sourceUrl && (
+                        <p className="text-xs text-muted-foreground truncate">{rec.sourceUrl}</p>
+                      )}
+                      {recItems.length > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {t('inboxPage.itemsExtracted', { count: recItems.length })}
+                        </p>
+                      )}
+                      {isFailed && rec.error && (
+                        <p className="text-xs text-destructive truncate">{rec.error}</p>
+                      )}
                     </div>
-                    {/* Row 2: title */}
-                    <div className="font-medium truncate">{rec.analysis.main_site || t('nav.recommendations')}</div>
-                    {/* Row 3: details */}
-                    {rec.sourceUrl && (
-                      <p className="text-xs text-muted-foreground truncate">{rec.sourceUrl}</p>
-                    )}
-                    {rec.analysis.extracted_items && rec.analysis.extracted_items.length > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {t('inboxPage.itemsExtracted', { count: rec.analysis.extracted_items.length })}
-                      </p>
-                    )}
-                  </div>
-                ))
+                  );
+                })
               )}
             </TabsContent>
           </Tabs>

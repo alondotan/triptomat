@@ -71,6 +71,14 @@ export interface SourceRecommendation {
         entity_id?: string;
       };
     }>;
+    recommendations?: Array<{
+      name: string;
+      category: string;
+      sentiment?: 'good' | 'bad';
+      paragraph?: string;
+      site?: string;
+    }>;
+    sites_hierarchy?: SiteHierarchyNode[];
     contacts?: Array<{
       name: string;
       role?: string;
