@@ -9,10 +9,12 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Authenticate via bearer token or query param
-    const authHeader = req.headers.get('authorization') || '';
+    // Authenticate via query param (preferred) or bearer token.
+    // Callers must provide a valid Supabase JWT in Authorization for Supabase
+    // to invoke the function, and pass the custom PIPELINE_EVENT_TOKEN as ?token=.
     const url = new URL(req.url);
-    const token = authHeader.replace('Bearer ', '') || url.searchParams.get('token') || '';
+    const authHeader = req.headers.get('authorization') || '';
+    const token = url.searchParams.get('token') || authHeader.replace('Bearer ', '');
 
     if (!PIPELINE_TOKEN || token !== PIPELINE_TOKEN) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {

@@ -16,6 +16,9 @@ import urllib.error
 
 PIPELINE_EVENT_URL = os.environ.get("PIPELINE_EVENT_URL", "")
 PIPELINE_EVENT_TOKEN = os.environ.get("PIPELINE_EVENT_TOKEN", "")
+# Supabase requires a valid JWT in the Authorization header to invoke edge functions.
+# We use the service role key for that, and pass our custom token as a query param.
+_SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 
 
 def report_event(
@@ -49,12 +52,18 @@ def report_event(
         payload["metadata"] = metadata
 
     try:
+        # Supabase needs a valid JWT to invoke edge functions; use service role key
+        # for the Authorization header and pass the custom token as a query param.
+        bearer = _SUPABASE_SERVICE_KEY or PIPELINE_EVENT_TOKEN
+        url = PIPELINE_EVENT_URL
+        if _SUPABASE_SERVICE_KEY and PIPELINE_EVENT_TOKEN:
+            url = f"{PIPELINE_EVENT_URL}?token={PIPELINE_EVENT_TOKEN}"
         req = urllib.request.Request(
-            PIPELINE_EVENT_URL,
+            url,
             data=json.dumps(payload).encode("utf-8"),
             headers={
                 "Content-Type": "application/json",
-                "Authorization": f"Bearer {PIPELINE_EVENT_TOKEN}",
+                "Authorization": f"Bearer {bearer}",
             },
         )
         with urllib.request.urlopen(req, timeout=3) as resp:
