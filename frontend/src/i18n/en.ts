@@ -793,6 +793,8 @@ const en = {
     analyze: 'Analyze',
     alreadyAnalyzed: 'Already analyzed — results available in Recommendations.',
     submitted: 'Submitted! Analysis in progress.',
+    analysisDone: 'Analysis complete.',
+    analysisComplete: 'Analysis complete: {{summary}}',
     listImported: 'List imported! {{count}} places added to POIs.',
     listSynced: 'List synced — no new places found.',
     timeout: 'Request timed out. Please try again.',

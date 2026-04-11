@@ -791,6 +791,8 @@ const he = {
     analyze: 'נתח',
     alreadyAnalyzed: 'כבר נותח — התוצאות זמינות בהמלצות.',
     submitted: 'נשלח! הניתוח בתהליך.',
+    analysisDone: 'ניתוח הסתיים.',
+    analysisComplete: 'ניתוח הסתיים: {{summary}}',
     listImported: 'הרשימה יובאה! {{count}} מקומות נוספו לנקודות עניין.',
     listSynced: 'הרשימה סונכרנה — לא נמצאו מקומות חדשים.',
     timeout: 'הבקשה עברה זמן מותר. נסה שוב.',

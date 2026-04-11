@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
@@ -9,6 +9,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Loader2, CheckCircle, AlertCircle, Link, FileText, ClipboardPaste } from 'lucide-react';
 import { urlSchema } from '@/schemas/url.schema';
+
+type ExtractedItem = { name: string; category: string };
+
+function buildItemSummary(items: ExtractedItem[], t: (k: string) => string): string {
+  if (!items.length) return '';
+  const counts: Record<string, number> = {};
+  for (const item of items) {
+    const key = item.category || 'other';
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  const parts = Object.entries(counts).map(([cat, n]) => {
+    const label = t(`poiCategory.${cat}`) !== `poiCategory.${cat}` ? t(`poiCategory.${cat}`) : cat;
+    return `${n} ${label}`;
+  });
+  return parts.join(', ');
+}
 
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -35,7 +51,9 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
   const [text, setText] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [message, setMessage] = useState('');
+  const [itemSummary, setItemSummary] = useState('');
   const [webhookToken, setWebhookToken] = useState<string | null>(null);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -52,7 +70,37 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
     setText('');
     setStatus('idle');
     setMessage('');
+    setItemSummary('');
     setMode('url');
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+  };
+
+  const subscribeToJob = (jobId: string) => {
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
+    const channel = supabase
+      .channel(`rec-done-${jobId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'source_recommendations', filter: `recommendation_id=eq.${jobId}` },
+        (payload) => {
+          const newStatus = (payload.new as any)?.status;
+          if (newStatus && newStatus !== 'processing') {
+            const items: ExtractedItem[] = (payload.new as any)?.analysis?.extracted_items || [];
+            const summary = buildItemSummary(items, t);
+            setItemSummary(summary ? t('urlSubmit.analysisComplete', { summary }) : t('urlSubmit.analysisDone'));
+            setMessage('');
+            supabase.removeChannel(channel);
+            channelRef.current = null;
+          }
+        }
+      )
+      .subscribe();
+    channelRef.current = channel;
   };
 
   const handleOpenChange = (v: boolean) => {
@@ -117,7 +165,18 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
 
       if (res.status === 200) {
         setStatus('success');
+        // Fetch existing result to show item counts
+        const { data: existing } = await supabase
+          .from('source_recommendations')
+          .select('analysis')
+          .eq('source_url', trimmed)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const items: ExtractedItem[] = existing?.analysis?.extracted_items || [];
+        const summary = buildItemSummary(items, t);
         setMessage(t('urlSubmit.alreadyAnalyzed'));
+        if (summary) setItemSummary(summary);
       } else if (res.status === 202) {
         const jobId = data.job_id;
         const meta = data.source_metadata || {};
@@ -132,6 +191,7 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
             analysis: {},
             linked_entities: [],
           }]);
+          subscribeToJob(jobId);
         }
         setStatus('success');
         setMessage(t('urlSubmit.submitted'));
@@ -314,10 +374,15 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
           </div>
         </form>
 
-        <div aria-live="polite">
-          {status === 'success' && (
+        <div aria-live="polite" className="space-y-1">
+          {status === 'success' && message && (
             <p className="flex items-center gap-1.5 text-xs text-green-600">
               <CheckCircle size={13} /> {message}
+            </p>
+          )}
+          {itemSummary && (
+            <p className="flex items-center gap-1.5 text-xs text-green-700 font-medium">
+              <CheckCircle size={13} /> {itemSummary}
             </p>
           )}
           {status === 'error' && (
