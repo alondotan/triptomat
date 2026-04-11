@@ -15,9 +15,10 @@ function findCityCoords(
   nodes: CountryLocationNode[],
   name: string,
 ): { lat: number; lng: number } | null {
+  if (!name) return null;
   const lower = name.toLowerCase();
   for (const node of nodes) {
-    if (node.name.toLowerCase() === lower && node.coordinates) {
+    if (node.name?.toLowerCase() === lower && node.coordinates) {
       return node.coordinates;
     }
     if (node.children) {

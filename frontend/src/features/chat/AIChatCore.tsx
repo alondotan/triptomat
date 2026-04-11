@@ -89,6 +89,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
   const [messages, setMessages] = useState<Message[]>(() => tripSessions.get(tripId) ?? []);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [applyingTools, setApplyingTools] = useState(false);
   const [integrating, setIntegrating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSentAt, setLastSentAt] = useState(0);
@@ -172,7 +173,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
 
   const sendMessage = useCallback(async () => {
     const trimmed = input.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed || loading || applyingTools) return;
 
     if (Date.now() - lastSentAt < COOLDOWN_MS) return;
 
@@ -286,14 +287,76 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
       };
     })();
 
+    // Helper to serialize messages for API calls
+    const serializeMessages = (msgs: Message[], enrichedContent?: string) =>
+      msgs.map((m, i) => ({
+        role: m.role,
+        content: i === msgs.length - 1 && m.role === 'user' && enrichedContent
+          ? enrichedContent.slice(0, MAX_INPUT)
+          : m.content,
+      }));
+
     try {
+      // ── Stage 1: fast chat response (no tools, lightweight prompt) ──────────
+      const { data: chatData, error: chatError } = await supabase.functions.invoke('ai-chat', {
+        body: {
+          messages: serializeMessages(updatedMessages, aiContent),
+          tripContext: {
+            tripName: tripContext.tripName,
+            countries: tripContext.countries,
+            startDate: tripContext.startDate,
+            endDate: tripContext.endDate,
+            numberOfDays: tripContext.numberOfDays,
+            status: tripContext.status,
+            currency: tripContext.currency,
+            festivals: tripContext.festivals,
+            // intentionally omit locationsFlat and allPlaces — not needed for chat
+          },
+          mode: 'chat',
+          tripPlan,
+          tripId: tripContext.tripId,
+        },
+      });
+
+      if (chatError) {
+        let errorMsg = chatError.message || 'Failed to get response';
+        try {
+          const ctx = (chatError as { context?: Response }).context;
+          if (ctx) {
+            const body = await ctx.json();
+            errorMsg = body?.error || body?.message || errorMsg;
+          }
+        } catch { /* ignore */ }
+        throw new Error(errorMsg);
+      }
+      if (chatData?.error === 'daily_limit_exceeded') {
+        queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
+        throw new Error(chatData.message || 'Daily AI chat limit reached');
+      }
+      if (chatData?.error) throw new Error(chatData.error);
+
+      // Show Stage 1 response immediately — user sees text right away
+      const assistantMsg: Message = {
+        role: 'assistant',
+        content: chatData?.message || 'Sorry, I could not generate a response.',
+      };
+      setMessages(prev => {
+        const next = [...prev, assistantMsg];
+        onNewAssistantMessage?.(assistantMsg.content, next.length - 1);
+        return next;
+      });
+      setLoading(false);
+      // Persist both messages to DB (fire-and-forget)
+      appendMessages([userMsg, assistantMsg]).catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
+      // ────────────────────────────────────────────────────────────────────────
+
+      // ── Stage 2: planner (tools, proven upsert→itinerary flow) ─────────────
+      // Uses the ORIGINAL messages (not Stage 1's response) so it plans independently
+      setApplyingTools(true);
       const { data, error: fnError } = await supabase.functions.invoke('ai-chat', {
         body: {
-          messages: updatedMessages.map((m, i) => ({
-            role: m.role,
-            // Last message is the one just sent — use enriched AI content with mention IDs
-            content: i === updatedMessages.length - 1 && m.role === 'user' ? aiContent.slice(0, MAX_INPUT) : m.content,
-          })),
+          messages: serializeMessages(updatedMessages, aiContent),
           tripContext: {
             tripName: tripContext.tripName,
             countries: tripContext.countries,
@@ -310,27 +373,17 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
           tripPlan,
           instantApply,
           tripId: tripContext.tripId,
+          stage1Response: assistantMsg.content,
         },
       });
 
-      console.log('[ai-chat] data:', JSON.stringify(data)?.slice(0, 500), 'error:', fnError);
-      if (fnError) {
-        let errorMsg = fnError.message || 'Failed to get response';
-        try {
-          const ctx = (fnError as { context?: Response }).context;
-          if (ctx) {
-            const body = await ctx.json();
-            console.error('[ai-chat] fnError body:', body);
-            errorMsg = body?.error || body?.message || errorMsg;
-          }
-        } catch { /* ignore */ }
-        throw new Error(errorMsg);
+      console.log('[ai-chat stage2] data:', JSON.stringify(data)?.slice(0, 500), 'error:', fnError);
+      console.log('[ai-chat stage2] toolCalls:', data?.toolCalls?.map((t: { name: string }) => t.name));
+      // Stage 2 errors are soft — user already has the text response
+      if (fnError || data?.error) {
+        console.warn('[ai-chat stage2] error (non-fatal):', fnError?.message || data?.error);
+        return; // skip tool application
       }
-      if (data?.error === 'daily_limit_exceeded') {
-        queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
-        throw new Error(data.message || 'Daily AI chat limit reached');
-      }
-      if (data?.error) throw new Error(data.error);
 
       // Handle tool calls (itinerary updates)
       let shouldApply = false;
@@ -485,18 +538,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         }
       }
 
-      const assistantMsg: Message = {
-        role: 'assistant',
-        content: data?.message || 'Sorry, I could not generate a response.',
-      };
-      setMessages(prev => {
-        const next = [...prev, assistantMsg];
-        onNewAssistantMessage?.(assistantMsg.content, next.length - 1);
-        return next;
-      });
-      // Persist both messages to DB (fire-and-forget — don't block UI)
-      appendMessages([userMsg, assistantMsg]).catch(() => {});
-      queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
+      // Stage 1 already showed the message — Stage 2 only applies actions to the trip
 
       // Apply the itinerary to the real trip
       const daysToApply = newDays ?? (shouldApply ? draft : null);
@@ -538,9 +580,10 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
       setError(errMsg);
     } finally {
       setLoading(false);
+      setApplyingTools(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, loading, messages, lastSentAt, tripContext, draft, applyToolCall, queryClient, onNewAssistantMessage, onSuggestPlaces, pois, itineraryDays, toast, t, initFromReal, instantApply, history, addPOI, activeTrip, updateCurrentTrip, tripPlaces, appendMessages]);
+  }, [input, loading, applyingTools, messages, lastSentAt, tripContext, draft, applyToolCall, queryClient, onNewAssistantMessage, onSuggestPlaces, pois, itineraryDays, toast, t, initFromReal, instantApply, history, addPOI, activeTrip, updateCurrentTrip, tripPlaces, appendMessages]);
 
   // Undo last AI change (instant-apply mode)
   const handleUndo = useCallback(async () => {
@@ -848,6 +891,12 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
               </div>
             </div>
           )}
+          {applyingTools && !loading && (
+            <div className="flex items-center gap-1.5 px-1 text-[10px] text-muted-foreground/70">
+              <Loader2 size={10} className="animate-spin" />
+              <span>Applying changes...</span>
+            </div>
+          )}
         </div>
       </ScrollArea>
 
@@ -902,14 +951,14 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
               t.style.height = 'auto';
               t.style.height = Math.min(t.scrollHeight, compact ? 80 : 120) + 'px';
             }}
-            disabled={loading || chatLimitReached}
+            disabled={loading || applyingTools || chatLimitReached}
             placeholder={chatLimitReached ? t('aiChat.limitReached', 'Daily AI chat limit reached') : t('aiChat.inputPlaceholder', { trip: tripLabel })}
           />
           <Button
             size="icon"
             className={cn('shrink-0 rounded-xl', compact ? 'h-8 w-8' : 'h-10 w-10')}
             onClick={sendMessage}
-            disabled={!input.trim() || loading || chatLimitReached}
+            disabled={!input.trim() || loading || applyingTools || chatLimitReached}
           >
             {loading ? <Loader2 size={compact ? 12 : 16} className="animate-spin" /> : <Send size={compact ? 12 : 16} />}
           </Button>

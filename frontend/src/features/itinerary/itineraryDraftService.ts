@@ -78,7 +78,7 @@ async function resolveLocationId(
  *
  * schedule_state:
  * - startTime present → 'scheduled', time_window: { start: startTime }
- * - dayPart present  → 'potential',  time_window: { start: dayPart }
+ * - dayPart present  → 'scheduled',  time_window: { start: dayPart }  (in schedule, not locked to exact time)
  * - neither          → 'potential',  no time_window
  *
  * Day-to-location assignment:
@@ -220,7 +220,8 @@ export async function applyDraftToTrip(
         scheduleState = 'scheduled';
         timeWindow = { start: effectiveTime };
       } else if (place.dayPart) {
-        scheduleState = 'potential';
+        // dayPart (Morning/Afternoon/Evening/Night) → show in schedule, not locked to exact time
+        scheduleState = 'scheduled';
         timeWindow = { start: place.dayPart };
       }
 

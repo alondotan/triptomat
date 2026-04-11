@@ -165,6 +165,19 @@ interface Group {
   isLocked: boolean;
 }
 
+// Day-part labels from AI (always English)
+const DAY_PART_VALUES = ['Morning', 'Afternoon', 'Evening', 'Night'] as const;
+type DayPart = typeof DAY_PART_VALUES[number];
+function isDayPart(s: string | undefined): s is DayPart {
+  return DAY_PART_VALUES.includes(s as DayPart);
+}
+const DAY_PART_I18N: Record<DayPart, string> = {
+  Morning: 'timeline.morning',
+  Afternoon: 'timeline.afternoon',
+  Evening: 'timeline.evening',
+  Night: 'timeline.night',
+};
+
 function buildGroups(items: Item[], lockedIds: Set<string>): Group[] {
   const groups: Group[] = [];
   let current: Group | null = null;
@@ -182,6 +195,13 @@ function buildGroups(items: Item[], lockedIds: Set<string>): Group[] {
       if (current) { groups.push(current); current = null; }
       groups.push({ id: `locked-${item.id}`, items: [item], isLocked: true });
     } else {
+      // Start a new group when the day-part label changes (e.g. Morning → Afternoon)
+      const itemDayPart = isDayPart(item.time) ? item.time : null;
+      const currentDayPart = current ? (isDayPart(current.items[0]?.time) ? current.items[0].time : null) : null;
+      if (itemDayPart && current && itemDayPart !== currentDayPart) {
+        groups.push(current);
+        current = null;
+      }
       if (!current) {
         current = { id: `unlocked-${item.id}`, items: [], isLocked: false };
       }
@@ -215,6 +235,10 @@ function groupLabel(groups: Group[], index: number, t: (key: string) => string):
     if (item?.isTimeBlock) return (item.time ? `${item.time} · ` : '') + item.label;
     return item?.time ?? '🔒';
   }
+
+  // Unlocked group: if items have a day-part label, show it directly
+  const firstItemTime = group.items.find(i => !i.isTimeBlock)?.time;
+  if (isDayPart(firstItemTime)) return t(DAY_PART_I18N[firstItemTime]);
 
   // Unlocked group: if immediately preceded by a time_block, inherit its label
   for (let i = index - 1; i >= 0; i--) {
@@ -2315,13 +2339,14 @@ export default function SchedulePage() {
           remark: poi.details?.notes?.user_summary,
           poi,
         };
-        // Only treat as scheduled if explicitly marked OR has a real booking hour.
-        // time_window.start can be a day-part label ("Morning" etc.) for potential items
-        // — those should stay potential, not create separate locked timeline groups.
+        // Scheduled = explicitly marked OR has a booking hour.
+        // Day-part labels ("Morning"/"Afternoon" etc.) go to scheduled but are NOT locked
+        // to an exact time slot — only HH:mm exact times create locked anchors.
         const isScheduled = a.schedule_state === 'scheduled' || !!bookingHour;
+        const isExactTime = /^\d{2}:\d{2}$/.test(time ?? '');
         if (isScheduled) {
           newScheduled.push(item);
-          if (time) newLocked.add(a.id);
+          if (time && isExactTime) newLocked.add(a.id);
         } else {
           newPotential.push(item);
         }
