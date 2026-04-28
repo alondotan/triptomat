@@ -1,15 +1,23 @@
 import time
 from google import genai
-from google.genai import errors as genai_errors
 
 
 class GeminiService:
     def __init__(self, api_key):
         self.client = genai.Client(api_key=api_key)
 
-    def _generate_with_retry(self, model, contents, max_retries=3):
+    @staticmethod
+    def _is_rate_limit_error(e):
+        err_str = str(e)
+        return (
+            getattr(e, 'code', None) == 429
+            or "RESOURCE_EXHAUSTED" in err_str
+            or "429" in err_str
+        )
+
+    def _generate_with_retry(self, model, contents, max_retries=4):
         """Call generate_content with exponential backoff on 429 rate-limit errors."""
-        delay = 10
+        delay = 30
         for attempt in range(max_retries + 1):
             try:
                 return self.client.models.generate_content(
@@ -17,12 +25,11 @@ class GeminiService:
                     contents=contents,
                     config={'response_mime_type': 'application/json'},
                 )
-            except genai_errors.ClientError as e:
-                is_rate_limit = getattr(e, 'code', None) == 429 or "RESOURCE_EXHAUSTED" in str(e)
-                if is_rate_limit and attempt < max_retries:
-                    print(f"Gemini 429 rate limit (attempt {attempt + 1}/{max_retries}), retrying in {delay}s...")
+            except Exception as e:
+                if self._is_rate_limit_error(e) and attempt < max_retries:
+                    print(f"Gemini rate limit on attempt {attempt + 1}/{max_retries}, retrying in {delay}s... ({type(e).__name__}: {str(e)[:120]})")
                     time.sleep(delay)
-                    delay *= 2
+                    delay = min(delay * 2, 120)
                     continue
                 raise
 
