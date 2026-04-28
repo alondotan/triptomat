@@ -8,7 +8,7 @@ import {
   ChevronDown, ChevronUp, ExternalLink, Video, Globe, MapPin, Mail, FileText,
   CheckCircle2, XCircle, Hourglass,
 } from 'lucide-react';
-import { usePipelineMonitor, type PipelineJob, type PipelineEvent } from '@/features/admin/usePipelineMonitor';
+import { usePipelineMonitor, type PipelineJob, type PipelineEvent, getJobProgressLabel } from '@/features/admin/usePipelineMonitor';
 
 // ── Helpers ────────────────────────────────────────────────────
 
@@ -129,11 +129,20 @@ function EventDetailRow({ event }: { event: PipelineEvent }) {
       <span className="text-xs text-muted-foreground">{formatTime(event.created_at)}</span>
       {metaKeys.length > 0 && (
         <div className="flex-1 text-xs text-muted-foreground">
+          {meta.sub_stage === 'analyzing' && (
+            <span className="text-amber-600 font-medium">מנתח תוכן בבינה מלאכותית...</span>
+          )}
           {meta.sub_stage === 'ai_done' && (
             <span className="text-blue-600 font-medium">
-              AI returned {meta.recommendations_count as number} recommendations
+              AI: {meta.recommendations_count as number} recommendations
               {meta.ai_duration_ms ? ` (${Math.round(meta.ai_duration_ms as number / 1000)}s)` : ''}
             </span>
+          )}
+          {meta.sub_stage === 'geocoding' && (
+            <span className="text-purple-600 font-medium">מחלץ מיקומים...</span>
+          )}
+          {meta.sub_stage === 'saving' && (
+            <span className="text-green-600 font-medium">שומר המלצות...</span>
           )}
           {meta.error && (
             <span className="text-destructive">{meta.error as string}</span>
@@ -213,6 +222,9 @@ function JobRow({ job }: { job: PipelineJob }) {
         </TableCell>
         <TableCell>
           <StageProgress job={job} />
+          {job.currentStatus === 'started' && (
+            <span className="text-xs text-amber-600 animate-pulse">{getJobProgressLabel(job)}</span>
+          )}
         </TableCell>
         <TableCell>
           <div className="flex items-center gap-1">

@@ -27,6 +27,34 @@ export interface PipelineJob {
   lastUpdatedAt: string;
 }
 
+export function getStageLabel(stage: string, subStage: string | undefined, sourceType: string | null): string {
+  if (stage === 'downloader') return 'מוריד סרטון...';
+  if (stage === 'gateway') return 'ממיין...';
+  if (stage === 'worker') {
+    switch (subStage) {
+      case 'analyzing':
+        if (sourceType === 'video') return 'מנתח סרטון...';
+        if (sourceType === 'maps') return 'מזהה מיקום...';
+        return 'מנתח תוכן...';
+      case 'ai_done':
+      case 'geocoding':
+        return 'מחלץ מיקומים...';
+      case 'saving':
+        return 'שומר המלצות...';
+      default:
+        return 'מנתח...';
+    }
+  }
+  return 'מעבד...';
+}
+
+export function getJobProgressLabel(job: PipelineJob): string {
+  const startedEvents = [...job.events].filter(e => e.status === 'started');
+  const latest = startedEvents[startedEvents.length - 1] || job.events[job.events.length - 1];
+  if (!latest) return 'מעבד...';
+  return getStageLabel(latest.stage, (latest.metadata as Record<string, string>)?.sub_stage, latest.source_type);
+}
+
 const STAGE_ORDER: Record<string, number> = {
   gateway: 0,
   downloader: 1,

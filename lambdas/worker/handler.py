@@ -119,6 +119,7 @@ def lambda_handler(event, context):
                     manual_lat, manual_lng = None, None
 
                     # ── AI Analysis ─────────────────────────────────────────
+                    report_event(job_id, "worker", "started", metadata={"sub_stage": "analyzing"})
                     with safe_span(tracer, "worker.ai_analysis", {
                         "ai.source_type": source_type,
                         "ai.model_name": "gemini",
@@ -202,6 +203,7 @@ def lambda_handler(event, context):
                             "ai_duration_ms": round(ai_duration),
                         })
 
+                        report_event(job_id, "worker", "started", metadata={"sub_stage": "geocoding"})
                         # ── Geocoding ────────────────────────────────────────
                         with safe_span(tracer, "worker.geocoding") as geo_span:
                             enriched_data = enrich_analysis_data(
@@ -243,6 +245,7 @@ def lambda_handler(event, context):
                                 enriched_data, webhook_token, GOOGLE_API_KEY,
                             )
 
+                        report_event(job_id, "worker", "started", metadata={"sub_stage": "saving"})
                         # ── Process recommendation ────────────────────────────
                         if USE_INLINE_WEBHOOK:
                             with safe_span(tracer, "worker.inline_webhook") as wh_span:

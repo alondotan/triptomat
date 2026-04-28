@@ -35,6 +35,7 @@ import {
   type ResourceLang,
 } from '@/features/geodata/resourceService';
 import { fetchTripRecommendations, deleteRecommendation } from '@/features/inbox/recommendationService';
+import { getStageLabel } from '@/features/admin/usePipelineMonitor';
 import type { SourceRecommendation } from '@/types/webhook';
 import type { PointOfInterest, Contact } from '@/types/trip';
 import type { UnifiedSource, SourceSection } from '@/types/source';
@@ -242,7 +243,7 @@ function ResourceCardContent({ resource, analyzed, onAnalyze, analyzing }: {
 
 // ── Recommendation card ──
 
-function RecommendationCardContent({ rec, pois, transportation, contacts, expandedId, setExpandedId, onDelete, onResend, onRefreshMapList, syncing, setSourceTextDialog, setSelectedPoi, setSelectedContact }: {
+function RecommendationCardContent({ rec, pois, transportation, contacts, expandedId, setExpandedId, onDelete, onResend, onRefreshMapList, syncing, setSourceTextDialog, setSelectedPoi, setSelectedContact, stageLabel }: {
   rec: SourceRecommendation;
   pois: PointOfInterest[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -257,6 +258,7 @@ function RecommendationCardContent({ rec, pois, transportation, contacts, expand
   setSourceTextDialog: (d: { title: string; text: string } | null) => void;
   setSelectedPoi: (p: PointOfInterest | null) => void;
   setSelectedContact: (c: Contact | null) => void;
+  stageLabel?: string;
 }) {
   const { t } = useTranslation();
   const isVideo = rec.sourceUrl ? /youtube\.com|youtu\.be|tiktok\.com|instagram\.com|facebook\.com|fb\.watch/i.test(rec.sourceUrl) : false;
@@ -265,7 +267,7 @@ function RecommendationCardContent({ rec, pois, transportation, contacts, expand
 
   // Status badges
   const statusBadge = rec.status === 'processing'
-    ? <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-600 border-orange-300"><Loader2 size={10} className="animate-spin me-0.5" />{t('recsPage.processing')}</Badge>
+    ? <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-600 border-orange-300"><Loader2 size={10} className="animate-spin me-0.5" />{stageLabel || t('recsPage.processing')}</Badge>
     : rec.status === 'failed'
       ? <Badge variant="destructive" className="text-[10px] px-1.5 py-0"><AlertTriangle size={10} className="me-0.5" />{t('recsPage.failed')}</Badge>
       : <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-100 text-green-700 border-green-200"><Sparkles size={10} className="me-0.5" />{t('sourcesPage.analyzed')}</Badge>;
@@ -491,6 +493,7 @@ const Sources = () => {
   const [selectedPoi, setSelectedPoi] = useState<PointOfInterest | null>(null);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [sourceTextDialog, setSourceTextDialog] = useState<{ title: string; text: string } | null>(null);
+  const [processingStages, setProcessingStages] = useState<Record<string, string>>({});
 
   // Webhook token
   useEffect(() => {
@@ -517,6 +520,42 @@ const Sources = () => {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [tripId]);
+
+  useEffect(() => {
+    const processingIds = recommendations
+      .filter(r => r.status === 'processing' && r.recommendationId)
+      .map(r => r.recommendationId as string);
+    if (!processingIds.length) { setProcessingStages({}); return; }
+
+    supabase
+      .from('pipeline_events')
+      .select('job_id, stage, status, metadata, source_type, created_at')
+      .in('job_id', processingIds)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        if (!data) return;
+        const map: Record<string, string> = {};
+        for (const ev of data) {
+          map[ev.job_id] = getStageLabel(ev.stage, (ev.metadata as Record<string, string>)?.sub_stage, ev.source_type);
+        }
+        setProcessingStages(map);
+      });
+
+    const channel = supabase
+      .channel('sources-processing-stages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pipeline_events' }, (payload) => {
+        const ev = payload.new as { job_id: string; stage: string; status: string; metadata: Record<string, string>; source_type: string | null };
+        if (processingIds.includes(ev.job_id)) {
+          setProcessingStages(prev => ({
+            ...prev,
+            [ev.job_id]: getStageLabel(ev.stage, ev.metadata?.sub_stage, ev.source_type),
+          }));
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [recommendations]);
 
   // Load S3 resources
   const doSearch = async (country: string) => {
@@ -802,6 +841,7 @@ const Sources = () => {
                                 setSourceTextDialog={setSourceTextDialog}
                                 setSelectedPoi={setSelectedPoi}
                                 setSelectedContact={setSelectedContact}
+                                stageLabel={source.data.recommendationId ? processingStages[source.data.recommendationId] : undefined}
                               />
                             )}
                           </div>
