@@ -1256,10 +1256,21 @@ export default function SchedulePage() {
         return; // will be picked up on next render
       }
 
+      // Derive country from location hierarchy for Wikipedia image search
+      const locCountry = (() => {
+        let cur: typeof tripLoc | undefined = tripLoc;
+        while (cur) {
+          if (cur.placeType === 'country') return cur.name;
+          const pid = cur.parentId;
+          cur = pid ? tripLocations.find(l => l.id === pid) : undefined;
+        }
+        return activeTrip.countries?.[0];
+      })();
+
       // Find or create a trip_place for this location
       let tripPlace = findTripPlaceByLocationId(tripPlaces, tripLoc.id);
       if (!tripPlace) {
-        tripPlace = await createTripPlace(activeTrip.id, tripLoc.id, { sortOrder: tripPlaces.length, locationName });
+        tripPlace = await createTripPlace(activeTrip.id, tripLoc.id, { sortOrder: tripPlaces.length, locationName, country: locCountry });
       }
 
       // Check if holding day already exists for this trip_place
@@ -1985,9 +1996,18 @@ export default function SchedulePage() {
     if (locationContext) {
       const tripLoc = findInFlatList(tripLocations, locationContext);
       if (tripLoc) {
+        const locCountry = (() => {
+          let cur: typeof tripLoc | undefined = tripLoc;
+          while (cur) {
+            if (cur.placeType === 'country') return cur.name;
+            const pid = cur.parentId;
+            cur = pid ? tripLocations.find(l => l.id === pid) : undefined;
+          }
+          return activeTrip.countries?.[0];
+        })();
         let tripPlace = findTripPlaceByLocationId(tripPlaces, tripLoc.id);
         if (!tripPlace) {
-          tripPlace = await createTripPlace(activeTrip.id, tripLoc.id, { sortOrder: tripPlaces.length, locationName: locationContext });
+          tripPlace = await createTripPlace(activeTrip.id, tripLoc.id, { sortOrder: tripPlaces.length, locationName: locationContext, country: locCountry });
           await reloadTripPlaces();
         }
         tripPlaceId = tripPlace.id;

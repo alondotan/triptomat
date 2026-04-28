@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronLeft } from 'lucide-react';
+import { ChevronDown, ChevronLeft, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { SiteNode } from '@/features/geodata/useCountrySites';
 import { TYPE_LABEL_KEYS } from '@/shared/components/LocationSelector';
@@ -48,9 +48,10 @@ interface LocationTreeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   hierarchy: SiteNode[];
+  isLoading?: boolean;
 }
 
-export function LocationTreeDialog({ open, onOpenChange, hierarchy }: LocationTreeDialogProps) {
+export function LocationTreeDialog({ open, onOpenChange, hierarchy, isLoading }: LocationTreeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col" dir="rtl">
@@ -58,7 +59,12 @@ export function LocationTreeDialog({ open, onOpenChange, hierarchy }: LocationTr
           <DialogTitle>Location tree</DialogTitle>
         </DialogHeader>
         <div className="overflow-y-auto flex-1 -mx-2 px-2">
-          {hierarchy.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">
+              <Loader2 size={16} className="animate-spin" />
+              <span className="text-sm">Loading locations...</span>
+            </div>
+          ) : hierarchy.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">
               No locations yet. Locations will appear here after processing recommendations and emails.
             </p>

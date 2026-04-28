@@ -23,7 +23,7 @@ export function useResearchAutoAssign() {
   const itineraryDays = itinCtx?.itineraryDays ?? [];
   const refetchItinerary = itinCtx?.refetchItinerary;
 
-  const isResearchMode = activeTrip?.status === 'research';
+  const isResearchMode = ['research', 'planning', 'detailed_planning'].includes(activeTrip?.status ?? '');
 
 
   const autoAssign = useCallback(async (poi: PointOfInterest) => {

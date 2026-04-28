@@ -115,7 +115,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false, heroTitle
     try { return parseInt(localStorage.getItem('inbox_unread_count') || '0', 10); } catch { return 0; }
   });
   const { trips, isLoading: tripsLoading } = useTripList();
-  const { activeTrip, setActiveTrip, deleteCurrentTrip, updateCurrentTrip, tripLocationTree, myRole } = useActiveTrip();
+  const { activeTrip, setActiveTrip, deleteCurrentTrip, updateCurrentTrip, tripLocationTree, isLoadingLocations, myRole } = useActiveTrip();
   const [locationTreeOpen, setLocationTreeOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [tierDialogOpen, setTierDialogOpen] = useState(false);
@@ -533,7 +533,7 @@ export function AppHeader({ heroScrolledPast = false, hasHero = false, heroTitle
       <EditTripDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} />
 
       {/* Location Tree Dialog */}
-      <LocationTreeDialog open={locationTreeOpen} onOpenChange={setLocationTreeOpen} hierarchy={tripLocationTree} />
+      <LocationTreeDialog open={locationTreeOpen} onOpenChange={setLocationTreeOpen} hierarchy={tripLocationTree} isLoading={isLoadingLocations} />
 
       {/* Share Trip Dialog */}
       <ShareTripDialog open={shareOpen} onOpenChange={setShareOpen} />

@@ -99,6 +99,15 @@ The \`place_name\` field must be the name of the place itself — never an activ
 ✓ Correct: "Angkor Wat", "Blue Pumpkin Café"
 ✗ Wrong: "Visit Angkor Wat", "Dinner at Blue Pumpkin Café"
 
+## Transportation naming and detail rules
+Transportation items represent a journey between two points. Always capture route information:
+- **place_name**: use "{origin} → {destination}" format. Examples: "Tel Aviv → Paris", "Bangkok → Chiang Mai Night Train", "Nice → Monaco (Bus)"
+- Include the mode in the name when it adds clarity: "Bangkok → Singapore (Flight)", "Kyoto → Tokyo (Shinkansen)"
+- **description** (in set_itinerary / update_day): include departure location, arrival location, estimated departure and arrival times, travel duration, and any booking notes. Example: "Departs Bangkok Suvarnabhumi 07:30, arrives Singapore Changi 11:00. ~3h flight."
+- **Return legs**: create a separate Transportation item for the return journey with the reverse route: "Paris → Tel Aviv".
+- **Day placement**: place the transport item on the day of travel. If travel spans midnight, place it on the departure day.
+- **Layovers / connections**: list each leg as a separate Transportation item (e.g. "Tel Aviv → Istanbul" then "Istanbul → Tokyo").
+
 ## Place categories and sub-types
 Use the \`category\` field for the main group — one of: **Activities**, **Eateries**, **Accommodations**, **Events**, **Transportation**.
 Then use the matching sub-type field (see below). Always include the relevant sub-type field.
@@ -131,6 +140,9 @@ Format for each day:
 - Evening: [Specific Restaurant or Activity Name]
 
 Use REAL attraction names (e.g. "Charles Bridge", "Old Town Square"), real restaurant names, real hotel names. Be specific — a follow-up step uses your exact place names to update the trip data.
+
+## Transportation items — naming:
+When mentioning or suggesting transport, use "{origin} → {destination}" format and include: departure/arrival times (if known), travel duration, mode, and any return leg. Create a separate item for the return journey.
 
 ## Other rules:
 - Only discuss travel-related topics. Politely redirect unrelated questions back to travel planning.

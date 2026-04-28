@@ -19,6 +19,7 @@ interface ActiveTripState {
   sourceEmailMap: Record<string, { permalink?: string; subject?: string }>;
   refreshKey: number;
   myRole: 'owner' | 'editor' | null;
+  isLoadingLocations: boolean;
 }
 
 type ActiveTripAction =
@@ -28,6 +29,7 @@ type ActiveTripAction =
   | { type: 'SET_SOURCE_EMAIL_MAP'; payload: Record<string, { permalink?: string; subject?: string }> }
   | { type: 'SET_MY_ROLE'; payload: 'owner' | 'editor' | null }
   | { type: 'INCREMENT_REFRESH_KEY' }
+  | { type: 'SET_LOADING_LOCATIONS'; payload: boolean }
   | { type: 'RESET_TRIP_DATA' };
 
 function activeTripReducer(state: ActiveTripState, action: ActiveTripAction): ActiveTripState {
@@ -35,7 +37,7 @@ function activeTripReducer(state: ActiveTripState, action: ActiveTripAction): Ac
     case 'SET_EXCHANGE_RATES':
       return { ...state, exchangeRates: action.payload };
     case 'SET_TRIP_LOCATIONS':
-      return { ...state, tripLocations: action.payload.flat, tripLocationTree: action.payload.tree };
+      return { ...state, tripLocations: action.payload.flat, tripLocationTree: action.payload.tree, isLoadingLocations: false };
     case 'SET_TRIP_PLACES':
       return { ...state, tripPlaces: action.payload };
     case 'SET_SOURCE_EMAIL_MAP':
@@ -44,8 +46,10 @@ function activeTripReducer(state: ActiveTripState, action: ActiveTripAction): Ac
       return { ...state, myRole: action.payload };
     case 'INCREMENT_REFRESH_KEY':
       return { ...state, refreshKey: state.refreshKey + 1 };
+    case 'SET_LOADING_LOCATIONS':
+      return { ...state, isLoadingLocations: action.payload };
     case 'RESET_TRIP_DATA':
-      return { ...state, exchangeRates: null, tripLocations: [], tripLocationTree: [], tripPlaces: [], sourceEmailMap: {}, myRole: null, refreshKey: state.refreshKey + 1 };
+      return { ...state, exchangeRates: null, tripLocations: [], tripLocationTree: [], tripPlaces: [], sourceEmailMap: {}, myRole: null, refreshKey: state.refreshKey + 1, isLoadingLocations: false };
     default:
       return state;
   }
@@ -62,6 +66,7 @@ interface ActiveTripContextType {
   refreshKey: number;
   myRole: 'owner' | 'editor' | null;
   isLoading: boolean;
+  isLoadingLocations: boolean;
   error: string | null;
   setActiveTrip: (id: string) => void;
   updateCurrentTrip: (updates: Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
@@ -87,6 +92,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     sourceEmailMap: {},
     refreshKey: 0,
     myRole: null,
+    isLoadingLocations: false,
   });
 
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId) || null, [trips, activeTripId]);
@@ -129,6 +135,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
 
   // Load trip locations from DB, enriched with Hebrew names from country JSON
   const loadLocations = useCallback(async (tripId: string) => {
+    dispatch({ type: 'SET_LOADING_LOCATIONS', payload: true });
     try {
       const flat = await fetchTripLocations(tripId);
       // Enrich with Hebrew names from country data
@@ -141,6 +148,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_TRIP_LOCATIONS', payload: { flat, tree } });
     } catch (e) {
       console.error('Failed to load trip locations:', e);
+      dispatch({ type: 'SET_LOADING_LOCATIONS', payload: false });
     }
   }, [activeTrip?.countries]);
 
@@ -258,6 +266,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     refreshKey: state.refreshKey,
     myRole: state.myRole,
     isLoading,
+    isLoadingLocations: state.isLoadingLocations,
     error,
     setActiveTrip,
     updateCurrentTrip,
@@ -267,7 +276,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     addSiteToHierarchy,
     reloadLocations,
     reloadTripPlaces,
-  }), [activeTrip, state.exchangeRates, state.tripLocationTree, state.tripLocations, state.tripPlaces, state.sourceEmailMap, state.refreshKey, state.myRole, isLoading, error, setActiveTrip, updateCurrentTrip, deleteCurrentTrip, loadTripData, setExchangeRates, addSiteToHierarchy, reloadLocations, reloadTripPlaces]);
+  }), [activeTrip, state.exchangeRates, state.tripLocationTree, state.tripLocations, state.tripPlaces, state.sourceEmailMap, state.refreshKey, state.myRole, state.isLoadingLocations, isLoading, error, setActiveTrip, updateCurrentTrip, deleteCurrentTrip, loadTripData, setExchangeRates, addSiteToHierarchy, reloadLocations, reloadTripPlaces]);
 
   return <ActiveTripContext.Provider value={value}>{children}</ActiveTripContext.Provider>;
 }

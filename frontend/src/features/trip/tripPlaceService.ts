@@ -35,7 +35,7 @@ export async function fetchTripPlaces(tripId: string): Promise<TripPlace[]> {
 export async function createTripPlace(
   tripId: string,
   tripLocationId: string,
-  options: { notes?: string; imageUrl?: string; sortOrder?: number; locationName?: string } = {},
+  options: { notes?: string; imageUrl?: string; sortOrder?: number; locationName?: string; country?: string } = {},
 ): Promise<TripPlace> {
   const { data, error } = await supabase
     .from('trip_places')
@@ -54,37 +54,54 @@ export async function createTripPlace(
 
   // Fire-and-forget: fetch Wikipedia image if no image was provided
   if (!options.imageUrl && options.locationName) {
-    fetchAndPersistTripPlaceImage(tripPlace.id, options.locationName);
+    fetchAndPersistTripPlaceImage(tripPlace.id, options.locationName, options.country);
   }
 
   return tripPlace;
 }
 
-/** Fire-and-forget: fetch a destination image from Wikipedia and persist it. */
-async function fetchAndPersistTripPlaceImage(tripPlaceId: string, locationName: string): Promise<void> {
+/** Fire-and-forget: fetch a destination image from Wikipedia REST API and persist it. */
+async function fetchAndPersistTripPlaceImage(tripPlaceId: string, locationName: string, country?: string): Promise<void> {
   try {
-    const nameParts = [locationName, ...locationName.split(/\s*[&,\-–]\s*/).map(s => s.trim()).filter(Boolean)];
+    const variants = [
+      locationName,
+      ...(country ? [`${locationName}, ${country}`] : []),
+      ...locationName.split(/\s*[&,\-–]\s*/).map(s => s.trim()).filter(Boolean),
+    ];
+
     let imageUrl: string | null = null;
 
-    for (const part of nameParts) {
-      // Use MediaWiki API (always returns 200, no 404 console noise for missing articles)
-      const params = new URLSearchParams({
-        action: 'query',
-        prop: 'pageimages',
-        titles: part,
-        pithumbsize: '800',
-        format: 'json',
-        origin: '*',
-      });
-      const res = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
-      if (!res.ok) continue;
-      const data = await res.json();
-      const pages = (data?.query?.pages ?? {}) as Record<string, { missing?: boolean; thumbnail?: { source?: string } }>;
-      const page = Object.values(pages)[0];
-      if (page && !page.missing && page.thumbnail?.source) {
-        imageUrl = page.thumbnail.source;
-        break;
-      }
+    for (const variant of variants) {
+      // Primary: Wikipedia REST summary API (most reliable for thumbnails)
+      try {
+        const slug = encodeURIComponent(variant.trim().replace(/ /g, '_'));
+        const res = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${slug}`, {
+          headers: { Accept: 'application/json' },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          imageUrl = data.thumbnail?.source ?? data.originalimage?.source ?? null;
+          if (imageUrl) break;
+        }
+      } catch { /* silent */ }
+
+      // Fallback: pageimages API
+      try {
+        const params = new URLSearchParams({
+          action: 'query', prop: 'pageimages', titles: variant,
+          pithumbsize: '800', format: 'json', origin: '*',
+        });
+        const res = await fetch(`https://en.wikipedia.org/w/api.php?${params}`);
+        if (res.ok) {
+          const data = await res.json();
+          const pages = (data?.query?.pages ?? {}) as Record<string, { missing?: boolean; thumbnail?: { source?: string } }>;
+          const page = Object.values(pages)[0];
+          if (page && !page.missing && page.thumbnail?.source) {
+            imageUrl = page.thumbnail.source;
+            break;
+          }
+        }
+      } catch { /* silent */ }
     }
 
     if (imageUrl) await updateTripPlaceImage(tripPlaceId, imageUrl);
