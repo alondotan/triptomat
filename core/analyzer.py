@@ -15,9 +15,9 @@ class GeminiService:
             or "429" in err_str
         )
 
-    def _generate_with_retry(self, model, contents, max_retries=4):
+    def _generate_with_retry(self, model, contents, max_retries=2):
         """Call generate_content with exponential backoff on 429 rate-limit errors."""
-        delay = 30
+        delay = 15
         for attempt in range(max_retries + 1):
             try:
                 return self.client.models.generate_content(
@@ -29,7 +29,7 @@ class GeminiService:
                 if self._is_rate_limit_error(e) and attempt < max_retries:
                     print(f"Gemini rate limit on attempt {attempt + 1}/{max_retries}, retrying in {delay}s... ({type(e).__name__}: {str(e)[:120]})")
                     time.sleep(delay)
-                    delay = min(delay * 2, 120)
+                    delay = min(delay * 2, 45)
                     continue
                 raise
 
