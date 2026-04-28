@@ -184,18 +184,20 @@ interface LocationTreeProps {
 }
 
 function LocationTree({ nodes, search, value, onSelect, onAddToTree, recentLocations }: LocationTreeProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const lower = search.toLowerCase();
 
-  // Collect all site names for recent matching
-  const allNames = useMemo(() => {
+  // Collect all site names + Hebrew name map for recent matching
+  const { allNames, heMap } = useMemo(() => {
     const names = new Set<string>();
+    const map = new Map<string, string>();
     function collect(n: SiteNode) {
       names.add(n.site);
+      if (n.site_he) map.set(n.site, n.site_he);
       n.sub_sites?.forEach(collect);
     }
     nodes.forEach(collect);
-    return names;
+    return { allNames: names, heMap: map };
   }, [nodes]);
 
   // Filter recent to only those that exist in the tree
@@ -206,11 +208,13 @@ function LocationTree({ nodes, search, value, onSelect, onAddToTree, recentLocat
 
   if (search) {
     // Flat search results
-    const results: { label: string; siteType: string; path: string[] }[] = [];
+    const results: { label: string; labelHe?: string; siteType: string; path: string[] }[] = [];
     function searchNodes(node: SiteNode, path: string[]) {
       const currentPath = [...path, node.site];
-      if (node.site.toLowerCase().includes(lower)) {
-        results.push({ label: node.site, siteType: node.site_type, path: currentPath });
+      const matchesEn = node.site.toLowerCase().includes(lower);
+      const matchesHe = node.site_he ? node.site_he.includes(search) : false;
+      if (matchesEn || matchesHe) {
+        results.push({ label: node.site, labelHe: node.site_he, siteType: node.site_type, path: currentPath });
       }
       node.sub_sites?.forEach(child => searchNodes(child, currentPath));
     }
@@ -222,23 +226,26 @@ function LocationTree({ nodes, search, value, onSelect, onAddToTree, recentLocat
 
     return (
       <div>
-        {results.map((r, i) => (
-          <button
-            key={`${r.label}-${i}`}
-            type="button"
-            onClick={() => onSelect(r.label)}
-            className={cn(
-              'flex items-center gap-1.5 w-full text-right py-1.5 px-2 rounded-md transition-colors text-sm hover:bg-accent',
-              value === r.label && 'bg-accent/50'
-            )}
-          >
-            <Check className={cn('h-3.5 w-3.5 shrink-0', value === r.label ? 'opacity-100' : 'opacity-0')} />
-            <span className="truncate">{r.label}</span>
-            <span className="text-[10px] text-muted-foreground mr-auto shrink-0">
-              {TYPE_LABEL_KEYS[r.siteType] ? t(TYPE_LABEL_KEYS[r.siteType]) : r.siteType}
-            </span>
-          </button>
-        ))}
+        {results.map((r, i) => {
+          const displayLabel = i18n.language === 'he' && r.labelHe ? r.labelHe : r.label;
+          return (
+            <button
+              key={`${r.label}-${i}`}
+              type="button"
+              onClick={() => onSelect(r.label)}
+              className={cn(
+                'flex items-center gap-1.5 w-full text-right py-1.5 px-2 rounded-md transition-colors text-sm hover:bg-accent',
+                value === r.label && 'bg-accent/50'
+              )}
+            >
+              <Check className={cn('h-3.5 w-3.5 shrink-0', value === r.label ? 'opacity-100' : 'opacity-0')} />
+              <span className="truncate">{displayLabel}</span>
+              <span className="text-[10px] text-muted-foreground mr-auto shrink-0">
+                {TYPE_LABEL_KEYS[r.siteType] ? t(TYPE_LABEL_KEYS[r.siteType]) : r.siteType}
+              </span>
+            </button>
+          );
+        })}
       </div>
     );
   }
@@ -249,20 +256,23 @@ function LocationTree({ nodes, search, value, onSelect, onAddToTree, recentLocat
       {validRecent.length > 0 && (
         <div className="mb-1">
           <div className="px-2 py-1 text-[11px] font-semibold text-muted-foreground">{t('locationSelector.recentlyUsed')}</div>
-          {validRecent.map(label => (
-            <button
-              key={`recent-${label}`}
-              type="button"
-              onClick={() => onSelect(label)}
-              className={cn(
-                'flex items-center gap-1.5 w-full text-right py-1.5 px-2 rounded-md transition-colors text-sm hover:bg-accent',
-                value === label && 'bg-accent/50'
-              )}
-            >
-              <Check className={cn('h-3.5 w-3.5 shrink-0', value === label ? 'opacity-100' : 'opacity-0')} />
-              <span className="truncate">{label}</span>
-            </button>
-          ))}
+          {validRecent.map(label => {
+            const displayLabel = i18n.language === 'he' && heMap.has(label) ? heMap.get(label)! : label;
+            return (
+              <button
+                key={`recent-${label}`}
+                type="button"
+                onClick={() => onSelect(label)}
+                className={cn(
+                  'flex items-center gap-1.5 w-full text-right py-1.5 px-2 rounded-md transition-colors text-sm hover:bg-accent',
+                  value === label && 'bg-accent/50'
+                )}
+              >
+                <Check className={cn('h-3.5 w-3.5 shrink-0', value === label ? 'opacity-100' : 'opacity-0')} />
+                <span className="truncate">{displayLabel}</span>
+              </button>
+            );
+          })}
           <div className="border-b my-1" />
         </div>
       )}

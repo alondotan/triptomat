@@ -463,7 +463,8 @@ async function seedTripPOIs(
       };
 
       try {
-        await createOrMergePOI(poi);
+        const seededAt = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+        await createOrMergePOI(poi, { createdAt: seededAt });
       } catch (e) {
         console.warn(`[seedTripPOIs] Failed to create POI "${place.name}":`, e);
       }

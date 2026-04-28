@@ -26,6 +26,7 @@ export async function fetchPOIs(tripId: string): Promise<PointOfInterest[]> {
  */
 export async function createOrMergePOI(
   poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>,
+  options?: { createdAt?: string },
 ): Promise<{ poi: PointOfInterest; merged: boolean }> {
   const { data: candidates } = await supabase
     .from('points_of_interest')
@@ -86,7 +87,7 @@ export async function createOrMergePOI(
     return { poi: merged, merged: true };
   }
 
-  const newPoi = await createPOI(poi);
+  const newPoi = await createPOI(poi, options);
 
   // Fire-and-forget: enrich coords, image, type for every new POI
   if (!newPoi.imageUrl || !newPoi.location?.coordinates?.lat || (!newPoi.placeType && !newPoi.activityType)) {
@@ -105,7 +106,10 @@ export async function createOrMergePOI(
   return { poi: newPoi, merged: false };
 }
 
-export async function createPOI(poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>): Promise<PointOfInterest> {
+export async function createPOI(
+  poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>,
+  options?: { createdAt?: string },
+): Promise<PointOfInterest> {
   const insertData = {
     trip_id: poi.tripId,
     category: poi.category,
@@ -119,6 +123,7 @@ export async function createPOI(poi: Omit<PointOfInterest, 'id' | 'createdAt' | 
     is_cancelled: poi.isCancelled || false,
     is_paid: poi.isPaid ?? false,
     image_url: poi.imageUrl || null,
+    ...(options?.createdAt ? { created_at: options.createdAt } : {}),
   };
   const { data, error } = await supabase
     .from('points_of_interest')

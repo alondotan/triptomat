@@ -4,7 +4,7 @@ import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { usePOI } from '@/features/poi/POIContext';
 import { useTransport } from '@/features/transport/TransportContext';
 import { useItinerary } from '@/features/itinerary/ItineraryContext';
-import { updateItineraryDay, createItineraryDay } from '@/features/itinerary/itineraryService';
+import { updateItineraryDay, createItineraryDay, deleteItineraryDay } from '@/features/itinerary/itineraryService';
 import { geocodeLocation } from '@/features/geodata/weatherService';
 import { findInFlatList, loadCountryData, buildDescriptionMap, loadCountryWeatherData, findWeatherMonthly, type CountryWeatherData } from '@/features/trip/tripLocationService';
 import { createTripPlace, deleteTripPlace, reorderTripPlaces, updateTripPlace, findTripPlaceByLocationId } from '@/features/trip/tripPlaceService';
@@ -769,39 +769,56 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
 // ─── Droppable day pill (real trip days) ─────────────────────────────────────
 
 function DroppableDayPill({
-  dayNum, shortLabel, isSelected, hasContent, weatherIcon, onClick, onDoubleClick,
+  dayNum, shortLabel, isSelected, hasContent, weatherIcon, hideDates, canDelete, onClick, onDoubleClick, onDelete,
 }: {
   dayNum: number;
   shortLabel: { line1: string; line2: string; line3: string };
   isSelected: boolean;
   hasContent: boolean;
   weatherIcon?: string;
+  hideDates?: boolean;
+  canDelete?: boolean;
   onClick: () => void;
   onDoubleClick?: () => void;
+  onDelete?: () => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `day-drop-${dayNum}` });
+  const label = hideDates
+    ? { line1: 'Day', line2: String(dayNum), line3: '' }
+    : shortLabel;
   return (
-    <button
-      ref={setNodeRef}
-      onClick={onClick}
-      onDoubleClick={onDoubleClick}
-      className={`flex flex-col items-center w-[56px] sm:w-[72px] px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border-2 transition-all text-xs sm:text-sm shrink-0 ${
-        isSelected
-          ? 'border-primary bg-primary text-primary-foreground font-semibold'
-          : isOver
-            ? 'border-primary/80 bg-primary/15 scale-105 shadow-md'
-            : hasContent
-              ? 'border-primary/30 bg-muted/50 hover:bg-muted'
-              : 'border-transparent bg-muted/30 hover:bg-muted text-muted-foreground'
-      }`}
-    >
-      <span className="text-[10px] sm:text-xs">{shortLabel.line1}</span>
-      <span className="text-base sm:text-lg font-bold">{shortLabel.line2}</span>
-      {shortLabel.line3 && <span className="text-[9px] sm:text-[10px]">{shortLabel.line3}</span>}
-      {weatherIcon
-        ? <span className="text-sm mt-0.5 leading-none">{weatherIcon}</span>
-        : hasContent && !isSelected && <div className="w-1.5 h-1.5 rounded-full bg-current mt-1 opacity-60" />}
-    </button>
+    <div className="relative group/pill shrink-0">
+      <button
+        ref={setNodeRef}
+        onClick={onClick}
+        onDoubleClick={onDoubleClick}
+        className={`flex flex-col items-center w-[56px] sm:w-[72px] px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border-2 transition-all text-xs sm:text-sm ${
+          isSelected
+            ? 'border-primary bg-primary text-primary-foreground font-semibold'
+            : isOver
+              ? 'border-primary/80 bg-primary/15 scale-105 shadow-md'
+              : hasContent
+                ? 'border-primary/30 bg-muted/50 hover:bg-muted'
+                : 'border-transparent bg-muted/30 hover:bg-muted text-muted-foreground'
+        }`}
+      >
+        <span className="text-[10px] sm:text-xs">{label.line1}</span>
+        <span className="text-base sm:text-lg font-bold">{label.line2}</span>
+        {label.line3 && <span className="text-[9px] sm:text-[10px]">{label.line3}</span>}
+        {weatherIcon
+          ? <span className="text-sm mt-0.5 leading-none">{weatherIcon}</span>
+          : hasContent && !isSelected && <div className="w-1.5 h-1.5 rounded-full bg-current mt-1 opacity-60" />}
+      </button>
+      {canDelete && onDelete && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onDelete(); }}
+          className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover/pill:opacity-100 transition-opacity z-10 shadow-sm"
+        >
+          <X size={10} />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -1012,6 +1029,7 @@ export default function SchedulePage() {
   const { t, i18n } = useTranslation();
   const [mobileTab, setMobileTab] = useState<'schedule' | 'map'>('schedule');
   const [viewMode, setViewMode] = useState<'places' | 'days' | 'tree'>('places');
+  const [hideDates, setHideDates] = useState(false);
 
   // Location descriptions loaded from country JSON files (externalId → {description, description_he, image})
   const [locationDescriptions, setLocationDescriptions] = useState<Map<string, { description?: string; description_he?: string; image?: string }>>(new Map());
@@ -1685,6 +1703,33 @@ export default function SchedulePage() {
   const refreshDays = useCallback(async () => {
     await refetchItinerary();
   }, [refetchItinerary]);
+
+  const handleDeleteDay = useCallback(async (dayNum: number) => {
+    if (!activeTrip || tripDays.length <= 1) return;
+    try {
+      const itDay = itineraryDays.find(d => d.dayNumber === dayNum);
+      if (itDay) await deleteItineraryDay(itDay.id);
+
+      const toRenumber = itineraryDays
+        .filter(d => d.dayNumber > dayNum)
+        .sort((a, b) => a.dayNumber - b.dayNumber);
+      for (const day of toRenumber) {
+        await updateItineraryDay(day.id, { dayNumber: day.dayNumber - 1 });
+      }
+
+      if (activeTrip.status === 'planning') {
+        await updateCurrentTrip({ numberOfDays: (activeTrip.numberOfDays || tripDays.length) - 1 });
+      } else if (activeTrip.endDate) {
+        await updateCurrentTrip({ endDate: format(subDays(parseISO(activeTrip.endDate), 1), 'yyyy-MM-dd') });
+      }
+
+      const newTotal = tripDays.length - 1;
+      setSelectedDayNum(prev => (prev > newTotal ? Math.max(1, newTotal) : prev >= dayNum ? Math.max(1, prev - 1) : prev));
+      await refreshDays();
+    } catch {
+      toast({ title: t('common.error'), variant: 'destructive' });
+    }
+  }, [activeTrip, tripDays.length, itineraryDays, updateCurrentTrip, refreshDays, toast, t]);
 
   const handleAddTransport = useCallback(async (poiId: string) => {
     const poi = pois.find(p => p.id === poiId);
@@ -3773,7 +3818,22 @@ export default function SchedulePage() {
             </div>
           ) : tripDays.length > 0 ? (
             <div className="w-full shrink-0 pb-1 overflow-x-auto will-change-transform" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)' }}>
-              <div className="flex gap-2 pb-1" style={{ minWidth: 'max-content' }}>
+              <div className="flex items-center gap-2 pb-1" style={{ minWidth: 'max-content' }}>
+                {/* Toggle: show day numbers vs. real dates */}
+                {tripDays.some(td => td.date) && (
+                  <button
+                    type="button"
+                    onClick={() => setHideDates(v => !v)}
+                    title={hideDates ? 'Show dates' : 'Hide dates'}
+                    className={`shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center transition-colors text-xs font-bold ${
+                      hideDates
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-muted/40 text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {hideDates ? <CalendarDays size={14} /> : '123'}
+                  </button>
+                )}
                 {tripDays.map((td) => {
                   const itDay = itineraryDays.find(d => d.dayNumber === td.dayNum);
                   const hasContent = !!itDay && (
@@ -3789,8 +3849,11 @@ export default function SchedulePage() {
                       isSelected={selectedDayNum === td.dayNum}
                       hasContent={hasContent}
                       weatherIcon={dayWeather ? weatherCodeToIcon(dayWeather.weatherCode) : undefined}
+                      hideDates={hideDates}
+                      canDelete={tripDays.length > 1}
                       onClick={() => { setSelectedDayNum(td.dayNum); setSelectedItemId(null); setHighlightedLegId(null); }}
                       onDoubleClick={() => handleDayDoubleClick(td.dayNum)}
+                      onDelete={() => handleDeleteDay(td.dayNum)}
                     />
                   );
                 })}
@@ -3815,7 +3878,7 @@ export default function SchedulePage() {
                             dayCount={item.dayCount}
                             isSelected={isSelected}
                             locationDayWidth={locationDayWidth}
-                            onClick={() => { setLocationContext(span.location); setLocationTotalDays(span.endIdx - span.startIdx + 1); setEditingLocation(true); }}
+                            onClick={() => { setSelectedDayNum(span.startIdx + 1); setLocationContext(span.location); setLocationTotalDays(span.endIdx - span.startIdx + 1); setEditingLocation(true); }}
                           />
                         );
                       })}

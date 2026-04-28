@@ -732,7 +732,7 @@ const en = {
     selectLocationsDesc: 'Click + to add destinations, then assign places of interest to each.',
     addPlace: 'Add place',
     noPoisYet: 'No places added yet. Click below to add.',
-    totalDays: 'Total: {{count}} days',
+    totalDays: 'Total days',
     startPlanning: 'Start planning',
     orSetDaysManually: '— or set days manually —',
     noActiveTrip: 'No active trip',

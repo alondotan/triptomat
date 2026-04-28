@@ -730,7 +730,7 @@ const he = {
     selectLocationsDesc: 'לחצו + כדי להוסיף יעדים, ואז שייכו מקומות עניין לכל יעד.',
     addPlace: 'הוסף מקום',
     noPoisYet: 'עוד לא נוספו מקומות. לחצו למטה להוספה.',
-    totalDays: 'סה״כ: {{count}} ימים',
+    totalDays: 'מספר ימים',
     startPlanning: 'התחלת תכנון',
     orSetDaysManually: '— או הגדירו ימים ידנית —',
     noActiveTrip: 'אין טיול פעיל',
