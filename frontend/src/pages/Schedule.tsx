@@ -1932,29 +1932,39 @@ export default function SchedulePage() {
       }
     }
 
-    // Determine how many days the current span covers for this location
-    const currentSpanDays = selectedSpan ? (selectedSpan.endIdx - selectedSpan.startIdx + 1) : 0;
-    const daysToInsert = locationTotalDays - currentSpanDays;
+    const spanStart = selectedSpan ? selectedSpan.startIdx + 1 : selectedDayNum;
+    const spanEnd = selectedSpan ? selectedSpan.endIdx + 1 : selectedDayNum;
+    const currentSpanDays = selectedSpan ? (selectedSpan.endIdx - selectedSpan.startIdx + 1) : 1;
+    const daysNeeded = locationTotalDays - currentSpanDays;
+    const newSpanEnd = spanStart + locationTotalDays - 1;
 
+    // Count consecutive empty (no-location) days right after the span, within trip bounds.
+    // These can be filled without adding new days to the trip.
+    let freeSlots = 0;
+    if (daysNeeded > 0) {
+      for (let d = spanEnd + 1; d <= Math.min(spanEnd + daysNeeded, tripDays.length); d++) {
+        const itDay = itineraryDays.find(day => day.dayNumber === d);
+        if (itDay?.tripPlaceId) break;
+        freeSlots++;
+      }
+    }
+
+    // Only insert new trip days for slots beyond existing empty days
+    const daysToInsert = Math.max(0, daysNeeded - freeSlots);
     if (daysToInsert > 0 && activeTrip.status !== 'research') {
-      const insertAfterDayNum = selectedSpan
-        ? selectedSpan.endIdx + 1
-        : selectedDayNum;
+      const insertBeforeDayNum = spanEnd + freeSlots + 1;
 
-      // Shift existing days that come after the insert point
       const daysToShift = itineraryDays
-        .filter(d => d.dayNumber > insertAfterDayNum)
+        .filter(d => d.dayNumber >= insertBeforeDayNum)
         .sort((a, b) => b.dayNumber - a.dayNumber);
       for (const day of daysToShift) {
         await updateItineraryDay(day.id, { dayNumber: day.dayNumber + daysToInsert });
       }
 
-      // Create the new days
       for (let i = 0; i < daysToInsert; i++) {
-        const newDayNum = insertAfterDayNum + 1 + i;
         await createItineraryDay({
           tripId: activeTrip.id,
-          dayNumber: newDayNum,
+          dayNumber: insertBeforeDayNum + i,
           tripPlaceId,
           accommodationOptions: [],
           activities: [],
@@ -1962,17 +1972,16 @@ export default function SchedulePage() {
         });
       }
 
-      // Update trip numberOfDays
       const newTotal = (activeTrip.numberOfDays || tripDays.length) + daysToInsert;
       await updateCurrentTrip({ numberOfDays: newTotal });
     }
 
-    // Set location on existing span days
-    const spanStart = selectedSpan ? selectedSpan.startIdx + 1 : selectedDayNum;
-    const spanEnd = selectedSpan ? selectedSpan.endIdx + 1 : selectedDayNum;
-    for (let dayNum = spanStart; dayNum <= spanEnd; dayNum++) {
+    // Update existing span + free slots with the location; clear days trimmed off the end
+    const updateUpTo = spanEnd + freeSlots;
+    for (let dayNum = spanStart; dayNum <= updateUpTo; dayNum++) {
+      const shouldHaveLocation = dayNum <= newSpanEnd;
       let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
-      if (!targetDay) {
+      if (!targetDay && shouldHaveLocation) {
         targetDay = await createItineraryDay({
           tripId: activeTrip.id,
           dayNumber: dayNum,
@@ -1983,7 +1992,7 @@ export default function SchedulePage() {
         });
       }
       if (targetDay) {
-        await updateItineraryDay(targetDay.id, { tripPlaceId: tripPlaceId ?? null });
+        await updateItineraryDay(targetDay.id, { tripPlaceId: shouldHaveLocation ? (tripPlaceId ?? null) : null });
       }
     }
 
@@ -3343,7 +3352,14 @@ export default function SchedulePage() {
                 })() : (
                   <>
                     {/* ── Feed: Instagram-style cards ── */}
+                    <p className="text-xs text-muted-foreground shrink-0 pb-1">{t('timeline.selectLocationsDesc')}</p>
                     <div className="space-y-3 pb-2">
+                      {sortedResearchLocations.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
+                          <MapPin size={40} className="text-muted-foreground/20" />
+                          <p className="text-sm font-medium text-muted-foreground">{t('timeline.noDestinations')}</p>
+                        </div>
+                      )}
                       {sortedResearchLocations.map((il) => {
                         const name = researchLocNameMap.get(il.id) || '';
                         const holdingDay = itineraryDays.find(d => d.tripPlaceId === il.id);
@@ -3370,14 +3386,17 @@ export default function SchedulePage() {
                               )}
                             </div>
                             {/* Overlay: name + count at bottom */}
-                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-3 pb-2.5 pt-8">
-                              <p className="text-base font-bold text-white truncate">{name}</p>
-                              {assignedDaysCount > 0 && (
-                                <p className="text-xs text-white/80">{t('timeline.daysCount', { count: assignedDaysCount })}</p>
-                              )}
-                              {poiCount > 0 && (
-                                <p className="text-xs text-white/70">{t('timeline.activitiesCount', { count: poiCount })}</p>
-                              )}
+                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-3 pb-2.5 pt-8 flex items-end justify-between">
+                              <div className="min-w-0">
+                                <p className="text-base font-bold text-white truncate">{name}</p>
+                                {assignedDaysCount > 0 && (
+                                  <p className="text-xs text-white/80">{t('timeline.daysCount', { count: assignedDaysCount })}</p>
+                                )}
+                                {poiCount > 0 && (
+                                  <p className="text-xs text-white/70">{t('timeline.activitiesCount', { count: poiCount })}</p>
+                                )}
+                              </div>
+                              <ArrowRight size={16} className={`shrink-0 text-white/60 mb-0.5 ${isRTL ? 'rotate-180' : ''}`} />
                             </div>
                           </button>
                         );
@@ -3878,7 +3897,7 @@ export default function SchedulePage() {
                             dayCount={item.dayCount}
                             isSelected={isSelected}
                             locationDayWidth={locationDayWidth}
-                            onClick={() => { setSelectedDayNum(span.startIdx + 1); setLocationContext(span.location); setLocationTotalDays(span.endIdx - span.startIdx + 1); setEditingLocation(true); }}
+                            onClick={() => { const itDay = itineraryDays.find(d => d.dayNumber === span.startIdx + 1); const tp = tripPlaces.find(p => p.id === itDay?.tripPlaceId); const tl = tripLocations.find(l => l.id === tp?.tripLocationId); setSelectedDayNum(span.startIdx + 1); setLocationContext(tl?.name ?? span.location); setLocationTotalDays(span.endIdx - span.startIdx + 1); setEditingLocation(true); }}
                           />
                         );
                       })}
