@@ -2060,6 +2060,23 @@ export default function SchedulePage() {
     [itineraryDays, selectedDayNum],
   );
 
+  // Country + city for the current day, derived from the location hierarchy
+  const currentDayLocationContext = useMemo(() => {
+    if (!currentItDay?.tripPlaceId) return { country: undefined, city: undefined };
+    const tp = tripPlaces.find(p => p.id === currentItDay.tripPlaceId);
+    if (!tp) return { country: undefined, city: undefined };
+    let country: string | undefined;
+    let city: string | undefined;
+    let loc = tripLocations.find(l => l.id === tp.tripLocationId);
+    while (loc) {
+      if (loc.placeType === 'country') { country = loc.name; break; }
+      if (!city) city = loc.name;
+      const parentId = loc.parentId;
+      loc = parentId ? tripLocations.find(l => l.id === parentId) : undefined;
+    }
+    return { country, city };
+  }, [currentItDay?.tripPlaceId, tripPlaces, tripLocations]);
+
   // ── Holidays for current day ────────────────────────────────────────────────
   const dayHolidays = useMemo(() => {
     const currentDay = tripDays[selectedDayNum - 1];
@@ -2304,7 +2321,10 @@ export default function SchedulePage() {
       placeType: data.placeType || undefined,
       name: data.name,
       status: 'suggested',
-      location: { city: data.city || undefined },
+      location: {
+        city: data.city || currentDayLocationContext.city || undefined,
+        country: currentDayLocationContext.country || undefined,
+      },
       sourceRefs: { email_ids: [], recommendation_ids: [] },
       details: {},
       isCancelled: false,
@@ -2324,7 +2344,7 @@ export default function SchedulePage() {
         });
       }
     }
-  }, [activeTrip, addPOI, addAccommodation, addMission]);
+  }, [activeTrip, addPOI, addAccommodation, addMission, currentDayLocationContext]);
 
   // ── Activity add (mirrors Index.tsx) ────────────────────────────────────────
   const dayActivityIds = useMemo(
@@ -2372,7 +2392,10 @@ export default function SchedulePage() {
       placeType: data.placeType || undefined,
       name: data.name,
       status: 'suggested',
-      location: { city: data.city || undefined },
+      location: {
+        city: data.city || currentDayLocationContext.city || undefined,
+        country: currentDayLocationContext.country || undefined,
+      },
       sourceRefs: { email_ids: [], recommendation_ids: [] },
       details: {},
       isCancelled: false,
@@ -2392,7 +2415,7 @@ export default function SchedulePage() {
         });
       }
     }
-  }, [activeTrip, addPOI, addActivity, addMission]);
+  }, [activeTrip, addPOI, addActivity, addMission, currentDayLocationContext]);
 
   // ── Load real data for selected day ─────────────────────────────────────────
   // potential  = activities with schedule_state !== 'scheduled'
@@ -3013,7 +3036,7 @@ export default function SchedulePage() {
   }
 
   return (
-    <AppLayout heroImageOverride={locationImageUrl} heroTitleOverride={selectedLocNameDisplay ? `${selectedLocCountry || ''} — ${selectedLocNameDisplay}` : undefined}>
+    <AppLayout heroTitleOverride={selectedLocNameDisplay ? `${selectedLocCountry || ''} — ${selectedLocNameDisplay}` : undefined}>
       <div className="flex flex-col gap-3 w-full px-1 sm:px-4 md:h-full" dir={isRTL ? 'rtl' : 'ltr'}>
 
         <DndContext

@@ -98,6 +98,7 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
             setMessage('');
             supabase.removeChannel(channel);
             channelRef.current = null;
+            setTimeout(() => onOpenChange(false), 1500);
           }
         }
       )
@@ -142,6 +143,7 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
               : t('urlSubmit.listSynced')
           );
           setUrl('');
+          setTimeout(() => onOpenChange(false), 1500);
           return;
         }
 
@@ -180,6 +182,7 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
         const summary = buildItemSummary(items, t);
         setMessage(t('urlSubmit.alreadyAnalyzed'));
         if (summary) setItemSummary(summary);
+        setTimeout(() => onOpenChange(false), 1500);
       } else if (res.status === 202) {
         const jobId = data.job_id;
         const meta = data.source_metadata || {};
@@ -246,6 +249,7 @@ export function CreateExternalRecommendationForm({ open, onOpenChange }: CreateE
         setStatus('success');
         setMessage(t('textSubmit.submitted'));
         setText('');
+        setTimeout(() => onOpenChange(false), 1500);
       } else {
         setStatus('error');
         setMessage(data.error || t('common.somethingWentWrong'));

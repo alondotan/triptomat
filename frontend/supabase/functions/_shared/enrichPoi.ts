@@ -97,8 +97,8 @@ export async function enrichPoi(
 
   // Step 2: Fetch image if missing
   if (!hasImage) {
-    // Try Wikipedia first
-    imageUrl = await fetchWikipediaImage(name);
+    // Try Wikipedia first (country hint helps disambiguate)
+    imageUrl = await fetchWikipediaImage(name, opts.country);
     if (imageUrl) {
       const { error } = await supabase
         .from('points_of_interest')

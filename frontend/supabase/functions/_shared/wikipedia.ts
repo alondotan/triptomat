@@ -1,10 +1,12 @@
 /**
  * Fetch a representative image for a place from Wikipedia (MediaWiki API).
- * Tries the full name, then parts split by common delimiters.
+ * Tries the full name, then "{name}, {country}" for disambiguation, then parts split by common delimiters.
  */
-export async function fetchWikipediaImage(name: string): Promise<string | null> {
+export async function fetchWikipediaImage(name: string, country?: string): Promise<string | null> {
   const nameParts = [
     name,
+    // Country-qualified variant helps Wikipedia disambiguate (e.g. "Temple Bar, Dublin")
+    ...(country ? [`${name}, ${country}`] : []),
     ...name.split(/\s*[&,\-–]\s*/).map(s => s.trim()).filter(Boolean),
   ];
 
