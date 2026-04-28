@@ -1,6 +1,6 @@
 /**
  * Google Geocoding API + Places API (New) for POI enrichment.
- * Ported from core/scrapers.py MapsService.
+ * Falls back to Nominatim (free, no key) when Google API key is unavailable.
  */
 
 const GOOGLE_MAPS_API_KEY = Deno.env.get('GOOGLE_MAPS_API_KEY') || '';
@@ -10,15 +10,7 @@ export interface GeoResult {
   formattedAddress: string | null;
 }
 
-/**
- * Geocode a text query to coordinates + formatted address.
- */
-export async function geocodeAddress(query: string): Promise<GeoResult> {
-  if (!GOOGLE_MAPS_API_KEY) {
-    console.warn('[geocode] GOOGLE_MAPS_API_KEY not configured');
-    return { coordinates: null, formattedAddress: null };
-  }
-
+async function geocodeWithGoogle(query: string): Promise<GeoResult> {
   try {
     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GOOGLE_MAPS_API_KEY}`;
     const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
@@ -36,10 +28,49 @@ export async function geocodeAddress(query: string): Promise<GeoResult> {
       }
     }
   } catch (e) {
-    console.error('[geocode] Geocoding API error:', e);
+    console.error('[geocode] Google API error:', e);
   }
-
   return { coordinates: null, formattedAddress: null };
+}
+
+async function geocodeWithNominatim(query: string): Promise<GeoResult> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&addressdetails=1`;
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Triptomat/1.0' },
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!res.ok) return { coordinates: null, formattedAddress: null };
+
+    const data = await res.json();
+    if (!data?.length) return { coordinates: null, formattedAddress: null };
+
+    const r = data[0];
+    if (r.lat && r.lon) {
+      return {
+        coordinates: { lat: parseFloat(r.lat), lng: parseFloat(r.lon) },
+        formattedAddress: r.display_name || null,
+      };
+    }
+  } catch (e) {
+    console.error('[geocode] Nominatim error:', e);
+  }
+  return { coordinates: null, formattedAddress: null };
+}
+
+/**
+ * Geocode a text query to coordinates + formatted address.
+ * Tries Google Maps first (if API key available), then falls back to Nominatim.
+ */
+export async function geocodeAddress(query: string): Promise<GeoResult> {
+  if (GOOGLE_MAPS_API_KEY) {
+    const result = await geocodeWithGoogle(query);
+    if (result.coordinates) return result;
+    console.warn('[geocode] Google returned no results, trying Nominatim');
+  } else {
+    console.warn('[geocode] GOOGLE_MAPS_API_KEY not configured, using Nominatim');
+  }
+  return geocodeWithNominatim(query);
 }
 
 /**
@@ -78,7 +109,6 @@ export async function fetchPlaceImage(
     const photoName = data.places?.[0]?.photos?.[0]?.name;
     if (photoName) {
       // Follow the redirect server-side so we store the final public CDN URL
-      // (not the key-bearing Places API URL, which fails from the browser)
       const mediaUrl = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=800&maxWidthPx=800&key=${GOOGLE_MAPS_API_KEY}`;
       const imgRes = await fetch(mediaUrl, { redirect: 'follow', signal: AbortSignal.timeout(10_000) });
       if (imgRes.ok) return imgRes.url;

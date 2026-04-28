@@ -1459,6 +1459,50 @@ export default function SchedulePage() {
     return () => { cancelled = true; };
   }, [selectedLocName, selectedLocCountry]);
 
+  // Country + city for the selected research location (English names for geocoding)
+  const selectedResearchLocContext = useMemo(() => {
+    if (!activeDetailTripLoc) return { country: undefined, city: undefined };
+    let country: string | undefined;
+    let city: string | undefined;
+    let loc: typeof activeDetailTripLoc | undefined = activeDetailTripLoc;
+    while (loc) {
+      if (loc.placeType === 'country') { country = loc.name; break; }
+      if (!city) city = loc.name;
+      const parentId = loc.parentId;
+      loc = parentId ? tripLocations.find(l => l.id === parentId) : undefined;
+    }
+    return { country, city };
+  }, [activeDetailTripLoc, tripLocations]);
+
+  // Create a brand-new POI and add it to the selected research location's holding day
+  const createNewResearchPoi = useCallback(async (data: Record<string, string>) => {
+    if (!activeTrip || !selectedResearchLocId) return;
+    const newPOI = await addPOI({
+      tripId: activeTrip.id,
+      category: (data.category as any) || 'attraction',
+      placeType: data.placeType || undefined,
+      name: data.name,
+      status: 'suggested',
+      location: {
+        city: data.city || selectedResearchLocContext.city || undefined,
+        country: selectedResearchLocContext.country || undefined,
+      },
+      sourceRefs: { email_ids: [], recommendation_ids: [] },
+      details: {},
+      isCancelled: false,
+      isPaid: false,
+    });
+    if (!newPOI) return;
+    const holdingDay = itineraryDays.find(d => d.tripPlaceId === selectedResearchLocId);
+    if (holdingDay) {
+      const existing = holdingDay.activities || [];
+      await updateItineraryDay(holdingDay.id, {
+        activities: [...existing, { order: existing.length + 1, type: 'poi' as const, id: newPOI.id, schedule_state: 'potential' as const }],
+      });
+      await refetchItinerary();
+    }
+  }, [activeTrip, selectedResearchLocId, selectedResearchLocContext, itineraryDays, addPOI, refetchItinerary]);
+
   // Add a POI to the selected research place
   const handleAddResearchPoi = useCallback(async (poiId: string) => {
     if (!activeTrip || !selectedResearchLocId) return;
@@ -1950,25 +1994,16 @@ export default function SchedulePage() {
       }
     }
 
-    // When editing via the pencil button: if selectedDayNum is inside the span → update only that day
-    if (editingSpan) {
-      const spanContainsSelectedDay =
-        selectedDayNum >= editingSpan.startIdx + 1 && selectedDayNum <= editingSpan.endIdx + 1;
-      if (spanContainsSelectedDay) {
-        const targetDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
-        if (targetDay) {
-          await updateItineraryDay(targetDay.id, { tripPlaceId: tripPlaceId ?? null });
-        }
-        setEditingLocation(false);
-        setEditingSpan(null);
-        setLocationTotalDays(1);
-        await refreshDays();
-        return;
-      }
-    }
+    // When editing via pencil button: if selectedDayNum is inside the span → start from that day
+    // (user edits "from here for N days"); otherwise → update the whole span as usual
+    const editingSpanContainsDay =
+      editingSpan &&
+      selectedDayNum >= editingSpan.startIdx + 1 &&
+      selectedDayNum <= editingSpan.endIdx + 1;
 
-    // Determine which span to use: explicit editingSpan (pencil button) or selectedSpan (click flow)
-    const activeSpan = editingSpan ?? selectedSpan;
+    const activeSpan = editingSpanContainsDay
+      ? { startIdx: selectedDayNum - 1, endIdx: selectedDayNum - 1 }
+      : (editingSpan ?? selectedSpan);
     const spanStart = activeSpan ? activeSpan.startIdx + 1 : selectedDayNum;
     const spanEnd = activeSpan ? activeSpan.endIdx + 1 : selectedDayNum;
     const currentSpanDays = activeSpan ? (activeSpan.endIdx - activeSpan.startIdx + 1) : 1;
@@ -3735,6 +3770,7 @@ export default function SchedulePage() {
                                 onRemove={handleRemoveResearchPoi}
                                 availableItems={pois.filter(p => !researchPotential.some(rp => rp.id === p.id)).map(p => ({ id: p.id, label: p.name, sublabel: p.location?.city || '', city: p.location?.city, status: p.status }))}
                                 onAdd={(id) => handleAddResearchPoi(id)}
+                                onCreateNew={createNewResearchPoi}
                                 addLabel={t('timeline.activity')}
                                 entityType="activity"
                                 locationContext={researchLocNameMap.get(selectedResearchLocId)}
@@ -3992,13 +4028,7 @@ export default function SchedulePage() {
               onChange={setLocationContext}
               totalDays={locationTotalDays}
               onTotalDaysChange={setLocationTotalDays}
-              maxTotalDays={
-                editingSpan &&
-                selectedDayNum >= editingSpan.startIdx + 1 &&
-                selectedDayNum <= editingSpan.endIdx + 1
-                  ? 1
-                  : tripDays.length + 30
-              }
+              maxTotalDays={tripDays.length + 30}
               onSave={updateLocationContext}
             />
           )}

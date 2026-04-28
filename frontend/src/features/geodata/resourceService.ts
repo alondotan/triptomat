@@ -39,7 +39,7 @@ export async function loadCountryResources(country: string): Promise<CountryReso
   if (resourceCache.has(country)) return resourceCache.get(country)!;
 
   try {
-    const res = await fetch(`${S3_BASE}/resources/${encodeURIComponent(country)}.json`);
+    const res = await fetch(`${S3_BASE}/geodata/countries_resources/${encodeURIComponent(country)}.json`);
     if (!res.ok) {
       resourceCache.set(country, null);
       return null;
