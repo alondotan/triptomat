@@ -14,7 +14,7 @@ import { LocationSelector } from '@/shared/components/LocationSelector';
 import { parseISO, format, addDays, subDays } from 'date-fns';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useTripDays, tripDayDate } from '@/shared/hooks/useTripDays';
-import type { ItineraryActivity, ItineraryDay, PointOfInterest } from '@/types/trip';
+import type { ItineraryActivity, ItineraryDay, POICategory, PointOfInterest } from '@/types/trip';
 import { POICard } from '@/features/poi/POICard';
 import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
 import { CreateTransportForm } from '@/features/transport/CreateTransportForm';
@@ -1479,7 +1479,7 @@ export default function SchedulePage() {
     if (!activeTrip || !selectedResearchLocId) return;
     const newPOI = await addPOI({
       tripId: activeTrip.id,
-      category: (data.category as any) || 'attraction',
+      category: (data.category as POICategory) || 'attraction',
       placeType: data.placeType || undefined,
       name: data.name,
       status: 'suggested',
@@ -2423,7 +2423,7 @@ export default function SchedulePage() {
     if (!activeTrip) return;
     const newPOI = await addPOI({
       tripId: activeTrip.id,
-      category: (data.category as any) || 'attraction',
+      category: (data.category as POICategory) || 'attraction',
       placeType: data.placeType || undefined,
       name: data.name,
       status: 'suggested',
