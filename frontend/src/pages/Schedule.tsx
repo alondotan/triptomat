@@ -951,13 +951,14 @@ function SortableLocationPill({ id, name, isSelected, poiCount, onSelect, onDele
 
 // ─── Sortable location span (planning mode Gantt strip) ─────────────────────────
 
-function SortableLocationSpan({ id, location, dayCount, isSelected, locationDayWidth, onClick }: {
+function SortableLocationSpan({ id, location, dayCount, isSelected, locationDayWidth, onClick, onEdit }: {
   id: string;
   location: string;
   dayCount: number;
   isSelected: boolean;
   locationDayWidth: number;
   onClick: () => void;
+  onEdit: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, animateLayoutChanges: noReturnAnimation });
   const width = dayCount * locationDayWidth - 8;
@@ -969,7 +970,7 @@ function SortableLocationSpan({ id, location, dayCount, isSelected, locationDayW
         transform: transform ? CSS.Transform.toString({ ...transform, y: 0 }) : undefined,
         transition,
       }}
-      className={`h-full rounded-md flex items-center overflow-hidden gap-0.5 transition-colors shrink-0 ${
+      className={`group h-full rounded-md flex items-center gap-0.5 transition-colors shrink-0 ${
         isDragging ? 'opacity-50 z-50' : ''
       } ${
         isSelected
@@ -987,13 +988,17 @@ function SortableLocationSpan({ id, location, dayCount, isSelected, locationDayW
       <button
         type="button"
         onClick={onClick}
-        disabled={!isSelected}
-        className={`flex-1 min-w-0 flex items-center gap-1 h-full ${
-          isSelected ? 'cursor-pointer hover:text-primary' : 'cursor-default'
-        }`}
+        className="flex-1 min-w-0 h-full cursor-pointer overflow-hidden"
       >
-        <span className="text-xs font-medium text-primary truncate">{location}</span>
-        {isSelected && <Pencil size={10} className="shrink-0 text-primary opacity-70" />}
+        <span className="text-xs font-medium text-primary truncate block">{location}</span>
+      </button>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onEdit(); }}
+        className="shrink-0 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity text-primary/60 hover:text-primary"
+        title="עדכן מיקום"
+      >
+        <Pencil size={10} />
       </button>
     </div>
   );
@@ -1695,6 +1700,8 @@ export default function SchedulePage() {
   const [locationContext, setLocationContext] = useState('');
   const [editingLocation, setEditingLocation] = useState(false);
   const [locationTotalDays, setLocationTotalDays] = useState(1);
+  // When editing via the pencil hover button (without selecting a day), track which span is being edited
+  const [editingSpan, setEditingSpan] = useState<{ startIdx: number; endIdx: number } | null>(null);
 
   const locationDayWidth = typeof window !== 'undefined' ? (window.innerWidth < 640 ? 64 : 80) : 72;
   const selectedIdx = selectedDayNum - 1;
@@ -1915,6 +1922,17 @@ export default function SchedulePage() {
     await refreshDays();
   }, [selectedDayNum, itineraryDays, setItineraryDays, refreshDays, resolveActivityTime]);
 
+  // Open location editor for a specific span without changing the selected day
+  const handleEditSpan = useCallback((span: { location: string; startIdx: number; endIdx: number }) => {
+    const itDay = itineraryDays.find(d => d.dayNumber === span.startIdx + 1);
+    const tp = tripPlaces.find(p => p.id === itDay?.tripPlaceId);
+    const tl = tripLocations.find(l => l.id === tp?.tripLocationId);
+    setLocationContext(tl?.name ?? span.location);
+    setLocationTotalDays(span.endIdx - span.startIdx + 1);
+    setEditingSpan({ startIdx: span.startIdx, endIdx: span.endIdx });
+    setEditingLocation(true);
+  }, [itineraryDays, tripPlaces, tripLocations]);
+
   const updateLocationContext = useCallback(async () => {
     if (!activeTrip) return;
 
@@ -1932,9 +1950,28 @@ export default function SchedulePage() {
       }
     }
 
-    const spanStart = selectedSpan ? selectedSpan.startIdx + 1 : selectedDayNum;
-    const spanEnd = selectedSpan ? selectedSpan.endIdx + 1 : selectedDayNum;
-    const currentSpanDays = selectedSpan ? (selectedSpan.endIdx - selectedSpan.startIdx + 1) : 1;
+    // When editing via the pencil button: if selectedDayNum is inside the span → update only that day
+    if (editingSpan) {
+      const spanContainsSelectedDay =
+        selectedDayNum >= editingSpan.startIdx + 1 && selectedDayNum <= editingSpan.endIdx + 1;
+      if (spanContainsSelectedDay) {
+        const targetDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
+        if (targetDay) {
+          await updateItineraryDay(targetDay.id, { tripPlaceId: tripPlaceId ?? null });
+        }
+        setEditingLocation(false);
+        setEditingSpan(null);
+        setLocationTotalDays(1);
+        await refreshDays();
+        return;
+      }
+    }
+
+    // Determine which span to use: explicit editingSpan (pencil button) or selectedSpan (click flow)
+    const activeSpan = editingSpan ?? selectedSpan;
+    const spanStart = activeSpan ? activeSpan.startIdx + 1 : selectedDayNum;
+    const spanEnd = activeSpan ? activeSpan.endIdx + 1 : selectedDayNum;
+    const currentSpanDays = activeSpan ? (activeSpan.endIdx - activeSpan.startIdx + 1) : 1;
     const daysNeeded = locationTotalDays - currentSpanDays;
     const newSpanEnd = spanStart + locationTotalDays - 1;
 
@@ -1997,9 +2034,10 @@ export default function SchedulePage() {
     }
 
     setEditingLocation(false);
+    setEditingSpan(null);
     setLocationTotalDays(1);
     await refreshDays();
-  }, [locationContext, locationTotalDays, selectedDayNum, selectedSpan, tripDays, itineraryDays, activeTrip, tripLocations, tripPlaces, reloadTripPlaces, refreshDays, updateCurrentTrip]);
+  }, [locationContext, locationTotalDays, selectedDayNum, selectedSpan, editingSpan, tripDays, itineraryDays, activeTrip, tripLocations, tripPlaces, reloadTripPlaces, refreshDays, updateCurrentTrip]);
 
   // ── Ensure itinerary day exists ─────────────────────────────────────────────
   const ensureItDay = useCallback(async () => {
@@ -3689,7 +3727,7 @@ export default function SchedulePage() {
 
                         {/* Right 1/3: image, map, notes */}
                         <div className="w-1/3 shrink-0 flex flex-col gap-2 min-h-0 overflow-hidden">
-                          <div className="relative rounded-lg overflow-hidden border bg-muted flex-1 min-h-[160px] shrink-0">
+                          <div className="relative rounded-lg overflow-hidden border bg-muted flex-1 min-h-[160px] shrink-0 isolate">
                             {locationCoords ? (
                               <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">Loading...</div>}>
                                 <LazyMiniMap coordinates={locationCoords} className="w-full h-full" zoom={isCity ? 13 : 9} boundary={locationBoundary ?? undefined} markers={researchMapMarkers} />
@@ -3898,6 +3936,7 @@ export default function SchedulePage() {
                             isSelected={isSelected}
                             locationDayWidth={locationDayWidth}
                             onClick={() => { const itDay = itineraryDays.find(d => d.dayNumber === span.startIdx + 1); const tp = tripPlaces.find(p => p.id === itDay?.tripPlaceId); const tl = tripLocations.find(l => l.id === tp?.tripLocationId); setSelectedDayNum(span.startIdx + 1); setLocationContext(tl?.name ?? span.location); setLocationTotalDays(span.endIdx - span.startIdx + 1); setEditingLocation(true); }}
+                            onEdit={() => handleEditSpan(span)}
                           />
                         );
                       })}
@@ -3925,12 +3964,18 @@ export default function SchedulePage() {
           {activeTrip && (
             <LocationContextPicker
               open={editingLocation}
-              onOpenChange={(open) => { if (!open) { setEditingLocation(false); setLocationTotalDays(1); } }}
+              onOpenChange={(open) => { if (!open) { setEditingLocation(false); setEditingSpan(null); setLocationTotalDays(1); } }}
               value={locationContext}
               onChange={setLocationContext}
               totalDays={locationTotalDays}
               onTotalDaysChange={setLocationTotalDays}
-              maxTotalDays={tripDays.length + 30}
+              maxTotalDays={
+                editingSpan &&
+                selectedDayNum >= editingSpan.startIdx + 1 &&
+                selectedDayNum <= editingSpan.endIdx + 1
+                  ? 1
+                  : tripDays.length + 30
+              }
               onSave={updateLocationContext}
             />
           )}
@@ -4261,7 +4306,7 @@ export default function SchedulePage() {
 
             {/* ── Column 3: Route map ─────────── */}
             {(!isMobile || mobileTab === 'map') && (
-              <div className={`${isMobile ? 'min-h-[calc(100vh-12rem)]' : 'hidden md:block md:min-h-0'} border rounded-lg overflow-hidden relative`}>
+              <div className={`${isMobile ? 'min-h-[calc(100vh-12rem)]' : 'hidden md:block md:min-h-0'} border rounded-lg overflow-hidden relative isolate`}>
                 {currentDayLocation && activeTrip?.countries && activeTrip.countries.length > 0 && (
                   <OrientationMap cityName={currentDayLocation} countries={activeTrip.countries} />
                 )}
@@ -4299,7 +4344,7 @@ export default function SchedulePage() {
 
           <DragOverlay dropAnimation={null}>
             {activeItem && (
-              <div className="flex items-center gap-2.5 bg-card border border-primary/50 rounded-xl px-3 py-2.5 shadow-lg rotate-1 cursor-grabbing">
+              <div className="w-fit flex items-center gap-2.5 bg-card border border-primary/50 rounded-xl px-3 py-2.5 shadow-lg rotate-1 cursor-grabbing">
                 <GripVertical size={14} className="text-muted-foreground/50 shrink-0" />
                 {activeItem.poi ? (
                   <POICard poi={activeItem.poi} level={1} />
