@@ -3036,7 +3036,7 @@ export default function SchedulePage() {
   }
 
   return (
-    <AppLayout heroTitleOverride={selectedLocNameDisplay ? `${selectedLocCountry || ''} — ${selectedLocNameDisplay}` : undefined}>
+    <AppLayout hideHero={!!activeDetailLocId} heroTitleOverride={selectedLocNameDisplay ? `${selectedLocCountry || ''} — ${selectedLocNameDisplay}` : undefined}>
       <div className="flex flex-col gap-3 w-full px-1 sm:px-4 md:h-full" dir={isRTL ? 'rtl' : 'ltr'}>
 
         <DndContext
@@ -3149,7 +3149,7 @@ export default function SchedulePage() {
                       </div>
                       {/* Location image */}
                       {detailImage && (
-                        <div className="shrink-0 w-full aspect-[16/9] rounded-xl overflow-hidden mb-3 bg-muted">
+                        <div className="shrink-0 w-full aspect-[16/9] max-h-44 rounded-xl overflow-hidden mb-3 bg-muted">
                           <img src={detailImage} alt={detailName} className="w-full h-full object-cover" />
                         </div>
                       )}
@@ -3513,7 +3513,7 @@ export default function SchedulePage() {
                       </div>
                       {/* Location image */}
                       {detailImage && (
-                        <div className="shrink-0 w-full aspect-[16/9] rounded-xl overflow-hidden mb-3 bg-muted">
+                        <div className="shrink-0 w-full aspect-[16/9] max-h-44 rounded-xl overflow-hidden mb-3 bg-muted">
                           <img src={detailImage} alt={detailName} className="w-full h-full object-cover" />
                         </div>
                       )}
