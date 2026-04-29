@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
         .select('id, name, location, image_url, place_type, activity_type, is_cancelled')
         .eq('trip_id', body.tripId);
       if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const summary = (pois || []).map((p: any) => ({
         id: p.id,
         name: p.name,

@@ -130,7 +130,12 @@ export interface PlaceSearchResult {
  * Finds places that aren't in the Geocoding API (e.g. small beaches, surf spots)
  * and returns both coordinates and a photo in a single call.
  */
-async function placesTextSearchOnce(textQuery: string): Promise<{ place: any } | null> {
+interface PlaceApiResult {
+  location?: { latitude?: number; longitude?: number };
+  photos?: Array<{ name?: string }>;
+}
+
+async function placesTextSearchOnce(textQuery: string): Promise<{ place: PlaceApiResult } | null> {
   const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
     method: 'POST',
     headers: {
@@ -164,7 +169,7 @@ export async function searchPlaceTextSearch(
   try {
     // First try with country suffix, then without if no results
     const queries = country ? [`${name} ${country}`, name] : [name];
-    let place: any = null;
+    let place: PlaceApiResult | null = null;
     for (const textQuery of queries) {
       const result = await placesTextSearchOnce(textQuery);
       if (result) { place = result.place; break; }
