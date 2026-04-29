@@ -50,6 +50,45 @@ Deno.serve(async (req) => {
       });
     }
 
+    // List mode: return all POIs with their coordinate status
+    if (body.listPois && body.tripId) {
+      const { data: pois, error } = await supabase
+        .from('points_of_interest')
+        .select('id, name, location, image_url, place_type, activity_type, is_cancelled')
+        .eq('trip_id', body.tripId);
+      if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const summary = (pois || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        cancelled: p.is_cancelled,
+        hasCoords: !!(p.location?.coordinates?.lat),
+        hasImage: !!p.image_url,
+        coords: p.location?.coordinates || null,
+      }));
+      return new Response(JSON.stringify({ total: summary.length, pois: summary }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Set coordinates directly by POI name (for places geocoding APIs can't find)
+    if (body.setCoords && body.tripId) {
+      const { lat, lng, poiName } = body;
+      if (!lat || !lng || !poiName) {
+        return new Response(JSON.stringify({ error: 'lat, lng, poiName required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      const { data: poi } = await supabase
+        .from('points_of_interest')
+        .select('id, name, location')
+        .eq('trip_id', body.tripId)
+        .ilike('name', `%${poiName}%`)
+        .eq('is_cancelled', false)
+        .single();
+      if (!poi) return new Response(JSON.stringify({ error: `POI not found: ${poiName}` }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const updatedLocation = { ...poi.location, coordinates: { lat, lng } };
+      const { error } = await supabase.from('points_of_interest').update({ location: updatedLocation }).eq('id', poi.id);
+      if (error) return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      console.log(`[set-coords] Set ${lat},${lng} for "${poi.name}" (${poi.id})`);
+      return new Response(JSON.stringify({ ok: true, id: poi.id, name: poi.name, coordinates: { lat, lng } }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // Batch mode: enrich all incomplete POIs for a trip
     if (body.tripId) {
       const { data: pois, error } = await supabase
