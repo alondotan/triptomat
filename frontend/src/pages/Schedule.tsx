@@ -4426,6 +4426,11 @@ export default function SchedulePage() {
                     }
                   }}
                   onReset={resetRoute}
+                  countryNames={
+                    currentDayLocationContext.country
+                      ? [currentDayLocationContext.country]
+                      : (activeTrip?.countries ?? [])
+                  }
                 />
               </div>
             )}

@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Button } from '@/components/ui/button';
-import { Loader2, Car, Footprints, X } from 'lucide-react';
+import { Loader2, Car, Footprints, X, Globe } from 'lucide-react';
 import {
   type RouteLeg,
   type RouteStats,
@@ -13,7 +13,9 @@ import {
   formatDuration,
   formatDistance,
 } from '@/features/transport/routeService';
+import { loadCountryData } from '@/features/trip/tripLocationService';
 import 'leaflet/dist/leaflet.css';
+import type { Feature, FeatureCollection } from 'geojson';
 
 // Fix Leaflet default icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -75,7 +77,7 @@ function createDotIcon(color: string, opacity: number) {
   });
 }
 
-// ── FitBounds ────────────────────────────────────────────────────────────────
+// ── FitBounds (fallback when no country data) ────────────────────────────────
 
 function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
   const map = useMap();
@@ -85,6 +87,52 @@ function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
       map.fitBounds(bounds, { padding: [40, 40] });
     }
   }, [map, coordinates]);
+  return null;
+}
+
+// ── ZoomController — handles country-level default + fly-to-POI ──────────────
+
+type ZoomState = 'country' | [number, number];
+
+function ZoomController({
+  countryNames,
+  zoomState,
+}: {
+  countryNames: string[];
+  zoomState: ZoomState;
+}) {
+  const map = useMap();
+  const [countryBounds, setCountryBounds] = useState<L.LatLngBounds | null>(null);
+  const countryKey = countryNames.join(',');
+
+  useEffect(() => {
+    if (!countryNames.length) return;
+    let cancelled = false;
+    Promise.all(countryNames.map(c => loadCountryData(c))).then(results => {
+      if (cancelled) return;
+      const features: Feature[] = [];
+      for (const cd of results) {
+        if (!cd) continue;
+        const gd = cd.geoData as FeatureCollection | undefined;
+        if (gd?.features) features.push(...gd.features);
+      }
+      if (features.length > 0) {
+        const layer = L.geoJSON({ type: 'FeatureCollection', features } as FeatureCollection);
+        const b = layer.getBounds();
+        if (b.isValid()) setCountryBounds(b);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [countryKey]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (zoomState === 'country') {
+      if (countryBounds) map.fitBounds(countryBounds, { padding: [20, 20] });
+    } else {
+      map.flyTo(zoomState, 14, { duration: 0.5 });
+    }
+  }, [zoomState, countryBounds, map]);
+
   return null;
 }
 
@@ -122,6 +170,8 @@ interface RouteMapPanelProps {
   onStopClick?: (stopId: string) => void;
   /** Called to clear the route calculation */
   onReset?: () => void;
+  /** Country names for default country-level zoom. Pass current day's country, or all trip countries. */
+  countryNames?: string[];
 }
 
 export function RouteMapPanel({
@@ -140,7 +190,18 @@ export function RouteMapPanel({
   selectedStopId,
   onStopClick,
   onReset,
+  countryNames,
 }: RouteMapPanelProps) {
+  const [zoomState, setZoomState] = useState<ZoomState>('country');
+
+  // Reset to country view when the day/country changes
+  const countryKey = countryNames?.join(',') ?? '';
+  useEffect(() => {
+    setZoomState('country');
+  }, [countryKey]);
+
+  const useCountryZoom = !!(countryNames && countryNames.length > 0);
+
   // IDs of scheduled stops — so we don't double-render them as dots
   const scheduledIds = useMemo(() => new Set(stops.map(s => s.id)), [stops]);
 
@@ -161,6 +222,14 @@ export function RouteMapPanel({
 
   const defaultCenter: [number, number] = allCoords.length > 0 ? allCoords[0] : [48.8566, 2.3522];
   const canCalculate = stops.length >= 2 && !isCalculating;
+
+  const isZoomedToPOI = zoomState !== 'country';
+
+  function handleStopClick(stopId: string) {
+    const stop = stops.find(s => s.id === stopId);
+    if (stop) setZoomState([stop.lat, stop.lng]);
+    onStopClick?.(stopId);
+  }
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -219,6 +288,19 @@ export function RouteMapPanel({
         {error && (
           <span className="text-[10px] text-destructive font-medium truncate max-w-[120px]">{error}</span>
         )}
+
+        {/* Zoom-out to country button — only visible after zooming into a POI */}
+        {useCountryZoom && isZoomedToPOI && (
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label="Zoom to country"
+            className="h-6 px-1.5 text-[11px] text-muted-foreground ml-auto"
+            onClick={() => setZoomState('country')}
+          >
+            <Globe size={11} className="mr-0.5" />
+          </Button>
+        )}
       </div>
 
       {/* Map — z-0 keeps Leaflet's internal z-indices below dialog overlays (z-50) */}
@@ -234,7 +316,12 @@ export function RouteMapPanel({
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <InvalidateSize />
-          {allCoords.length > 0 && <FitBounds coordinates={allCoords} />}
+
+          {useCountryZoom ? (
+            <ZoomController countryNames={countryNames!} zoomState={zoomState} />
+          ) : (
+            allCoords.length > 0 && <FitBounds coordinates={allCoords} />
+          )}
 
           {/* Route polylines */}
           {legs.map((leg, i) => (
@@ -274,7 +361,7 @@ export function RouteMapPanel({
                 key={`stop-${stop.id}`}
                 position={[stop.lat, stop.lng]}
                 icon={createNumberedIcon(label, color, isSelected)}
-                eventHandlers={onStopClick ? { click: () => onStopClick(stop.id) } : undefined}
+                eventHandlers={{ click: () => handleStopClick(stop.id) }}
               >
                 <Popup>
                   <div className="text-sm font-semibold">{stopNames[stop.id] || `Stop ${i + 1}`}</div>
