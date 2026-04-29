@@ -1437,6 +1437,21 @@ export default function SchedulePage() {
     return englishName ? getCountryDisplayName(englishName) : undefined;
   }, [activeDetailTripLoc, tripLocations, activeTrip?.countries, locationDescriptions, i18n.language]);
 
+  // Country + city for the selected research location (English names for geocoding)
+  const selectedResearchLocContext = useMemo(() => {
+    if (!activeDetailTripLoc) return { country: undefined, city: undefined };
+    let country: string | undefined;
+    let city: string | undefined;
+    let loc: typeof activeDetailTripLoc | undefined = activeDetailTripLoc;
+    while (loc) {
+      if (loc.placeType === 'country') { country = loc.name; break; }
+      if (!city) city = loc.name;
+      const parentId = loc.parentId;
+      loc = parentId ? tripLocations.find(l => l.id === parentId) : undefined;
+    }
+    return { country, city };
+  }, [activeDetailTripLoc, tripLocations]);
+
   // Geocode + boundary
   useEffect(() => {
     setLocationCoords(null);
@@ -1489,21 +1504,6 @@ export default function SchedulePage() {
       .catch(() => {});
     return () => { cancelled = true; };
   }, [selectedLocName, selectedResearchLocContext.country, activeTrip?.countries]);
-
-  // Country + city for the selected research location (English names for geocoding)
-  const selectedResearchLocContext = useMemo(() => {
-    if (!activeDetailTripLoc) return { country: undefined, city: undefined };
-    let country: string | undefined;
-    let city: string | undefined;
-    let loc: typeof activeDetailTripLoc | undefined = activeDetailTripLoc;
-    while (loc) {
-      if (loc.placeType === 'country') { country = loc.name; break; }
-      if (!city) city = loc.name;
-      const parentId = loc.parentId;
-      loc = parentId ? tripLocations.find(l => l.id === parentId) : undefined;
-    }
-    return { country, city };
-  }, [activeDetailTripLoc, tripLocations]);
 
   // Create a brand-new POI and add it to the selected research location's holding day
   const createNewResearchPoi = useCallback(async (data: Record<string, string>) => {
