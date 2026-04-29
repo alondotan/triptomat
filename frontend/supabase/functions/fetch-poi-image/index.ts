@@ -82,9 +82,9 @@ Deno.serve(async (req) => {
         });
         results.push({ id: poi.id, name: poi.name, ...result });
 
-        // Small delay between API calls to be respectful
+        // Nominatim enforces 1 req/sec; 1500ms between POIs keeps us well under
         if (incomplete.indexOf(poi) < incomplete.length - 1) {
-          await new Promise(r => setTimeout(r, 200));
+          await new Promise(r => setTimeout(r, 1500));
         }
       }
 
