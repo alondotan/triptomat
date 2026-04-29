@@ -3,7 +3,7 @@
  * Used by travel-webhook, recommendation-webhook, and enrich-poi edge function.
  */
 
-import { geocodeAddress, fetchPlaceImage } from './geocode.ts';
+import { geocodeAddress, fetchPlaceImage, searchPlaceTextSearch } from './geocode.ts';
 import { fetchAndSetPoiImage } from './pexels.ts';
 import { fetchWikipediaImage } from './wikipedia.ts';
 
@@ -70,6 +70,8 @@ export async function enrichPoi(
 
   // Step 1: Geocode if missing coordinates or address
   const hasAddress = !!poi.location?.address;
+  // imageFromPlaces is set when the Places text-search fallback also returns a photo
+  let imageFromPlaces: string | null = null;
   if (!hasCoords || !hasAddress) {
     const parts = [name, opts.address, opts.city, opts.country].filter(Boolean);
     const query = parts.join(', ');
@@ -92,21 +94,54 @@ export async function enrichPoi(
 
       if (error) console.error('[enrichPoi] Failed to update location:', error);
       else console.log(`[enrichPoi] Location updated for ${poiId}:`, { coords: !!geo.coordinates, address: !!geo.formattedAddress });
+    } else if (!hasCoords) {
+      // Geocoding API returned nothing — try Google Places text search.
+      // This finds places (beaches, surf spots, local landmarks) not indexed by the Geocoding API.
+      console.log(`[enrichPoi] Geocoding found nothing, trying Places text search for "${name}"`);
+      const placeResult = await searchPlaceTextSearch(name, opts.country);
+      if (placeResult.coordinates) {
+        coordinates = placeResult.coordinates;
+        const updatedLocation = { ...poi.location, coordinates: placeResult.coordinates };
+        const { error } = await supabase
+          .from('points_of_interest')
+          .update({ location: updatedLocation })
+          .eq('id', poiId);
+        if (error) console.error('[enrichPoi] Failed to update Places coords:', error);
+        else console.log(`[enrichPoi] Places text search coords set for ${poiId}`);
+      }
+      if (placeResult.imageUrl) {
+        imageFromPlaces = placeResult.imageUrl;
+      }
     }
   }
 
   // Step 2: Fetch image if missing
   if (!hasImage) {
-    // Try Wikipedia first (country hint helps disambiguate)
-    imageUrl = await fetchWikipediaImage(name, opts.country);
-    if (imageUrl) {
+    // Use the photo returned by the Places text-search fallback (step 1)
+    if (imageFromPlaces) {
+      imageUrl = imageFromPlaces;
       const { error } = await supabase
         .from('points_of_interest')
         .update({ image_url: imageUrl })
         .eq('id', poiId)
         .is('image_url', null);
-      if (error) console.error('[enrichPoi] Failed to update Wikipedia image:', error);
-      else console.log(`[enrichPoi] Wikipedia image set for ${poiId}`);
+      if (error) console.error('[enrichPoi] Failed to update Places text-search image:', error);
+      else console.log(`[enrichPoi] Places text-search image set for ${poiId}`);
+    }
+
+    // Try Wikipedia (country hint helps disambiguate)
+    if (!imageUrl) {
+      const wikiImage = await fetchWikipediaImage(name, opts.country);
+      if (wikiImage) {
+        imageUrl = wikiImage;
+        const { error } = await supabase
+          .from('points_of_interest')
+          .update({ image_url: imageUrl })
+          .eq('id', poiId)
+          .is('image_url', null);
+        if (error) console.error('[enrichPoi] Failed to update Wikipedia image:', error);
+        else console.log(`[enrichPoi] Wikipedia image set for ${poiId}`);
+      }
     }
 
     // Try Google Places API (needs coordinates)

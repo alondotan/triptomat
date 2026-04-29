@@ -547,6 +547,10 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         try {
           console.log('[ai-chat] calling applyDraftToTrip with', JSON.stringify(daysToApply).slice(0, 500));
           await applyDraftToTrip(tripContext.tripId, daysToApply, pois, tripPlaces, tripContext.countries?.[0]);
+          // Re-enrich any POIs the individual fire-and-forgets missed (e.g. due to
+          // concurrent rate-limits during bulk creation). Batch mode is sequential so
+          // it avoids hammering the geocoding/image APIs. Fire-and-forget.
+          supabase.functions.invoke('fetch-poi-image', { body: { tripId: tripContext.tripId } }).catch(() => {});
           if (!instantApply) {
             toast({ title: t('aiChat.tripUpdated'), description: t('aiChat.tripUpdatedDesc') });
           }

@@ -119,3 +119,59 @@ export async function fetchPlaceImage(
 
   return null;
 }
+
+export interface PlaceSearchResult {
+  coordinates: { lat: number; lng: number } | null;
+  imageUrl: string | null;
+}
+
+/**
+ * Google Places text search (no location bias).
+ * Finds places that aren't in the Geocoding API (e.g. small beaches, surf spots)
+ * and returns both coordinates and a photo in a single call.
+ */
+export async function searchPlaceTextSearch(
+  name: string,
+  country?: string,
+): Promise<PlaceSearchResult> {
+  if (!GOOGLE_MAPS_API_KEY) return { coordinates: null, imageUrl: null };
+
+  const textQuery = country ? `${name} ${country}` : name;
+  try {
+    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': GOOGLE_MAPS_API_KEY,
+        'X-Goog-FieldMask': 'places.location,places.photos',
+      },
+      body: JSON.stringify({ textQuery }),
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!res.ok) return { coordinates: null, imageUrl: null };
+    const data = await res.json();
+
+    const place = data.places?.[0];
+    if (!place) return { coordinates: null, imageUrl: null };
+
+    const loc = place.location;
+    const coordinates =
+      loc?.latitude != null && loc?.longitude != null
+        ? { lat: loc.latitude as number, lng: loc.longitude as number }
+        : null;
+
+    let imageUrl: string | null = null;
+    const photoName = place.photos?.[0]?.name;
+    if (photoName) {
+      const mediaUrl = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=800&maxWidthPx=800&key=${GOOGLE_MAPS_API_KEY}`;
+      const imgRes = await fetch(mediaUrl, { redirect: 'follow', signal: AbortSignal.timeout(10_000) });
+      if (imgRes.ok) imageUrl = imgRes.url;
+    }
+
+    return { coordinates, imageUrl };
+  } catch (e) {
+    console.error('[geocode] Places text search error:', e);
+    return { coordinates: null, imageUrl: null };
+  }
+}
