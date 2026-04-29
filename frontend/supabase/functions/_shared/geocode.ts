@@ -149,11 +149,17 @@ export async function searchPlaceTextSearch(
       signal: AbortSignal.timeout(10_000),
     });
 
-    if (!res.ok) return { coordinates: null, imageUrl: null };
+    if (!res.ok) {
+      console.warn(`[geocode] Places text search HTTP ${res.status} for "${textQuery}"`);
+      return { coordinates: null, imageUrl: null };
+    }
     const data = await res.json();
 
     const place = data.places?.[0];
-    if (!place) return { coordinates: null, imageUrl: null };
+    if (!place) {
+      console.warn(`[geocode] Places text search: no results for "${textQuery}"`);
+      return { coordinates: null, imageUrl: null };
+    }
 
     const loc = place.location;
     const coordinates =
@@ -164,9 +170,14 @@ export async function searchPlaceTextSearch(
     let imageUrl: string | null = null;
     const photoName = place.photos?.[0]?.name;
     if (photoName) {
-      const mediaUrl = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=800&maxWidthPx=800&key=${GOOGLE_MAPS_API_KEY}`;
-      const imgRes = await fetch(mediaUrl, { redirect: 'follow', signal: AbortSignal.timeout(10_000) });
-      if (imgRes.ok) imageUrl = imgRes.url;
+      try {
+        const mediaUrl = `https://places.googleapis.com/v1/${photoName}/media?maxHeightPx=800&maxWidthPx=800&key=${GOOGLE_MAPS_API_KEY}`;
+        const imgRes = await fetch(mediaUrl, { redirect: 'follow', signal: AbortSignal.timeout(10_000) });
+        if (imgRes.ok) imageUrl = imgRes.url;
+      } catch (photoErr) {
+        // Photo fetch failed (e.g. timeout) — coordinates are still valid
+        console.warn('[geocode] Places photo fetch failed, keeping coordinates:', photoErr);
+      }
     }
 
     return { coordinates, imageUrl };
