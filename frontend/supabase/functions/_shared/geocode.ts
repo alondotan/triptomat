@@ -162,6 +162,7 @@ export async function searchPlaceTextSearch(
     }
 
     const loc = place.location;
+    console.log(`[geocode] Places text search hit for "${textQuery}": location=${JSON.stringify(loc)}`);
     const coordinates =
       loc?.latitude != null && loc?.longitude != null
         ? { lat: loc.latitude as number, lng: loc.longitude as number }
