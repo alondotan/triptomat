@@ -4399,7 +4399,7 @@ export default function SchedulePage() {
 
             {/* ── Column 3: Route map ─────────── */}
             {(!isMobile || mobileTab === 'map') && (
-              <div className={`${isMobile ? 'min-h-[calc(100vh-12rem)]' : 'hidden md:block md:min-h-0'} border rounded-lg overflow-hidden relative isolate`}>
+              <div className={`${isMobile ? 'min-h-[calc(100vh-12rem)]' : 'hidden md:block md:sticky md:top-16 md:h-[calc(100dvh-4rem)]'} border rounded-lg overflow-hidden relative isolate`}>
                 {currentDayLocation && activeTrip?.countries && activeTrip.countries.length > 0 && (
                   <OrientationMap cityName={currentDayLocation} countries={activeTrip.countries} />
                 )}
