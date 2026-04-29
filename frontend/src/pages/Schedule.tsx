@@ -6,7 +6,7 @@ import { useTransport } from '@/features/transport/TransportContext';
 import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { updateItineraryDay, createItineraryDay, deleteItineraryDay } from '@/features/itinerary/itineraryService';
 import { geocodeLocation } from '@/features/geodata/weatherService';
-import { findInFlatList, loadCountryData, buildDescriptionMap, loadCountryWeatherData, findWeatherMonthly, type CountryWeatherData } from '@/features/trip/tripLocationService';
+import { findInFlatList, loadCountryData, buildDescriptionMap, loadCountryWeatherData, findWeatherMonthly, fetchTripLocations, addTripLocation, type CountryWeatherData } from '@/features/trip/tripLocationService';
 import { createTripPlace, deleteTripPlace, reorderTripPlaces, updateTripPlace, findTripPlaceByLocationId } from '@/features/trip/tripPlaceService';
 import { rebuildPOIBookingsFromDays } from '@/features/poi/poiService';
 import { LocationContextPicker } from '@/shared/components/LocationContextPicker';
@@ -1246,23 +1246,38 @@ export default function SchedulePage() {
     if (!activeTrip) return;
     setAddLocationOpen(false);
     try {
-      // Ensure it's in trip_locations hierarchy
-      const tripLoc = findInFlatList(tripLocations, locationName);
+      // Ensure it's in trip_locations hierarchy.
+      // Use a local authoritative list — the closure's tripLocations may be stale when the
+      // LocationSelector just called addSiteToHierarchy moments before this callback fires.
+      let locList = tripLocations;
+      let tripLoc = findInFlatList(locList, locationName);
       if (!tripLoc) {
-        // addSiteToHierarchy triggers a reload; wait for it
-        addSiteToHierarchy(locationName);
-        await new Promise(r => setTimeout(r, 500));
+        // Wait for the DB insert triggered by LocationSelector to complete, then re-fetch directly
+        await new Promise(r => setTimeout(r, 700));
+        locList = await fetchTripLocations(activeTrip.id);
+        tripLoc = findInFlatList(locList, locationName);
+        if (!tripLoc) {
+          // Fallback: add it now (shouldn't normally happen — LocationSelector always calls addSiteToHierarchy first)
+          await addTripLocation(activeTrip.id, locationName, 'city', null, 'manual');
+          await new Promise(r => setTimeout(r, 300));
+          locList = await fetchTripLocations(activeTrip.id);
+          tripLoc = findInFlatList(locList, locationName);
+        }
+        if (!tripLoc) {
+          await reloadLocations();
+          return;
+        }
+        // Update context with the fresh data
         await reloadLocations();
-        return; // will be picked up on next render
       }
 
-      // Derive country from location hierarchy for Wikipedia image search
+      // Derive country from location hierarchy for Wikipedia image search (use fresh locList)
       const locCountry = (() => {
         let cur: typeof tripLoc | undefined = tripLoc;
         while (cur) {
           if (cur.placeType === 'country') return cur.name;
           const pid = cur.parentId;
-          cur = pid ? tripLocations.find(l => l.id === pid) : undefined;
+          cur = pid ? locList.find(l => l.id === pid) : undefined;
         }
         return activeTrip.countries?.[0];
       })();
@@ -1293,7 +1308,7 @@ export default function SchedulePage() {
     } catch {
       toast({ title: t('common.error'), variant: 'destructive' });
     }
-  }, [activeTrip, tripLocations, tripPlaces, addSiteToHierarchy, reloadLocations, reloadTripPlaces, itineraryDays, researchLocations, refetchItinerary, t, toast]);
+  }, [activeTrip, tripLocations, tripPlaces, reloadLocations, reloadTripPlaces, itineraryDays, researchLocations, refetchItinerary, t, toast]);
 
   // Drag-end handler for reordering research location pills
   const handleLocationDragEnd = useCallback(async (event: DragEndEvent) => {
