@@ -130,39 +130,49 @@ export interface PlaceSearchResult {
  * Finds places that aren't in the Geocoding API (e.g. small beaches, surf spots)
  * and returns both coordinates and a photo in a single call.
  */
+async function placesTextSearchOnce(textQuery: string): Promise<{ place: any } | null> {
+  const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': GOOGLE_MAPS_API_KEY,
+      'X-Goog-FieldMask': 'places.location,places.photos',
+    },
+    body: JSON.stringify({ textQuery }),
+    signal: AbortSignal.timeout(10_000),
+  });
+
+  if (!res.ok) {
+    console.warn(`[geocode] Places text search HTTP ${res.status} for "${textQuery}"`);
+    return null;
+  }
+  const data = await res.json();
+  const place = data.places?.[0];
+  if (!place) {
+    console.warn(`[geocode] Places text search: no results for "${textQuery}"`);
+    return null;
+  }
+  return { place };
+}
+
 export async function searchPlaceTextSearch(
   name: string,
   country?: string,
 ): Promise<PlaceSearchResult> {
   if (!GOOGLE_MAPS_API_KEY) return { coordinates: null, imageUrl: null };
 
-  const textQuery = country ? `${name} ${country}` : name;
   try {
-    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': GOOGLE_MAPS_API_KEY,
-        'X-Goog-FieldMask': 'places.location,places.photos',
-      },
-      body: JSON.stringify({ textQuery }),
-      signal: AbortSignal.timeout(10_000),
-    });
-
-    if (!res.ok) {
-      console.warn(`[geocode] Places text search HTTP ${res.status} for "${textQuery}"`);
-      return { coordinates: null, imageUrl: null };
+    // First try with country suffix, then without if no results
+    const queries = country ? [`${name} ${country}`, name] : [name];
+    let place: any = null;
+    for (const textQuery of queries) {
+      const result = await placesTextSearchOnce(textQuery);
+      if (result) { place = result.place; break; }
     }
-    const data = await res.json();
-
-    const place = data.places?.[0];
-    if (!place) {
-      console.warn(`[geocode] Places text search: no results for "${textQuery}"`);
-      return { coordinates: null, imageUrl: null };
-    }
+    if (!place) return { coordinates: null, imageUrl: null };
 
     const loc = place.location;
-    console.log(`[geocode] Places text search hit for "${textQuery}": location=${JSON.stringify(loc)}`);
+    console.log(`[geocode] Places text search hit for "${name}": location=${JSON.stringify(loc)}`);
     const coordinates =
       loc?.latitude != null && loc?.longitude != null
         ? { lat: loc.latitude as number, lng: loc.longitude as number }
