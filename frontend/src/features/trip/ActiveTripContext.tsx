@@ -201,6 +201,9 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
   const addSiteToHierarchy = useCallback((siteName: string, parentSiteName?: string) => {
     if (!activeTrip) return;
 
+    // Idempotency: skip if already in the tree to prevent duplicate DB rows
+    if (findInFlatList(state.tripLocations, siteName)) return;
+
     // Find parent ID from the flat list
     let parentId: string | null = null;
     if (parentSiteName) {

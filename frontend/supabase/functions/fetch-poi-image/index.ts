@@ -1,6 +1,7 @@
 import { corsHeaders } from '../_shared/cors.ts';
 import { createSupabaseClient } from '../_shared/supabase.ts';
 import { enrichPoi } from '../_shared/enrichPoi.ts';
+import { fetchWikipediaImage } from '../_shared/wikipedia.ts';
 
 /**
  * POI enrichment edge function.
@@ -19,6 +20,35 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const supabase = createSupabaseClient();
+
+    // Trip place image mode: fetch and persist image for a trip_place
+    if (body.tripPlaceId) {
+      const { tripPlaceId, locationName, country } = body;
+      if (!locationName) {
+        return new Response(JSON.stringify({ error: 'locationName required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      console.log(`[enrich-trip-place] Fetching image for "${locationName}" (country: ${country})`);
+      const imageUrl = await fetchWikipediaImage(locationName, country);
+
+      if (imageUrl) {
+        const { error } = await supabase
+          .from('trip_places')
+          .update({ image_url: imageUrl })
+          .eq('id', tripPlaceId);
+        if (error) console.error('[enrich-trip-place] Failed to update image:', error);
+        else console.log(`[enrich-trip-place] Image saved for trip_place ${tripPlaceId}`);
+      } else {
+        console.log(`[enrich-trip-place] No Wikipedia image found for "${locationName}"`);
+      }
+
+      return new Response(JSON.stringify({ imageUrl: imageUrl || null }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Batch mode: enrich all incomplete POIs for a trip
     if (body.tripId) {
