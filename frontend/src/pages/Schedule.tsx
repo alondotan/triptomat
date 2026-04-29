@@ -1443,10 +1443,11 @@ export default function SchedulePage() {
     setLocationBoundary(null);
     if (!selectedLocName) return;
     let cancelled = false;
-    const countryCtx = selectedLocCountry ? ` ${selectedLocCountry}` : '';
+    // Always use English for geocoding — selectedLocCountry may be localized (Hebrew)
+    const englishCountry = selectedResearchLocContext.country || activeTrip?.countries?.[0] || '';
+    const countryCtx = englishCountry ? ` ${englishCountry}` : '';
     // Try full name first, then first part before & , - as fallback
     const tryGeocode = async (name: string) => {
-      // Try with country context first for disambiguation
       if (countryCtx) {
         const geo = await geocodeLocation(name + countryCtx);
         if (geo) return geo;
@@ -1466,7 +1467,7 @@ export default function SchedulePage() {
     tryGeocode(selectedLocName).then(geo => {
       if (!cancelled && geo) setLocationCoords({ lat: geo.latitude, lng: geo.longitude });
     });
-    // Fetch boundary polygon — use country context for Nominatim disambiguation
+    // Fetch boundary polygon + use Nominatim lat/lon as coordinate fallback
     const nominatimQuery = selectedLocName.split(/\s*[&,\-–]\s*/)[0].trim() || selectedLocName;
     const nominatimFull = nominatimQuery + countryCtx;
     fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(nominatimFull)}&format=json&polygon_geojson=1&limit=1`, {
@@ -1474,16 +1475,20 @@ export default function SchedulePage() {
     })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (!cancelled && data?.[0]?.geojson) {
-          const geo = data[0].geojson;
-          if (geo.type === 'Polygon' || geo.type === 'MultiPolygon') {
-            setLocationBoundary(geo);
+        if (!cancelled && Array.isArray(data) && data[0]) {
+          const item = data[0];
+          if (item.geojson?.type === 'Polygon' || item.geojson?.type === 'MultiPolygon') {
+            setLocationBoundary(item.geojson);
+          }
+          // Use Nominatim coords as fallback if Open-Meteo didn't return anything
+          if (item.lat && item.lon) {
+            setLocationCoords(c => c ?? { lat: parseFloat(item.lat), lng: parseFloat(item.lon) });
           }
         }
       })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [selectedLocName, selectedLocCountry]);
+  }, [selectedLocName, selectedResearchLocContext.country, activeTrip?.countries]);
 
   // Country + city for the selected research location (English names for geocoding)
   const selectedResearchLocContext = useMemo(() => {
