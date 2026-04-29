@@ -25,6 +25,7 @@ export interface RouteStop {
   lat: number;
   lng: number;
   durationMin: number;
+  placeType?: string;
 }
 
 /** Override for a specific leg — built from Transport entities in the schedule. */

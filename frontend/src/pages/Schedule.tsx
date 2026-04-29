@@ -2200,17 +2200,18 @@ export default function SchedulePage() {
         lat: item.poi!.location.coordinates!.lat,
         lng: item.poi!.location.coordinates!.lng,
         durationMin: item.poi!.details?.activity_details?.duration ?? 60,
+        placeType: item.poi?.placeType || item.poi?.activityType || undefined,
       }));
 
     const stops = [...activityStops];
 
     // Prepend morning accommodation as start point
     if (morningCoords && morningAccom) {
-      stops.unshift({ id: `accom-morning-${morningAccom.poi.id}`, lat: morningCoords.lat, lng: morningCoords.lng, durationMin: 0 });
+      stops.unshift({ id: `accom-morning-${morningAccom.poi.id}`, lat: morningCoords.lat, lng: morningCoords.lng, durationMin: 0, placeType: morningAccom.poi.placeType || morningAccom.poi.activityType || undefined });
     }
     // Append evening accommodation as end point
     if (eveningCoords && eveningAccom) {
-      stops.push({ id: `accom-evening-${eveningAccom.poi.id}`, lat: eveningCoords.lat, lng: eveningCoords.lng, durationMin: 0 });
+      stops.push({ id: `accom-evening-${eveningAccom.poi.id}`, lat: eveningCoords.lat, lng: eveningCoords.lng, durationMin: 0, placeType: eveningAccom.poi.placeType || eveningAccom.poi.activityType || undefined });
     }
 
     return stops;
@@ -2318,14 +2319,15 @@ export default function SchedulePage() {
         name: item.poi!.name,
         category: item.poi!.category,
         isScheduled: scheduledSet.has(item.id),
+        placeType: item.poi?.placeType || item.poi?.activityType || undefined,
       }));
 
     // Add accommodations
     if (morningCoords && morningAccom) {
-      pois.push({ id: `accom-morning-${morningAccom.poi.id}`, lat: morningCoords.lat, lng: morningCoords.lng, name: morningAccom.poi.name, category: 'accommodation', isScheduled: true });
+      pois.push({ id: `accom-morning-${morningAccom.poi.id}`, lat: morningCoords.lat, lng: morningCoords.lng, name: morningAccom.poi.name, category: 'accommodation', isScheduled: true, placeType: morningAccom.poi.placeType || morningAccom.poi.activityType || undefined });
     }
     if (eveningCoords && eveningAccom) {
-      pois.push({ id: `accom-evening-${eveningAccom.poi.id}`, lat: eveningCoords.lat, lng: eveningCoords.lng, name: eveningAccom.poi.name, category: 'accommodation', isScheduled: true });
+      pois.push({ id: `accom-evening-${eveningAccom.poi.id}`, lat: eveningCoords.lat, lng: eveningCoords.lng, name: eveningAccom.poi.name, category: 'accommodation', isScheduled: true, placeType: eveningAccom.poi.placeType || eveningAccom.poi.activityType || undefined });
     }
     return pois;
   }, [scheduled, potential, morningCoords, morningAccom, eveningCoords, eveningAccom]);

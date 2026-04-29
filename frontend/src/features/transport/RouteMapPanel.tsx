@@ -14,6 +14,7 @@ import {
   formatDistance,
 } from '@/features/transport/routeService';
 import { loadCountryData } from '@/features/trip/tripLocationService';
+import { getSubCategoryEntry, loadSubCategoryConfig } from '@/shared/lib/subCategoryConfig';
 import 'leaflet/dist/leaflet.css';
 import type { Feature, FeatureCollection } from 'geojson';
 
@@ -29,6 +30,7 @@ export interface MapPOI {
   name: string;
   category: string;
   isScheduled: boolean;
+  placeType?: string;
 }
 
 const POI_COLORS: Record<string, string> = {
@@ -36,6 +38,13 @@ const POI_COLORS: Record<string, string> = {
   eatery: '#ea580c',
   attraction: '#16a34a',
   service: '#7c3aed',
+};
+
+const CATEGORY_FALLBACK_ICONS: Record<string, string> = {
+  accommodation: 'bed',
+  eatery: 'restaurant',
+  attraction: 'local_activity',
+  service: 'build',
 };
 
 const MODE_LABELS: Record<TravelMode, string> = {
@@ -56,24 +65,33 @@ function badgeColor(idx: number, total: number): string {
   return '#4f46e5';
 }
 
-function createNumberedIcon(label: string, color: string, isSelected = false) {
+function materialIconFor(placeType: string | undefined, category: string): string {
+  if (placeType) {
+    const entry = getSubCategoryEntry(placeType);
+    if (entry?.icon) return entry.icon;
+  }
+  return CATEGORY_FALLBACK_ICONS[category] ?? 'location_on';
+}
+
+function createStopIcon(materialIcon: string, color: string, isSelected = false) {
   const size = isSelected ? 36 : 28;
+  const fontSize = isSelected ? 18 : 14;
   const border = isSelected ? '3px solid #facc15' : '2px solid #fff';
   const shadow = isSelected ? '0 0 0 3px rgba(250,204,21,0.4), 0 1px 6px rgba(0,0,0,.4)' : '0 1px 4px rgba(0,0,0,.35)';
   return new L.DivIcon({
     className: '',
-    html: `<div style="background:${color};color:#fff;border-radius:50%;width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;font-size:${isSelected ? 13 : 11}px;font-weight:700;border:${border};box-shadow:${shadow}">${label}</div>`,
+    html: `<div style="background:${color};color:#fff;border-radius:50%;width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center;border:${border};box-shadow:${shadow}"><span class="material-symbols-outlined" style="font-size:${fontSize}px;line-height:1;font-variation-settings:'FILL' 1,wght 400">${materialIcon}</span></div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
 }
 
-function createDotIcon(color: string, opacity: number) {
+function createDotIcon(materialIcon: string, color: string, opacity: number) {
   return new L.DivIcon({
     className: '',
-    html: `<div style="background:${color};width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.25);opacity:${opacity}"></div>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
+    html: `<div style="background:${color};width:18px;height:18px;border-radius:50%;border:1.5px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.25);opacity:${opacity};display:flex;align-items:center;justify-content:center"><span class="material-symbols-outlined" style="font-size:10px;color:white;line-height:1;font-variation-settings:'FILL' 1,wght 400">${materialIcon}</span></div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
   });
 }
 
@@ -193,6 +211,12 @@ export function RouteMapPanel({
   countryNames,
 }: RouteMapPanelProps) {
   const [zoomState, setZoomState] = useState<ZoomState>('country');
+  const [, forceUpdate] = useState(0);
+
+  // Load sub-category config so materialIconFor() works synchronously
+  useEffect(() => {
+    loadSubCategoryConfig().then(() => forceUpdate(n => n + 1));
+  }, []);
 
   // Reset to country view when the day/country changes
   const countryKey = countryNames?.join(',') ?? '';
@@ -340,7 +364,7 @@ export function RouteMapPanel({
             <Marker
               key={`pot-${poi.id}`}
               position={[poi.lat, poi.lng]}
-              icon={createDotIcon(POI_COLORS[poi.category] ?? '#9ca3af', 0.6)}
+              icon={createDotIcon(materialIconFor(poi.placeType, poi.category), POI_COLORS[poi.category] ?? '#9ca3af', 0.6)}
             >
               <Popup>
                 <div className="text-xs">
@@ -351,16 +375,16 @@ export function RouteMapPanel({
             </Marker>
           ))}
 
-          {/* Scheduled stop markers (numbered) */}
+          {/* Scheduled stop markers (sub-category icon) */}
           {stops.map((stop, i) => {
-            const label = i === 0 ? 'S' : i === stops.length - 1 ? 'E' : String(i + 1);
             const color = badgeColor(i, stops.length);
             const isSelected = selectedStopId === stop.id;
+            const icon = materialIconFor(stop.placeType, 'attraction');
             return (
               <Marker
                 key={`stop-${stop.id}`}
                 position={[stop.lat, stop.lng]}
-                icon={createNumberedIcon(label, color, isSelected)}
+                icon={createStopIcon(icon, color, isSelected)}
                 eventHandlers={{ click: () => handleStopClick(stop.id) }}
               >
                 <Popup>
