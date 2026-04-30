@@ -7,7 +7,7 @@ import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { updateItineraryDay, createItineraryDay, deleteItineraryDay } from '@/features/itinerary/itineraryService';
 import { geocodeLocation } from '@/features/geodata/weatherService';
 import { findInFlatList, loadCountryData, buildDescriptionMap, loadCountryWeatherData, findWeatherMonthly, fetchTripLocations, addTripLocation, type CountryWeatherData } from '@/features/trip/tripLocationService';
-import { createTripPlace, deleteTripPlace, reorderTripPlaces, updateTripPlace, findTripPlaceByLocationId } from '@/features/trip/tripPlaceService';
+import { createTripPlace, deleteTripPlace, reorderTripPlaces, updateTripPlace, findTripPlaceByLocationId, enrichTripPlaceImage } from '@/features/trip/tripPlaceService';
 import { rebuildPOIBookingsFromDays } from '@/features/poi/poiService';
 import { LocationContextPicker } from '@/shared/components/LocationContextPicker';
 import { LocationSelector } from '@/shared/components/LocationSelector';
@@ -1400,6 +1400,17 @@ export default function SchedulePage() {
   const locationImageUrl = activeDetailLoc?.imageUrl
     || (activeDetailTripLoc ? (locationDescriptions.get(activeDetailTripLoc.externalId ?? '') ?? locationDescriptions.get(activeDetailTripLoc.name))?.image : undefined)
     || null;
+
+  // Lazy image enrichment: trigger edge function once per session for locations missing an image
+  const enrichedRef = useRef(new Set<string>());
+  useEffect(() => {
+    const id = activeDetailLoc?.id;
+    if (!id || activeDetailLoc?.imageUrl || enrichedRef.current.has(id)) return;
+    if (!activeDetailTripLoc?.name) return;
+    enrichedRef.current.add(id);
+    const country = selectedResearchLocContext.country || activeTrip?.countries?.[0];
+    enrichTripPlaceImage(id, activeDetailTripLoc.name, country);
+  }, [activeDetailLoc?.id, activeDetailLoc?.imageUrl, activeDetailTripLoc?.name, selectedResearchLocContext.country, activeTrip?.countries]);
 
   // Geocode selected research location for map + fetch boundary + image
   const selectedLocName = activeDetailTripLoc?.name;
@@ -3505,7 +3516,9 @@ export default function SchedulePage() {
                         const assignedDaysCount = hasDays ? itineraryDays.filter(d => d.tripPlaceId === il.id).length : 0;
                         const tripLoc = tripLocations.find(l => l.id === il.tripLocationId);
                         const locDescEntry = (tripLoc?.externalId ? locationDescriptions.get(tripLoc.externalId) : undefined) ?? (tripLoc ? locationDescriptions.get(tripLoc.name) : undefined);
-                        const imgUrl = il.imageUrl || locDescEntry?.image;
+                        const firstPoiImg = holdingDay?.activities?.map(a => pois.find(p => p.id === a.id))
+                          .find(p => p?.imageUrl)?.imageUrl;
+                        const imgUrl = il.imageUrl || locDescEntry?.image || firstPoiImg;
                         return (
                           <button
                             key={il.id}

@@ -2,6 +2,7 @@ import { corsHeaders } from '../_shared/cors.ts';
 import { createSupabaseClient } from '../_shared/supabase.ts';
 import { enrichPoi } from '../_shared/enrichPoi.ts';
 import { fetchWikipediaImage } from '../_shared/wikipedia.ts';
+import { geocodeAddress, fetchPlaceImage } from '../_shared/geocode.ts';
 
 /**
  * POI enrichment edge function.
@@ -32,7 +33,22 @@ Deno.serve(async (req) => {
       }
 
       console.log(`[enrich-trip-place] Fetching image for "${locationName}" (country: ${country})`);
-      const imageUrl = await fetchWikipediaImage(locationName, country);
+
+      // 1. Wikipedia (most reliable for destination thumbnails)
+      let imageUrl: string | null = await fetchWikipediaImage(locationName, country);
+      if (imageUrl) {
+        console.log(`[enrich-trip-place] Wikipedia image found for "${locationName}"`);
+      }
+
+      // 2. Google Places fallback (geocode first to get coords for bias)
+      if (!imageUrl) {
+        const query = country ? `${locationName}, ${country}` : locationName;
+        const geo = await geocodeAddress(query);
+        if (geo.coordinates) {
+          imageUrl = await fetchPlaceImage(locationName, geo.coordinates.lat, geo.coordinates.lng);
+          if (imageUrl) console.log(`[enrich-trip-place] Google Places image found for "${locationName}"`);
+        }
+      }
 
       if (imageUrl) {
         const { error } = await supabase
@@ -42,7 +58,7 @@ Deno.serve(async (req) => {
         if (error) console.error('[enrich-trip-place] Failed to update image:', error);
         else console.log(`[enrich-trip-place] Image saved for trip_place ${tripPlaceId}`);
       } else {
-        console.log(`[enrich-trip-place] No Wikipedia image found for "${locationName}"`);
+        console.log(`[enrich-trip-place] No image found for "${locationName}"`);
       }
 
       return new Response(JSON.stringify({ imageUrl: imageUrl || null }), {

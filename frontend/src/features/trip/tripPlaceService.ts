@@ -121,6 +121,15 @@ export async function updateTripPlaceImage(id: string, imageUrl: string): Promis
   if (error) throw error;
 }
 
+// ── Enrich ───────────────────────────────────────────────────
+
+/** Fire-and-forget: ask edge function to fetch and persist an image for this trip_place. */
+export function enrichTripPlaceImage(tripPlaceId: string, locationName: string, country?: string): void {
+  supabase.functions.invoke('fetch-poi-image', {
+    body: { tripPlaceId, locationName, country },
+  }).catch(err => console.warn('[enrichTripPlace] Failed:', err));
+}
+
 // ── Lookup ───────────────────────────────────────────────────
 
 /** Find the trip_place for a given trip_location_id, or null if not yet planned. */
