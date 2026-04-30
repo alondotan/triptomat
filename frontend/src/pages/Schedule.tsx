@@ -3988,7 +3988,7 @@ export default function SchedulePage() {
 
             </div>
           ) : tripDays.length > 0 ? (
-            <div className="w-full shrink-0 pb-1 overflow-x-auto will-change-transform" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)' }}>
+            <div className="w-full shrink-0 pb-1 overflow-x-auto will-change-transform sticky top-14 sm:top-16 z-30 bg-background" style={{ WebkitOverflowScrolling: 'touch', transform: 'translateZ(0)' }}>
               <div className="flex items-center gap-2 pb-1" style={{ minWidth: 'max-content' }}>
                 {/* Toggle: show day numbers vs. real dates */}
                 {tripDays.some(td => td.date) && (
