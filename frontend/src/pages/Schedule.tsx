@@ -2061,10 +2061,14 @@ export default function SchedulePage() {
     const daysNeeded = locationTotalDays - currentSpanDays;
     const newSpanEnd = spanStart + locationTotalDays - 1;
 
+    // In dates mode the trip length is fixed by startDate/endDate — never insert new days,
+    // just reassign existing days within the fixed range.
+    const isDatesMode = !!(activeTrip.startDate && activeTrip.endDate);
+
     // Count consecutive empty (no-location) days right after the span, within trip bounds.
     // These can be filled without adding new days to the trip.
     let freeSlots = 0;
-    if (daysNeeded > 0) {
+    if (daysNeeded > 0 && !isDatesMode) {
       for (let d = spanEnd + 1; d <= Math.min(spanEnd + daysNeeded, tripDays.length); d++) {
         const itDay = itineraryDays.find(day => day.dayNumber === d);
         if (itDay?.tripPlaceId) break;
@@ -2072,9 +2076,9 @@ export default function SchedulePage() {
       }
     }
 
-    // Only insert new trip days for slots beyond existing empty days
+    // Only insert new trip days for slots beyond existing empty days (planning mode only)
     const daysToInsert = Math.max(0, daysNeeded - freeSlots);
-    if (daysToInsert > 0 && activeTrip.status !== 'research') {
+    if (daysToInsert > 0 && activeTrip.status !== 'research' && !isDatesMode) {
       const insertBeforeDayNum = spanEnd + freeSlots + 1;
 
       const daysToShift = itineraryDays
@@ -2099,10 +2103,12 @@ export default function SchedulePage() {
       await updateCurrentTrip({ numberOfDays: newTotal });
     }
 
-    // Update existing span + free slots with the location; clear days trimmed off the end
-    const updateUpTo = spanEnd + freeSlots;
+    // In dates mode: cover from spanStart to max(spanEnd, newSpanEnd) capped at trip length,
+    // so we both extend (assign new days) and shrink (clear old days) within the fixed range.
+    const clampedNewSpanEnd = isDatesMode ? Math.min(newSpanEnd, tripDays.length) : newSpanEnd;
+    const updateUpTo = isDatesMode ? Math.max(spanEnd, clampedNewSpanEnd) : spanEnd + freeSlots;
     for (let dayNum = spanStart; dayNum <= updateUpTo; dayNum++) {
-      const shouldHaveLocation = dayNum <= newSpanEnd;
+      const shouldHaveLocation = dayNum <= clampedNewSpanEnd;
       let targetDay = itineraryDays.find(d => d.dayNumber === dayNum);
       if (!targetDay && shouldHaveLocation) {
         targetDay = await createItineraryDay({
