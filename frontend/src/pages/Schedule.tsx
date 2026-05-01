@@ -1401,17 +1401,6 @@ export default function SchedulePage() {
     || (activeDetailTripLoc ? (locationDescriptions.get(activeDetailTripLoc.externalId ?? '') ?? locationDescriptions.get(activeDetailTripLoc.name))?.image : undefined)
     || null;
 
-  // Lazy image enrichment: trigger edge function once per session for locations missing an image
-  const enrichedRef = useRef(new Set<string>());
-  useEffect(() => {
-    const id = activeDetailLoc?.id;
-    if (!id || activeDetailLoc?.imageUrl || enrichedRef.current.has(id)) return;
-    if (!activeDetailTripLoc?.name) return;
-    enrichedRef.current.add(id);
-    const country = selectedResearchLocContext.country || activeTrip?.countries?.[0];
-    enrichTripPlaceImage(id, activeDetailTripLoc.name, country);
-  }, [activeDetailLoc?.id, activeDetailLoc?.imageUrl, activeDetailTripLoc?.name, selectedResearchLocContext.country, activeTrip?.countries]);
-
   // Geocode selected research location for map + fetch boundary + image
   const selectedLocName = activeDetailTripLoc?.name;
   const selectedLocNameDisplay = (() => {
@@ -1462,6 +1451,17 @@ export default function SchedulePage() {
     }
     return { country, city };
   }, [activeDetailTripLoc, tripLocations]);
+
+  // Lazy image enrichment: trigger edge function once per session for locations missing an image
+  const enrichedRef = useRef(new Set<string>());
+  useEffect(() => {
+    const id = activeDetailLoc?.id;
+    if (!id || activeDetailLoc?.imageUrl || enrichedRef.current.has(id)) return;
+    if (!activeDetailTripLoc?.name) return;
+    enrichedRef.current.add(id);
+    const country = selectedResearchLocContext.country || activeTrip?.countries?.[0];
+    enrichTripPlaceImage(id, activeDetailTripLoc.name, country);
+  }, [activeDetailLoc?.id, activeDetailLoc?.imageUrl, activeDetailTripLoc?.name, selectedResearchLocContext.country, activeTrip?.countries]);
 
   // Geocode + boundary
   useEffect(() => {
