@@ -2472,6 +2472,17 @@ export default function SchedulePage() {
     await refreshDays();
   }, [currentItDay, pois, updatePOI, refreshDays]);
 
+  // Move a scheduled item back to the potential zone (keep in day, change schedule_state)
+  const unscheduleActivity = useCallback((entityId: string) => {
+    const item = scheduled.find(i => i.id === entityId);
+    if (!item) return;
+    const newScheduled = scheduled.filter(i => i.id !== entityId);
+    const newPotential = [...potential, item];
+    setScheduled(newScheduled);
+    setPotential(newPotential);
+    persistDayActivities(newScheduled, newPotential);
+  }, [scheduled, potential, persistDayActivities]);
+
   const createNewActivity = useCallback(async (data: Record<string, string>, createBookingMission?: boolean) => {
     if (!activeTrip) return;
     const newPOI = await addPOI({
@@ -3373,7 +3384,7 @@ export default function SchedulePage() {
                                         transportCalcDurations={transportCalcDurations}
                                         selectedItemId={null}
                                         onSelectItem={undefined}
-                                        onRemoveActivity={removeActivity}
+                                        onRemoveActivity={unscheduleActivity}
                                       />
                                     </div>
                                     <DropGap index={gi + 1} active={isAnyDragging} />
@@ -3743,7 +3754,7 @@ export default function SchedulePage() {
                                           transportCalcDurations={transportCalcDurations}
                                           selectedItemId={selectedItemId}
                                           onSelectItem={(id) => setSelectedItemId(prev => prev === id ? null : id)}
-                                          onRemoveActivity={removeActivity}
+                                          onRemoveActivity={unscheduleActivity}
                                         />
                                       </div>
                                       <DropGap index={gi + 1} active={isAnyDragging} />
@@ -4315,7 +4326,7 @@ export default function SchedulePage() {
                             transportCalcDurations={transportCalcDurations}
                             selectedItemId={isMobile ? null : selectedItemId}
                             onSelectItem={isMobile ? undefined : (id) => setSelectedItemId(prev => prev === id ? null : id)}
-                            onRemoveActivity={removeActivity}
+                            onRemoveActivity={unscheduleActivity}
                           />
                         </div>
                         {/* Gap after each group */}
