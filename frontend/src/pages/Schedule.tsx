@@ -4031,7 +4031,7 @@ export default function SchedulePage() {
               </div>
 
               {/* Gantt-like location strip (draggable to reorder) */}
-              <div className="relative h-8 mt-1 mb-1">
+              <div className="relative h-8 mt-1 mb-1" style={tripDays.some(td => td.date) ? { paddingInlineStart: '40px' } : undefined}>
                 <DndContext sensors={locationPillSensors} collisionDetection={closestCenter} onDragEnd={handleLocationSpanReorder}>
                   <SortableContext items={sortableSpanIds} strategy={horizontalListSortingStrategy}>
                     <div className="flex gap-2 h-full">
