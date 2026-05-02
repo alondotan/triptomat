@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect, useRef, Fragment, lazy, Suspense } from 'react';
+import { categoryEmoji, transportEmoji } from '@/shared/utils/emojiMaps';
 import { AppLayout } from '@/shared/components/layout/AppLayout';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { usePOI } from '@/features/poi/POIContext';
@@ -93,29 +94,6 @@ function tempToHsl(temp: number): string {
 const MONTH_LABELS_EN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTH_LABELS_HE = ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ'];
 
-// Emoji by POI category
-function categoryEmoji(category: string): string {
-  switch (category) {
-    case 'accommodation': return '🏨';
-    case 'eatery':        return '🍽️';
-    case 'attraction':    return '🏛️';
-    case 'service':       return '🔧';
-    default:              return '📍';
-  }
-}
-
-// Emoji by transport category
-function transportEmoji(category: string): string {
-  switch (category) {
-    case 'flight':      return '✈️';
-    case 'train':       return '🚂';
-    case 'ferry':       return '⛴️';
-    case 'bus':         return '🚌';
-    case 'taxi':        return '🚕';
-    case 'car_rental':  return '🚗';
-    default:            return '🚀';
-  }
-}
 
 // ─── Chronological reorder ────────────────────────────────────────────────────
 // When a time_block gets/changes its time, reorder activities so timed items

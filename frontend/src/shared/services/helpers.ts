@@ -93,3 +93,23 @@ export const STATUS_PRIORITY: Record<string, number> = {
 
 /** @deprecated Use STATUS_PRIORITY — values are identical. */
 export const TRANSPORT_STATUS_PRIORITY = STATUS_PRIORITY;
+
+/**
+ * Applies the four merge rules shared by every entity type:
+ * sourceRefs union, status upgrade-only, isPaid additive, isCancelled un-cancel.
+ * Spread the result into your domain-specific `updates` object.
+ */
+export function applyCommonMergeRules<S extends string>(
+  primary: { status: S; isPaid?: boolean; isCancelled?: boolean; sourceRefs: SourceRefs },
+  secondary: { status: S; isPaid?: boolean; isCancelled?: boolean; sourceRefs: SourceRefs },
+): { sourceRefs: SourceRefs; status?: S; isPaid?: boolean; isCancelled?: boolean } {
+  const result: { sourceRefs: SourceRefs; status?: S; isPaid?: boolean; isCancelled?: boolean } = {
+    sourceRefs: mergeSourceRefs(primary.sourceRefs, secondary.sourceRefs),
+  };
+  if ((STATUS_PRIORITY[secondary.status] ?? 0) > (STATUS_PRIORITY[primary.status] ?? 0)) {
+    result.status = secondary.status;
+  }
+  if (secondary.isPaid) result.isPaid = true;
+  if (primary.isCancelled && !secondary.isCancelled) result.isCancelled = false;
+  return result;
+}

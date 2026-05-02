@@ -11,9 +11,7 @@ import { useToast } from '@/shared/hooks/use-toast';
 import { useAiUsage } from '@/shared/hooks/useAiUsage';
 import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { usePOI } from '@/features/poi/POIContext';
-import { updatePOI as updatePOIService } from '@/features/poi/poiService';
 import { useItineraryDraft } from '@/features/itinerary/useItineraryDraft';
-import { CATEGORY_MAP } from '@/shared/utils/categoryMap';
 import { applyDraftToTrip } from '@/features/itinerary/itineraryDraftService';
 import { useItineraryHistory } from '@/features/home/useItineraryHistory';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
@@ -21,7 +19,8 @@ import { useChatHistory } from './useChatHistory';
 import { useAtMention, extractMentionNames, stripMentionBrackets } from './useAtMention';
 import { AtMentionMenu } from './AtMentionMenu';
 import type { TripContext } from './AIChatSheet';
-import type { PointOfInterest } from '@/types/trip';
+import { buildTripPlan } from './buildTripPlan';
+import { applyAIToolCalls } from './applyAIToolCalls';
 
 type Message = import('./useChatHistory').Message;
 
@@ -199,93 +198,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
     setLoading(true);
     setLastSentAt(Date.now());
 
-    // Build the trip plan sent as context: locations → days (scheduled) + potential POIs
-    const tripPlan = (() => {
-      const poiMap = new Map(pois.map(p => [p.id, p]));
-
-      // Collect scheduled POI IDs across all days
-      const scheduledPoiIds = new Set(
-        itineraryDays.flatMap(d =>
-          (d.activities ?? []).filter(a => a.type === 'poi').map(a => a.id)
-        )
-      );
-
-      // Build tripPlace → location name lookup
-      const placeLocMap = new Map(
-        tripPlaces.map(tp => {
-          const loc = tripLocations.find(l => l.id === tp.tripLocationId);
-          return [tp.id, loc?.name ?? ''];
-        })
-      );
-
-      // Group days by location name (via tripPlaceId → location name)
-      const locationDaysMap = new Map<string, typeof itineraryDays>();
-      for (const day of itineraryDays) {
-        const loc = (day.tripPlaceId && placeLocMap.get(day.tripPlaceId)) || '';
-        if (!locationDaysMap.has(loc)) locationDaysMap.set(loc, []);
-        locationDaysMap.get(loc)!.push(day);
-      }
-
-      // Build name → TripLocation lookup for IDs
-      const tripLocationByName = new Map(
-        tripLocations.map(tl => [tl.name.toLowerCase(), tl])
-      );
-
-      // Group unscheduled POIs by city
-      const potentialByCity = new Map<string, Array<{ id: string; name: string; category: string; status: string }>>();
-      const unassigned: Array<{ id: string; name: string; category: string; status: string }> = [];
-      for (const poi of pois) {
-        if (scheduledPoiIds.has(poi.id)) continue;
-        const city = poi.location?.city || '';
-        if (!city) {
-          unassigned.push({ id: poi.id, name: poi.name, category: poi.category, status: poi.status });
-          continue;
-        }
-        if (!potentialByCity.has(city)) potentialByCity.set(city, []);
-        potentialByCity.get(city)!.push({ id: poi.id, name: poi.name, category: poi.category, status: poi.status });
-      }
-
-      // Build hotel list from accommodation POIs
-      const hotels = pois
-        .filter(p => p.category === 'accommodation')
-        .map(p => ({ id: p.id, name: p.name, city: p.location?.city }));
-
-      // Build location entries for locations that have scheduled days
-      const locations = [...locationDaysMap.entries()].map(([locName, days]) => ({
-        id: tripLocationByName.get(locName.toLowerCase())?.id,
-        name: locName,
-        days: days.map(day => {
-          const selectedHotel = (day.accommodationOptions ?? []).find(a => a.is_selected);
-          const hotelPoi = selectedHotel ? poiMap.get(selectedHotel.poi_id) : undefined;
-          return {
-            dayNumber: day.dayNumber,
-            date: day.date,
-            hotel_id: hotelPoi?.id,
-            places: (day.activities ?? [])
-              .filter(a => a.type === 'poi' && poiMap.has(a.id))
-              .sort((a, b) => a.order - b.order)
-              .map(a => {
-                const poi = poiMap.get(a.id)!;
-                return { id: poi.id, name: poi.name, category: poi.category, time: a.time_window?.start };
-              }),
-          };
-        }),
-        potential: potentialByCity.get(locName) ?? [],
-      }));
-
-      // Add cities that have potential POIs but no scheduled days
-      for (const [city, potentials] of potentialByCity.entries()) {
-        if (!locationDaysMap.has(city)) {
-          locations.push({ id: tripLocationByName.get(city.toLowerCase())?.id, name: city, days: [], potential: potentials });
-        }
-      }
-
-      return {
-        locations,
-        unassigned: unassigned.length ? unassigned : undefined,
-        hotels: hotels.length ? hotels : undefined,
-      };
-    })();
+    const tripPlan = buildTripPlan(pois, itineraryDays, tripPlaces, tripLocations);
 
     // Helper to serialize messages for API calls
     const serializeMessages = (msgs: Message[], enrichedContent?: string) =>
@@ -389,153 +302,23 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
       let shouldApply = false;
       let newDays: ReturnType<typeof applyToolCall> | null = null;
       if (data?.toolCalls?.length > 0) {
-        for (const tc of data.toolCalls) {
-          if (tc.name === 'set_itinerary' && tc.args?.days) {
-            if (instantApply) {
-              history.pushHistory(itineraryDays, pois, activeTrip);
-            }
-            newDays = applyToolCall(tc.args.days);
-            // Save snapshot so the user can revisit this plan state later
-            if (newDays) {
-              snapshotByMsgIdxRef.current.set(updatedMessages.length, newDays);
-            }
-            // Notify parent with clean structured places from the tool call
-            if (onItineraryUpdate) {
-              const places = (tc.args.days as Array<{ day_number?: number; dayNumber?: number; location_id?: string; location_name?: string; location_context?: string; locationContext?: string; places?: Array<{ name?: string; place_name?: string; is_specific_place?: boolean; place_id?: string }> }>)
-                .flatMap(d => (d.places ?? [])
-                  .filter(p => p.place_id || p.is_specific_place !== false)
-                  .map(p => ({
-                    name: p.place_name ?? p.name ?? '',
-                    day: d.day_number ?? d.dayNumber ?? 0,
-                    location: d.location_name ?? d.location_context ?? d.locationContext,
-                  }))
-                  .filter(p => p.name));
-              onItineraryUpdate(places, updatedMessages.length);
-            }
-          } else if (tc.name === 'update_day' && tc.args?.day) {
-            if (instantApply) {
-              history.pushHistory(itineraryDays, pois, activeTrip);
-            }
-            newDays = applyDayUpdate(tc.args.day);
-            if (newDays) {
-              snapshotByMsgIdxRef.current.set(updatedMessages.length, newDays);
-            }
-            if (onItineraryUpdate) {
-              const day = tc.args.day as { day_number?: number; dayNumber?: number; location_name?: string; places?: Array<{ name?: string; place_name?: string; is_specific_place?: boolean; place_id?: string }> };
-              const places = (day.places ?? [])
-                .filter(p => p.place_id || p.is_specific_place !== false)
-                .map(p => ({
-                  name: p.place_name ?? p.name ?? '',
-                  day: day.day_number ?? day.dayNumber ?? 0,
-                  location: day.location_name,
-                }))
-                .filter(p => p.name);
-              onItineraryUpdate(places, updatedMessages.length);
-            }
-
-          } else if (tc.name === 'apply_itinerary') {
-            shouldApply = true;
-
-          } else if (tc.name === 'suggest_places' && tc.args?.places) {
-            onSuggestPlaces?.(tc.args.places, updatedMessages.length);
-
-          } else if (tc.name === 'add_places' && Array.isArray(tc.args?.places) && (tc.args.places as unknown[]).length > 0) {
-            if (instantApply) history.pushHistory(itineraryDays, pois, activeTrip);
-            await Promise.all((tc.args.places as Record<string, unknown>[]).map(p =>
-              addPOI({
-                tripId: tripContext.tripId,
-                name: p.name as string,
-                category: (CATEGORY_MAP[p.category as string] ?? p.category as PointOfInterest['category']) || 'attraction',
-                placeType: (p.place_type || p.accommodation_type || p.eatery_type || p.transport_type || p.event_type) as string | undefined,
-                activityType: p.activity_type as string | undefined,
-                status: 'suggested',
-                location: {
-                  city: (p.location_name || p.city) as string | undefined,
-                  country: p.country as string | undefined,
-                },
-                details: {
-                  ...(p.cost !== undefined ? { cost: { amount: p.cost as number, currency: tripContext.currency || '' } } : {}),
-                  ...(p.notes ? { notes: { user_summary: p.notes as string } } : {}),
-                },
-                sourceRefs: { email_ids: [], recommendation_ids: [] },
-                isCancelled: false,
-                isPaid: false,
-              } as Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>)
-            ));
-
-          } else if (tc.name === 'add_place' && tc.args?.name) {
-            if (instantApply) history.pushHistory(itineraryDays, pois, activeTrip);
-            await addPOI({
-              tripId: tripContext.tripId,
-              name: tc.args.name,
-              category: (CATEGORY_MAP[tc.args.category as string] ?? tc.args.category as PointOfInterest['category']) || 'attraction',
-              placeType: (tc.args.place_type || tc.args.accommodation_type || tc.args.eatery_type || tc.args.transport_type || tc.args.event_type) as string | undefined,
-              activityType: tc.args.activity_type as string | undefined,
-              status: 'suggested',
-              location: {
-                city: (tc.args.location_name || tc.args.city) as string | undefined,
-                country: tc.args.country as string | undefined,
-              },
-              details: {
-                ...(tc.args.cost !== undefined ? { cost: { amount: tc.args.cost, currency: tripContext.currency || '' } } : {}),
-                ...(tc.args.notes ? { notes: { user_summary: tc.args.notes } } : {}),
-              },
-              sourceRefs: { email_ids: [], recommendation_ids: [] },
-              isCancelled: false,
-              isPaid: false,
-            } as Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>);
-
-          } else if (tc.name === 'update_place' && (tc.args?.place_id || tc.args?.name)) {
-            const existing = tc.args.place_id
-              ? pois.find(p => p.id === String(tc.args.place_id))
-              : pois.find(p => p.name.toLowerCase() === String(tc.args.name).toLowerCase());
-            if (existing) {
-              if (instantApply) history.pushHistory(itineraryDays, pois, activeTrip);
-              const updates: Partial<PointOfInterest> = {};
-              if (tc.args.cost !== undefined || tc.args.notes !== undefined) {
-                updates.details = {
-                  ...existing.details,
-                  ...(tc.args.cost !== undefined ? { cost: { amount: tc.args.cost as number, currency: tripContext.currency || '' } } : {}),
-                  ...(tc.args.notes !== undefined ? { notes: { ...existing.details?.notes, user_summary: tc.args.notes as string } } : {}),
-                };
-              }
-              if (tc.args.status !== undefined) {
-                updates.status = tc.args.status as PointOfInterest['status'];
-              }
-              await updatePOIService(existing.id, updates);
-            }
-
-          } else if (tc.name === 'add_days' && (tc.args?.count as number) > 0) {
-            if (instantApply) history.pushHistory(itineraryDays, pois, activeTrip);
-            await updateCurrentTrip({ numberOfDays: (tripContext.numberOfDays || 0) + (tc.args.count as number) });
-
-          } else if (tc.name === 'shift_trip_dates' && tc.args?.new_start_date && tripContext.startDate) {
-            if (instantApply) history.pushHistory(itineraryDays, pois, activeTrip);
-            const oldStart = new Date(tripContext.startDate);
-            const newStart = new Date(tc.args.new_start_date as string);
-            const deltaDays = Math.round((newStart.getTime() - oldStart.getTime()) / 86_400_000);
-            const tripUpdates: Parameters<typeof updateCurrentTrip>[0] = { startDate: tc.args.new_start_date as string };
-            if (tripContext.endDate) {
-              const newEnd = new Date(tripContext.endDate);
-              newEnd.setDate(newEnd.getDate() + deltaDays);
-              tripUpdates.endDate = newEnd.toISOString().split('T')[0];
-            }
-            await updateCurrentTrip(tripUpdates);
-            // Shift dates on all itinerary days that have an assigned date
-            await Promise.all(
-              itineraryDays
-                .filter(d => d.date)
-                .map(d => {
-                  const shifted = new Date(d.date!);
-                  shifted.setDate(shifted.getDate() + deltaDays);
-                  return supabase
-                    .from('itinerary_days')
-                    .update({ date: shifted.toISOString().split('T')[0] })
-                    .eq('id', d.id);
-                }),
-            );
-          }
-        }
+        ({ newDays, shouldApply } = await applyAIToolCalls({
+          toolCalls: data.toolCalls,
+          tripContext,
+          pois,
+          itineraryDays,
+          activeTrip,
+          instantApply,
+          applyToolCall,
+          applyDayUpdate,
+          addPOI,
+          updateCurrentTrip,
+          history,
+          onItineraryUpdate,
+          onSuggestPlaces,
+          snapshotRef: snapshotByMsgIdxRef,
+          updatedMessagesLength: updatedMessages.length,
+        }));
       }
 
       // Stage 1 already showed the message — Stage 2 only applies actions to the trip

@@ -4,7 +4,7 @@ import {
 } from '@/types/trip';
 import {
   supabase, hasValue, mergeWithNewWins, fuzzyMatch,
-  mergeSourceRefs, STATUS_PRIORITY,
+  mergeSourceRefs, STATUS_PRIORITY, applyCommonMergeRules,
 } from '@/shared/services/helpers';
 
 export async function fetchPOIs(tripId: string): Promise<PointOfInterest[]> {
@@ -174,7 +174,7 @@ export async function mergeTwoPOIs(
   const updates: Partial<PointOfInterest> = {
     location: mergedLocation,
     details: mergedDetails,
-    sourceRefs: mergeSourceRefs(primary.sourceRefs, secondary.sourceRefs),
+    ...applyCommonMergeRules(primary, secondary),
   };
 
   if (!hasValue(primary.placeType) && hasValue(secondary.placeType)) {
@@ -186,17 +186,6 @@ export async function mergeTwoPOIs(
   if (!hasValue(primary.imageUrl) && hasValue(secondary.imageUrl)) {
     updates.imageUrl = secondary.imageUrl;
   }
-
-  // Status: never downgrade
-  const secPriority = STATUS_PRIORITY[secondary.status] ?? 0;
-  const priPriority = STATUS_PRIORITY[primary.status] ?? 0;
-  if (secPriority > priPriority) updates.status = secondary.status;
-
-  // isPaid: additive
-  if (secondary.isPaid) updates.isPaid = true;
-
-  // isCancelled: un-cancel if either is not cancelled
-  if (primary.isCancelled && !secondary.isCancelled) updates.isCancelled = false;
 
   await updatePOI(primary.id, updates);
   await deletePOI(secondary.id);

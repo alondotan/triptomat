@@ -12,6 +12,7 @@ import {
   Breadcrumb, BreadcrumbList, BreadcrumbItem,
   BreadcrumbLink, BreadcrumbPage, BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { formatFileSize } from '@/shared/utils/formatUtils';
 
 const CATEGORY_ICONS: Record<DocumentCategory, typeof FileText> = {
   passport: CreditCard, id: CreditCard, visa: Stamp, insurance: Shield,
@@ -21,13 +22,6 @@ const CATEGORY_ICONS: Record<DocumentCategory, typeof FileText> = {
 const CATEGORIES: DocumentCategory[] = [
   'passport', 'visa', 'insurance', 'id', 'flight', 'hotel', 'car_rental', 'activity', 'other',
 ];
-
-function formatFileSize(bytes?: number): string {
-  if (!bytes) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
 
 function fileIcon(mimeType?: string) {
   if (!mimeType) return FileText;

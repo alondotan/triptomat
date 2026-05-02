@@ -3,7 +3,7 @@ import {
   Transportation, SourceRefs, TransportCost, TransportBooking, TransportSegment,
 } from '@/types/trip';
 import {
-  supabase, mergeWithNewWins, mergeSourceRefs, TRANSPORT_STATUS_PRIORITY,
+  supabase, mergeWithNewWins, applyCommonMergeRules,
 } from '@/shared/services/helpers';
 
 export async function fetchTransportation(tripId: string): Promise<Transportation[]> {
@@ -76,7 +76,7 @@ export async function mergeTwoTransportations(
   const updates: Partial<Transportation> = {
     booking: mergedBooking,
     additionalInfo: mergedAdditionalInfo,
-    sourceRefs: mergeSourceRefs(primary.sourceRefs, secondary.sourceRefs),
+    ...applyCommonMergeRules(primary, secondary),
   };
 
   // Cost: take primary's unless zero, then take secondary's
@@ -88,17 +88,6 @@ export async function mergeTwoTransportations(
   if (primary.segments.length === 0 && secondary.segments.length > 0) {
     updates.segments = secondary.segments;
   }
-
-  // Status: never downgrade
-  const secPriority = TRANSPORT_STATUS_PRIORITY[secondary.status] ?? 0;
-  const priPriority = TRANSPORT_STATUS_PRIORITY[primary.status] ?? 0;
-  if (secPriority > priPriority) updates.status = secondary.status;
-
-  // isPaid: additive
-  if (secondary.isPaid) updates.isPaid = true;
-
-  // isCancelled: un-cancel if either is not cancelled
-  if (primary.isCancelled && !secondary.isCancelled) updates.isCancelled = false;
 
   await updateTransportation(primary.id, updates);
   await deleteTransportation(secondary.id);

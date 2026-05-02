@@ -5,6 +5,7 @@ import { usePOI } from '@/features/poi/POIContext';
 import type { PointOfInterest } from '@/types/trip';
 import type { SourceRecommendation } from '@/types/webhook';
 import { fetchTripRecommendations } from '@/features/inbox/recommendationService';
+import { CATEGORY_GRADIENTS } from './v2Config';
 
 // ─── types ──────────────────────────────────────────────────────────────────
 
@@ -19,15 +20,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   eatery:        'Restaurant',
   accommodation: 'Hotel',
   event:         'Event',
-};
-
-// Gradient placeholders when no image is available
-const CATEGORY_GRADIENTS: Record<string, string> = {
-  attraction:    'from-slate-900 via-blue-950 to-indigo-900',
-  service:       'from-slate-900 via-zinc-900 to-slate-800',
-  eatery:        'from-amber-950 via-orange-950 to-red-950',
-  accommodation: 'from-emerald-950 via-teal-950 to-cyan-950',
-  event:         'from-purple-950 via-violet-950 to-indigo-950',
 };
 
 // ─── sub-components ─────────────────────────────────────────────────────────

@@ -7,17 +7,8 @@ import { useLocalizeLocation } from '@/features/geodata/useLocationDescriptions'
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { usePOI } from '@/features/poi/POIContext';
 import { V2POIForm } from '@/features/v2/forms/V2POIForm';
-import type { PointOfInterest, POIStatus } from '@/types/trip';
-
-const STATUS_COLORS: Record<POIStatus, string> = {
-  suggested:  'bg-v2-surface-container-high text-v2-on-surface-variant',
-  interested: 'bg-blue-900/40 text-blue-300',
-  planned:    'bg-indigo-900/40 text-indigo-300',
-  scheduled:  'bg-v2-primary/20 text-v2-primary',
-  booked:     'bg-v2-secondary/20 text-v2-secondary',
-  visited:    'bg-emerald-900/40 text-emerald-300',
-  skipped:    'bg-v2-surface-container text-v2-on-surface-variant',
-};
+import type { PointOfInterest } from '@/types/trip';
+import { STATUS_COLORS } from './v2Config';
 
 function HotelCard({ poi, onOpen }: { poi: PointOfInterest; onOpen: () => void }) {
   const localizeLocation = useLocalizeLocation();
