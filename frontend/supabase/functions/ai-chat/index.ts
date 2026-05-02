@@ -420,7 +420,7 @@ ALWAYS respond with helpful text AND call the appropriate tool when action is ne
 - Set apply=true when user wants to plan/build/create/save the itinerary.
 - For a single day change, use update_day_plan instead.
 
-Call plan_itinerary when: user asks to plan, build, schedule, or create an itinerary.
+Call plan_itinerary when: user asks to plan, build, schedule, or create an itinerary — OR when user sends/shares/pastes their own plan (e.g., a list or table of days and places) for you to save. If the user provides a ready-made plan, parse it into the tool call and save it immediately with apply=true.
 Do NOT call plan_itinerary for: factual questions or open recommendations without scheduling intent.
 
 When referencing any place that appears in the current plan, use the EXACT name as listed.`;
@@ -1220,6 +1220,8 @@ Deno.serve(async (req) => {
                   ];
                 } catch (err) {
                   console.error('unified: handlePlanItinerary error:', err);
+                  // Remove unresolved plan_itinerary/update_day_plan so client doesn't receive an unhandled tool call
+                  resolvedToolCalls = functionCalls.filter(f => f.name !== 'plan_itinerary' && f.name !== 'update_day_plan');
                 }
               }
             }

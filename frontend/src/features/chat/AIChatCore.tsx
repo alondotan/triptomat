@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
+import Markdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -645,14 +646,31 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
                 <div className={cn('flex flex-col gap-1', compact ? 'max-w-[90%]' : 'max-w-[85%]')}>
                   <div
                     className={cn(
-                      'rounded-2xl whitespace-pre-wrap break-words',
+                      'rounded-2xl break-words',
                       compact ? 'px-2.5 py-1.5 text-xs' : 'px-3.5 py-2.5 text-sm',
                       msg.role === 'user'
-                        ? 'bg-primary text-primary-foreground rounded-br-md'
+                        ? 'bg-primary text-primary-foreground rounded-br-md whitespace-pre-wrap'
                         : 'bg-muted rounded-bl-md'
                     )}
                   >
-                    {msg.content}
+                    {msg.role === 'user' ? msg.content : (
+                      <Markdown
+                        components={{
+                          p: ({ children }) => <p className="mb-1.5 last:mb-0">{children}</p>,
+                          ul: ({ children }) => <ul className="list-disc pl-4 mb-1.5 space-y-0.5">{children}</ul>,
+                          ol: ({ children }) => <ol className="list-decimal pl-4 mb-1.5 space-y-0.5">{children}</ol>,
+                          li: ({ children }) => <li>{children}</li>,
+                          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                          em: ({ children }) => <em>{children}</em>,
+                          h3: ({ children }) => <p className="font-semibold mb-1">{children}</p>,
+                          h4: ({ children }) => <p className="font-medium mb-0.5">{children}</p>,
+                          a: ({ children }) => <span>{children}</span>,
+                          code: ({ children }) => <code className="bg-background/50 px-1 rounded text-xs font-mono">{children}</code>,
+                        }}
+                      >
+                        {msg.content}
+                      </Markdown>
+                    )}
                   </div>
                   {snap && onViewSnapshot && (
                     <button
@@ -672,7 +690,7 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             );
           })}
 
-          {loading && (
+          {loading && messages[messages.length - 1]?.role !== 'assistant' && (
             <div className="flex gap-2 justify-start">
               <div className={cn('shrink-0 rounded-full bg-primary/10 flex items-center justify-center mt-0.5', compact ? 'w-5 h-5' : 'w-7 h-7')}>
                 <Bot size={compact ? 10 : 14} className="text-primary" />
