@@ -10,6 +10,7 @@ import {
   Mail,
   DollarSign,
   Filter,
+  BarChart2,
 } from 'lucide-react';
 
 interface NavItem {
@@ -28,6 +29,7 @@ const navItems: NavItem[] = [
   { path: '/admin/emails', label: 'Email Analysis', icon: Mail },
   { path: '/admin/costs', label: 'Cost Tracker', icon: DollarSign },
   { path: '/admin/funnel', label: 'Pipeline Funnel', icon: Filter },
+  { path: '/admin/ai-metrics', label: 'AI Metrics', icon: BarChart2 },
 ];
 
 export function AdminSidebar() {

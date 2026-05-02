@@ -1131,6 +1131,8 @@ Deno.serve(async (req) => {
 
     // ── Unified mode: single streaming call with text + tools ────────────────
     if (mode === 'unified') {
+      const requestStart = Date.now();
+      let ttftMs: number | undefined;
       const systemPrompt = buildUnifiedSystemPrompt(tripContext as TripContext, (tripPlan as TripPlan) ?? null);
       const geminiBody: Record<string, unknown> = {
         system_instruction: { parts: [{ text: systemPrompt }] },
@@ -1185,6 +1187,7 @@ Deno.serve(async (req) => {
                   const parts = chunk.candidates?.[0]?.content?.parts ?? [];
                   for (const part of parts) {
                     if (part.text) {
+                      if (ttftMs === undefined) ttftMs = Date.now() - requestStart;
                       fullText += part.text;
                       controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', text: part.text })}\n\n`));
                     }
@@ -1222,6 +1225,7 @@ Deno.serve(async (req) => {
             }
 
             const finalMessage = fullText || 'Done.';
+            const totalMs = Date.now() - requestStart;
             // Log cache hit stats — cachedContentTokenCount > 0 means implicit caching kicked in
             if (usageMetadata) {
               console.log('[ai-chat unified] usage:', JSON.stringify({
@@ -1234,6 +1238,22 @@ Deno.serve(async (req) => {
                   : '0.00',
               }));
             }
+            // Fire-and-forget metrics insert (never block the stream response)
+            serviceClient.from('ai_chat_metrics').insert({
+              user_id: userId,
+              trip_id: bodyTripId ?? null,
+              mode: 'unified',
+              prompt_tokens: usageMetadata?.promptTokenCount ?? null,
+              cached_tokens: usageMetadata?.cachedContentTokenCount ?? null,
+              output_tokens: usageMetadata?.candidatesTokenCount ?? null,
+              total_tokens: usageMetadata?.totalTokenCount ?? null,
+              ttft_ms: ttftMs ?? null,
+              total_ms: totalMs,
+              tool_names: resolvedToolCalls.length > 0
+                ? resolvedToolCalls.map(tc => tc.name)
+                : null,
+              source: typeof source === 'string' ? source : 'web',
+            }).then().catch((err: unknown) => console.error('metrics insert error:', err));
             persistIfRequested(finalMessage, resolvedToolCalls.length > 0 ? resolvedToolCalls : null);
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', message: finalMessage, toolCalls: resolvedToolCalls })}\n\n`));
             controller.close();
