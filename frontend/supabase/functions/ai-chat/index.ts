@@ -405,28 +405,10 @@ ${applyInstruction}
   return prompt;
 }
 
-// Unified mode: friendly text response + all tools in a single call (no Stage 1/2 split)
-function buildUnifiedSystemPrompt(tripContext?: TripContext, tripPlan?: TripPlan | null): string {
-  // Reuse context injection (pass undefined for tripPlan to skip planner section)
-  let prompt = buildSystemPrompt(tripContext, undefined);
+// Static planning instructions — kept separate so they can sit in the cacheable prefix
+const UNIFIED_PLANNING_INSTRUCTIONS = `
 
-  if (tripPlan !== undefined && tripPlan !== null) {
-    const hasContent = tripPlan.locations.length > 0 || (tripPlan.unassigned?.length ?? 0) > 0;
-    const planText = hasContent ? buildTripPlanText(tripPlan) : '(Empty — no places or days planned yet)';
-
-    const allNames: string[] = [
-      ...tripPlan.locations.flatMap(loc => [
-        ...loc.days.flatMap(d => d.places.map(p => p.name)),
-        ...loc.potential.map(p => p.name),
-      ]),
-      ...(tripPlan.unassigned ?? []).map(p => p.name),
-    ];
-    const knownNamesRule = allNames.length > 0
-      ? `\nWhen referencing any place that appears in the current plan, use the EXACT name as listed.`
-      : '';
-
-    prompt += `\n\n## Itinerary Planning
-${knownNamesRule}
+## Itinerary Planning
 
 ALWAYS respond with helpful text AND call the appropriate tool when action is needed:
 - Recommendations only → call suggest_places (describe the places in text too)
@@ -441,8 +423,47 @@ ALWAYS respond with helpful text AND call the appropriate tool when action is ne
 Call plan_itinerary when: user asks to plan, build, schedule, or create an itinerary.
 Do NOT call plan_itinerary for: factual questions or open recommendations without scheduling intent.
 
-Current plan:
-${planText}`;
+When referencing any place that appears in the current plan, use the EXACT name as listed.`;
+
+// Unified mode: friendly text response + all tools in a single call (no Stage 1/2 split)
+// Layout matters: static prefix FIRST (eligible for Gemini implicit caching),
+// dynamic per-trip content LAST. https://developers.googleblog.com/gemini-2-5-models-now-support-implicit-caching/
+function buildUnifiedSystemPrompt(tripContext?: TripContext, tripPlan?: TripPlan | null): string {
+  // ── STATIC PREFIX (cacheable across all users/trips) ──────────────────
+  let prompt = BASE_SYSTEM_PROMPT + UNIFIED_PLANNING_INSTRUCTIONS;
+
+  // ── DYNAMIC SUFFIX (per-trip; never cached) ──────────────────────────
+  if (tripContext?.tripName) {
+    const parts = [`\n\n## Current trip context\nYou are assisting with a trip called "${tripContext.tripName}".`];
+    if (tripContext.countries?.length) parts.push(`Destinations: ${tripContext.countries.join(', ')}.`);
+    if (tripContext.startDate && tripContext.endDate) parts.push(`Dates: ${tripContext.startDate} to ${tripContext.endDate}.`);
+    else if (tripContext.numberOfDays) parts.push(`Duration: ${tripContext.numberOfDays} days.`);
+    if (tripContext.currency) parts.push(`Display currency: ${tripContext.currency}.`);
+    if (tripContext.status) parts.push(`Trip phase: ${tripContext.status}.`);
+    if (tripContext.locationsFlat?.length) {
+      parts.push(`Available destinations in ${tripContext.countries?.[0] ?? 'this country'}: ${tripContext.locationsFlat.join(', ')}.`);
+    }
+    if (tripContext.allPlaces?.length) {
+      const names = tripContext.allPlaces.map(p => p.name).join(', ');
+      parts.push(`\nKnown attractions in this country (use EXACT names when referencing these): ${names}.`);
+    }
+    if (tripContext.festivals?.length) {
+      const festLines = tripContext.festivals
+        .map(f => {
+          const id = f.id ? ` [event_id: ${f.id}]` : '';
+          return f.period ? `  - ${f.name}${id} (${f.country}, ${f.period})` : `  - ${f.name}${id} (${f.country})`;
+        })
+        .join('\n');
+      parts.push(`\nUpcoming festivals & events during this trip:\n${festLines}`);
+    }
+    parts.push('Use this context to give relevant, specific advice. Reference the trip details naturally when helpful.');
+    prompt += parts.join('\n');
+  }
+
+  if (tripPlan !== undefined && tripPlan !== null) {
+    const hasContent = tripPlan.locations.length > 0 || (tripPlan.unassigned?.length ?? 0) > 0;
+    const planText = hasContent ? buildTripPlanText(tripPlan) : '(Empty — no places or days planned yet)';
+    prompt += `\n\nCurrent plan:\n${planText}`;
   }
 
   return prompt;
@@ -1142,6 +1163,7 @@ Deno.serve(async (req) => {
       let sseBuffer = '';
       let fullText = '';
       const functionCalls: Array<{ name: string; args: unknown }> = [];
+      let usageMetadata: { promptTokenCount?: number; cachedContentTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number } | undefined;
 
       const responseStream = new ReadableStream<Uint8Array>({
         async start(controller) {
@@ -1170,6 +1192,7 @@ Deno.serve(async (req) => {
                       functionCalls.push({ name: part.functionCall.name, args: part.functionCall.args });
                     }
                   }
+                  if (chunk.usageMetadata) usageMetadata = chunk.usageMetadata;
                 } catch { /* skip malformed chunks */ }
               }
             }
@@ -1199,6 +1222,18 @@ Deno.serve(async (req) => {
             }
 
             const finalMessage = fullText || 'Done.';
+            // Log cache hit stats — cachedContentTokenCount > 0 means implicit caching kicked in
+            if (usageMetadata) {
+              console.log('[ai-chat unified] usage:', JSON.stringify({
+                prompt: usageMetadata.promptTokenCount,
+                cached: usageMetadata.cachedContentTokenCount ?? 0,
+                output: usageMetadata.candidatesTokenCount,
+                total: usageMetadata.totalTokenCount,
+                cacheHitRatio: usageMetadata.promptTokenCount && usageMetadata.cachedContentTokenCount
+                  ? (usageMetadata.cachedContentTokenCount / usageMetadata.promptTokenCount).toFixed(2)
+                  : '0.00',
+              }));
+            }
             persistIfRequested(finalMessage, resolvedToolCalls.length > 0 ? resolvedToolCalls : null);
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', message: finalMessage, toolCalls: resolvedToolCalls })}\n\n`));
             controller.close();
