@@ -843,9 +843,11 @@ const SAFETY_SETTINGS = [
 
 async function handleUpsertPlaces(
   // deno-lint-ignore no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args: { locations?: any[]; places?: any[] },
   tripId: string,
   // deno-lint-ignore no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   db: any,
 ): Promise<Record<string, string>> {
   const idMap: Record<string, string> = {};
@@ -933,9 +935,11 @@ async function handleUpsertPlaces(
 
 // deno-lint-ignore no-explicit-any
 async function handlePlanItinerary(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args: { locations?: any[]; places?: any[]; days?: any[]; day?: any; apply?: boolean },
   tripId: string,
   // deno-lint-ignore no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   db: any,
   isFullPlan: boolean,
 ): Promise<Array<{ name: string; args: unknown }>> {
@@ -951,10 +955,12 @@ async function handlePlanItinerary(
   const toolCalls: Array<{ name: string; args: unknown }> = [];
 
   if (isFullPlan && args.days) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const days = args.days.map((day: any) => ({
       ...day,
       location_id: resolveId(day.location_id),
       hotel_id: resolveId(day.hotel_id),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       places: (day.places || []).map((p: any) => ({ ...p, place_id: resolveId(p.place_id) })),
     }));
     toolCalls.push({ name: 'set_itinerary', args: { days } });
@@ -963,6 +969,7 @@ async function handlePlanItinerary(
       ...args.day,
       location_id: resolveId(args.day.location_id),
       hotel_id: resolveId(args.day.hotel_id),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       places: (args.day.places || []).map((p: any) => ({ ...p, place_id: resolveId(p.place_id) })),
     };
     toolCalls.push({ name: 'update_day', args: { day } });
@@ -1134,8 +1141,7 @@ Deno.serve(async (req) => {
       const chunkDecoder = new TextDecoder();
       let sseBuffer = '';
       let fullText = '';
-      // deno-lint-ignore no-explicit-any
-      const functionCalls: Array<{ name: string; args: any }> = [];
+      const functionCalls: Array<{ name: string; args: unknown }> = [];
 
       const responseStream = new ReadableStream<Uint8Array>({
         async start(controller) {
