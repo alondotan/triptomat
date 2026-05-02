@@ -7,6 +7,7 @@ const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_STREAM_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
 
 const MAX_INPUT_LENGTH = 2000;
 const MAX_MESSAGES = 15;
@@ -404,6 +405,49 @@ ${applyInstruction}
   return prompt;
 }
 
+// Unified mode: friendly text response + all tools in a single call (no Stage 1/2 split)
+function buildUnifiedSystemPrompt(tripContext?: TripContext, tripPlan?: TripPlan | null): string {
+  // Reuse context injection (pass undefined for tripPlan to skip planner section)
+  let prompt = buildSystemPrompt(tripContext, undefined);
+
+  if (tripPlan !== undefined && tripPlan !== null) {
+    const hasContent = tripPlan.locations.length > 0 || (tripPlan.unassigned?.length ?? 0) > 0;
+    const planText = hasContent ? buildTripPlanText(tripPlan) : '(Empty — no places or days planned yet)';
+
+    const allNames: string[] = [
+      ...tripPlan.locations.flatMap(loc => [
+        ...loc.days.flatMap(d => d.places.map(p => p.name)),
+        ...loc.potential.map(p => p.name),
+      ]),
+      ...(tripPlan.unassigned ?? []).map(p => p.name),
+    ];
+    const knownNamesRule = allNames.length > 0
+      ? `\nWhen referencing any place that appears in the current plan, use the EXACT name as listed.`
+      : '';
+
+    prompt += `\n\n## Itinerary Planning
+${knownNamesRule}
+
+ALWAYS respond with helpful text AND call the appropriate tool when action is needed:
+- Recommendations only → call suggest_places (describe the places in text too)
+- Full itinerary request → call plan_itinerary + write a brief day-by-day overview in text (1-2 lines per day)
+- Single day change → call update_day_plan + briefly describe what changed in text
+- Add to trip → call add_place / add_places + confirm in text
+
+**plan_itinerary** — registers new places AND builds the full schedule in one call.
+- Set apply=true when user wants to plan/build/create/save the itinerary.
+- For a single day change, use update_day_plan instead.
+
+Call plan_itinerary when: user asks to plan, build, schedule, or create an itinerary.
+Do NOT call plan_itinerary for: factual questions or open recommendations without scheduling intent.
+
+Current plan:
+${planText}`;
+  }
+
+  return prompt;
+}
+
 // Base tools — always available in all modes
 const CATEGORY_ENUM = { type: 'STRING', enum: ['Activities', 'Eateries', 'Accommodations', 'Events', 'Transportation'], description: 'The main category group.' };
 const LOCATION_FIELDS = {
@@ -748,13 +792,46 @@ const UPDATE_DAY_DECL = {
   },
 };
 
-// 2-step planner tool set
-const ITINERARY_TOOL_TWOSTEP = {
-  functionDeclarations: [UPSERT_PLACES_DECL, SIMPLIFIED_SET_ITINERARY_DECL, UPDATE_DAY_DECL],
+// Single-step planner: combines upsert_places + set_itinerary into one Gemini call
+const PLAN_ITINERARY_DECL = {
+  name: 'plan_itinerary',
+  description: 'Register new locations and places AND build the complete day-by-day schedule in one call. Use temp IDs for new items, real IDs for existing ones. Set apply=true when the user explicitly asks to plan, build, create, or save the itinerary.',
+  parameters: {
+    type: 'OBJECT',
+    properties: {
+      apply: {
+        type: 'BOOLEAN',
+        description: 'Set true when user explicitly asks to plan, build, create, or save.',
+      },
+      locations: UPSERT_PLACES_DECL.parameters.properties.locations,
+      places: UPSERT_PLACES_DECL.parameters.properties.places,
+      days: SIMPLIFIED_SET_ITINERARY_DECL.parameters.properties.days,
+    },
+    required: ['locations', 'places', 'days'],
+  },
 };
 
-const ITINERARY_TOOL_TWOSTEP_WITH_APPLY = {
-  functionDeclarations: [UPSERT_PLACES_DECL, SIMPLIFIED_SET_ITINERARY_DECL, UPDATE_DAY_DECL, ITINERARY_TOOL.functionDeclarations[1]], // apply_itinerary
+const UPDATE_DAY_PLAN_DECL = {
+  name: 'update_day_plan',
+  description: 'Register new locations/places AND update a single specific day — all in one call. Use instead of plan_itinerary when only one day changes.',
+  parameters: {
+    type: 'OBJECT',
+    properties: {
+      apply: {
+        type: 'BOOLEAN',
+        description: 'Set true when user explicitly asks to apply or save the change.',
+      },
+      locations: UPSERT_PLACES_DECL.parameters.properties.locations,
+      places: UPSERT_PLACES_DECL.parameters.properties.places,
+      day: UPDATE_DAY_DECL.parameters.properties.day,
+    },
+    required: ['locations', 'places', 'day'],
+  },
+};
+
+// Single-step tool set — one Gemini call instead of two
+const ITINERARY_TOOL_SINGLESTEP = {
+  functionDeclarations: [PLAN_ITINERARY_DECL, UPDATE_DAY_PLAN_DECL],
 };
 
 const SAFETY_SETTINGS = [
@@ -772,6 +849,13 @@ async function handleUpsertPlaces(
   db: any,
 ): Promise<Record<string, string>> {
   const idMap: Record<string, string> = {};
+
+  // Fetch trip country once — used as geocoding hint on every POI
+  let tripCountry: string | undefined;
+  {
+    const { data: trip } = await db.from('trips').select('countries').eq('id', tripId).single();
+    tripCountry = trip?.countries?.[0];
+  }
 
   // 1. Create new locations (in order — parent before child)
   for (const loc of (args.locations || [])) {
@@ -828,7 +912,7 @@ async function handleUpsertPlaces(
         place_type: placeType || null,
         activity_type: place.activity_type || null,
         status: 'planned',
-        location: cityName ? { city: cityName } : {},
+        location: { ...(cityName ? { city: cityName } : {}), ...(tripCountry ? { country: tripCountry } : {}) },
         source_refs: { email_ids: [], recommendation_ids: [] },
         details: {},
         is_cancelled: false,
@@ -845,6 +929,50 @@ async function handleUpsertPlaces(
   }
 
   return idMap;
+}
+
+// deno-lint-ignore no-explicit-any
+async function handlePlanItinerary(
+  args: { locations?: any[]; places?: any[]; days?: any[]; day?: any; apply?: boolean },
+  tripId: string,
+  // deno-lint-ignore no-explicit-any
+  db: any,
+  isFullPlan: boolean,
+): Promise<Array<{ name: string; args: unknown }>> {
+  let idMap: Record<string, string> = {};
+  try {
+    idMap = await handleUpsertPlaces({ locations: args.locations, places: args.places }, tripId, db);
+  } catch (err) {
+    console.error('handlePlanItinerary: upsert failed', err);
+  }
+
+  const resolveId = (id: string | undefined) => (id ? (idMap[id] ?? id) : id);
+
+  const toolCalls: Array<{ name: string; args: unknown }> = [];
+
+  if (isFullPlan && args.days) {
+    const days = args.days.map((day: any) => ({
+      ...day,
+      location_id: resolveId(day.location_id),
+      hotel_id: resolveId(day.hotel_id),
+      places: (day.places || []).map((p: any) => ({ ...p, place_id: resolveId(p.place_id) })),
+    }));
+    toolCalls.push({ name: 'set_itinerary', args: { days } });
+  } else if (!isFullPlan && args.day) {
+    const day = {
+      ...args.day,
+      location_id: resolveId(args.day.location_id),
+      hotel_id: resolveId(args.day.hotel_id),
+      places: (args.day.places || []).map((p: any) => ({ ...p, place_id: resolveId(p.place_id) })),
+    };
+    toolCalls.push({ name: 'update_day', args: { day } });
+  }
+
+  if (args.apply) {
+    toolCalls.push({ name: 'apply_itinerary', args: {} });
+  }
+
+  return toolCalls;
 }
 
 async function callGemini(body: Record<string, unknown>) {
@@ -960,6 +1088,135 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Persistence helper — used by all modes
+    const lastUserMessage = [...messages].reverse().find((m: { role: string; content: string }) => m.role === 'user')?.content ?? '';
+    const persistIfRequested = (responseText: string, toolCallsPayload: unknown) => {
+      if (!persistHistory || !bodyTripId) return;
+      const msgSource: string = typeof source === 'string' ? source : 'web';
+      serviceClient
+        .rpc('save_chat_message', { p_trip_id: bodyTripId, p_user_id: userId, p_role: 'user', p_content: lastUserMessage, p_tool_calls: null, p_source: msgSource })
+        .then(() =>
+          serviceClient.rpc('save_chat_message', { p_trip_id: bodyTripId, p_user_id: userId, p_role: 'assistant', p_content: responseText, p_tool_calls: toolCallsPayload ?? null, p_source: msgSource })
+        )
+        .catch((err: unknown) => console.error('persistHistory error:', err));
+    };
+
+    // ── Unified mode: single streaming call with text + tools ────────────────
+    if (mode === 'unified') {
+      const systemPrompt = buildUnifiedSystemPrompt(tripContext as TripContext, (tripPlan as TripPlan) ?? null);
+      const geminiBody: Record<string, unknown> = {
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: sanitized,
+        generationConfig: { maxOutputTokens: 8192, temperature: 0.7 },
+        safetySettings: SAFETY_SETTINGS,
+        tools: [{
+          functionDeclarations: [
+            ...BASE_TOOLS.functionDeclarations,
+            ...ITINERARY_TOOL_SINGLESTEP.functionDeclarations,
+          ],
+        }],
+        toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
+      };
+
+      const geminiStreamResponse = await fetch(GEMINI_STREAM_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(geminiBody),
+      });
+
+      if (!geminiStreamResponse.ok) {
+        const err = await geminiStreamResponse.text();
+        throw new Error(`AI service error (${geminiStreamResponse.status}): ${err.slice(0, 200)}`);
+      }
+
+      const encoder = new TextEncoder();
+      const geminiReader = geminiStreamResponse.body!.getReader();
+      const chunkDecoder = new TextDecoder();
+      let sseBuffer = '';
+      let fullText = '';
+      // deno-lint-ignore no-explicit-any
+      const functionCalls: Array<{ name: string; args: any }> = [];
+
+      const responseStream = new ReadableStream<Uint8Array>({
+        async start(controller) {
+          try {
+            while (true) {
+              const { done, value } = await geminiReader.read();
+              if (done) break;
+
+              sseBuffer += chunkDecoder.decode(value, { stream: true });
+              const lines = sseBuffer.split('\n');
+              sseBuffer = lines.pop() ?? '';
+
+              for (const line of lines) {
+                if (!line.startsWith('data: ')) continue;
+                const jsonStr = line.slice(6).trim();
+                if (!jsonStr || jsonStr === '[DONE]') continue;
+                try {
+                  const chunk = JSON.parse(jsonStr);
+                  const parts = chunk.candidates?.[0]?.content?.parts ?? [];
+                  for (const part of parts) {
+                    if (part.text) {
+                      fullText += part.text;
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', text: part.text })}\n\n`));
+                    }
+                    if (part.functionCall) {
+                      functionCalls.push({ name: part.functionCall.name, args: part.functionCall.args });
+                    }
+                  }
+                } catch { /* skip malformed chunks */ }
+              }
+            }
+
+            // Resolve plan_itinerary / update_day_plan server-side (DB writes + ID mapping)
+            let resolvedToolCalls = [...functionCalls];
+            if (bodyTripId) {
+              const planFc = functionCalls.find(fc => fc.name === 'plan_itinerary');
+              const updateDayPlanFc = functionCalls.find(fc => fc.name === 'update_day_plan');
+              if (planFc || updateDayPlanFc) {
+                const fc = (planFc || updateDayPlanFc)!;
+                try {
+                  const resolved = await handlePlanItinerary(
+                    fc.args as { locations?: unknown[]; places?: unknown[]; days?: unknown[]; day?: unknown; apply?: boolean },
+                    bodyTripId,
+                    serviceClient,
+                    !!planFc,
+                  );
+                  resolvedToolCalls = [
+                    ...functionCalls.filter(f => f.name !== 'plan_itinerary' && f.name !== 'update_day_plan'),
+                    ...resolved,
+                  ];
+                } catch (err) {
+                  console.error('unified: handlePlanItinerary error:', err);
+                }
+              }
+            }
+
+            const finalMessage = fullText || 'Done.';
+            persistIfRequested(finalMessage, resolvedToolCalls.length > 0 ? resolvedToolCalls : null);
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done', message: finalMessage, toolCalls: resolvedToolCalls })}\n\n`));
+            controller.close();
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            console.error('unified stream error:', msg);
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: msg })}\n\n`));
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(responseStream, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'X-Accel-Buffering': 'no',
+        },
+      });
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     // ── Stage 1: Chat mode — fast, no tools ─────────────────────────────────
     if (mode === 'chat') {
       const planForChat: TripPlan | null = (tripPlan as TripPlan) ?? null;
@@ -996,7 +1253,7 @@ Deno.serve(async (req) => {
       systemPrompt += `\n\n## FOLLOW THIS EXACT PLAN — STRICT
 The following itinerary was already described to the user. You MUST build this EXACT plan with:
 - Same places, same days, same structure
-- **Exact place names** as written (use them verbatim in upsert_places and set_itinerary)
+- **Exact place names** as written (use them verbatim in plan_itinerary)
 - **Exact time-of-day assignment**: if the plan says "Morning" → set day_part: "Morning"; "Afternoon" → "Afternoon"; "Evening" → "Evening"; "Night" → "Night"
 - Set start_time ONLY if the plan explicitly states a specific time (e.g. "at 10:00"). Do NOT infer or guess start_time from day_part — leave it empty otherwise
 - Set duration where explicitly mentioned or clearly estimable from context
@@ -1013,7 +1270,7 @@ Do not add, remove, or reorder places. Do not change their time-of-day slot.`;
 The assistant has already replied to the user in text. Your sole job now is to execute actions based on the conversation:
 - User wanted to add a place → call add_place or add_places
 - User wanted recommendations shown on map → call suggest_places
-- User wanted to build/update itinerary → call upsert_places then set_itinerary or update_day
+- User wanted to build/update itinerary → call plan_itinerary (full plan) or update_day_plan (single day)
 - Purely informational exchange with no action needed → do NOT call any tools, return empty text
 Do NOT generate a conversational response. Only call tools if action is warranted.`;}
 
@@ -1029,20 +1286,17 @@ Do NOT generate a conversational response. Only call tools if action is warrante
     };
 
     // Always enable base tools (suggest_places, add_place, update_place, add_days, shift_trip_dates).
-    // In planner/actions mode, also add the 2-step upsert_places + set_itinerary tools.
+    // In planner/actions mode, also add the single-step plan_itinerary + update_day_plan tools.
     if (isPlanner || isActions) {
-      const itineraryDeclarations = isInstantApply
-        ? ITINERARY_TOOL_TWOSTEP.functionDeclarations
-        : ITINERARY_TOOL_TWOSTEP_WITH_APPLY.functionDeclarations;
       geminiBody.tools = [{
         functionDeclarations: [
           ...BASE_TOOLS.functionDeclarations,
-          ...itineraryDeclarations,
+          ...ITINERARY_TOOL_SINGLESTEP.functionDeclarations,
         ],
       }];
       if (isPlanner) {
-        // Force upsert_places on first turn (original planner behavior)
-        geminiBody.toolConfig = { functionCallingConfig: { mode: 'ANY', allowedFunctionNames: ['upsert_places'] } };
+        // Force plan_itinerary — single Gemini call, no second round-trip needed
+        geminiBody.toolConfig = { functionCallingConfig: { mode: 'ANY', allowedFunctionNames: ['plan_itinerary'] } };
       } else {
         // Actions mode: let model freely decide which tools to call
         geminiBody.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
@@ -1060,50 +1314,39 @@ Do NOT generate a conversational response. Only call tools if action is warrante
       if (contents.length > 0 && contents[contents.length - 1].role === 'model') {
         contents.push({
           role: 'user',
-          parts: [{ text: 'Based on the plan you described above, please call the appropriate tools now to save it to my trip. Call upsert_places with the new locations and places, then call set_itinerary (or update_day) to build the schedule. Use the exact place names from your response.' }],
+          parts: [{ text: 'Based on the plan you described above, please call the appropriate tools now to save it to my trip. Call plan_itinerary (or update_day_plan for a single day) with the exact place names from your response.' }],
         });
       }
     }
 
-    // First Gemini call
+    // First (and only) Gemini call
     const result = await callGemini(geminiBody);
 
-    // ── 2-step: handle upsert_places then continue with set_itinerary ──────
+    // ── Single-step: handle plan_itinerary / update_day_plan server-side ─────
+    // DB writes + ID mapping happen here; no second Gemini call needed.
+    let overrideToolCalls: Array<{ name: string; args: unknown }> | null = null;
     if ((isPlanner || isActions) && bodyTripId) {
       const firstParts = result.candidates?.[0]?.content?.parts || [];
-      const upsertFc = firstParts.find(
-        (p: { functionCall?: { name: string; args: unknown } }) => p.functionCall?.name === 'upsert_places'
+
+      const planFc = firstParts.find(
+        (p: { functionCall?: { name: string; args: unknown } }) => p.functionCall?.name === 'plan_itinerary'
+      );
+      const updateDayPlanFc = firstParts.find(
+        (p: { functionCall?: { name: string; args: unknown } }) => p.functionCall?.name === 'update_day_plan'
       );
 
-      if (upsertFc) {
-        let idMap: Record<string, string> = {};
+      if (planFc || updateDayPlanFc) {
+        const fc = planFc || updateDayPlanFc;
         try {
-          idMap = await handleUpsertPlaces(
-            upsertFc.functionCall.args as { locations?: unknown[]; places?: unknown[] },
+          overrideToolCalls = await handlePlanItinerary(
+            fc.functionCall.args as { locations?: unknown[]; places?: unknown[]; days?: unknown[]; day?: unknown; apply?: boolean },
             bodyTripId,
             serviceClient,
+            !!planFc,
           );
         } catch (err) {
-          console.error('handleUpsertPlaces error:', err);
+          console.error('handlePlanItinerary error:', err);
         }
-
-        // Build second turn: append model's upsert_places call + function response
-        const secondContents = [
-          ...sanitized,
-          { role: 'model', parts: firstParts },
-          {
-            role: 'user',
-            parts: [{ functionResponse: { name: 'upsert_places', response: { id_map: idMap } } }],
-          },
-        ];
-
-        geminiBody.contents = secondContents;
-        geminiBody.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
-
-        const result2 = await callGemini(geminiBody);
-
-        // Use result2 for the rest of the flow
-        Object.assign(result, result2);
       }
     }
     // ─────────────────────────────────────────────────────────────────────────
@@ -1133,20 +1376,18 @@ Do NOT generate a conversational response. Only call tools if action is warrante
       }));
     }
 
-    // Resolve the last user message text for persistence
-    const lastUserMessage = [...messages].reverse().find((m: { role: string; content: string }) => m.role === 'user')?.content ?? '';
-
-    // Helper: persist user + assistant messages asynchronously (fire-and-forget)
-    const persistIfRequested = (responseText: string, toolCallsPayload: unknown) => {
-      if (!persistHistory || !bodyTripId) return;
-      const msgSource: string = typeof source === 'string' ? source : 'web';
-      serviceClient
-        .rpc('save_chat_message', { p_trip_id: bodyTripId, p_user_id: userId, p_role: 'user', p_content: lastUserMessage, p_tool_calls: null, p_source: msgSource })
-        .then(() =>
-          serviceClient.rpc('save_chat_message', { p_trip_id: bodyTripId, p_user_id: userId, p_role: 'assistant', p_content: responseText, p_tool_calls: toolCallsPayload ?? null, p_source: msgSource })
-        )
-        .catch((err: unknown) => console.error('persistHistory error:', err));
-    };
+    // Single-step plan processed server-side — return the already-resolved tool calls
+    if (overrideToolCalls !== null) {
+      const responseMessage = textParts || 'I updated the itinerary plan.';
+      persistIfRequested(responseMessage, overrideToolCalls);
+      return new Response(JSON.stringify({
+        message: responseMessage,
+        toolCalls: overrideToolCalls,
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // If there are tool calls, return them along with any text from the same response
     if (functionCalls.length > 0) {

@@ -27,6 +27,8 @@ type Message = import('./useChatHistory').Message;
 const MAX_INPUT = 2000;
 const COOLDOWN_MS = 2000;
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL;
+const SUPABASE_FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
 // In-memory store for per-trip conversation sessions (L1 cache for instant re-render)
 const tripSessions = new Map<string, Message[]>();
@@ -210,65 +212,22 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
       }));
 
     try {
-      // ── Stage 1: fast chat response (no tools, lightweight prompt) ──────────
-      const { data: chatData, error: chatError } = await supabase.functions.invoke('ai-chat', {
-        body: {
-          messages: serializeMessages(updatedMessages, aiContent),
-          tripContext: {
-            tripName: tripContext.tripName,
-            countries: tripContext.countries,
-            startDate: tripContext.startDate,
-            endDate: tripContext.endDate,
-            numberOfDays: tripContext.numberOfDays,
-            status: tripContext.status,
-            currency: tripContext.currency,
-            festivals: tripContext.festivals,
-            // intentionally omit locationsFlat and allPlaces — not needed for chat
-          },
-          mode: 'chat',
-          tripPlan,
-          tripId: tripContext.tripId,
+      // ── Unified mode: single streaming call (text + tools together) ──────────
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error('Not authenticated');
+
+      // Add streaming placeholder so user sees the assistant "typing"
+      const placeholder: Message = { role: 'assistant', content: '' };
+      setMessages([...updatedMessages, placeholder]);
+
+      const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/ai-chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': SUPABASE_ANON_KEY,
         },
-      });
-
-      if (chatError) {
-        let errorMsg = chatError.message || 'Failed to get response';
-        try {
-          const ctx = (chatError as { context?: Response }).context;
-          if (ctx) {
-            const body = await ctx.json();
-            errorMsg = body?.error || body?.message || errorMsg;
-          }
-        } catch { /* ignore */ }
-        throw new Error(errorMsg);
-      }
-      if (chatData?.error === 'daily_limit_exceeded') {
-        queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
-        throw new Error(chatData.message || 'Daily AI chat limit reached');
-      }
-      if (chatData?.error) throw new Error(chatData.error);
-
-      // Show Stage 1 response immediately — user sees text right away
-      const assistantMsg: Message = {
-        role: 'assistant',
-        content: chatData?.message || 'Sorry, I could not generate a response.',
-      };
-      setMessages(prev => {
-        const next = [...prev, assistantMsg];
-        onNewAssistantMessage?.(assistantMsg.content, next.length - 1);
-        return next;
-      });
-      setLoading(false);
-      // Persist both messages to DB (fire-and-forget)
-      appendMessages([userMsg, assistantMsg]).catch(() => {});
-      queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
-      // ────────────────────────────────────────────────────────────────────────
-
-      // ── Stage 2: planner (tools, proven upsert→itinerary flow) ─────────────
-      // Uses the ORIGINAL messages (not Stage 1's response) so it plans independently
-      setApplyingTools(true);
-      const { data, error: fnError } = await supabase.functions.invoke('ai-chat', {
-        body: {
+        body: JSON.stringify({
           messages: serializeMessages(updatedMessages, aiContent),
           tripContext: {
             tripName: tripContext.tripName,
@@ -281,29 +240,82 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
             festivals: tripContext.festivals,
             locationsFlat: tripContext.locationsFlat,
             allPlaces: tripContext.allPlaces,
+            existingPOIs: tripContext.existingPOIs,
           },
-          mode: 'planner',
+          mode: 'unified',
           tripPlan,
           instantApply,
           tripId: tripContext.tripId,
-          stage1Response: assistantMsg.content,
-        },
+          persistHistory: true,
+        }),
       });
 
-      console.log('[ai-chat stage2] data:', JSON.stringify(data)?.slice(0, 500), 'error:', fnError);
-      console.log('[ai-chat stage2] toolCalls:', data?.toolCalls?.map((t: { name: string }) => t.name));
-      // Stage 2 errors are soft — user already has the text response
-      if (fnError || data?.error) {
-        console.warn('[ai-chat stage2] error (non-fatal):', fnError?.message || data?.error);
-        return; // skip tool application
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        if (errBody?.error === 'daily_limit_exceeded') {
+          queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
+          throw new Error(errBody.message || 'Daily AI chat limit reached');
+        }
+        throw new Error(errBody?.error || `Server error ${response.status}`);
       }
 
-      // Handle tool calls (itinerary updates)
+      // Read the SSE stream — update message content as text arrives
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let sseBuffer = '';
+      let streamedText = '';
+      let finalMessage = '';
+      let finalToolCalls: Array<{ name: string; args: Record<string, unknown> }> = [];
+
+      outer: while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split('\n');
+        sseBuffer = lines.pop() ?? '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const payload = JSON.parse(line.slice(6));
+
+          if (payload.type === 'text') {
+            streamedText += payload.text;
+            setMessages(prev => {
+              const next = [...prev];
+              next[next.length - 1] = { role: 'assistant', content: streamedText };
+              return next;
+            });
+          } else if (payload.type === 'done') {
+            finalMessage = payload.message ?? streamedText;
+            finalToolCalls = payload.toolCalls ?? [];
+            break outer;
+          } else if (payload.type === 'error') {
+            throw new Error(payload.error || 'AI service error');
+          }
+        }
+      }
+
+      const assistantMsg: Message = { role: 'assistant', content: finalMessage || streamedText || 'Sorry, I could not generate a response.' };
+      setMessages(prev => {
+        const next = [...prev];
+        next[next.length - 1] = assistantMsg;
+        onNewAssistantMessage?.(assistantMsg.content, next.length - 1);
+        return next;
+      });
+      setLoading(false);
+      appendMessages([userMsg, assistantMsg]).catch(() => {});
+      queryClient.invalidateQueries({ queryKey: ['ai-usage'] });
+      // ─────────────────────────────────────────────────────────────────────────
+
+      // Apply tool calls from unified response
       let shouldApply = false;
       let newDays: ReturnType<typeof applyToolCall> | null = null;
-      if (data?.toolCalls?.length > 0) {
+      if (finalToolCalls.length > 0) {
+        setApplyingTools(true);
+        console.log('[ai-chat unified] toolCalls:', finalToolCalls.map((t: { name: string }) => t.name));
         ({ newDays, shouldApply } = await applyAIToolCalls({
-          toolCalls: data.toolCalls,
+          toolCalls: finalToolCalls,
           tripContext,
           pois,
           itineraryDays,
@@ -321,24 +333,16 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         }));
       }
 
-      // Stage 1 already showed the message — Stage 2 only applies actions to the trip
-
-      // Apply the itinerary to the real trip
+      // Apply itinerary to real trip if needed
       const daysToApply = newDays ?? (shouldApply ? draft : null);
-      console.log('[ai-chat] daysToApply:', daysToApply?.length, 'newDays:', !!newDays, 'shouldApply:', shouldApply, 'instantApply:', instantApply);
       if (daysToApply && daysToApply.length > 0 && (instantApply ? !!newDays : shouldApply)) {
         try {
-          console.log('[ai-chat] calling applyDraftToTrip with', JSON.stringify(daysToApply).slice(0, 500));
           await applyDraftToTrip(tripContext.tripId, daysToApply, pois, tripPlaces, tripContext.countries?.[0]);
-          // Re-enrich any POIs the individual fire-and-forgets missed (e.g. due to
-          // concurrent rate-limits during bulk creation). Batch mode is sequential so
-          // it avoids hammering the geocoding/image APIs. Fire-and-forget.
           supabase.functions.invoke('fetch-poi-image', { body: { tripId: tripContext.tripId } }).catch(() => {});
           if (!instantApply) {
             toast({ title: t('aiChat.tripUpdated'), description: t('aiChat.tripUpdatedDesc') });
           }
           initFromReal(itineraryDays, pois);
-          // Sync trip metadata so Schedule page (useTripDays) sees the right day count
           const maxDay = daysToApply.reduce((m, d) => Math.max(m, d.dayNumber || 0), 0);
           if (maxDay > 0) {
             const updates: Parameters<typeof updateCurrentTrip>[0] = {};
