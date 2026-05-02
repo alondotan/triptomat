@@ -2478,17 +2478,6 @@ export default function SchedulePage() {
     await refreshDays();
   }, [currentItDay, pois, updatePOI, refreshDays]);
 
-  // Move a scheduled item back to the potential zone (keep in day, change schedule_state)
-  const unscheduleActivity = useCallback((entityId: string) => {
-    const item = scheduled.find(i => i.id === entityId);
-    if (!item) return;
-    const newScheduled = scheduled.filter(i => i.id !== entityId);
-    const newPotential = [...potential, item];
-    setScheduled(newScheduled);
-    setPotential(newPotential);
-    persistDayActivities(newScheduled, newPotential);
-  }, [scheduled, potential, persistDayActivities]);
-
   const createNewActivity = useCallback(async (data: Record<string, string>, createBookingMission?: boolean) => {
     if (!activeTrip) return;
     const newPOI = await addPOI({
@@ -2748,6 +2737,17 @@ export default function SchedulePage() {
       await Promise.all([...changedIds].map(id => rebuildPOIBookingsFromDays(activeTrip.id, id)));
     }
   }, [selectedDayNum, itineraryDays, setItineraryDays, activeTrip]);
+
+  // Move a scheduled item back to the potential zone (keep in day, change schedule_state)
+  const unscheduleActivity = useCallback((entityId: string) => {
+    const item = scheduled.find(i => i.id === entityId);
+    if (!item) return;
+    const newScheduled = scheduled.filter(i => i.id !== entityId);
+    const newPotential = [...potential, item];
+    setScheduled(newScheduled);
+    setPotential(newPotential);
+    persistDayActivities(newScheduled, newPotential);
+  }, [scheduled, potential, persistDayActivities]);
 
   // Delete an auto-generated group → merge its items into the adjacent unlocked group
   const handleDeleteAutoGroup = useCallback(async (contentItemIds: string[]) => {
