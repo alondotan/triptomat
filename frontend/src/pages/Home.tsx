@@ -232,8 +232,8 @@ const HomePage = () => {
   }, [itineraryDays, pois, tripLocations, tripPlaces]);
 
   // Compute sleep segments by day location: one marker per unique location, with all day ranges combined.
-  // Non-consecutive visits to the same location appear as "1, 4-7" in a single marker.
-  // placeImageMap is included in deps as a proxy for geodata load (both update in the same effect).
+  // No dependency on placeImageMap — segments are ready as soon as liveDays are available.
+  // HomeMapPanel resolves coordinates via localStorage cache (instant after first visit).
   const sleepSegments = useMemo<SleepSegment[]>(() => {
     if (contextMode !== 'itinerary' || selectedLevel.type !== 'trip') return [];
     const byLocation = new Map<string, SleepSegment>();
@@ -262,7 +262,7 @@ const HomePage = () => {
       }
     }
     return insertionOrder.map(k => byLocation.get(k)!);
-  }, [liveDays, contextMode, selectedLevel, placeImageMap]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [liveDays, contextMode, selectedLevel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Shared helper: add a list of place-name suggestions to the panel + map
   const addSuggestionsToPanel = useCallback((

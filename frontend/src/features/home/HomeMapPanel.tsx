@@ -31,11 +31,11 @@ function getCategoryColor(category?: string): string {
   return POI_COLORS[category ?? ''] ?? '#f59e0b';
 }
 
-async function geocodeByName(name: string, countries: string[]): Promise<[number, number] | null> {
+async function geocodeByName(name: string, countries: string[]): Promise<{ coords: [number, number] | null; fromNetwork: boolean }> {
   const cacheKey = `tmt_geo:${name.toLowerCase()}:${countries[0] ?? ''}`;
   try {
     const cached = localStorage.getItem(cacheKey);
-    if (cached) return JSON.parse(cached) as [number, number];
+    if (cached) return { coords: JSON.parse(cached) as [number, number], fromNetwork: false };
   } catch { /* ignore */ }
 
   const q = encodeURIComponent(countries.length ? `${name} ${countries[0]}` : name);
@@ -46,12 +46,12 @@ async function geocodeByName(name: string, countries: string[]): Promise<[number
     );
     const data = await res.json();
     if (data?.[0]) {
-      const result: [number, number] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-      try { localStorage.setItem(cacheKey, JSON.stringify(result)); } catch { /* ignore */ }
-      return result;
+      const coords: [number, number] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      try { localStorage.setItem(cacheKey, JSON.stringify(coords)); } catch { /* ignore */ }
+      return { coords, fromNetwork: true };
     }
   } catch { /* ignore */ }
-  return null;
+  return { coords: null, fromNetwork: true };
 }
 
 const regionStyle = {
@@ -106,10 +106,10 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
       for (const s of todo) {
         if (cancelled) break;
         geocodedRef.current.add(s.id);
-        const result = await geocodeByName(s.name, countries);
+        const { coords, fromNetwork } = await geocodeByName(s.name, countries);
         if (cancelled) break;
-        if (result) setNominatimCoords(prev => ({ ...prev, [s.id]: result }));
-        await new Promise(r => setTimeout(r, 1100)); // Nominatim ≤1 req/s
+        if (coords) setNominatimCoords(prev => ({ ...prev, [s.id]: coords }));
+        if (fromNetwork) await new Promise(r => setTimeout(r, 1100)); // Nominatim ≤1 req/s
       }
     })();
     return () => { cancelled = true; };
@@ -139,10 +139,10 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
       for (const s of todo) {
         if (cancelled) break;
         geocodedSleepRef.current.add(s.poiId);
-        const result = await geocodeByName(s.name, countries);
+        const { coords, fromNetwork } = await geocodeByName(s.name, countries);
         if (cancelled) break;
-        if (result) setSleepCoords(prev => ({ ...prev, [s.poiId]: result }));
-        await new Promise(r => setTimeout(r, 1100));
+        if (coords) setSleepCoords(prev => ({ ...prev, [s.poiId]: coords }));
+        if (fromNetwork) await new Promise(r => setTimeout(r, 1100));
       }
     })();
     return () => { cancelled = true; };
