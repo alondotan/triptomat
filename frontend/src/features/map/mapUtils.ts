@@ -41,24 +41,54 @@ export const TRANSPORT_COLORS: Record<string, string> = {
   default: '#64748b',
 };
 
-export const LOCATION_MARKER_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#ef4444', '#0891b2', '#eab308', '#ec4899'];
+export const LOCATION_MARKER_COLOR = '#4f46e5';
 
-export const createLocationMarkerIcon = (index: number, color: string, cityName: string, nightsLabel: string) => {
+const LOCATION_CATEGORY_ICON: Record<string, string> = {
+  attraction: 'place',
+  eatery: 'restaurant',
+  service: 'build',
+};
+
+export const createLocationMarkerIcon = (
+  index: number,
+  cityName: string,
+  nightsLabel: string,
+  attractions?: Array<{ name: string; category: string }>,
+) => {
+  const color = LOCATION_MARKER_COLOR;
   const circleSz = 36;
-  const labelW = Math.max(cityName.length * 7 + 16, 70);
-  const totalH = circleSz + 8 + 18 + 16; // circle + gap + city + nights
-  const html = `<div style="position:relative;width:${labelW}px;height:${totalH}px;display:flex;flex-direction:column;align-items:center;">
-    <div style="width:${circleSz}px;height:${circleSz}px;border-radius:50%;background:${color};color:white;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,0.35);border:2.5px solid white;font-size:16px;font-weight:700;font-family:sans-serif;flex-shrink:0;">${index}</div>
-    <div style="margin-top:4px;background:white;border-radius:6px;padding:2px 6px;box-shadow:0 2px 6px rgba(0,0,0,0.18);text-align:center;line-height:1.2;">
-      <div style="font-size:11px;font-weight:600;color:#1e293b;white-space:nowrap;font-family:sans-serif;">${cityName}</div>
-      <div style="font-size:10px;color:#64748b;font-family:sans-serif;">${nightsLabel}</div>
+  const leftW = Math.max(cityName.length * 7 + 16, 72);
+  const leftH = circleSz + 4 + 32; // circle + gap + label card
+
+  const items = (attractions ?? []).slice(0, 3);
+  const rightW = items.length > 0 ? 112 : 0;
+  const colGap = items.length > 0 ? 6 : 0;
+  const rightH = items.length > 0 ? 4 + items.length * 20 + Math.max(0, items.length - 1) * 3 : 0;
+  const totalW = leftW + colGap + rightW;
+  const totalH = Math.max(leftH, rightH);
+
+  const attrHtml = items.map(a => {
+    const icon = LOCATION_CATEGORY_ICON[a.category] ?? 'location_on';
+    const label = a.name.length > 14 ? a.name.slice(0, 13) + '…' : a.name;
+    return `<div style="display:flex;align-items:center;gap:3px;background:white;border-radius:5px;padding:2px 6px;box-shadow:0 1px 4px rgba(0,0,0,0.15);white-space:nowrap;overflow:hidden;"><span class="material-symbols-outlined" style="font-size:11px;color:${color};flex-shrink:0;">${icon}</span><span style="font-size:10px;font-weight:500;color:#1e293b;">${label}</span></div>`;
+  }).join('');
+
+  const html = `<div style="display:inline-flex;align-items:flex-start;gap:${colGap}px;">
+    <div style="display:flex;flex-direction:column;align-items:center;width:${leftW}px;">
+      <div style="width:${circleSz}px;height:${circleSz}px;border-radius:50%;background:${color};color:white;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,0.35);border:2.5px solid white;font-size:16px;font-weight:700;font-family:sans-serif;flex-shrink:0;">${index}</div>
+      <div style="margin-top:4px;background:white;border-radius:6px;padding:2px 6px;box-shadow:0 2px 6px rgba(0,0,0,0.18);text-align:center;line-height:1.2;max-width:${leftW - 4}px;">
+        <div style="font-size:11px;font-weight:600;color:#1e293b;white-space:nowrap;font-family:sans-serif;overflow:hidden;text-overflow:ellipsis;">${cityName}</div>
+        <div style="font-size:10px;color:#64748b;font-family:sans-serif;">${nightsLabel}</div>
+      </div>
     </div>
+    ${items.length > 0 ? `<div style="display:flex;flex-direction:column;gap:3px;margin-top:4px;">${attrHtml}</div>` : ''}
   </div>`;
+
   return new L.DivIcon({
     className: '',
     html,
-    iconSize: [labelW, totalH],
-    iconAnchor: [labelW / 2, circleSz / 2],
+    iconSize: [totalW, totalH],
+    iconAnchor: [leftW / 2, circleSz / 2],
   });
 };
 

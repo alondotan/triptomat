@@ -258,7 +258,18 @@ const HomePage = () => {
           name: loc,
           coordinates: placeCoordMapRef.current.get(locKey),
           ranges: [{ start: day.dayNumber, end: day.dayNumber }],
+          attractions: [],
         });
+      }
+      // Collect non-accommodation places for the attraction chips (up to 3 unique per location)
+      const seg = byLocation.get(locKey)!;
+      for (const place of day.places) {
+        if (place.category === 'accommodation') continue;
+        if ((seg.attractions?.length ?? 0) >= 3) break;
+        if (!seg.attractions) seg.attractions = [];
+        if (!seg.attractions.find(a => a.name.toLowerCase() === place.name.toLowerCase())) {
+          seg.attractions.push({ name: place.name, category: place.category ?? 'attraction' });
+        }
       }
     }
     return insertionOrder.map(k => byLocation.get(k)!);

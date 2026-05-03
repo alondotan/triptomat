@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON, Tooltip, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import type { Geometry } from 'geojson';
-import { createPOIIcon, createLocationMarkerIcon, LOCATION_MARKER_COLORS, POI_COLORS, FitBounds } from '@/features/map/mapUtils';
+import { createPOIIcon, createLocationMarkerIcon, LOCATION_MARKER_COLOR, POI_COLORS, FitBounds } from '@/features/map/mapUtils';
 import { getSubCategoryEntry, loadSubCategoryConfig } from '@/shared/lib/subCategoryConfig';
 import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
 import type { PointOfInterest } from '@/types/trip';
@@ -72,14 +72,21 @@ export interface SleepSegment {
   ranges: Array<{ start: number; end: number }>;
   /** Sequential index (1-based) for numbered circle marker */
   index?: number;
+  /** Top non-accommodation places for this location, shown as small chips on the marker */
+  attractions?: Array<{ name: string; category: string }>;
 }
 
 function formatRanges(ranges: SleepSegment['ranges']): string {
   return ranges.map(r => r.start === r.end ? String(r.start) : `${r.start}-${r.end}`).join(', ');
 }
 
-function countNights(ranges: SleepSegment['ranges']): number {
-  return ranges.reduce((sum, r) => sum + (r.end - r.start + 1), 0);
+function buildNightsLabel(ranges: SleepSegment['ranges']): string {
+  if (ranges.length === 1) {
+    const count = ranges[0].end - ranges[0].start + 1;
+    return `${count} לילות`;
+  }
+  const parts = ranges.map(r => String(r.end - r.start + 1)).join('+');
+  return `${parts} לילות`;
 }
 
 interface HomeMapPanelProps {
@@ -160,10 +167,9 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
         const pos = s.coordinates ?? sleepCoords[s.poiId] ?? null;
         if (!pos) return null;
         const label = formatRanges(s.ranges);
-        const nights = countNights(s.ranges);
+        const nightsLabel = buildNightsLabel(s.ranges);
         const idx = s.index ?? (i + 1);
-        const color = LOCATION_MARKER_COLORS[(idx - 1) % LOCATION_MARKER_COLORS.length];
-        return { poiId: s.poiId, name: s.name, label, nights, idx, color, pos };
+        return { poiId: s.poiId, name: s.name, label, nightsLabel, idx, pos, attractions: s.attractions };
       })
       .filter((m): m is NonNullable<typeof m> => m !== null),
     [sleepSegments, sleepCoords],
@@ -230,29 +236,26 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
               <Polyline
                 key={`line-${m.poiId}-${next.poiId}`}
                 positions={[m.pos, next.pos]}
-                pathOptions={{ color: next.color, weight: 3, opacity: 0.7, dashArray: '6 4' }}
+                pathOptions={{ color: LOCATION_MARKER_COLOR, weight: 3, opacity: 0.7, dashArray: '6 4' }}
               />
             );
           })}
 
-          {sleepMarkers.map(m => {
-            const nightsLabel = `${m.nights} לילות`;
-            return (
-              <Marker
-                key={`sleep-${m.poiId}`}
-                position={m.pos}
-                icon={createLocationMarkerIcon(m.idx, m.color, m.name, nightsLabel)}
-                zIndexOffset={500}
-              >
-                <Popup>
-                  <div className="text-sm">
-                    <div className="font-semibold">{m.name}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">ימים {m.label}</div>
-                  </div>
-                </Popup>
-              </Marker>
-            );
-          })}
+          {sleepMarkers.map(m => (
+            <Marker
+              key={`sleep-${m.poiId}`}
+              position={m.pos}
+              icon={createLocationMarkerIcon(m.idx, m.name, m.nightsLabel, m.attractions)}
+              zIndexOffset={500}
+            >
+              <Popup>
+                <div className="text-sm">
+                  <div className="font-semibold">{m.name}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">ימים {m.label}</div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
 
           {isEmpty && regionMarkers.map(r => r.boundary ? (
             <GeoJSON key={r.id} data={r.boundary} style={regionStyle}>
