@@ -57,9 +57,13 @@ interface RegionMarker { id: string; name: string; pos?: [number, number]; bound
 export interface SleepSegment {
   poiId: string;
   name: string;
-  dayStart: number;
-  dayEnd: number;
   coordinates?: [number, number];
+  /** One or more day ranges — multiple when the same location appears non-consecutively */
+  ranges: Array<{ start: number; end: number }>;
+}
+
+function formatRanges(ranges: SleepSegment['ranges']): string {
+  return ranges.map(r => r.start === r.end ? String(r.start) : `${r.start}-${r.end}`).join(', ');
 }
 
 interface HomeMapPanelProps {
@@ -139,8 +143,8 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
       .map(s => {
         const pos = s.coordinates ?? sleepCoords[s.poiId] ?? null;
         if (!pos) return null;
-        const label = s.dayStart === s.dayEnd ? String(s.dayStart) : `${s.dayStart}-${s.dayEnd}`;
-        return { poiId: s.poiId, name: s.name, dayStart: s.dayStart, dayEnd: s.dayEnd, pos, label };
+        const label = formatRanges(s.ranges);
+        return { poiId: s.poiId, name: s.name, label, pos };
       })
       .filter((m): m is NonNullable<typeof m> => m !== null),
     [sleepSegments, sleepCoords],
@@ -211,9 +215,7 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
               <Popup>
                 <div className="text-sm">
                   <div className="font-semibold">{m.name}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">
-                    {m.dayStart === m.dayEnd ? `Day ${m.dayStart}` : `Days ${m.dayStart}–${m.dayEnd}`}
-                  </div>
+                  <div className="text-xs text-slate-500 mt-0.5">Days {m.label}</div>
                 </div>
               </Popup>
             </Marker>

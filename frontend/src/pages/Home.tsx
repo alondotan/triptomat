@@ -218,24 +218,37 @@ const HomePage = () => {
     }));
   }, [itineraryDays, pois, tripLocations, tripPlaces]);
 
-  // Compute sleep segments by day location: consecutive days in the same location → one night-range marker.
+  // Compute sleep segments by day location: one marker per unique location, with all day ranges combined.
+  // Non-consecutive visits to the same location appear as "1, 4-7" in a single marker.
   // placeImageMap is included in deps as a proxy for geodata load (both update in the same effect).
   const sleepSegments = useMemo<SleepSegment[]>(() => {
     if (contextMode !== 'itinerary' || selectedLevel.type !== 'trip') return [];
-    const segments: SleepSegment[] = [];
+    const byLocation = new Map<string, SleepSegment>();
+    const insertionOrder: string[] = [];
     const sorted = [...liveDays].sort((a, b) => a.dayNumber - b.dayNumber);
     for (const day of sorted) {
       const loc = day.locationContext;
       if (!loc) continue;
-      const coords = placeCoordMapRef.current.get(loc.toLowerCase());
-      const last = segments[segments.length - 1];
-      if (last && last.name.toLowerCase() === loc.toLowerCase() && last.dayEnd === day.dayNumber - 1) {
-        last.dayEnd = day.dayNumber;
+      const locKey = loc.toLowerCase();
+      const existing = byLocation.get(locKey);
+      if (existing) {
+        const lastRange = existing.ranges[existing.ranges.length - 1];
+        if (lastRange.end === day.dayNumber - 1) {
+          lastRange.end = day.dayNumber;
+        } else {
+          existing.ranges.push({ start: day.dayNumber, end: day.dayNumber });
+        }
       } else {
-        segments.push({ poiId: `loc-${loc}`, name: loc, dayStart: day.dayNumber, dayEnd: day.dayNumber, coordinates: coords });
+        insertionOrder.push(locKey);
+        byLocation.set(locKey, {
+          poiId: `loc-${loc}`,
+          name: loc,
+          coordinates: placeCoordMapRef.current.get(locKey),
+          ranges: [{ start: day.dayNumber, end: day.dayNumber }],
+        });
       }
     }
-    return segments;
+    return insertionOrder.map(k => byLocation.get(k)!);
   }, [liveDays, contextMode, selectedLevel, placeImageMap]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Shared helper: add a list of place-name suggestions to the panel + map
