@@ -117,6 +117,19 @@ const HomePage = () => {
 
         if (countryData?.locations) {
           const boundaries = countryData.boundaries as Record<string, unknown> | undefined;
+          // Recursively collect city/region coordinates into coordMap so night markers appear instantly
+          type LocNode = { id: string; name?: string; coordinates?: { lat: number; lng: number }; children?: LocNode[] };
+          function collectLocCoords(locs: LocNode[]) {
+            for (const loc of locs) {
+              if (loc.name && loc.coordinates) {
+                const key = loc.name.toLowerCase();
+                if (!coordMap.has(key)) coordMap.set(key, [loc.coordinates.lat, loc.coordinates.lng]);
+              }
+              if (loc.children?.length) collectLocCoords(loc.children);
+            }
+          }
+          collectLocCoords(countryData.locations as LocNode[]);
+
           for (const loc of countryData.locations) {
             const boundary = boundaries?.[loc.id];
             const pos: [number, number] | undefined = loc.coordinates

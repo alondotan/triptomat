@@ -32,6 +32,12 @@ function getCategoryColor(category?: string): string {
 }
 
 async function geocodeByName(name: string, countries: string[]): Promise<[number, number] | null> {
+  const cacheKey = `tmt_geo:${name.toLowerCase()}:${countries[0] ?? ''}`;
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) return JSON.parse(cached) as [number, number];
+  } catch { /* ignore */ }
+
   const q = encodeURIComponent(countries.length ? `${name} ${countries[0]}` : name);
   try {
     const res = await fetch(
@@ -39,7 +45,11 @@ async function geocodeByName(name: string, countries: string[]): Promise<[number
       { headers: { 'User-Agent': 'Triptomat/1.0' } },
     );
     const data = await res.json();
-    if (data?.[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+    if (data?.[0]) {
+      const result: [number, number] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+      try { localStorage.setItem(cacheKey, JSON.stringify(result)); } catch { /* ignore */ }
+      return result;
+    }
   } catch { /* ignore */ }
   return null;
 }
