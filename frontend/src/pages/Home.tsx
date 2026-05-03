@@ -218,28 +218,33 @@ const HomePage = () => {
     }));
   }, [itineraryDays, pois, tripLocations, tripPlaces]);
 
-  // Compute sleep segments: consecutive days at the same hotel → shown as night-range markers on the map
+  // Compute sleep segments: each hotel's check-in day spans forward to the next check-in (or last day).
+  // Accommodation is only written on check-in day, not every night, so we propagate forward.
   const sleepSegments = useMemo<SleepSegment[]>(() => {
     if (contextMode !== 'itinerary' || selectedLevel.type !== 'trip') return [];
     const poiMap = new Map(pois.map(p => [p.id, p]));
-    const segments: SleepSegment[] = [];
     const sorted = [...itineraryDays].sort((a, b) => a.dayNumber - b.dayNumber);
+    const lastDay = sorted[sorted.length - 1]?.dayNumber ?? 0;
+
+    // Collect check-in events: days where a hotel is explicitly selected
+    const checkIns: Array<{ dayNumber: number; poi: typeof pois[0] }> = [];
     for (const day of sorted) {
       const selected = day.accommodationOptions.find(a => a.is_selected);
       if (!selected) continue;
       const poi = poiMap.get(selected.poi_id);
       if (!poi) continue;
-      const coords = poi.location?.coordinates
-        ? [poi.location.coordinates.lat, poi.location.coordinates.lng] as [number, number]
-        : undefined;
-      const last = segments[segments.length - 1];
-      if (last && last.poiId === poi.id && last.dayEnd === day.dayNumber - 1) {
-        last.dayEnd = day.dayNumber;
-      } else {
-        segments.push({ poiId: poi.id, name: poi.name, dayStart: day.dayNumber, dayEnd: day.dayNumber, coordinates: coords });
-      }
+      checkIns.push({ dayNumber: day.dayNumber, poi });
     }
-    return segments;
+
+    // Each hotel spans from check-in to (next check-in - 1), or end of trip
+    return checkIns.map((ci, idx) => {
+      const nextCheckIn = checkIns[idx + 1];
+      const dayEnd = nextCheckIn ? nextCheckIn.dayNumber - 1 : lastDay;
+      const coords = ci.poi.location?.coordinates
+        ? [ci.poi.location.coordinates.lat, ci.poi.location.coordinates.lng] as [number, number]
+        : undefined;
+      return { poiId: ci.poi.id, name: ci.poi.name, dayStart: ci.dayNumber, dayEnd, coordinates: coords };
+    });
   }, [itineraryDays, pois, contextMode, selectedLevel]);
 
   // Shared helper: add a list of place-name suggestions to the panel + map
