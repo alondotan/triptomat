@@ -212,7 +212,7 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
                 <div className="text-sm">
                   <div className="font-semibold">{m.name}</div>
                   <div className="text-xs text-slate-500 mt-0.5">
-                    {m.dayStart === m.dayEnd ? `Night ${m.dayStart}` : `Nights ${m.dayStart}–${m.dayEnd}`}
+                    {m.dayStart === m.dayEnd ? `Day ${m.dayStart}` : `Days ${m.dayStart}–${m.dayEnd}`}
                   </div>
                 </div>
               </Popup>
