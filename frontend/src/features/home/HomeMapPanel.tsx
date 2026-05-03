@@ -72,8 +72,10 @@ export interface SleepSegment {
   ranges: Array<{ start: number; end: number }>;
   /** Sequential index (1-based) for numbered circle marker */
   index?: number;
-  /** Top non-accommodation places for this location, shown as small chips on the marker */
-  attractions?: Array<{ name: string; category: string }>;
+  /** Image URL for the popup header */
+  imageUrl?: string;
+  /** Attractions for this location — shown as POI markers (if coords) or listed in popup */
+  attractions?: Array<{ name: string; category: string; placeType?: string; coordinates?: [number, number] }>;
 }
 
 function formatRanges(ranges: SleepSegment['ranges']): string {
@@ -98,8 +100,15 @@ interface HomeMapPanelProps {
   sleepSegments?: SleepSegment[];
 }
 
+const ATTRACTION_ICON: Record<string, string> = {
+  attraction: 'place',
+  eatery: 'restaurant',
+  service: 'build',
+};
+
 export function HomeMapPanel({ items, countries, regionMarkers = [], selectedName, onSelectName, sleepSegments = [] }: HomeMapPanelProps) {
   const [dialogPOI, setDialogPOI] = useState<PointOfInterest | null>(null);
+  const [openSleepId, setOpenSleepId] = useState<string | null>(null);
   // Force re-render once sub-category config is loaded so marker icons update
   const [, setConfigLoaded] = useState(false);
   useEffect(() => {
@@ -169,7 +178,7 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
         const label = formatRanges(s.ranges);
         const nightsLabel = buildNightsLabel(s.ranges);
         const idx = s.index ?? (i + 1);
-        return { poiId: s.poiId, name: s.name, label, nightsLabel, idx, pos, attractions: s.attractions };
+        return { poiId: s.poiId, name: s.name, label, nightsLabel, idx, pos, imageUrl: s.imageUrl, attractions: s.attractions ?? [] };
       })
       .filter((m): m is NonNullable<typeof m> => m !== null),
     [sleepSegments, sleepCoords],
@@ -245,17 +254,59 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
             <Marker
               key={`sleep-${m.poiId}`}
               position={m.pos}
-              icon={createLocationMarkerIcon(m.idx, m.name, m.nightsLabel, m.attractions)}
+              icon={createLocationMarkerIcon(m.idx, m.name, m.nightsLabel)}
               zIndexOffset={500}
+              eventHandlers={{
+                popupopen: () => setOpenSleepId(m.poiId),
+                popupclose: () => setOpenSleepId(id => id === m.poiId ? null : id),
+              }}
             >
-              <Popup>
-                <div className="text-sm">
-                  <div className="font-semibold">{m.name}</div>
+              <Popup minWidth={180}>
+                <div style={{ width: 180 }}>
+                  {m.imageUrl && (
+                    <img
+                      src={m.imageUrl}
+                      alt={m.name}
+                      style={{ width: 'calc(100% + 24px)', marginLeft: -12, marginTop: -8, marginBottom: 8, height: 80, objectFit: 'cover', display: 'block', borderRadius: '4px 4px 0 0' }}
+                    />
+                  )}
+                  <div className="font-semibold text-sm">{m.name}</div>
                   <div className="text-xs text-slate-500 mt-0.5">ימים {m.label}</div>
+                  {m.attractions.filter(a => !a.coordinates).length > 0 && (
+                    <div className="mt-2 pt-1.5 border-t space-y-1">
+                      {m.attractions.filter(a => !a.coordinates).map((a, ai) => (
+                        <div key={ai} className="flex items-center gap-1.5 text-xs text-slate-700">
+                          <span className="material-symbols-outlined" style={{ fontSize: 13, color: LOCATION_MARKER_COLOR }}>{ATTRACTION_ICON[a.category] ?? 'location_on'}</span>
+                          <span>{a.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </Popup>
             </Marker>
           ))}
+
+          {sleepMarkers.flatMap(m =>
+            openSleepId === m.poiId
+              ? m.attractions.filter(a => a.coordinates).map(a => {
+                  const color = getCategoryColor(a.category);
+                  const icon = getMaterialIcon(a.placeType, a.category);
+                  return (
+                    <Marker
+                      key={`attr-${m.poiId}-${a.name}`}
+                      position={a.coordinates!}
+                      icon={createPOIIcon(color, icon)}
+                      zIndexOffset={300}
+                    >
+                      <Popup>
+                        <div className="text-sm font-semibold">{a.name}</div>
+                      </Popup>
+                    </Marker>
+                  );
+                })
+              : []
+          )}
 
           {isEmpty && regionMarkers.map(r => r.boundary ? (
             <GeoJSON key={r.id} data={r.boundary} style={regionStyle}>

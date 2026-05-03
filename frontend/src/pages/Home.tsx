@@ -213,7 +213,8 @@ const HomePage = () => {
     return itineraryDays.map(day => ({
       dayNumber: day.dayNumber,
       date: day.date,
-      locationContext: (day.tripPlaceId && placeLocMap.get(day.tripPlaceId)) || undefined,
+      locationContext: (day.tripPlaceId && placeLocMap.get(day.tripPlaceId)) || undefined, // kept for panelItems consumers
+      locationName: (day.tripPlaceId && placeLocMap.get(day.tripPlaceId)) || undefined,
       places: (day.activities || [])
         .filter(a => a.type === 'poi' && poiMap.has(a.id))
         .sort((a, b) => a.order - b.order)
@@ -236,11 +237,12 @@ const HomePage = () => {
   // HomeMapPanel resolves coordinates via localStorage cache (instant after first visit).
   const sleepSegments = useMemo<SleepSegment[]>(() => {
     if (contextMode !== 'itinerary' || selectedLevel.type !== 'trip') return [];
+    const poiMap = new Map(pois.map(p => [p.id, p]));
     const byLocation = new Map<string, SleepSegment>();
     const insertionOrder: string[] = [];
     const sorted = [...liveDays].sort((a, b) => a.dayNumber - b.dayNumber);
     for (const day of sorted) {
-      const loc = day.locationContext;
+      const loc = day.locationName;
       if (!loc) continue;
       const locKey = loc.toLowerCase();
       const existing = byLocation.get(locKey);
@@ -258,22 +260,24 @@ const HomePage = () => {
           name: loc,
           coordinates: placeCoordMapRef.current.get(locKey),
           ranges: [{ start: day.dayNumber, end: day.dayNumber }],
+          imageUrl: placeImageMap.get(locKey),
           attractions: [],
         });
       }
-      // Collect non-accommodation places for the attraction chips (up to 3 unique per location)
       const seg = byLocation.get(locKey)!;
       for (const place of day.places) {
         if (place.category === 'accommodation') continue;
-        if ((seg.attractions?.length ?? 0) >= 3) break;
         if (!seg.attractions) seg.attractions = [];
-        if (!seg.attractions.find(a => a.name.toLowerCase() === place.name.toLowerCase())) {
-          seg.attractions.push({ name: place.name, category: place.category ?? 'attraction' });
-        }
+        if (seg.attractions.find(a => a.name.toLowerCase() === place.name.toLowerCase())) continue;
+        const poi = place.existingPoiId ? poiMap.get(place.existingPoiId) : undefined;
+        const coords = poi?.location?.coordinates
+          ? [poi.location.coordinates.lat, poi.location.coordinates.lng] as [number, number]
+          : undefined;
+        seg.attractions.push({ name: place.name, category: place.category ?? 'attraction', placeType: place.placeType, coordinates: coords });
       }
     }
     return insertionOrder.map(k => byLocation.get(k)!);
-  }, [liveDays, contextMode, selectedLevel]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [liveDays, pois, contextMode, selectedLevel, placeImageMap]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Shared helper: add a list of place-name suggestions to the panel + map
   const addSuggestionsToPanel = useCallback((
