@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, memo } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import Markdown from 'react-markdown';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';

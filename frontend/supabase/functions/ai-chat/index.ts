@@ -68,10 +68,11 @@ You have tools to interact directly with the user's trip. Use them proactively �
 **shift_trip_dates** — Use when user wants to move the entire trip to different dates.
 - "Move my trip to start on March 15" → call shift_trip_dates
 
-**add_place vs set_itinerary/update_day — how to choose:**
-- "Add", "save", "keep for later", or "add all of these" with no mention of a specific day → use add_place / add_places
-- "Plan", "schedule", "put on day X", "build an itinerary" → use set_itinerary / update_day
-- After suggest_places, if user says "add them" or "add all" with no day reference → add_places (not set_itinerary)
+**add_place vs plan_itinerary — how to choose:**
+- User sends/pastes a structured plan (table, numbered days, day-by-day list) → ALWAYS use plan_itinerary with apply=true, NOT add_places
+- "Add", "save", "keep for later", or "add all of these" with no day structure → use add_place / add_places
+- "Plan", "schedule", "put on day X", "build an itinerary", or user provides a full plan → use plan_itinerary
+- After suggest_places, if user says "add them" or "add all" with no day reference → add_places (not plan_itinerary)
 
 **update_day** — Use when the user asks to add, change, or remove something on a single specific day.
 - "Add the Eiffel Tower to day 3" → call update_day for day 3
@@ -412,9 +413,9 @@ const UNIFIED_PLANNING_INSTRUCTIONS = `
 
 ALWAYS respond with helpful text AND call the appropriate tool when action is needed:
 - Recommendations only → call suggest_places (describe the places in text too)
-- Full itinerary request → call plan_itinerary + write a brief day-by-day overview in text (1-2 lines per day)
+- Full itinerary request OR user sends their own plan → call plan_itinerary with apply=true + write a brief summary in text
 - Single day change → call update_day_plan + briefly describe what changed in text
-- Add to trip → call add_place / add_places + confirm in text
+- Add individual places (no day structure) → call add_place / add_places + confirm in text
 
 **plan_itinerary** — registers new places AND builds the full schedule in one call.
 - Set apply=true when user wants to plan/build/create/save the itinerary.
@@ -1134,6 +1135,12 @@ Deno.serve(async (req) => {
       const requestStart = Date.now();
       let ttftMs: number | undefined;
       const systemPrompt = buildUnifiedSystemPrompt(tripContext as TripContext, (tripPlan as TripPlan) ?? null);
+
+      // Detect if the user is submitting a structured plan (table or day-by-day list)
+      const lastUserContent = sanitized.filter((m: { role: string }) => m.role === 'user').at(-1)?.parts?.[0]?.text ?? '';
+      const isSubmittingPlan = (lastUserContent.split('|').length > 4) ||
+        /(?:יום|day)\s+\d/i.test(lastUserContent);
+
       const geminiBody: Record<string, unknown> = {
         system_instruction: { parts: [{ text: systemPrompt }] },
         contents: sanitized,
@@ -1145,7 +1152,9 @@ Deno.serve(async (req) => {
             ...ITINERARY_TOOL_SINGLESTEP.functionDeclarations,
           ],
         }],
-        toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
+        toolConfig: isSubmittingPlan
+          ? { functionCallingConfig: { mode: 'ANY', allowedFunctionNames: ['plan_itinerary', 'update_day_plan'] } }
+          : { functionCallingConfig: { mode: 'AUTO' } },
       };
 
       const geminiStreamResponse = await fetch(GEMINI_STREAM_URL, {
