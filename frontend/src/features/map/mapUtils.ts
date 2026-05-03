@@ -41,19 +41,24 @@ export const TRANSPORT_COLORS: Record<string, string> = {
   default: '#64748b',
 };
 
-export const createSleepMarkerIcon = (label: string) => {
-  const html = `<div style="position:relative;width:40px;height:52px;">
-    <div style="position:absolute;top:0;left:0;width:40px;height:40px;border-radius:50%;background:#4338ca;color:white;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.4);border:2.5px solid white;">
-      <span class="material-symbols-outlined" style="font-size:18px;line-height:1;">nights_stay</span>
+export const LOCATION_MARKER_COLORS = ['#22c55e', '#3b82f6', '#f97316', '#a855f7', '#ef4444', '#0891b2', '#eab308', '#ec4899'];
+
+export const createLocationMarkerIcon = (index: number, color: string, cityName: string, nightsLabel: string) => {
+  const circleSz = 36;
+  const labelW = Math.max(cityName.length * 7 + 16, 70);
+  const totalH = circleSz + 8 + 18 + 16; // circle + gap + city + nights
+  const html = `<div style="position:relative;width:${labelW}px;height:${totalH}px;display:flex;flex-direction:column;align-items:center;">
+    <div style="width:${circleSz}px;height:${circleSz}px;border-radius:50%;background:${color};color:white;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,0.35);border:2.5px solid white;font-size:16px;font-weight:700;font-family:sans-serif;flex-shrink:0;">${index}</div>
+    <div style="margin-top:4px;background:white;border-radius:6px;padding:2px 6px;box-shadow:0 2px 6px rgba(0,0,0,0.18);text-align:center;line-height:1.2;">
+      <div style="font-size:11px;font-weight:600;color:#1e293b;white-space:nowrap;font-family:sans-serif;">${cityName}</div>
+      <div style="font-size:10px;color:#64748b;font-family:sans-serif;">${nightsLabel}</div>
     </div>
-    <div style="position:absolute;top:-5px;left:26px;background:#1e1b4b;color:white;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;border:1.5px solid white;white-space:nowrap;line-height:1.5;font-family:sans-serif;">${label}</div>
-    <div style="position:absolute;bottom:0;left:13px;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:12px solid #4338ca;"></div>
   </div>`;
   return new L.DivIcon({
     className: '',
     html,
-    iconSize: [40, 52],
-    iconAnchor: [20, 52],
+    iconSize: [labelW, totalH],
+    iconAnchor: [labelW / 2, circleSz / 2],
   });
 };
 

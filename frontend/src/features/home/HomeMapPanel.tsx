@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, GeoJSON, Tooltip } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON, Tooltip, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import type { Geometry } from 'geojson';
-import { createPOIIcon, createSleepMarkerIcon, POI_COLORS, FitBounds } from '@/features/map/mapUtils';
+import { createPOIIcon, createLocationMarkerIcon, LOCATION_MARKER_COLORS, POI_COLORS, FitBounds } from '@/features/map/mapUtils';
 import { getSubCategoryEntry, loadSubCategoryConfig } from '@/shared/lib/subCategoryConfig';
 import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
 import type { PointOfInterest } from '@/types/trip';
@@ -70,10 +70,16 @@ export interface SleepSegment {
   coordinates?: [number, number];
   /** One or more day ranges — multiple when the same location appears non-consecutively */
   ranges: Array<{ start: number; end: number }>;
+  /** Sequential index (1-based) for numbered circle marker */
+  index?: number;
 }
 
 function formatRanges(ranges: SleepSegment['ranges']): string {
   return ranges.map(r => r.start === r.end ? String(r.start) : `${r.start}-${r.end}`).join(', ');
+}
+
+function countNights(ranges: SleepSegment['ranges']): number {
+  return ranges.reduce((sum, r) => sum + (r.end - r.start + 1), 0);
 }
 
 interface HomeMapPanelProps {
@@ -150,11 +156,14 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
 
   const sleepMarkers = useMemo(() =>
     sleepSegments
-      .map(s => {
+      .map((s, i) => {
         const pos = s.coordinates ?? sleepCoords[s.poiId] ?? null;
         if (!pos) return null;
         const label = formatRanges(s.ranges);
-        return { poiId: s.poiId, name: s.name, label, pos };
+        const nights = countNights(s.ranges);
+        const idx = s.index ?? (i + 1);
+        const color = LOCATION_MARKER_COLORS[(idx - 1) % LOCATION_MARKER_COLORS.length];
+        return { poiId: s.poiId, name: s.name, label, nights, idx, color, pos };
       })
       .filter((m): m is NonNullable<typeof m> => m !== null),
     [sleepSegments, sleepCoords],
@@ -215,21 +224,35 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
             );
           })}
 
-          {sleepMarkers.map(m => (
-            <Marker
-              key={`sleep-${m.poiId}`}
-              position={m.pos}
-              icon={createSleepMarkerIcon(m.label)}
-              zIndexOffset={500}
-            >
-              <Popup>
-                <div className="text-sm">
-                  <div className="font-semibold">{m.name}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">Days {m.label}</div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+          {sleepMarkers.length > 1 && sleepMarkers.slice(0, -1).map((m, i) => {
+            const next = sleepMarkers[i + 1];
+            return (
+              <Polyline
+                key={`line-${m.poiId}-${next.poiId}`}
+                positions={[m.pos, next.pos]}
+                pathOptions={{ color: next.color, weight: 3, opacity: 0.7, dashArray: '6 4' }}
+              />
+            );
+          })}
+
+          {sleepMarkers.map(m => {
+            const nightsLabel = `${m.nights} לילות`;
+            return (
+              <Marker
+                key={`sleep-${m.poiId}`}
+                position={m.pos}
+                icon={createLocationMarkerIcon(m.idx, m.color, m.name, nightsLabel)}
+                zIndexOffset={500}
+              >
+                <Popup>
+                  <div className="text-sm">
+                    <div className="font-semibold">{m.name}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">ימים {m.label}</div>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
 
           {isEmpty && regionMarkers.map(r => r.boundary ? (
             <GeoJSON key={r.id} data={r.boundary} style={regionStyle}>
