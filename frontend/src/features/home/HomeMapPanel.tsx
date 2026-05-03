@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import type { Geometry } from 'geojson';
-import { createPOIIcon, POI_COLORS, FitBounds } from '@/features/map/mapUtils';
+import { createPOIIcon, createSleepMarkerIcon, POI_COLORS, FitBounds } from '@/features/map/mapUtils';
 import { getSubCategoryEntry, loadSubCategoryConfig } from '@/shared/lib/subCategoryConfig';
 import { POIDetailDialog } from '@/features/poi/POIDetailDialog';
 import type { PointOfInterest } from '@/types/trip';
@@ -54,15 +54,24 @@ const regionStyle = {
 
 interface RegionMarker { id: string; name: string; pos?: [number, number]; boundary?: Geometry }
 
+export interface SleepSegment {
+  poiId: string;
+  name: string;
+  dayStart: number;
+  dayEnd: number;
+  coordinates?: [number, number];
+}
+
 interface HomeMapPanelProps {
   items: PanelItem[];
   countries: string[];
   regionMarkers?: RegionMarker[];
   selectedName: string | null;
   onSelectName: (name: string | null) => void;
+  sleepSegments?: SleepSegment[];
 }
 
-export function HomeMapPanel({ items, countries, regionMarkers = [], selectedName, onSelectName }: HomeMapPanelProps) {
+export function HomeMapPanel({ items, countries, regionMarkers = [], selectedName, onSelectName, sleepSegments = [] }: HomeMapPanelProps) {
   const [dialogPOI, setDialogPOI] = useState<PointOfInterest | null>(null);
   // Force re-render once sub-category config is loaded so marker icons update
   const [, setConfigLoaded] = useState(false);
@@ -104,8 +113,41 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
     [items, nominatimCoords],
   );
 
+  // Nominatim-geocoded coordinates for sleep segments without embedded coords
+  const [sleepCoords, setSleepCoords] = useState<Record<string, [number, number]>>({});
+  const geocodedSleepRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const todo = sleepSegments.filter(s => !s.coordinates && !geocodedSleepRef.current.has(s.poiId));
+    if (!todo.length) return;
+    let cancelled = false;
+    (async () => {
+      for (const s of todo) {
+        if (cancelled) break;
+        geocodedSleepRef.current.add(s.poiId);
+        const result = await geocodeByName(s.name, countries);
+        if (cancelled) break;
+        if (result) setSleepCoords(prev => ({ ...prev, [s.poiId]: result }));
+        await new Promise(r => setTimeout(r, 1100));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [sleepSegments]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const sleepMarkers = useMemo(() =>
+    sleepSegments
+      .map(s => {
+        const pos = s.coordinates ?? sleepCoords[s.poiId] ?? null;
+        if (!pos) return null;
+        const label = s.dayStart === s.dayEnd ? String(s.dayStart) : `${s.dayStart}-${s.dayEnd}`;
+        return { poiId: s.poiId, name: s.name, dayStart: s.dayStart, dayEnd: s.dayEnd, pos, label };
+      })
+      .filter((m): m is NonNullable<typeof m> => m !== null),
+    [sleepSegments, sleepCoords],
+  );
+
   const isEmpty = items.length === 0;
-  const allCoords = markers.map(m => m.pos);
+  const allCoords = [...markers.map(m => m.pos), ...sleepMarkers.map(m => m.pos)];
   const fitCoords = allCoords.length > 0 ? allCoords : (isEmpty ? regionMarkers.flatMap(r => r.pos ? [r.pos] : []) : []);
   const defaultCenter: [number, number] = fitCoords[0] ?? [35.6762, 139.6503];
 
@@ -158,6 +200,24 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
               </Marker>
             );
           })}
+
+          {sleepMarkers.map(m => (
+            <Marker
+              key={`sleep-${m.poiId}`}
+              position={m.pos}
+              icon={createSleepMarkerIcon(m.label)}
+              zIndexOffset={500}
+            >
+              <Popup>
+                <div className="text-sm">
+                  <div className="font-semibold">{m.name}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">
+                    {m.dayStart === m.dayEnd ? `Night ${m.dayStart}` : `Nights ${m.dayStart}–${m.dayEnd}`}
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
 
           {isEmpty && regionMarkers.map(r => r.boundary ? (
             <GeoJSON key={r.id} data={r.boundary} style={regionStyle}>

@@ -41,6 +41,22 @@ export const TRANSPORT_COLORS: Record<string, string> = {
   default: '#64748b',
 };
 
+export const createSleepMarkerIcon = (label: string) => {
+  const html = `<div style="position:relative;width:40px;height:52px;">
+    <div style="position:absolute;top:0;left:0;width:40px;height:40px;border-radius:50%;background:#4338ca;color:white;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,0.4);border:2.5px solid white;">
+      <span class="material-symbols-outlined" style="font-size:18px;line-height:1;">hotel</span>
+    </div>
+    <div style="position:absolute;top:-5px;left:26px;background:#1e1b4b;color:white;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;border:1.5px solid white;white-space:nowrap;line-height:1.5;font-family:sans-serif;">${label}</div>
+    <div style="position:absolute;bottom:0;left:13px;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:12px solid #4338ca;"></div>
+  </div>`;
+  return new L.DivIcon({
+    className: '',
+    html,
+    iconSize: [40, 52],
+    iconAnchor: [20, 52],
+  });
+};
+
 export function FitBounds({ coordinates }: { coordinates: [number, number][] }) {
   const map = useMap();
   useEffect(() => {

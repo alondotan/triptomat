@@ -7,7 +7,7 @@ import { usePOI } from '@/features/poi/POIContext';
 import { useItinerary } from '@/features/itinerary/ItineraryContext';
 import { AppLayout } from '@/shared/components/layout';
 import { AIChatCore } from '@/features/chat/AIChatCore';
-import { HomeMapPanel } from '@/features/home/HomeMapPanel';
+import { HomeMapPanel, type SleepSegment } from '@/features/home/HomeMapPanel';
 import { HomeSuggestionsPanel } from '@/features/home/HomeSuggestionsPanel';
 import { OverviewItineraryPanel } from '@/features/overview/OverviewItineraryPanel';
 import { loadFestivalData } from '@/features/geodata/festivalService';
@@ -218,6 +218,30 @@ const HomePage = () => {
     }));
   }, [itineraryDays, pois, tripLocations, tripPlaces]);
 
+  // Compute sleep segments: consecutive days at the same hotel → shown as night-range markers on the map
+  const sleepSegments = useMemo<SleepSegment[]>(() => {
+    if (contextMode !== 'itinerary' || selectedLevel.type !== 'trip') return [];
+    const poiMap = new Map(pois.map(p => [p.id, p]));
+    const segments: SleepSegment[] = [];
+    const sorted = [...itineraryDays].sort((a, b) => a.dayNumber - b.dayNumber);
+    for (const day of sorted) {
+      const selected = day.accommodationOptions.find(a => a.is_selected);
+      if (!selected) continue;
+      const poi = poiMap.get(selected.poi_id);
+      if (!poi) continue;
+      const coords = poi.location?.coordinates
+        ? [poi.location.coordinates.lat, poi.location.coordinates.lng] as [number, number]
+        : undefined;
+      const last = segments[segments.length - 1];
+      if (last && last.poiId === poi.id && last.dayEnd === day.dayNumber - 1) {
+        last.dayEnd = day.dayNumber;
+      } else {
+        segments.push({ poiId: poi.id, name: poi.name, dayStart: day.dayNumber, dayEnd: day.dayNumber, coordinates: coords });
+      }
+    }
+    return segments;
+  }, [itineraryDays, pois, contextMode, selectedLevel]);
+
   // Shared helper: add a list of place-name suggestions to the panel + map
   const addSuggestionsToPanel = useCallback((
     items: Array<{ name: string; location?: string; day?: number }>,
@@ -377,6 +401,7 @@ const HomePage = () => {
               regionMarkers={regionMarkers}
               selectedName={selectedName}
               onSelectName={setSelectedName}
+              sleepSegments={sleepSegments}
             />
           </div>
 
@@ -494,6 +519,7 @@ const HomePage = () => {
                 regionMarkers={regionMarkers}
                 selectedName={selectedName}
                 onSelectName={setSelectedName}
+                sleepSegments={sleepSegments}
               />
             </div>
           </div>
