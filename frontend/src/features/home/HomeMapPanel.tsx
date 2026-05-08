@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, GeoJSON, Tooltip, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON, Tooltip, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { Geometry } from 'geojson';
 import { createPOIIcon, createLocationMarkerIcon, LOCATION_MARKER_COLOR, POI_COLORS, FitBounds } from '@/features/map/mapUtils';
@@ -106,9 +106,15 @@ const ATTRACTION_ICON: Record<string, string> = {
   service: 'build',
 };
 
+function MapCapture({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null> }) {
+  mapRef.current = useMap();
+  return null;
+}
+
 export function HomeMapPanel({ items, countries, regionMarkers = [], selectedName, onSelectName, sleepSegments = [] }: HomeMapPanelProps) {
   const [dialogPOI, setDialogPOI] = useState<PointOfInterest | null>(null);
   const [openSleepId, setOpenSleepId] = useState<string | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
   // Force re-render once sub-category config is loaded so marker icons update
   const [, setConfigLoaded] = useState(false);
   useEffect(() => {
@@ -197,6 +203,7 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          <MapCapture mapRef={mapRef} />
           {fitCoords.length > 0 && <FitBounds coordinates={fitCoords} />}
 
           {markers.map(m => {
@@ -259,6 +266,10 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
               eventHandlers={{
                 popupopen: () => setOpenSleepId(m.poiId),
                 popupclose: () => setOpenSleepId(id => id === m.poiId ? null : id),
+                dblclick: (e) => {
+                  L.DomEvent.stopPropagation(e);
+                  mapRef.current?.flyTo(m.pos, 13, { duration: 0.8 });
+                },
               }}
             >
               <Popup minWidth={180}>
@@ -272,9 +283,9 @@ export function HomeMapPanel({ items, countries, regionMarkers = [], selectedNam
                   )}
                   <div className="font-semibold text-sm">{m.name}</div>
                   <div className="text-xs text-slate-500 mt-0.5">ימים {m.label}</div>
-                  {m.attractions.filter(a => !a.coordinates).length > 0 && (
+                  {m.attractions.length > 0 && (
                     <div className="mt-2 pt-1.5 border-t space-y-1">
-                      {m.attractions.filter(a => !a.coordinates).map((a, ai) => (
+                      {m.attractions.map((a, ai) => (
                         <div key={ai} className="flex items-center gap-1.5 text-xs text-slate-700">
                           <span className="material-symbols-outlined" style={{ fontSize: 13, color: LOCATION_MARKER_COLOR }}>{ATTRACTION_ICON[a.category] ?? 'location_on'}</span>
                           <span>{a.name}</span>
