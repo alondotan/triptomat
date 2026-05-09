@@ -4057,7 +4057,7 @@ export default function SchedulePage() {
                     type="button"
                     onClick={() => { setLocationContext(''); setEditingLocation(true); }}
                     className="absolute top-0 h-full border border-dashed border-primary/40 rounded-md flex items-center justify-center px-1 text-[10px] sm:text-xs text-muted-foreground hover:text-primary hover:border-primary transition-colors whitespace-nowrap"
-                    style={{ insetInlineStart: `${selectedIdx * locationDayWidth}px`, width: `${locationDayWidth - 8}px` }}
+                    style={{ insetInlineStart: `${selectedIdx * locationDayWidth + (tripDays.some(td => td.date) ? 40 : 0)}px`, width: `${locationDayWidth - 8}px` }}
                   >
                     + {t('timeline.location')}
                   </button>
