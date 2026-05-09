@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, Pencil, Plus, Quote, Save, Trash2, X } from 'lucide-react';
+import { ExternalLink, MapPin, Pencil, Plus, Quote, Save, Trash2, X } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Switch } from '@/components/ui/switch';
 import { SubCategorySelector } from '@/shared/components/SubCategorySelector';
@@ -23,6 +23,31 @@ import { useTripMode } from '@/shared/hooks/useTripMode';
 import { TripDaySelect } from '@/shared/components/TripDaySelect';
 import { useIsMobile } from '@/shared/hooks/use-mobile';
 import { AccommodationMiniMap } from './AccommodationMiniMap';
+
+function parseGoogleMapsUrl(url: string): { lat: number; lng: number } | null {
+  try {
+    // Pattern 1: @lat,lng in path (place, search, direct coord URLs)
+    const atMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+    if (atMatch) {
+      const lat = parseFloat(atMatch[1]);
+      const lng = parseFloat(atMatch[2]);
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) return { lat, lng };
+    }
+    // Pattern 2: ?q=lat,lng
+    const q = new URL(url).searchParams.get('q');
+    if (q) {
+      const qMatch = q.match(/^(-?\d+\.?\d*),(-?\d+\.?\d*)$/);
+      if (qMatch) {
+        const lat = parseFloat(qMatch[1]);
+        const lng = parseFloat(qMatch[2]);
+        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) return { lat, lng };
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 const CURRENCIES = ['ILS', 'USD', 'EUR', 'GBP', 'PHP', 'THB', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'SGD', 'HKD', 'TWD', 'MYR', 'IDR', 'VND', 'KRW', 'INR', 'TRY', 'EGP', 'GEL', 'CZK', 'HUF', 'PLN', 'RON', 'BGN', 'SEK', 'NOK', 'DKK', 'ISK', 'MXN', 'BRL', 'ZAR', 'AED', 'SAR', 'CNY', 'QAR', 'KWD', 'JOD'];
 
@@ -131,6 +156,9 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
   const DURATION_PRESETS = ['30','60','90','120','180','480'];
   const [isCustomDuration, setIsCustomDuration] = useState(false);
 
+  // Google Maps URL for coordinate extraction (transient — not persisted)
+  const [mapsUrl, setMapsUrl] = useState('');
+
   // Recommendation quotes
   const [quotes, setQuotes] = useState<RecommendationQuote[]>([]);
 
@@ -161,6 +189,7 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
     setOrderNumber(d.orderNumber);
     setDuration(d.duration);
     setIsCustomDuration(d.duration !== '' && !DURATION_PRESETS.includes(d.duration));
+    setMapsUrl('');
     setEditingName(false);
     setShowDeleteConfirm(false);
   };
@@ -267,6 +296,7 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
           city: city || undefined,
           country: country || undefined,
           address: address || undefined,
+          ...(parsedCoords ? { coordinates: parsedCoords } : {}),
         },
         sourceRefs: { email_ids: [], recommendation_ids: [] },
         details: {
@@ -301,6 +331,7 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
           city: city || undefined,
           country: country || undefined,
           address: address || undefined,
+          ...(parsedCoords ? { coordinates: parsedCoords } : {}),
         },
         details: {
           ...poi.details,
@@ -352,7 +383,9 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
 
   const isMobile = useIsMobile();
   const isAccommodation = category === 'accommodation';
-  const hasCoordinates = !!poi?.location.coordinates;
+  const parsedCoords = mapsUrl ? parseGoogleMapsUrl(mapsUrl) : null;
+  const existingCoords = poi?.location.coordinates;
+  const hasCoordinates = !!(parsedCoords || existingCoords);
 
   // --- Shared JSX sections ---
 
@@ -448,6 +481,35 @@ export function POIDetailDialog({ poi, open, onOpenChange, initialCategory }: PO
       <div className="space-y-1">
         <Label>{t('poiDetail.address')}</Label>
         <Input name="address" value={address} onChange={e => setAddress(e.target.value)} autoComplete="street-address" />
+      </div>
+      <div className="space-y-1">
+        <Label className="flex items-center gap-1">
+          <MapPin size={12} />
+          {t('poiDetail.mapsLink')}
+        </Label>
+        <Input
+          name="mapsUrl"
+          value={mapsUrl}
+          onChange={e => setMapsUrl(e.target.value)}
+          placeholder={t('poiDetail.mapsLinkPlaceholder')}
+          autoComplete="off"
+          dir="ltr"
+        />
+        {parsedCoords && (
+          <p className="text-xs text-emerald-600 flex items-center gap-1">
+            <MapPin size={10} />
+            {parsedCoords.lat.toFixed(5)}, {parsedCoords.lng.toFixed(5)}
+          </p>
+        )}
+        {!parsedCoords && mapsUrl && (
+          <p className="text-xs text-destructive">{t('poiDetail.mapsLinkInvalid')}</p>
+        )}
+        {!parsedCoords && !mapsUrl && existingCoords && (
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <MapPin size={10} />
+            {existingCoords.lat.toFixed(5)}, {existingCoords.lng.toFixed(5)}
+          </p>
+        )}
       </div>
     </div>
   );
