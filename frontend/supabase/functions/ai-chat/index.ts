@@ -974,27 +974,42 @@ async function handlePlanItinerary(
 
   const resolveId = (id: string | undefined) => (id ? (idMap[id] ?? id) : id);
 
+  // Build place-temp-id → location-temp-id map so we can derive a day's location
+  // when the AI omits location_id on a day (it's optional in the schema).
+  const placeToLocationTempId: Record<string, string> = {};
+  for (const place of (args.places || [])) {
+    if (place.temp_id && place.location_id) {
+      placeToLocationTempId[place.temp_id] = place.location_id;
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function resolveDay(day: any) {
+    // Prefer explicit day-level location_id; fall back to deriving from the first place
+    let locationId = resolveId(day.location_id);
+    if (!locationId) {
+      for (const p of (day.places || [])) {
+        const locTempId = placeToLocationTempId[p.place_id];
+        if (locTempId) { locationId = resolveId(locTempId); break; }
+      }
+    }
+    return {
+      ...day,
+      location_id: locationId,
+      hotel_id: resolveId(day.hotel_id),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      places: (day.places || []).map((p: any) => ({ ...p, place_id: resolveId(p.place_id) })),
+    };
+  }
+
   const toolCalls: Array<{ name: string; args: unknown }> = [];
 
   if (isFullPlan && args.days) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const days = args.days.map((day: any) => ({
-      ...day,
-      location_id: resolveId(day.location_id),
-      hotel_id: resolveId(day.hotel_id),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      places: (day.places || []).map((p: any) => ({ ...p, place_id: resolveId(p.place_id) })),
-    }));
+    const days = args.days.map((day: any) => resolveDay(day));
     toolCalls.push({ name: 'set_itinerary', args: { days } });
   } else if (!isFullPlan && args.day) {
-    const day = {
-      ...args.day,
-      location_id: resolveId(args.day.location_id),
-      hotel_id: resolveId(args.day.hotel_id),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      places: (args.day.places || []).map((p: any) => ({ ...p, place_id: resolveId(p.place_id) })),
-    };
-    toolCalls.push({ name: 'update_day', args: { day } });
+    toolCalls.push({ name: 'update_day', args: { day: resolveDay(args.day) } });
   }
 
   if (args.apply) {
