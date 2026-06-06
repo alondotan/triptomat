@@ -22,6 +22,7 @@ import { AtMentionMenu } from './AtMentionMenu';
 import type { TripContext } from './AIChatSheet';
 import { buildTripPlan } from './buildTripPlan';
 import { applyAIToolCalls } from './applyAIToolCalls';
+import { queryKeys } from '@/shared/queries/keys';
 
 type Message = import('./useChatHistory').Message;
 
@@ -340,10 +341,14 @@ export function AIChatCore({ tripContext, compact = false, className, initialMes
         try {
           await applyDraftToTrip(tripContext.tripId, daysToApply, pois, tripPlaces, tripContext.countries?.[0]);
           supabase.functions.invoke('fetch-poi-image', { body: { tripId: tripContext.tripId } }).catch(() => {});
+          // Invalidate all trip-related caches so the UI reflects what was just saved to DB
+          queryClient.invalidateQueries({ queryKey: queryKeys.itinerary.all(tripContext.tripId) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.poi.all(tripContext.tripId) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.trips.places(tripContext.tripId) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.trips.locations(tripContext.tripId) });
           if (!instantApply) {
             toast({ title: t('aiChat.tripUpdated'), description: t('aiChat.tripUpdatedDesc') });
           }
-          initFromReal(itineraryDays, pois);
           const maxDay = daysToApply.reduce((m, d) => Math.max(m, d.dayNumber || 0), 0);
           if (maxDay > 0) {
             const updates: Parameters<typeof updateCurrentTrip>[0] = {};
