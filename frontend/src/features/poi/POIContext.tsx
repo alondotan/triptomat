@@ -1,38 +1,14 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useCallback, useMemo, ReactNode } from 'react';
 import { PointOfInterest } from '@/types/trip';
-import { fetchPOIs, createOrMergePOI, updatePOI as updatePOIService, deletePOI as deletePOIService, mergeTwoPOIs } from '@/features/poi/poiService';
-import { repairItineraryReferences } from '@/features/trip/tripService';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/shared/hooks/use-toast';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
+import { usePOIs, useAddPOI, useUpdatePOI, useDeletePOI, useMergePOIs } from './usePOIQueries';
 
-// State
-interface POIState {
-  pois: PointOfInterest[];
-}
+/**
+ * Thin wrapper around the POI TanStack Query hooks. Preserves the legacy
+ * `usePOI()` API so existing consumers don't need to change. New code should
+ * prefer the hooks in `usePOIQueries.ts` directly.
+ */
 
-type POIAction =
-  | { type: 'SET_POIS'; payload: PointOfInterest[] }
-  | { type: 'ADD_POI'; payload: PointOfInterest }
-  | { type: 'UPDATE_POI'; payload: PointOfInterest }
-  | { type: 'DELETE_POI'; payload: string };
-
-function poiReducer(state: POIState, action: POIAction): POIState {
-  switch (action.type) {
-    case 'SET_POIS':
-      return { pois: action.payload };
-    case 'ADD_POI':
-      return { pois: [...state.pois, action.payload] };
-    case 'UPDATE_POI':
-      return { pois: state.pois.map(p => p.id === action.payload.id ? action.payload : p) };
-    case 'DELETE_POI':
-      return { pois: state.pois.filter(p => p.id !== action.payload) };
-    default:
-      return state;
-  }
-}
-
-// Context type
 interface POIContextType {
   pois: PointOfInterest[];
   addPOI: (poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>) => Promise<PointOfInterest | undefined>;
@@ -44,102 +20,67 @@ interface POIContextType {
 export const POIContext = createContext<POIContextType | undefined>(undefined);
 
 export function POIProvider({ children }: { children: ReactNode }) {
-  const { toast } = useToast();
-  const { activeTrip, refreshKey } = useActiveTrip();
-  const [state, dispatch] = useReducer(poiReducer, { pois: [] });
+  const { activeTrip } = useActiveTrip();
+  const tripId = activeTrip?.id;
 
-  // Load POIs when active trip changes
-  useEffect(() => {
-    // Clear stale POIs immediately to prevent flash of old data
-    dispatch({ type: 'SET_POIS', payload: [] });
-    if (activeTrip) {
-      fetchPOIs(activeTrip.id).then(pois => dispatch({ type: 'SET_POIS', payload: pois }));
-    }
-  }, [activeTrip?.id, refreshKey]);
+  const { data: pois = [] } = usePOIs(tripId);
+  const addMutation = useAddPOI(tripId);
+  const updateMutation = useUpdatePOI(tripId);
+  const deleteMutation = useDeletePOI(tripId);
+  const mergeMutation = useMergePOIs(tripId);
 
-  // Realtime subscription
-  useEffect(() => {
-    const tripId = activeTrip?.id;
-    if (!tripId) return;
-
-    const channel = supabase
-      .channel(`poi-realtime-${tripId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'points_of_interest', filter: `trip_id=eq.${tripId}` }, () => {
-        fetchPOIs(tripId).then(pois => dispatch({ type: 'SET_POIS', payload: pois }));
-      })
-      .subscribe((status) => {
-        if (status === 'CHANNEL_ERROR') {
-          console.error('POI realtime subscription error');
-        }
-      });
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [activeTrip?.id]);
-
-  const addPOI = useCallback(async (poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>): Promise<PointOfInterest | undefined> => {
-    try {
-      const { poi: result, merged } = await createOrMergePOI(poi);
-      if (merged) {
-        dispatch({ type: 'UPDATE_POI', payload: result });
-        toast({ title: 'Merged with existing item', description: `"${result.name}" already exists — your data was merged into it.` });
-      } else {
-        dispatch({ type: 'ADD_POI', payload: result });
+  const addPOI = useCallback(
+    async (poi: Omit<PointOfInterest, 'id' | 'createdAt' | 'updatedAt'>) => {
+      try {
+        const result = await addMutation.mutateAsync(poi);
+        return result.poi;
+      } catch {
+        return undefined;
       }
+    },
+    [addMutation],
+  );
 
-      return result;
-    } catch (error) {
-      console.error('Failed to add POI:', error);
-      toast({ title: 'Error', description: 'Failed to add item.', variant: 'destructive' });
-      return undefined;
-    }
-  }, [toast]);
+  const updatePOI = useCallback(
+    async (poi: PointOfInterest) => {
+      try {
+        await updateMutation.mutateAsync(poi);
+      } catch {
+        // toast handled inside mutation
+      }
+    },
+    [updateMutation],
+  );
 
-  const updatePOI = useCallback(async (poi: PointOfInterest) => {
-    try {
-      await updatePOIService(poi.id, poi);
-      dispatch({ type: 'UPDATE_POI', payload: poi });
-    } catch (error) {
-      console.error('Failed to update POI:', error);
-      toast({ title: 'Error', description: 'Failed to update item.', variant: 'destructive' });
-    }
-  }, [toast]);
+  const deletePOI = useCallback(
+    async (poiId: string) => {
+      try {
+        await deleteMutation.mutateAsync(poiId);
+      } catch {
+        // toast handled inside mutation
+      }
+    },
+    [deleteMutation],
+  );
 
-  const deletePOI = useCallback(async (poiId: string) => {
-    try {
-      await deletePOIService(poiId);
-      dispatch({ type: 'DELETE_POI', payload: poiId });
-    } catch (error) {
-      console.error('Failed to delete POI:', error);
-      toast({ title: 'Error', description: 'Failed to delete item.', variant: 'destructive' });
-    }
-  }, [toast]);
+  const mergePOIs = useCallback(
+    async (primaryId: string, secondaryId: string) => {
+      const primary = pois.find(p => p.id === primaryId);
+      const secondary = pois.find(p => p.id === secondaryId);
+      if (!primary || !secondary) return;
+      try {
+        await mergeMutation.mutateAsync({ primary, secondary });
+      } catch {
+        // toast handled inside mutation
+      }
+    },
+    [pois, mergeMutation],
+  );
 
-  const mergePOIs = useCallback(async (primaryId: string, secondaryId: string) => {
-    const primary = state.pois.find(p => p.id === primaryId);
-    const secondary = state.pois.find(p => p.id === secondaryId);
-    if (!primary || !secondary || !activeTrip) return;
-    try {
-      const merged = await mergeTwoPOIs(primary, secondary);
-      await repairItineraryReferences(activeTrip.id, secondaryId, primaryId, 'poi');
-      dispatch({ type: 'UPDATE_POI', payload: merged });
-      dispatch({ type: 'DELETE_POI', payload: secondaryId });
-      // Itinerary realtime subscription will auto-sync
-      toast({ title: 'Merged successfully', description: `"${secondary.name}" merged into "${primary.name}"` });
-    } catch (error) {
-      console.error('Failed to merge POIs:', error);
-      toast({ title: 'Error', description: 'Merge failed.', variant: 'destructive' });
-    }
-  }, [state.pois, activeTrip, toast]);
-
-  const value = useMemo(() => ({
-    pois: state.pois,
-    addPOI,
-    updatePOI,
-    deletePOI,
-    mergePOIs,
-  }), [state.pois, addPOI, updatePOI, deletePOI, mergePOIs]);
+  const value = useMemo(
+    () => ({ pois, addPOI, updatePOI, deletePOI, mergePOIs }),
+    [pois, addPOI, updatePOI, deletePOI, mergePOIs],
+  );
 
   return <POIContext.Provider value={value}>{children}</POIContext.Provider>;
 }

@@ -1,61 +1,31 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useCallback, useMemo, useState, useEffect, ReactNode } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trip } from '@/types/trip';
-import { supabase as supabaseClient } from '@/integrations/supabase/client';
-import { updateTrip, deleteTrip } from '@/features/trip/tripService';
 import { ExchangeRates, fetchExchangeRates } from '@/features/finance/exchangeRateService';
-
-import { fetchTripLocations, buildLocationTree, loadCountryData, buildDescriptionMap, addTripLocation, findInFlatList, type TripLocation } from '@/features/trip/tripLocationService';
-import { fetchTripPlaces, type TripPlace } from '@/features/trip/tripPlaceService';
+import { addTripLocation, findInFlatList, type TripLocation } from '@/features/trip/tripLocationService';
+import type { TripPlace } from '@/types/trip';
 import type { SiteNode } from '@/features/geodata/useCountrySites';
-import { useToast } from '@/shared/hooks/use-toast';
 import { useTripList } from './TripListContext';
+import { useUpdateTrip, useDeleteTrip } from './useTripQueries';
+import { useTripLocations, useReloadTripLocations } from './useTripLocationsQuery';
+import { useTripPlaces, useReloadTripPlaces } from './useTripPlacesQuery';
+import { useSourceEmailMap } from './useSourceEmailMap';
+import { queryKeys } from '@/shared/queries/keys';
 
-// State
-interface ActiveTripState {
-  exchangeRates: ExchangeRates | null;
-  tripLocations: TripLocation[];
-  tripLocationTree: SiteNode[];
-  tripPlaces: TripPlace[];
-  sourceEmailMap: Record<string, { permalink?: string; subject?: string }>;
-  refreshKey: number;
-  myRole: 'owner' | 'editor' | null;
-  isLoadingLocations: boolean;
-}
+/**
+ * Active-trip context. Owns trip selection + per-trip metadata
+ * (locations, places, exchange rates, email map).
+ *
+ * Data fetching is now backed by TanStack Query hooks. The legacy
+ * `useActiveTrip()` API is preserved.
+ *
+ * `refreshKey` and `loadTripData` remain for backwards compat:
+ *  - `loadTripData` invalidates all trip-scoped queries (manual refresh).
+ *  - `refreshKey` is a counter that increments on `loadTripData` —
+ *    historically watched by other contexts; with Query in place no domain
+ *    context still consumes it but a couple of components do, so we keep it.
+ */
 
-type ActiveTripAction =
-  | { type: 'SET_EXCHANGE_RATES'; payload: ExchangeRates | null }
-  | { type: 'SET_TRIP_LOCATIONS'; payload: { flat: TripLocation[]; tree: SiteNode[] } }
-  | { type: 'SET_TRIP_PLACES'; payload: TripPlace[] }
-  | { type: 'SET_SOURCE_EMAIL_MAP'; payload: Record<string, { permalink?: string; subject?: string }> }
-  | { type: 'SET_MY_ROLE'; payload: 'owner' | 'editor' | null }
-  | { type: 'INCREMENT_REFRESH_KEY' }
-  | { type: 'SET_LOADING_LOCATIONS'; payload: boolean }
-  | { type: 'RESET_TRIP_DATA' };
-
-function activeTripReducer(state: ActiveTripState, action: ActiveTripAction): ActiveTripState {
-  switch (action.type) {
-    case 'SET_EXCHANGE_RATES':
-      return { ...state, exchangeRates: action.payload };
-    case 'SET_TRIP_LOCATIONS':
-      return { ...state, tripLocations: action.payload.flat, tripLocationTree: action.payload.tree, isLoadingLocations: false };
-    case 'SET_TRIP_PLACES':
-      return { ...state, tripPlaces: action.payload };
-    case 'SET_SOURCE_EMAIL_MAP':
-      return { ...state, sourceEmailMap: action.payload };
-    case 'SET_MY_ROLE':
-      return { ...state, myRole: action.payload };
-    case 'INCREMENT_REFRESH_KEY':
-      return { ...state, refreshKey: state.refreshKey + 1 };
-    case 'SET_LOADING_LOCATIONS':
-      return { ...state, isLoadingLocations: action.payload };
-    case 'RESET_TRIP_DATA':
-      return { ...state, exchangeRates: null, tripLocations: [], tripLocationTree: [], tripPlaces: [], sourceEmailMap: {}, myRole: null, refreshKey: state.refreshKey + 1, isLoadingLocations: false };
-    default:
-      return state;
-  }
-}
-
-// Context type
 interface ActiveTripContextType {
   activeTrip: Trip | null;
   exchangeRates: ExchangeRates | null;
@@ -81,24 +51,63 @@ interface ActiveTripContextType {
 export const ActiveTripContext = createContext<ActiveTripContextType | undefined>(undefined);
 
 export function ActiveTripProvider({ children }: { children: ReactNode }) {
-  const { toast } = useToast();
-  const { trips, activeTripId, isLoading, error, setActiveTripId, removeTrip, updateTripInList } = useTripList();
-
-  const [state, dispatch] = useReducer(activeTripReducer, {
-    exchangeRates: null,
-    tripLocations: [],
-    tripLocationTree: [],
-    tripPlaces: [],
-    sourceEmailMap: {},
-    refreshKey: 0,
-    myRole: null,
-    isLoadingLocations: false,
-  });
+  const queryClient = useQueryClient();
+  const { trips, activeTripId, isLoading, error, setActiveTripId } = useTripList();
 
   const activeTrip = useMemo(() => trips.find(t => t.id === activeTripId) || null, [trips, activeTripId]);
+  const tripId = activeTrip?.id;
+
+  // Trip locations + tree
+  const { data: locationsData, isLoading: isLoadingLocations } = useTripLocations(tripId, activeTrip?.countries ?? []);
+  const tripLocations = locationsData?.flat ?? [];
+  const tripLocationTree = locationsData?.tree ?? [];
+  const reloadLocationsFn = useReloadTripLocations(tripId);
+
+  // Trip places
+  const { data: tripPlaces = [] } = useTripPlaces(tripId);
+  const reloadTripPlacesFn = useReloadTripPlaces(tripId);
+
+  // Source email map
+  const { data: sourceEmailMap = {} } = useSourceEmailMap(tripId);
+
+  // Exchange rates — keyed by currency + countries
+  const { data: exchangeRatesData = null } = useQuery<ExchangeRates | null>({
+    queryKey: ['exchange-rates', activeTrip?.currency, activeTrip?.countries?.slice().sort().join(',')],
+    enabled: !!activeTrip,
+    queryFn: () => fetchExchangeRates(activeTrip!.currency, activeTrip!.countries),
+    staleTime: 30 * 60_000,
+  });
+  // Allow manual override (for the "fill missing rate on demand" path in formatDualCurrency)
+  const [exchangeRatesOverride, setExchangeRatesOverride] = useState<ExchangeRates | null>(null);
+  const exchangeRates = exchangeRatesOverride ?? exchangeRatesData;
+
+  // Reset override when trip changes
+  useEffect(() => { setExchangeRatesOverride(null); }, [tripId]);
+
+  // Trip mutations
+  const updateMutation = useUpdateTrip();
+  const deleteMutation = useDeleteTrip();
+
+  // Refresh-key + manual reload
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const loadTripData = useCallback(async (id: string) => {
+    // Invalidate all trip-scoped queries
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.trips.locations(id) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.trips.places(id) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.poi.all(id) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.transport.all(id) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.itinerary.all(id) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.finance.all(id) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.missions.all(id) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.contacts.all(id) }),
+      queryClient.invalidateQueries({ queryKey: ['trips', id, 'source-email-map'] }),
+    ]);
+    setRefreshKey(k => k + 1);
+  }, [queryClient]);
 
   const setActiveTrip = useCallback((id: string) => {
-    dispatch({ type: 'RESET_TRIP_DATA' });
     setActiveTripId(id);
     // Track last-opened timestamp for "recent trips" ordering
     try {
@@ -111,165 +120,57 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
   const updateCurrentTrip = useCallback(async (updates: Partial<Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>>) => {
     if (!activeTrip) return;
     try {
-      await updateTrip(activeTrip.id, updates);
-      updateTripInList({ id: activeTrip.id, ...updates });
-      toast({ title: 'Trip updated' });
-    } catch (error) {
-      console.error('Failed to update trip:', error);
-      toast({ title: 'Error', description: 'Failed to update trip.', variant: 'destructive' });
-    }
-  }, [activeTrip, updateTripInList, toast]);
+      await updateMutation.mutateAsync({ id: activeTrip.id, updates });
+    } catch { /* toast handled inside mutation */ }
+  }, [activeTrip, updateMutation]);
 
   const deleteCurrentTrip = useCallback(async () => {
     if (!activeTrip) return;
     try {
-      await deleteTrip(activeTrip.id);
-      removeTrip(activeTrip.id);
-      dispatch({ type: 'RESET_TRIP_DATA' });
-      toast({ title: 'Trip Deleted' });
-    } catch (error) {
-      console.error('Failed to delete trip:', error);
-      toast({ title: 'Error', description: 'Failed to delete trip.', variant: 'destructive' });
-    }
-  }, [activeTrip, removeTrip, toast]);
+      await deleteMutation.mutateAsync(activeTrip.id);
+    } catch { /* toast handled inside mutation */ }
+  }, [activeTrip, deleteMutation]);
 
-  // Load trip locations from DB, enriched with Hebrew names from country JSON
-  const loadLocations = useCallback(async (tripId: string) => {
-    dispatch({ type: 'SET_LOADING_LOCATIONS', payload: true });
-    try {
-      const flat = await fetchTripLocations(tripId);
-      // Enrich with Hebrew names from country data
-      const countries = activeTrip?.countries ?? [];
-      const countryResults = countries.length > 0
-        ? await Promise.all(countries.map(c => loadCountryData(c)))
-        : [];
-      const descMap = countryResults.length > 0 ? buildDescriptionMap(countryResults) : undefined;
-      const tree = buildLocationTree(flat, descMap);
-      dispatch({ type: 'SET_TRIP_LOCATIONS', payload: { flat, tree } });
-    } catch (e) {
-      console.error('Failed to load trip locations:', e);
-      dispatch({ type: 'SET_LOADING_LOCATIONS', payload: false });
-    }
-  }, [activeTrip?.countries]);
-
-  const loadPlaces = useCallback(async (tripId: string) => {
-    try {
-      const places = await fetchTripPlaces(tripId);
-      dispatch({ type: 'SET_TRIP_PLACES', payload: places });
-    } catch (e) {
-      console.error('Failed to load trip places:', e);
-    }
+  const setExchangeRates = useCallback((rates: ExchangeRates | null) => {
+    setExchangeRatesOverride(rates);
   }, []);
 
   const reloadLocations = useCallback(async () => {
-    if (activeTrip) await loadLocations(activeTrip.id);
-  }, [activeTrip, loadLocations]);
+    if (tripId) await reloadLocationsFn();
+  }, [tripId, reloadLocationsFn]);
 
   const reloadTripPlaces = useCallback(async () => {
-    if (activeTrip) await loadPlaces(activeTrip.id);
-  }, [activeTrip, loadPlaces]);
-
-  const loadTripMetadata = useCallback(async (tripId: string) => {
-    // Load locations and places
-    await loadLocations(tripId);
-    await loadPlaces(tripId);
-
-    // Load email map (still from source_emails)
-    try {
-      const { data: emails } = await supabaseClient
-        .from('source_emails')
-        .select('id, source_email_info')
-        .eq('trip_id', tripId)
-        .eq('status', 'linked');
-
-      const emailMap: Record<string, { permalink?: string; subject?: string }> = {};
-      for (const email of (emails || [])) {
-        const info = email.source_email_info as { email_permalink?: string; subject?: string } | undefined;
-        emailMap[email.id] = { permalink: info?.email_permalink, subject: info?.subject };
-      }
-      dispatch({ type: 'SET_SOURCE_EMAIL_MAP', payload: emailMap });
-    } catch (e) {
-      console.error('Failed to load source email map:', e);
-    }
-  }, [loadLocations]);
-
-  const loadTripData = useCallback(async (tripId: string) => {
-    await loadTripMetadata(tripId);
-    dispatch({ type: 'INCREMENT_REFRESH_KEY' });
-  }, [loadTripMetadata]);
+    if (tripId) await reloadTripPlacesFn();
+  }, [tripId, reloadTripPlacesFn]);
 
   const addSiteToHierarchy = useCallback((siteName: string, parentSiteName?: string) => {
     if (!activeTrip) return;
+    if (findInFlatList(tripLocations, siteName)) return;
 
-    // Idempotency: skip if already in the tree to prevent duplicate DB rows
-    if (findInFlatList(state.tripLocations, siteName)) return;
-
-    // Find parent ID from the flat list
     let parentId: string | null = null;
     if (parentSiteName) {
-      const parent = findInFlatList(state.tripLocations, parentSiteName);
+      const parent = findInFlatList(tripLocations, parentSiteName);
       if (parent) parentId = parent.id;
     }
 
-    // Insert into DB, then reload
     addTripLocation(activeTrip.id, siteName, 'city', parentId, 'manual')
-      .then(() => loadLocations(activeTrip.id))
+      .then(() => reloadLocationsFn())
       .catch(e => console.error('Failed to add location:', e));
-  }, [activeTrip, state.tripLocations, loadLocations]);
+  }, [activeTrip, tripLocations, reloadLocationsFn]);
 
-  const setExchangeRates = useCallback((rates: ExchangeRates | null) => {
-    dispatch({ type: 'SET_EXCHANGE_RATES', payload: rates });
-  }, []);
-
-  // Fetch data when active trip changes
-  const prevTripIdRef = useRef<string | null>(null);
-  useEffect(() => {
-    if (activeTrip && activeTrip.id !== prevTripIdRef.current) {
-      prevTripIdRef.current = activeTrip.id;
-      loadTripMetadata(activeTrip.id);
-      dispatch({ type: 'SET_MY_ROLE', payload: activeTrip.myRole || 'owner' });
-      fetchExchangeRates(activeTrip.currency, activeTrip.countries)
-        .then(rates => dispatch({ type: 'SET_EXCHANGE_RATES', payload: rates }))
-        .catch(e => console.error('Failed to fetch exchange rates:', e));
-    } else if (!activeTrip) {
-      prevTripIdRef.current = null;
-    }
-  }, [activeTrip, loadTripMetadata]);
-
-  // Subscribe to realtime changes on trip_locations and trip_places
-  useEffect(() => {
-    if (!activeTrip) return;
-    const channel = supabaseClient
-      .channel(`trip_locations_places_${activeTrip.id}`)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'trip_locations',
-        filter: `trip_id=eq.${activeTrip.id}`,
-      }, () => { loadLocations(activeTrip.id); })
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'trip_places',
-        filter: `trip_id=eq.${activeTrip.id}`,
-      }, () => { loadPlaces(activeTrip.id); })
-      .subscribe();
-
-    return () => { supabaseClient.removeChannel(channel); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTrip?.id, loadLocations, loadPlaces]);
+  const myRole = activeTrip?.myRole ?? null;
 
   const value = useMemo(() => ({
     activeTrip,
-    exchangeRates: state.exchangeRates,
-    tripLocationTree: state.tripLocationTree,
-    tripLocations: state.tripLocations,
-    tripPlaces: state.tripPlaces,
-    sourceEmailMap: state.sourceEmailMap,
-    refreshKey: state.refreshKey,
-    myRole: state.myRole,
+    exchangeRates,
+    tripLocationTree,
+    tripLocations,
+    tripPlaces,
+    sourceEmailMap,
+    refreshKey,
+    myRole,
     isLoading,
-    isLoadingLocations: state.isLoadingLocations,
+    isLoadingLocations,
     error,
     setActiveTrip,
     updateCurrentTrip,
@@ -279,7 +180,7 @@ export function ActiveTripProvider({ children }: { children: ReactNode }) {
     addSiteToHierarchy,
     reloadLocations,
     reloadTripPlaces,
-  }), [activeTrip, state.exchangeRates, state.tripLocationTree, state.tripLocations, state.tripPlaces, state.sourceEmailMap, state.refreshKey, state.myRole, state.isLoadingLocations, isLoading, error, setActiveTrip, updateCurrentTrip, deleteCurrentTrip, loadTripData, setExchangeRates, addSiteToHierarchy, reloadLocations, reloadTripPlaces]);
+  }), [activeTrip, exchangeRates, tripLocationTree, tripLocations, tripPlaces, sourceEmailMap, refreshKey, myRole, isLoading, isLoadingLocations, error, setActiveTrip, updateCurrentTrip, deleteCurrentTrip, loadTripData, setExchangeRates, addSiteToHierarchy, reloadLocations, reloadTripPlaces]);
 
   return <ActiveTripContext.Provider value={value}>{children}</ActiveTripContext.Provider>;
 }

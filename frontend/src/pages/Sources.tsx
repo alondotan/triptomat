@@ -34,7 +34,7 @@ import {
   type ResourceCategory,
   type ResourceLang,
 } from '@/features/geodata/resourceService';
-import { fetchTripRecommendations, deleteRecommendation } from '@/features/inbox/recommendationService';
+import { useTripRecommendations, useDeleteRecommendation, useWebhookToken } from '@/features/inbox/useInboxQueries';
 import { getStageLabel } from '@/features/admin/usePipelineMonitor';
 import type { SourceRecommendation } from '@/types/webhook';
 import type { PointOfInterest, Contact } from '@/types/trip';
@@ -483,10 +483,8 @@ const Sources = () => {
 
   // State
   const [resources, setResources] = useState<CountryResource[]>([]);
-  const [recommendations, setRecommendations] = useState<SourceRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchingCountries, setSearchingCountries] = useState<Set<string>>(new Set());
-  const [webhookToken, setWebhookToken] = useState<string | null>(null);
   const [analyzingUrls, setAnalyzingUrls] = useState<Set<string>>(new Set());
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [syncing, setSyncing] = useState<Record<string, boolean>>({});
@@ -495,31 +493,10 @@ const Sources = () => {
   const [sourceTextDialog, setSourceTextDialog] = useState<{ title: string; text: string } | null>(null);
   const [processingStages, setProcessingStages] = useState<Record<string, string>>({});
 
-  // Webhook token
-  useEffect(() => {
-    supabase.from('webhook_tokens').select('token').single()
-      .then(({ data }) => setWebhookToken(data?.token ?? null));
-  }, []);
-
-  // Load recommendations + real-time
-  useEffect(() => {
-    if (!tripId) return;
-    fetchTripRecommendations(tripId).then(setRecommendations).catch(console.error);
-  }, [tripId]);
-
-  useEffect(() => {
-    if (!tripId) return;
-    const channel = supabase
-      .channel(`sources-rt-${tripId}`)
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'source_recommendations',
-        filter: `trip_id=eq.${tripId}`,
-      }, () => {
-        fetchTripRecommendations(tripId).then(setRecommendations).catch(console.error);
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [tripId]);
+  // Recommendations (with realtime) and webhook token via TanStack Query
+  const { data: recommendations = [] } = useTripRecommendations(tripId);
+  const { data: webhookToken = null } = useWebhookToken();
+  const deleteRecommendationMutation = useDeleteRecommendation(tripId);
 
   useEffect(() => {
     const processingIds = recommendations
@@ -680,8 +657,7 @@ const Sources = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteRecommendation(id);
-      setRecommendations(prev => prev.filter(r => r.id !== id));
+      await deleteRecommendationMutation.mutateAsync(id);
       toast({ title: t('recsPage.recDeleted') });
     } catch {
       toast({ title: t('recsPage.deleteError'), variant: 'destructive' });
@@ -694,7 +670,7 @@ const Sources = () => {
     try {
       const token = webhookToken || (await supabase.from('webhook_tokens').select('token').single()).data?.token;
       if (!token) throw new Error('No webhook token');
-      await deleteRecommendation(rec.id);
+      await deleteRecommendationMutation.mutateAsync(rec.id);
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 30_000);
       const res = await fetch(GATEWAY_URL, {
@@ -718,7 +694,7 @@ const Sources = () => {
       } else {
         toast({ title: t('recsPage.resendFailed'), variant: 'destructive' });
       }
-      fetchTripRecommendations(tripId).then(setRecommendations).catch(console.error);
+      // Realtime subscription on source_recommendations will refresh the list automatically.
     } catch (err: unknown) {
       toast({ title: t('recsPage.resendFailed'), description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
     }

@@ -4,6 +4,7 @@ import {
   mergeWithNewWins,
   fuzzyMatch,
   mergeSourceRefs,
+  applyCommonMergeRules,
   STATUS_PRIORITY,
   TRANSPORT_STATUS_PRIORITY,
 } from "./helpers";
@@ -215,5 +216,81 @@ describe("TRANSPORT_STATUS_PRIORITY", () => {
     expect(TRANSPORT_STATUS_PRIORITY.scheduled).toBeGreaterThan(TRANSPORT_STATUS_PRIORITY.planned);
     expect(TRANSPORT_STATUS_PRIORITY.planned).toBeGreaterThan(TRANSPORT_STATUS_PRIORITY.interested);
     expect(TRANSPORT_STATUS_PRIORITY.interested).toBeGreaterThan(TRANSPORT_STATUS_PRIORITY.suggested);
+  });
+});
+
+describe("applyCommonMergeRules", () => {
+  const refs = (ids: string[]) => ({ email_ids: ids, recommendation_ids: [] });
+
+  it("keeps primary status when it's higher priority", () => {
+    const result = applyCommonMergeRules(
+      { status: "booked", isPaid: false, isCancelled: false, sourceRefs: refs([]) },
+      { status: "suggested", isPaid: false, isCancelled: false, sourceRefs: refs([]) },
+    );
+    expect(result.status).toBeUndefined();
+  });
+
+  it("upgrades to secondary status when secondary is higher priority", () => {
+    const result = applyCommonMergeRules(
+      { status: "suggested", isPaid: false, isCancelled: false, sourceRefs: refs([]) },
+      { status: "booked", isPaid: false, isCancelled: false, sourceRefs: refs([]) },
+    );
+    expect(result.status).toBe("booked");
+  });
+
+  it("does not set status when both have equal priority", () => {
+    const result = applyCommonMergeRules(
+      { status: "planned", isPaid: false, isCancelled: false, sourceRefs: refs([]) },
+      { status: "planned", isPaid: false, isCancelled: false, sourceRefs: refs([]) },
+    );
+    expect(result.status).toBeUndefined();
+  });
+
+  it("isPaid is additive: secondary paid sets isPaid true", () => {
+    const result = applyCommonMergeRules(
+      { status: "suggested", isPaid: false, isCancelled: false, sourceRefs: refs([]) },
+      { status: "suggested", isPaid: true, isCancelled: false, sourceRefs: refs([]) },
+    );
+    expect(result.isPaid).toBe(true);
+  });
+
+  it("isPaid stays undefined when neither is paid", () => {
+    const result = applyCommonMergeRules(
+      { status: "suggested", isPaid: false, isCancelled: false, sourceRefs: refs([]) },
+      { status: "suggested", isPaid: false, isCancelled: false, sourceRefs: refs([]) },
+    );
+    expect(result.isPaid).toBeUndefined();
+  });
+
+  it("primary paid is not cleared by secondary unpaid", () => {
+    const result = applyCommonMergeRules(
+      { status: "suggested", isPaid: true, isCancelled: false, sourceRefs: refs([]) },
+      { status: "suggested", isPaid: false, isCancelled: false, sourceRefs: refs([]) },
+    );
+    expect(result.isPaid).toBeUndefined();
+  });
+
+  it("un-cancels when primary is cancelled but secondary is not", () => {
+    const result = applyCommonMergeRules(
+      { status: "suggested", isPaid: false, isCancelled: true, sourceRefs: refs([]) },
+      { status: "suggested", isPaid: false, isCancelled: false, sourceRefs: refs([]) },
+    );
+    expect(result.isCancelled).toBe(false);
+  });
+
+  it("keeps cancelled when both are cancelled", () => {
+    const result = applyCommonMergeRules(
+      { status: "suggested", isPaid: false, isCancelled: true, sourceRefs: refs([]) },
+      { status: "suggested", isPaid: false, isCancelled: true, sourceRefs: refs([]) },
+    );
+    expect(result.isCancelled).toBeUndefined();
+  });
+
+  it("merges sourceRefs from both sides", () => {
+    const result = applyCommonMergeRules(
+      { status: "suggested", isPaid: false, isCancelled: false, sourceRefs: refs(["e1"]) },
+      { status: "suggested", isPaid: false, isCancelled: false, sourceRefs: refs(["e2"]) },
+    );
+    expect(result.sourceRefs.email_ids).toEqual(expect.arrayContaining(["e1", "e2"]));
   });
 });

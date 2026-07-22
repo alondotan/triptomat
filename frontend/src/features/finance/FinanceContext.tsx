@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useCallback, useMemo, useRef, ReactNode } from 'react';
 import { Expense, CostBreakdown } from '@/types/trip';
-import { fetchExpenses, createExpense, updateExpense as updateExpenseService, deleteExpense as deleteExpenseService } from '@/features/finance/expenseService';
 import { updatePOI } from '@/features/poi/poiService';
 import { updateTransportation } from '@/features/transport/transportService';
 import { convertToPreferred, fetchSingleRate } from '@/features/finance/exchangeRateService';
@@ -8,32 +7,18 @@ import { useToast } from '@/shared/hooks/use-toast';
 import { useActiveTrip } from '@/features/trip/ActiveTripContext';
 import { usePOI } from '@/features/poi/POIContext';
 import { useTransport } from '@/features/transport/TransportContext';
+import { useExpenses, useAddExpense, useUpdateExpense, useDeleteExpense } from './useExpenseQueries';
 
-// State
-interface FinanceState {
-  expenses: Expense[];
-}
-
-type FinanceAction =
-  | { type: 'SET_EXPENSES'; payload: Expense[] }
-  | { type: 'ADD_EXPENSE'; payload: Expense }
-  | { type: 'UPDATE_EXPENSE'; payload: Expense }
-  | { type: 'DELETE_EXPENSE'; payload: string };
-
-function financeReducer(state: FinanceState, action: FinanceAction): FinanceState {
-  switch (action.type) {
-    case 'SET_EXPENSES':
-      return { expenses: action.payload };
-    case 'ADD_EXPENSE':
-      return { expenses: [action.payload, ...state.expenses] };
-    case 'UPDATE_EXPENSE':
-      return { expenses: state.expenses.map(e => e.id === action.payload.id ? action.payload : e) };
-    case 'DELETE_EXPENSE':
-      return { expenses: state.expenses.filter(e => e.id !== action.payload) };
-    default:
-      return state;
-  }
-}
+/**
+ * Thin wrapper that combines:
+ *   - Expense CRUD (now backed by TanStack Query hooks in `useExpenseQueries.ts`)
+ *   - Cross-entity helpers (`togglePaidStatus`, `getCostBreakdown`)
+ *   - Pure currency formatters
+ *
+ * The context exists mainly to expose pure compute functions that depend on
+ * other contexts (POI, Transport, ActiveTrip). New code that only needs
+ * expenses should use `useExpenses` / `useAddExpense` directly.
+ */
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
   USD: '$', ILS: '₪', EUR: '€', GBP: '£', PHP: '₱', THB: '฿', JPY: '¥', CNY: '¥',
@@ -44,7 +29,6 @@ const CURRENCY_SYMBOLS: Record<string, string> = {
   GEL: '₾', ISK: 'kr', RON: 'lei', BGN: 'лв',
 };
 
-// Context type
 interface FinanceContextType {
   expenses: Expense[];
   addExpense: (e: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -61,53 +45,36 @@ const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
 export function FinanceProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
-  const { activeTrip, exchangeRates, refreshKey, setExchangeRates } = useActiveTrip();
+  const { activeTrip, exchangeRates, setExchangeRates } = useActiveTrip();
   const { pois, updatePOI: updatePOIInContext } = usePOI();
   const { transportation, updateTransportation: updateTransportInContext } = useTransport();
-  const [state, dispatch] = useReducer(financeReducer, { expenses: [] });
+
+  const tripId = activeTrip?.id;
+  const { data: expenses = [] } = useExpenses(tripId);
+  const addMutation = useAddExpense(tripId);
+  const updateMutation = useUpdateExpense(tripId);
+  const deleteMutation = useDeleteExpense(tripId);
 
   // Track pending exchange-rate fetches to avoid repeated calls during render
   const pendingRateFetches = useRef<Set<string>>(new Set());
 
-  // Load expenses when active trip changes
-  useEffect(() => {
-    if (activeTrip) {
-      fetchExpenses(activeTrip.id).then(expenses => dispatch({ type: 'SET_EXPENSES', payload: expenses }));
-    } else {
-      dispatch({ type: 'SET_EXPENSES', payload: [] });
-    }
-  }, [activeTrip?.id, refreshKey]);
-
   const addExpense = useCallback(async (e: Omit<Expense, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const newE = await createExpense(e);
-      dispatch({ type: 'ADD_EXPENSE', payload: newE });
-    } catch (error) {
-      console.error('Failed to add expense:', error);
-      toast({ title: 'Error', description: 'Failed to add expense.', variant: 'destructive' });
-    }
-  }, [toast]);
+      await addMutation.mutateAsync(e);
+    } catch { /* toast handled inside mutation */ }
+  }, [addMutation]);
 
   const updateExpense = useCallback(async (id: string, updates: Partial<Expense>) => {
     try {
-      await updateExpenseService(id, updates);
-      const existing = state.expenses.find(e => e.id === id);
-      if (existing) dispatch({ type: 'UPDATE_EXPENSE', payload: { ...existing, ...updates } });
-    } catch (error) {
-      console.error('Failed to update expense:', error);
-      toast({ title: 'Error', description: 'Failed to update expense.', variant: 'destructive' });
-    }
-  }, [state.expenses, toast]);
+      await updateMutation.mutateAsync({ id, updates });
+    } catch { /* toast handled inside mutation */ }
+  }, [updateMutation]);
 
   const deleteExpense = useCallback(async (id: string) => {
     try {
-      await deleteExpenseService(id);
-      dispatch({ type: 'DELETE_EXPENSE', payload: id });
-    } catch (error) {
-      console.error('Failed to delete expense:', error);
-      toast({ title: 'Error', description: 'Failed to delete expense.', variant: 'destructive' });
-    }
-  }, [toast]);
+      await deleteMutation.mutateAsync(id);
+    } catch { /* toast handled inside mutation */ }
+  }, [deleteMutation]);
 
   const togglePaidStatus = useCallback(async (entityType: 'poi' | 'transport' | 'expense', id: string, isPaid: boolean) => {
     try {
@@ -120,15 +87,13 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         const existing = transportation.find(t => t.id === id);
         if (existing) updateTransportInContext({ ...existing, isPaid });
       } else {
-        await updateExpenseService(id, { isPaid });
-        const existing = state.expenses.find(e => e.id === id);
-        if (existing) dispatch({ type: 'UPDATE_EXPENSE', payload: { ...existing, isPaid } });
+        await updateMutation.mutateAsync({ id, updates: { isPaid } });
       }
     } catch (error) {
       console.error('Failed to toggle paid status:', error);
       toast({ title: 'Error', description: 'Failed to update paid status.', variant: 'destructive' });
     }
-  }, [pois, transportation, state.expenses, updatePOIInContext, updateTransportInContext, toast]);
+  }, [pois, transportation, updatePOIInContext, updateTransportInContext, updateMutation, toast]);
 
   const getCostBreakdown = useCallback((): CostBreakdown => {
     const preferred = activeTrip?.currency || 'USD';
@@ -148,13 +113,13 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       transport += converted;
     });
     let manualExpenses = 0;
-    state.expenses.forEach(e => {
+    expenses.forEach(e => {
       const converted = exchangeRates ? (convertToPreferred(e.amount, e.currency, exchangeRates) ?? e.amount) : e.amount;
       manualExpenses += converted;
     });
     const total = transport + lodging + activities + services + manualExpenses;
     return { transport, lodging, activities, services, total };
-  }, [activeTrip?.currency, pois, transportation, state.expenses, exchangeRates]);
+  }, [activeTrip?.currency, pois, transportation, expenses, exchangeRates]);
 
   const formatCurrency = useCallback((amount: number, currency?: string): string => {
     const cur = currency || activeTrip?.currency || 'USD';
@@ -192,7 +157,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   }, [exchangeRates]);
 
   const value = useMemo(() => ({
-    expenses: state.expenses,
+    expenses,
     addExpense,
     updateExpense,
     deleteExpense,
@@ -201,7 +166,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     formatCurrency,
     formatDualCurrency,
     convertToPreferredCurrency,
-  }), [state.expenses, addExpense, updateExpense, deleteExpense, togglePaidStatus, getCostBreakdown, formatCurrency, formatDualCurrency, convertToPreferredCurrency]);
+  }), [expenses, addExpense, updateExpense, deleteExpense, togglePaidStatus, getCostBreakdown, formatCurrency, formatDualCurrency, convertToPreferredCurrency]);
 
   return <FinanceContext.Provider value={value}>{children}</FinanceContext.Provider>;
 }

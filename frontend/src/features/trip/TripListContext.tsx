@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useReducer, useEffect, useCallback, useMemo, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Trip, TripStatus } from '@/types/trip';
-import { fetchTrips, createTrip } from '@/features/trip/tripService';
-import { useToast } from '@/shared/hooks/use-toast';
+import { useTrips, useCreateTrip } from './useTripQueries';
+import { queryKeys } from '@/shared/queries/keys';
 
 export interface CreateTripData {
   name: string;
@@ -14,57 +15,18 @@ export interface CreateTripData {
   endDate?: string;
 }
 
-// State
-interface TripListState {
-  trips: Trip[];
-  activeTripId: string | null;
-  isLoading: boolean;
-  error: string | null;
-}
+/**
+ * TripListContext owns the *active trip selection* (which trip the user is
+ * currently viewing). The trip list itself is backed by TanStack Query
+ * (`useTrips`) — this context just adds the active-trip-id selection layer
+ * on top, with localStorage persistence and graceful fallback when the
+ * active trip disappears.
+ *
+ * `removeTrip` / `updateTripInList` are kept for backwards compatibility but
+ * are now thin wrappers around the query cache. New code should use the
+ * mutation hooks in `useTripQueries.ts` directly.
+ */
 
-// Actions
-type TripListAction =
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'LOAD_TRIPS'; payload: Trip[] }
-  | { type: 'SET_ACTIVE_TRIP_ID'; payload: string | null }
-  | { type: 'ADD_TRIP'; payload: Trip }
-  | { type: 'REMOVE_TRIP'; payload: string }
-  | { type: 'UPDATE_TRIP'; payload: Partial<Trip> & { id: string } };
-
-function tripListReducer(state: TripListState, action: TripListAction): TripListState {
-  switch (action.type) {
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.payload };
-    case 'SET_ERROR':
-      return { ...state, error: action.payload };
-    case 'LOAD_TRIPS': {
-      const savedId = localStorage.getItem('activeTripId');
-      const validSavedId = savedId && action.payload.some(t => t.id === savedId) ? savedId : null;
-      const firstId = validSavedId || (action.payload.length > 0 ? action.payload[0].id : null);
-      return { ...state, trips: action.payload, activeTripId: firstId, isLoading: false };
-    }
-    case 'SET_ACTIVE_TRIP_ID':
-      return { ...state, activeTripId: action.payload };
-    case 'ADD_TRIP':
-      return { ...state, trips: [action.payload, ...state.trips], activeTripId: action.payload.id };
-    case 'REMOVE_TRIP': {
-      const filtered = state.trips.filter(t => t.id !== action.payload);
-      const newActiveId = state.activeTripId === action.payload
-        ? (filtered.length > 0 ? filtered[0].id : null)
-        : state.activeTripId;
-      return { ...state, trips: filtered, activeTripId: newActiveId };
-    }
-    case 'UPDATE_TRIP': {
-      const { id, ...updates } = action.payload;
-      return { ...state, trips: state.trips.map(t => t.id === id ? { ...t, ...updates } : t) };
-    }
-    default:
-      return state;
-  }
-}
-
-// Context type
 interface TripListContextType {
   trips: Trip[];
   activeTripId: string | null;
@@ -80,74 +42,90 @@ interface TripListContextType {
 const TripListContext = createContext<TripListContextType | undefined>(undefined);
 
 export function TripListProvider({ children }: { children: ReactNode }) {
-  const { toast } = useToast();
-  const [state, dispatch] = useReducer(tripListReducer, {
-    trips: [],
-    activeTripId: null,
-    isLoading: true,
-    error: null,
+  const queryClient = useQueryClient();
+  const { data: trips = [], isLoading, error: queryError } = useTrips();
+  const createMutation = useCreateTrip();
+
+  const [activeTripId, setActiveTripIdState] = useState<string | null>(() => {
+    return localStorage.getItem('activeTripId');
   });
 
-  const loadTrips = useCallback(async () => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-    try {
-      const trips = await fetchTrips();
-      dispatch({ type: 'LOAD_TRIPS', payload: trips });
-    } catch (error) {
-      console.error('Failed to load trips:', error);
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to load trips' });
-      dispatch({ type: 'SET_LOADING', payload: false });
+  // When trips load (or change), if no active trip is selected — or the
+  // selected one no longer exists — fall back to the first trip.
+  useEffect(() => {
+    if (trips.length === 0) return;
+    if (!activeTripId || !trips.some(t => t.id === activeTripId)) {
+      const fallbackId = trips[0].id;
+      setActiveTripIdState(fallbackId);
+      localStorage.setItem('activeTripId', fallbackId);
     }
-  }, []);
+  }, [trips, activeTripId]);
 
   const setActiveTripId = useCallback((id: string) => {
     localStorage.setItem('activeTripId', id);
-    dispatch({ type: 'SET_ACTIVE_TRIP_ID', payload: id });
+    setActiveTripIdState(id);
   }, []);
+
+  const loadTrips = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.trips.list() });
+  }, [queryClient]);
 
   const createNewTrip = useCallback(async (data: CreateTripData) => {
     try {
-      const newTrip = await createTrip({
+      const newTrip = await createMutation.mutateAsync({
         name: data.name,
         description: data.description,
         countries: data.countries,
-        currency: data.currency || 'ILS',
+        currency: (data.currency || 'ILS') as Trip['currency'],
         status: data.status,
         numberOfDays: data.numberOfDays,
         startDate: data.startDate,
         endDate: data.endDate,
       });
       localStorage.setItem('activeTripId', newTrip.id);
-      dispatch({ type: 'ADD_TRIP', payload: newTrip });
-      toast({ title: 'Trip Created', description: `"${data.name}" has been created.` });
-    } catch (error) {
-      console.error('Failed to create trip:', error);
-      toast({ title: 'Error', description: 'Failed to create trip.', variant: 'destructive' });
-    }
-  }, [toast]);
+      setActiveTripIdState(newTrip.id);
+    } catch { /* toast handled inside mutation */ }
+  }, [createMutation]);
 
+  /**
+   * Removes a trip from the local cache. Does NOT call the DB — assumes the
+   * caller already deleted the trip (or is using a mutation that did).
+   * Also reassigns `activeTripId` if the removed trip was active.
+   */
   const removeTrip = useCallback((id: string) => {
-    dispatch({ type: 'REMOVE_TRIP', payload: id });
-  }, []);
+    queryClient.setQueryData<Trip[]>(queryKeys.trips.list(), (old) => (old ?? []).filter(t => t.id !== id));
+    if (activeTripId === id) {
+      const remaining = (queryClient.getQueryData<Trip[]>(queryKeys.trips.list()) ?? []);
+      const fallbackId = remaining.length > 0 ? remaining[0].id : null;
+      if (fallbackId) {
+        localStorage.setItem('activeTripId', fallbackId);
+      } else {
+        localStorage.removeItem('activeTripId');
+      }
+      setActiveTripIdState(fallbackId);
+    }
+  }, [queryClient, activeTripId]);
 
+  /**
+   * Patches a trip in the local cache. Does NOT call the DB.
+   */
   const updateTripInList = useCallback((updates: Partial<Trip> & { id: string }) => {
-    dispatch({ type: 'UPDATE_TRIP', payload: updates });
-  }, []);
-
-  // Load trips on mount
-  useEffect(() => { loadTrips(); }, [loadTrips]);
+    queryClient.setQueryData<Trip[]>(queryKeys.trips.list(), (old) =>
+      (old ?? []).map(t => t.id === updates.id ? { ...t, ...updates } : t),
+    );
+  }, [queryClient]);
 
   const value = useMemo(() => ({
-    trips: state.trips,
-    activeTripId: state.activeTripId,
-    isLoading: state.isLoading,
-    error: state.error,
+    trips,
+    activeTripId,
+    isLoading,
+    error: queryError ? 'Failed to load trips' : null,
     loadTrips,
     setActiveTripId,
     createNewTrip,
     removeTrip,
     updateTripInList,
-  }), [state.trips, state.activeTripId, state.isLoading, state.error, loadTrips, setActiveTripId, createNewTrip, removeTrip, updateTripInList]);
+  }), [trips, activeTripId, isLoading, queryError, loadTrips, setActiveTripId, createNewTrip, removeTrip, updateTripInList]);
 
   return <TripListContext.Provider value={value}>{children}</TripListContext.Provider>;
 }
