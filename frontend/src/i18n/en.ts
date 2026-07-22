@@ -728,6 +728,8 @@ const en = {
     dragItemHere: 'Drag an item here',
     addTimeWindow: 'Add time window',
     timeWindowPlaceholder: 'Window name (e.g. City tour)',
+    addEvent: 'Add event',
+    eventPlaceholder: 'Description (e.g. Wake up, Depart)',
     addLocation: 'Add destination',
     location: 'Loc',
     setLocation: 'Set Location',

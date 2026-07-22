@@ -83,6 +83,7 @@ interface Item {
   remark?: string;   // e.g. "Book tickets in advance"
   poi?: PointOfInterest; // original POI object when item represents a POI
   isTimeBlock?: boolean; // named section divider
+  isEvent?: boolean; // standalone time-only event (no place) — e.g. "wake up 07:00"
 }
 
 // Temperature → hue: -10°C=220 (blue) → 35°C=0 (red)
@@ -310,7 +311,7 @@ function DraggableItem({ item, isBeingDragged, onRemove }: { item: Item; isBeing
 
 function SortableScheduledItem({
   item, isLocked, onToggleLock, onAddTransport, onDeleteTransport, onEditTransport,
-  onUpdateTimeBlock, onDeleteTimeBlock, calcDurationMin, onSelect, isSelected, onRemove,
+  onUpdateTimeBlock, onDeleteTimeBlock, onUpdateEvent, onDeleteEvent, calcDurationMin, onSelect, isSelected, onRemove,
 }: {
   item: Item;
   isLocked: boolean;
@@ -320,6 +321,8 @@ function SortableScheduledItem({
   onEditTransport?: () => void;
   onUpdateTimeBlock?: (label: string, time: string | undefined) => void;
   onDeleteTimeBlock?: () => void;
+  onUpdateEvent?: (label: string, time: string | undefined) => void;
+  onDeleteEvent?: () => void;
   calcDurationMin?: number;
   onSelect?: () => void;
   isSelected?: boolean;
@@ -332,13 +335,14 @@ function SortableScheduledItem({
     animateLayoutChanges: noReturnAnimation,
   });
 
-  // Inline edit state for time_block items
+  // Inline edit state for time_block / event items
   const [isEditing, setIsEditing] = useState(false);
   const [editLabel, setEditLabel] = useState(item.label);
   const [editTime, setEditTime] = useState(item.time ?? '');
 
   const saveEdit = () => {
-    onUpdateTimeBlock?.(editLabel.trim() || item.label, editTime || undefined);
+    if (item.isEvent) onUpdateEvent?.(editLabel.trim() || item.label, editTime || undefined);
+    else onUpdateTimeBlock?.(editLabel.trim() || item.label, editTime || undefined);
     setIsEditing(false);
   };
   const cancelEdit = () => {
@@ -406,6 +410,78 @@ function SortableScheduledItem({
               <button
                 type="button"
                 onClick={onDeleteTimeBlock}
+                className="p-1 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Event item: standalone time-only row (no place)
+  if (item.isEvent) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={{
+          transform: transform ? CSS.Transform.toString({ ...transform, x: 0 }) : undefined,
+          transition,
+        }}
+        className={`flex items-center gap-2 bg-card border rounded-lg px-2 sm:px-2.5 py-2 transition-opacity touch-manipulation ${isDragging ? 'opacity-40' : ''} ${isSelected ? 'ring-2 ring-primary' : ''}`}
+      >
+        <button
+          {...attributes}
+          {...(isLocked ? {} : listeners)}
+          disabled={isLocked}
+          className="shrink-0 p-0.5 touch-none select-none cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground"
+        >
+          <GripVertical size={14} />
+        </button>
+        <span className="shrink-0 w-6 h-6 rounded-full bg-sky-500/10 text-sky-500 flex items-center justify-center">
+          <Clock size={13} />
+        </span>
+        {isEditing ? (
+          <>
+            <Input
+              value={editLabel}
+              onChange={e => setEditLabel(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') cancelEdit(); }}
+              className="h-6 text-xs flex-1 min-w-0 px-1.5"
+              autoFocus
+            />
+            <input
+              type="time"
+              value={editTime}
+              onChange={e => setEditTime(e.target.value)}
+              className="h-6 text-xs border border-input rounded px-1.5 bg-background w-24"
+            />
+            <button type="button" onClick={saveEdit} className="p-0.5 text-primary hover:text-primary/80 transition-colors shrink-0">
+              <Check size={13} />
+            </button>
+            <button type="button" onClick={cancelEdit} className="p-0.5 text-muted-foreground hover:text-foreground transition-colors shrink-0">
+              <X size={13} />
+            </button>
+          </>
+        ) : (
+          <>
+            <span className="flex-1 text-sm font-medium truncate">{item.label}</span>
+            {item.time && (
+              <span className="text-xs text-muted-foreground shrink-0 font-mono">{item.time}</span>
+            )}
+            <div className="flex items-center gap-0.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => { setEditLabel(item.label); setEditTime(item.time ?? ''); setIsEditing(true); }}
+                className="p-1 rounded text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-colors"
+              >
+                <Pencil size={12} />
+              </button>
+              <button
+                type="button"
+                onClick={onDeleteEvent}
                 className="p-1 rounded text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-colors"
               >
                 <Trash2 size={12} />
@@ -587,7 +663,7 @@ function TimeBlockSectionHeader({ item, canDelete, onUpdate, onDelete, dragHandl
 
 // ─── Group frame ───────────────────────────────────────────────────────────────
 
-function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onDeleteTransport, onEditTransport, onUpdateTimeBlock, onDeleteTimeBlock, canDelete, onRenameGroup, onDeleteGroup, legMap, onHighlightLeg, transportCalcDurations, selectedItemId, onSelectItem, onRemoveActivity }: {
+function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onDeleteTransport, onEditTransport, onUpdateTimeBlock, onDeleteTimeBlock, onUpdateEvent, onDeleteEvent, canDelete, onRenameGroup, onDeleteGroup, legMap, onHighlightLeg, transportCalcDurations, selectedItemId, onSelectItem, onRemoveActivity }: {
   group: Group;
   label: string;
   lockedIds: Set<string>;
@@ -597,6 +673,8 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
   onEditTransport?: (transportId: string) => void;
   onUpdateTimeBlock?: (itemId: string, label: string, time: string | undefined) => void;
   onDeleteTimeBlock?: (itemId: string) => void;
+  onUpdateEvent?: (itemId: string, label: string, time: string | undefined) => void;
+  onDeleteEvent?: (itemId: string) => void;
   canDelete?: boolean;
   onRenameGroup?: (label: string, time: string | undefined) => void;
   onDeleteGroup?: () => void;
@@ -730,6 +808,8 @@ function GroupFrame({ group, label, lockedIds, onToggleLock, onAddTransport, onD
                   onAddTransport={item.poi ? () => onAddTransport?.(item.poi!.id) : undefined}
                   onDeleteTransport={transportId ? () => onDeleteTransport?.(transportId) : undefined}
                   onEditTransport={transportId ? () => onEditTransport?.(transportId) : undefined}
+                  onUpdateEvent={item.isEvent ? (lbl, tm) => onUpdateEvent?.(item.id, lbl, tm) : undefined}
+                  onDeleteEvent={item.isEvent ? () => onDeleteEvent?.(item.id) : undefined}
                   calcDurationMin={transportCalcDurations?.get(item.id)}
                   onSelect={item.poi && onSelectItem ? () => onSelectItem(item.id) : undefined}
                   isSelected={item.poi ? selectedItemId === item.id : false}
@@ -1000,6 +1080,9 @@ export default function SchedulePage() {
   const [addingTimeBlock, setAddingTimeBlock] = useState(false);
   const [newTbLabel, setNewTbLabel] = useState('');
   const [newTbTime, setNewTbTime] = useState('');
+  const [addingEvent, setAddingEvent] = useState(false);
+  const [newEvtLabel, setNewEvtLabel] = useState('');
+  const [newEvtTime, setNewEvtTime] = useState('');
 
   // ── Route map state ─────────────────────────────────────────────────────────
   const [defaultMode, setDefaultMode] = useState<'car' | 'walk'>('car');
@@ -1953,6 +2036,70 @@ export default function SchedulePage() {
     await refreshDays();
   }, [selectedDayNum, itineraryDays, setItineraryDays, refreshDays]);
 
+  // ── Standalone events (time-only rows, no place) ──────────────────────────
+  const handleAddEvent = useCallback(async () => {
+    if (!newEvtLabel.trim()) return;
+    let itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (!itDay && activeTrip) {
+      itDay = await createItineraryDay({
+        tripId: activeTrip.id,
+        dayNumber: selectedDayNum,
+        date: tripDays[selectedDayNum - 1]?.dateStr,
+        accommodationOptions: [],
+        activities: [],
+        transportationSegments: [],
+      });
+    }
+    if (!itDay) return;
+    const maxOrder = itDay.activities.reduce((m, a) => Math.max(m, a.order), 0);
+    const newActivity = {
+      order: maxOrder + 1,
+      type: 'event' as const,
+      id: crypto.randomUUID(),
+      label: newEvtLabel.trim(),
+      ...(newEvtTime ? { time_window: { start: newEvtTime } } : {}),
+    };
+    let updatedActivities = [...itDay.activities, newActivity];
+    // If the event has a time, place it chronologically among the day's activities
+    if (newEvtTime) {
+      const day = itDay;
+      updatedActivities = reorderActivitiesChronologically(updatedActivities, a => resolveActivityTime(day, a));
+    }
+    setItineraryDays(itineraryDays.map(d => d.id === itDay!.id ? { ...d, activities: updatedActivities } : d));
+    await updateItineraryDay(itDay.id, { activities: updatedActivities });
+    setNewEvtLabel('');
+    setNewEvtTime('');
+    setAddingEvent(false);
+    await refreshDays();
+  }, [newEvtLabel, newEvtTime, selectedDayNum, tripDays, itineraryDays, activeTrip, setItineraryDays, refreshDays, resolveActivityTime]);
+
+  const handleUpdateEvent = useCallback(async (itemId: string, label: string, time: string | undefined) => {
+    const activityId = itemId.replace('evt_', '');
+    const itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (!itDay) return;
+    let updatedActivities = itDay.activities.map(a =>
+      a.id === activityId
+        ? { ...a, label, time_window: time ? { start: time } : undefined }
+        : a,
+    );
+    if (time) {
+      updatedActivities = reorderActivitiesChronologically(updatedActivities, a => resolveActivityTime(itDay, a));
+    }
+    setItineraryDays(itineraryDays.map(d => d.id === itDay.id ? { ...d, activities: updatedActivities } : d));
+    await updateItineraryDay(itDay.id, { activities: updatedActivities });
+    await refreshDays();
+  }, [selectedDayNum, itineraryDays, setItineraryDays, refreshDays, resolveActivityTime]);
+
+  const handleDeleteEvent = useCallback(async (itemId: string) => {
+    const activityId = itemId.replace('evt_', '');
+    const itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
+    if (!itDay) return;
+    const updatedActivities = itDay.activities.filter(a => a.id !== activityId);
+    setItineraryDays(itineraryDays.map(d => d.id === itDay.id ? { ...d, activities: updatedActivities } : d));
+    await updateItineraryDay(itDay.id, { activities: updatedActivities });
+    await refreshDays();
+  }, [selectedDayNum, itineraryDays, setItineraryDays, refreshDays]);
+
   // Rename an auto-generated group → converts it into a time_block-headed group
   const handleRenameAutoGroup = useCallback(async (firstContentItemId: string | undefined, label: string, time: string | undefined) => {
     const itDay = itineraryDays.find(d => d.dayNumber === selectedDayNum);
@@ -2553,6 +2700,19 @@ export default function SchedulePage() {
       // NOT added to lockedIds — time blocks live in unlocked groups as section headers
     });
 
+    // ── Events (standalone time-only rows, no place) ─────────────────────────
+    itDay.activities.filter(a => a.type === 'event').forEach(a => {
+      const item: Item = {
+        id: `evt_${a.id}`,
+        label: a.label || 'Event',
+        emoji: '⏰',
+        time: a.time_window?.start,
+        isEvent: true,
+      };
+      newScheduled.push(item);
+      // NOT locked — events flow inline within unlocked groups, ordered by `order`
+    });
+
     // ── Transport segments ────────────────────────────────────────────────────
     // Each selected transport segment appears as a locked item on the day its
     // departure_time falls on. segment_id in the day record narrows to one
@@ -2592,7 +2752,7 @@ export default function SchedulePage() {
     const transArr = newScheduled.filter(i => i.id.startsWith('trans_'));
 
     // Sort POIs + time_blocks by saved order (unordered items go to end)
-    const rawActivityId = (id: string) => id.startsWith('tblock_') ? id.replace('tblock_', '') : id;
+    const rawActivityId = (id: string) => id.startsWith('tblock_') ? id.replace('tblock_', '') : id.startsWith('evt_') ? id.replace('evt_', '') : id;
     poiArr.sort((a, b) => {
       const oA = itDay.activities.find(act => act.id === rawActivityId(a.id))?.order ?? 9999;
       const oB = itDay.activities.find(act => act.id === rawActivityId(b.id))?.order ?? 9999;
@@ -2665,6 +2825,13 @@ export default function SchedulePage() {
         if (existing) updatedActivities.push({ ...existing, order: idx + 1 });
         return;
       }
+      if (item.id.startsWith('evt_')) {
+        // Event — preserve all fields (type/label/time_window), just update order
+        const activityId = item.id.replace('evt_', '');
+        const existing = itDay.activities.find(a => a.id === activityId);
+        if (existing) updatedActivities.push({ ...existing, order: idx + 1 });
+        return;
+      }
       const existing = itDay.activities.find(a => a.id === item.id);
       updatedActivities.push({
         order: idx + 1, // full positional index including transport item slots
@@ -2678,6 +2845,13 @@ export default function SchedulePage() {
     // Potential POIs after scheduled (clear time_window so they stay potential on reload)
     const schedLen = updatedActivities.length;
     newPotential.forEach((item, idx) => {
+      // Events keep their type/fields even if they land in the potential array
+      if (item.id.startsWith('evt_')) {
+        const activityId = item.id.replace('evt_', '');
+        const existing = itDay.activities.find(a => a.id === activityId);
+        if (existing) updatedActivities.push({ ...existing, order: schedLen + idx + 1 });
+        return;
+      }
       updatedActivities.push({
         order: schedLen + idx + 1,
         type: 'poi',
@@ -2855,9 +3029,11 @@ export default function SchedulePage() {
         const targetDay = itineraryDays.find(d => d.dayNumber === targetDayNum);
         if (!sourceDay || !targetDay) { addLog(`  ❌ Day not found`); return; }
 
-        // Collect all activity IDs in the group (time block uses raw ID, POIs use item ID directly)
+        // Collect all activity IDs in the group (time block / event use raw ID, POIs use item ID directly)
         const groupItemIds = draggedGroup.items.map(i =>
-          i.id.startsWith('tblock_') ? i.id.replace('tblock_', '') : i.id,
+          i.id.startsWith('tblock_') ? i.id.replace('tblock_', '')
+            : i.id.startsWith('evt_') ? i.id.replace('evt_', '')
+            : i.id,
         );
         const groupIdSet = new Set(groupItemIds);
 
@@ -2915,11 +3091,16 @@ export default function SchedulePage() {
       const targetDay = itineraryDays.find(d => d.dayNumber === targetDayNum);
       if (!sourceDay || !targetDay) { addLog(`  ❌ Day not found`); return; }
 
-      const newSourceActivities = sourceDay.activities.filter(a => a.id !== itemId);
+      // Events carry an evt_ prefixed item id; resolve back to the raw activity id
+      const activityId = itemId.startsWith('evt_') ? itemId.replace('evt_', '') : itemId;
+      const sourceActivity = sourceDay.activities.find(a => a.id === activityId);
+      const newSourceActivities = sourceDay.activities.filter(a => a.id !== activityId);
       const nextOrder = targetDay.activities.length > 0
         ? Math.max(...targetDay.activities.map(a => a.order)) + 1
         : 1;
-      const newActivity: ItineraryActivity = { order: nextOrder, type: 'poi', id: itemId, schedule_state: 'potential' };
+      const newActivity: ItineraryActivity = (item.isEvent && sourceActivity)
+        ? { ...sourceActivity, order: nextOrder }
+        : { order: nextOrder, type: 'poi', id: activityId, schedule_state: 'potential' };
       const newTargetActivities = [...targetDay.activities, newActivity];
 
       // Optimistic UI
@@ -3360,6 +3541,8 @@ export default function SchedulePage() {
                                         onEditTransport={handleEditTransport}
                                         onUpdateTimeBlock={handleUpdateTimeBlock}
                                         onDeleteTimeBlock={handleDeleteTimeBlock}
+                                        onUpdateEvent={handleUpdateEvent}
+                                        onDeleteEvent={handleDeleteEvent}
                                         canDelete={canDeleteGroup(groups, gi)}
                                         onRenameGroup={(lbl, time) => { const content = group.items.filter(i => !i.isTimeBlock); handleRenameAutoGroup(content[0]?.id, lbl, time); }}
                                         onDeleteGroup={() => { const content = group.items.filter(i => !i.isTimeBlock); handleDeleteAutoGroup(content.map(i => i.id)); }}
@@ -3730,6 +3913,8 @@ export default function SchedulePage() {
                                           onEditTransport={handleEditTransport}
                                           onUpdateTimeBlock={handleUpdateTimeBlock}
                                           onDeleteTimeBlock={handleDeleteTimeBlock}
+                                          onUpdateEvent={handleUpdateEvent}
+                                          onDeleteEvent={handleDeleteEvent}
                                           canDelete={canDeleteGroup(groups, gi)}
                                           onRenameGroup={(lbl, time) => { const content = group.items.filter(i => !i.isTimeBlock); handleRenameAutoGroup(content[0]?.id, lbl, time); }}
                                           onDeleteGroup={() => { const content = group.items.filter(i => !i.isTimeBlock); handleDeleteAutoGroup(content.map(i => i.id)); }}
@@ -3757,6 +3942,19 @@ export default function SchedulePage() {
                                 <button type="button" onClick={() => setAddingTimeBlock(true)} className="mt-2 w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground/60 hover:text-primary hover:bg-primary/5 border border-dashed border-primary/20 hover:border-primary/40 rounded-lg py-1.5 transition-colors">
                                   <Clock size={12} />
                                   {t('timeline.addTimeWindow')}
+                                </button>
+                              )}
+                              {addingEvent ? (
+                                <div className="flex gap-1.5 items-center mt-1.5 p-2 rounded-lg bg-sky-500/5 border border-sky-500/20">
+                                  <Input placeholder={t('timeline.eventPlaceholder')} value={newEvtLabel} onChange={e => setNewEvtLabel(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') handleAddEvent(); if (e.key === 'Escape') { setAddingEvent(false); setNewEvtLabel(''); setNewEvtTime(''); } }} className="h-7 text-xs flex-1 min-w-0" autoFocus />
+                                  <input type="time" value={newEvtTime} onChange={e => setNewEvtTime(e.target.value)} className="h-7 text-xs border border-input rounded-md px-2 bg-background w-[88px] shrink-0" />
+                                  <button type="button" onClick={handleAddEvent} className="p-1 rounded text-primary hover:bg-primary/10 transition-colors shrink-0"><Check size={14} /></button>
+                                  <button type="button" onClick={() => { setAddingEvent(false); setNewEvtLabel(''); setNewEvtTime(''); }} className="p-1 rounded text-muted-foreground hover:bg-muted transition-colors shrink-0"><X size={14} /></button>
+                                </div>
+                              ) : (
+                                <button type="button" onClick={() => setAddingEvent(true)} className="mt-1.5 w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground/60 hover:text-sky-500 hover:bg-sky-500/5 border border-dashed border-sky-500/20 hover:border-sky-500/40 rounded-lg py-1.5 transition-colors">
+                                  <Clock size={12} />
+                                  {t('timeline.addEvent')}
                                 </button>
                               )}
                             </div>
@@ -4296,6 +4494,8 @@ export default function SchedulePage() {
                             onEditTransport={handleEditTransport}
                             onUpdateTimeBlock={handleUpdateTimeBlock}
                             onDeleteTimeBlock={handleDeleteTimeBlock}
+                            onUpdateEvent={handleUpdateEvent}
+                            onDeleteEvent={handleDeleteEvent}
                             canDelete={canDeleteGroup(groups, gi)}
                             onRenameGroup={(lbl, time) => {
                               const content = group.items.filter(i => !i.isTimeBlock);
@@ -4352,6 +4552,41 @@ export default function SchedulePage() {
                   >
                     <Clock size={12} />
                     {t('timeline.addTimeWindow')}
+                  </button>
+                )}
+
+                {/* Add event */}
+                {addingEvent ? (
+                  <div className="flex gap-1.5 items-center mt-1.5 p-2 rounded-lg bg-sky-500/5 border border-sky-500/20">
+                    <Input
+                      placeholder={t('timeline.eventPlaceholder')}
+                      value={newEvtLabel}
+                      onChange={e => setNewEvtLabel(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleAddEvent(); if (e.key === 'Escape') { setAddingEvent(false); setNewEvtLabel(''); setNewEvtTime(''); } }}
+                      className="h-7 text-xs flex-1 min-w-0"
+                      autoFocus
+                    />
+                    <input
+                      type="time"
+                      value={newEvtTime}
+                      onChange={e => setNewEvtTime(e.target.value)}
+                      className="h-7 text-xs border border-input rounded-md px-2 bg-background w-[88px] shrink-0"
+                    />
+                    <button type="button" onClick={handleAddEvent} className="p-1 rounded text-primary hover:bg-primary/10 transition-colors shrink-0">
+                      <Check size={14} />
+                    </button>
+                    <button type="button" onClick={() => { setAddingEvent(false); setNewEvtLabel(''); setNewEvtTime(''); }} className="p-1 rounded text-muted-foreground hover:bg-muted transition-colors shrink-0">
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setAddingEvent(true)}
+                    className="mt-1.5 w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground/60 hover:text-sky-500 hover:bg-sky-500/5 border border-dashed border-sky-500/20 hover:border-sky-500/40 rounded-lg py-1.5 transition-colors"
+                  >
+                    <Clock size={12} />
+                    {t('timeline.addEvent')}
                   </button>
                 )}
               </div>

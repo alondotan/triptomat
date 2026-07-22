@@ -726,6 +726,8 @@ const he = {
     dragItemHere: 'גרור פריט לכאן',
     addTimeWindow: 'הוסף חלון זמן',
     timeWindowPlaceholder: 'שם חלון (לדוגמה: סיור בעיר)',
+    addEvent: 'הוסף אירוע',
+    eventPlaceholder: 'תיאור (לדוגמה: קמים, יציאה לדרך)',
     addLocation: 'הוסף יעד',
     location: 'מיקום',
     setLocation: 'עדכון מיקום',

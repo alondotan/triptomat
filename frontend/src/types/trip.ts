@@ -231,11 +231,11 @@ export interface ItineraryAccommodationOption {
 
 export interface ItineraryActivity {
   order: number;
-  type: 'poi' | 'collection' | 'time_block';
+  type: 'poi' | 'collection' | 'time_block' | 'event';
   id: string;
   schedule_state?: 'potential' | 'scheduled';
   time_window?: { start?: string; end?: string };
-  label?: string; // custom label for time_block activities
+  label?: string; // custom label for time_block / event activities
 }
 
 export interface ItineraryTransportSegment {
